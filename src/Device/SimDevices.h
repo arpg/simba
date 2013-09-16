@@ -3,8 +3,6 @@
 #include <iostream>
 #include <vector>
 #include <Eigen/Eigen>             // for vector maths
-#include <Mvlpp/Mvl.h>
-
 
 #include <SceneGraph/SceneGraph.h> // for open GL scene graph
 #include <SceneGraph/SimCam.h>     // for sim cam

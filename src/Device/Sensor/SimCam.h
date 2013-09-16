@@ -3,6 +3,7 @@
 
 #include <Device/SimDevices.h>
 #include <ModelGraph/PhyModelGraphAgent.h>
+#include <calibu/cam/CameraXml.h>
 
 // a warpper for SimCam in SceneGraph for robot proxy. See more function of origional version of SimCam in SceneGraph
 class SimCam
@@ -20,27 +21,38 @@ class SimCam
        vector<string>                 m_vCameraModel;
 
        // ------------------------------------------------------------------------------------------------------------------
-       bool init(Eigen::Vector6d  vInitPose, string sDeviceName, int CameraType, int FPS, string sCameraModel, GLSceneGraph&  glGraph, PhyModelGraphAgent&  mPhyMGAgent)
+       bool init(Eigen::Vector6d vInitPose,
+                 string sDeviceName,
+                 int CameraType,
+                 int FPS,
+                 string sCameraModel,
+                 GLSceneGraph& glGraph,
+                 PhyModelGraphAgent& mPhyMGAgent)
        {
            m_sDeviceName = sDeviceName;
            m_rPhysMGAgent = mPhyMGAgent;
            m_iFPS = FPS;
 
-           // set sim cam model
-           mvl::CameraModel CamModel( sCameraModel );
+           calibu::CameraModel CamModel =
+               calibu::ReadXmlCameraModel(sCameraModel);
 
-           // get some camera parameters
+           // // get some camera parameters
            Eigen::Matrix3d K = CamModel.K();
            g_nImgWidth  = CamModel.Width();
            g_nImgHeight = CamModel.Height();
 
            string sCvar = sDeviceName+".Pose";
            const char* cCvar = sCvar.c_str();
-           Eigen::Vector6d  g_vCamPose = CVarUtils::CreateCVar( cCvar, Eigen::Vector6d( vInitPose), "Camera's pose. Left is dominant camera." );
+           Eigen::Vector6d  g_vCamPose = CVarUtils::CreateCVar(
+               cCvar, Eigen::Vector6d( vInitPose),
+               "Camera's pose. Left is dominant camera." );
 
            // initialize cameras
            m_iCamType = CameraType;
-           m_Camera.Init(&glGraph, mvl::Cart2T( g_vCamPose ), K, g_nImgWidth, g_nImgHeight, m_iCamType );
+           m_Camera.Init(&glGraph,
+                         Sophus::SE3d::exp( g_vCamPose ).matrix(),
+                         K, g_nImgWidth, g_nImgHeight,
+                         m_iCamType );
 
            cout<<"[SimCam] init sim cam success. Type is "<<CameraType<<". Width is:"<<g_nImgWidth <<", "<<" Height is: "<<g_nImgHeight<<endl;
            return true;
@@ -138,7 +150,7 @@ class SimCam
        // update is the same for all types of sim cam
        void Update()
        {
-           m_Camera.SetPoseRobot(mvl::Cart2T(GetCameraPose()));
+           m_Camera.SetPoseRobot(Sophus::SE3d::exp(GetCameraPose()).matrix());
            m_Camera.RenderToTexture();
            m_Camera.DrawCamera();
 

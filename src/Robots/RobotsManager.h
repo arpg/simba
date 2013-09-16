@@ -9,7 +9,6 @@
 #include <iostream>
 #include <vector>
 #include <Eigen/Eigen>             // for vector maths
-#include <Mvlpp/Mvl.h>
 #include <Network/Messages.h>
 #include <Robots/SimRobot.h>
 #include <ModelGraph/PhyModelGraphAgent.h>    // for communicate between Physic Engine and Model Graph

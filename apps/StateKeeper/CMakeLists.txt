@@ -27,5 +27,5 @@ link_libraries( ${Pangolin_LIBRARIES})
 add_executable( StateKeeper StateKeeper.cpp )
 
 target_link_libraries( StateKeeper
-                       ${NODE_LIBRARIES}
-                     )
+  ${NODE_LIBRARIES}
+  )

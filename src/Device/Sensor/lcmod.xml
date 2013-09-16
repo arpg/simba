@@ -1,14 +1,10 @@
-<camera_model type="MVL_CAMERA_LINEAR" camid="left" version="7">
-    <forward>  1; 0; 0  </forward>
-    <right  >  0; 1; 0  </right>
-    <down   >  0; 0; 1  </down>
-    <pose  > 0.00; -0.06; 0.00; 0.00; 0.00; 0.00 </pose>
-    <width > 512 </width>
-    <height> 384 </height>
-    <fx    >851.340367</fx>
-    <cx    >255.500000</cx>
-    <fy    >850.955208</fy>
-    <cy    >191.500000</cy>
-    <sx    >0.000000</sx>
+<camera_model name="left" index="0" serialno="-1" type="calibu_fu_fv_u0_v0" version="8">
+  <width> 512 </width>
+  <height> 384 </height>
+  <!-- Use RDF matrix, [right down forward], to define the coordinate frame convention -->
+  <forward> [ 1; 0; 0 ] </forward>
+  <right> [ 0; 1; 0 ] </right>
+  <down> [ 0; 0; 1 ] </down>
+  <!-- Camera parameters ordered as per type name. -->
+  <params> [ 851.340367; 850.955208; 255.5; 191.5 ] </params>
 </camera_model>
-

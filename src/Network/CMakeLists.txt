@@ -8,6 +8,6 @@ add_library( SimMessages ${PROTO_SRCS})
 
 include_directories( ${PROTOBUF_INCLUDE_DIRS} )
 include_directories( ${NODE_INCLUDE_DIRS}  ${CMAKE_SOURCE_DIR} )
-link_libraries( ${NODE_LIBRARIES} )
+target_link_libraries(SimMessages ${NODE_LIBRARIES} )
 
 

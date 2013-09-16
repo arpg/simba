@@ -10,7 +10,7 @@ find_package( SceneGraph REQUIRED )
 find_package( Bullet REQUIRED )
 find_package( TinyXML2 REQUIRED )
 find_package( HAL 0.1 QUIET)
-find_package( MVL REQUIRED )
+find_package( Calibu 0.1 REQUIRED )
 find_package( NODE REQUIRED)
 
 
@@ -20,7 +20,7 @@ include_directories( ${Pangolin_INCLUDE_DIRS})
 include_directories( ${SceneGraph_INCLUDE_DIRS})
 include_directories( ${TinyXML2_INCLUDE_DIRS})
 include_directories( ${HAL_INCLUDE_DIRS} )
-include_directories( ${MVL_INCLUDE_DIRS} )
+include_directories( ${Calibu_INCLUDE_DIRS} )
 include_directories( ${NODE_INCLUDE_DIRS})
 
 
@@ -30,15 +30,15 @@ link_libraries( ${BULLET_LIBRARIES})
 link_libraries( ${TinyXML2_LIBRARIES})
 link_libraries( ${HAL_LIBRARIES})
 link_libraries( SimMessages) # common protocol buffers
-link_libraries( ${MVL_LIBRARIES} )
+link_libraries( ${Calibu_LIBRARIES} )
 
 link_directories( ${Pangolin_LIBRARY_DIRS} ) # this is bad form, libraries should specify full paths
-link_directories( ${MVL_LIBRARY_DIRS} )
+link_directories( ${Calibu_LIBRARY_DIRS} )
 
 add_executable( RobotProxy RobotProxy.cpp )
 
 target_link_libraries( RobotProxy
-                       ${NODE_LIBRARIES}
-                       ${HAL_LIBRARIES}
-                     )
+  ${NODE_LIBRARIES}
+  ${HAL_LIBRARIES}
+  )
 
