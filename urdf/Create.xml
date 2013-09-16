@@ -1,0 +1,44 @@
+<robot name="Create">
+    <bodybase name="Chassis" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="1000"  pose="0,0,0,0,0,1.57"   dimesion="2,4"  scale="100"  type="Cylinder"/>
+    <body name="FWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,2,-2,0,1.5707,0"  dimesion="1,1" scale="25" type="Cylinder"/>
+    <body name="BRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="3.5,2,1,0,-1.5707,0"  dimesion="1,1"  scale="25" type="Cylinder"/>
+    <body name="BLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="-3.5,2,1,0,-1.5707,0"  dimesion="1,1" scale="25" type="Cylinder"/>
+
+    <joint name="FAxleJoint" type="HingeJoint">
+        <parent body = "Chassis"/>
+        <child  body = "FWheel"/>
+        <pivot  setting = "0,2,-2"/>
+        <axis   setting = "1,0,0"/>
+    </joint>
+
+    <joint name="BRAxleJoint" type="HingeJoint">
+        <parent body = "Chassis"/>
+        <child  body = "BRWheel"/>
+        <pivot  setting  = "3.5,2,1"/>
+        <axis   setting  = "1,0,0"/>
+    </joint>
+
+
+    <joint name="BLAxleJoint" type="HingeJoint">
+        <parent body = "Chassis"/>
+        <child  body = "BLWheel"/>
+        <pivot  setting = "-3.5,2,1"/>
+        <axis   setting = "1,0,0"/>
+    </joint>
+
+    
+    <!--
+
+    <joint name="BLAxleJoint" type="HingeJoint">
+        <parent body = "Chassis"/>
+        <child  body = "BLWheel"/>
+        <pivot  setting = "-2.5,0,2.8"/>
+        <axis   setting = "1,0,0"/>
+    </joint>
+     
+
+    <SimDevice type="SimGPS" name="GPS1" parent="Chassis" pose="-2.5,0,0,0,0,0"/>
+     -->
+
+</robot>
+

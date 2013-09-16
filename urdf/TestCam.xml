@@ -1,0 +1,27 @@
+<robot name="Robot">
+    <bodybase name="Chassis" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="1000"  pose="0,0,0,0,0,1.5707" dimesion="2,1,3" scale="100"  type="Box"/>
+    
+    <Sensor Name="RCamera" 
+		    Type="Camera" 
+			Driver="Kinect" 
+			Size="640*480" 
+			Mode="RGBD" 
+			Resolution="VGA" 
+			FPS="30" 
+			Align="true" 
+			Parent="Stick" 
+			Pose="0,-2,0,0,0,-1.57" 
+			Location="Local" />
+			
+    <Sensor Name="LCamera"
+            Type="Camera"
+            Driver="Node2Cam"
+            Size="512*384"
+            Mode="RGBD"
+            FPS="30"
+            Align="true"
+            Parent="Stick"
+            Pose="0,-2,0,0,0,-1.57"
+            Location="@Proxy1"
+            Model="/Users/malu/Code/Luma/Sim/src/Device/lcmod.xml" />
+</robot>

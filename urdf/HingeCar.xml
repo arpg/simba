@@ -1,0 +1,56 @@
+<robot name="Robot">
+    <bodybase name="Chassis" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="1000"  pose="0,0,0,0,0,1.5707"   dimesion="2,1,3"  scale="100"  type="Box"/>
+    <body name="FRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="2.5,0,-2.8,0,1.5707,0"  dimesion="1,2"  scale="25" type="Cylinder"/>
+    <body name="FLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="-2.5,0,-2.8,0,-1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
+    <body name="BRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="2.5,0,2.8,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
+    <body name="BLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="-2.5,0,2.8,0,-1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
+
+
+    <joint name="FRWheelJoint" type="HingeJoint">
+        <parent body = "Chassis"/>
+        <child  body = "FRWheel"/>
+        <pivot  setting  = "2.5,0,-2.8"/>
+        <axis   setting  = "1,0,0"/>
+    </joint>
+    
+    <joint name="FLWheelJoint" type="HingeJoint">
+        <parent body = "Chassis"/>
+        <child  body = "FLWheel"/>
+        <pivot  setting = "-2.5,0,-2.8"/>
+        <axis   setting = "1,0,0"/>
+    </joint>
+    
+    <joint name="BRWheelJoint" type="HingeJoint">
+        <parent body = "Chassis"/>
+        <child  body = "BRWheel"/>
+        <pivot  setting = "2.5,0,2.8"/>
+        <axis   setting = "1,0,0"/>
+    </joint>
+    
+    <joint name="BLWheelJoint" type="HingeJoint">
+        <parent body = "Chassis"/>
+        <child  body = "BLWheel"/>
+        <pivot  setting = "-2.5,0,2.8"/>
+        <axis   setting = "1,0,0"/>
+    </joint>
+    
+    
+     
+    <SimDevice type="SimGPS" name="GPS1" parent="Chassis" pose="-2.5,0,0,0,0,0"/>
+    <!--
+    <SimDevice type="SimVicon" name="Vicon1" parent="Chassis">
+        <dot name ="dot1" pose="2.5,0,0.8,0,0,0"/>
+        <dot name ="dot2" pose="2.5,0,0.7,0,0,0"/>
+        <dot name ="dot3" pose="2.5,0,0.6,0,0,0"/>
+        <dot name ="dot4" pose="2.5,0,0.5,0,0,0"/>
+    </SimDevice>
+    
+    <SimDevice type="SimLaser" mode="2D" name="myLaser" parent="Chassos" pose="-1,0,0,0,0,0"/>
+     
+     -->
+    
+    <SimDevice type="Kinect" mode="Gray" name="LSimCam" parent="Chassis" pose="-2,0,1,0,0,0"/>
+
+    
+</robot>
+
