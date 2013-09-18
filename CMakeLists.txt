@@ -5,8 +5,10 @@ project( Sim )
 # Add to module path, so we can find our cmake modules
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/.)
 
+find_package(Sophus REQUIRED)
 find_package(Calibu 0.1 REQUIRED)
-include_directories(${Calibu_INCLUDE_DIRS})
+include_directories(${Calibu_INCLUDE_DIRS}
+                    ${Sophus_INCLUDE_DIRS})
 
 # Add to module path, so we can find our cmake modules
 set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules ${CMAKE_MODULE_PATH} )
