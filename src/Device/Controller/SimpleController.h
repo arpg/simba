@@ -64,6 +64,19 @@ public:
             }
         }
 
+        for (int ii = 0; ii < m_eCommand.size(); ii++) {
+            if(m_eCommand[ii][3]!=0 || m_eCommand[ii][4]!=0 || m_eCommand[ii][5]!=0)
+            {
+                Eigen::Vector3d eSteering;
+                eSteering[0] = m_eCommand[ii][3];
+                eSteering[1] = m_eCommand[ii][4];
+                eSteering[2] = m_eCommand[ii][5];
+                string sBodyFullName = m_vBodyFullName[ii];
+                m_rPhyMGAgent.m_Agent.ApplySteering(sBodyFullName, eSteering);
+            }
+        }
+
+
         // apply steering
 //        if(m_eCommand[3]!=0 || m_eCommand[4]!=0 || m_eCommand[5]!=0)
 //        {

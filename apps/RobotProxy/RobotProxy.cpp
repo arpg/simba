@@ -189,42 +189,51 @@ class RobotProxy
         //----------------------------------------------------------------------------------------------------------------------------------------------
         void LeftKey()
         {
-//            m_SimRobot->m_Controller.ApplySteering("FLWheel",0.01);
-//            m_SimRobot->m_Controller.ApplySteering("FRWheel",0.01);
-              m_RobotManager.DeleteRobot("Robot@Proxy1");  // just for test!
+            Eigen::Vector6d  dCommand;
+            vector<string> vBodyFullName;
+            string sMainRobotName = m_pMainRobot->GetRobotName();
+
+            dCommand<<0, 0, 0, 0, 0, -2000;
+            vBodyFullName.push_back("FRWheel@"+sMainRobotName);
+            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+
+            dCommand<<0, 0, 0, 0, 0, -2000;
+            vBodyFullName.push_back("FLWheel@"+sMainRobotName);
+            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+
+            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
         }
 
         ///////////////////////////////////////////////////////////////////
         void RightKey()
         {
-//              m_RobotManager.m_PhyMGAgent.m_Agent.GetPhys()->PrintAllConstraintName();
-              m_RobotManager.m_PhyMGAgent.m_Agent.GetPhys()->PrintAllEntityName();
+            Eigen::Vector6d  dCommand;
+            vector<string> vBodyFullName;
+            string sMainRobotName = m_pMainRobot->GetRobotName();
 
-//            m_SimRobot->m_Controller.ApplySteering("FRWheel",-0.01);
-//            m_SimRobot->m_Controller.ApplySteering("FLWheel",-0.01);
+            dCommand<<0, 0, 0, 0, 0, 2000;
+            vBodyFullName.push_back("FRWheel@"+sMainRobotName);
+            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+
+            dCommand<<0, 0, 0, 0, 0, 2000;
+            vBodyFullName.push_back("FLWheel@"+sMainRobotName);
+            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+
+            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
         }
 
         ///////////////////////////////////////////////////////////////////
         void ForwardKey()
         {
-//            Eigen::Vector6d  dCommand;
-//            dCommand<<0, 8000, 0,0,0,0;
-//            vector<string> vBodyFullName;
-//            string sMainRobotName = m_pMainRobot->GetRobotName();
-//            vBodyFullName.push_back("BRWheel@"+sMainRobotName);
-//            vBodyFullName.push_back("BLWheel@"+sMainRobotName);
-//            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
-//            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
             Eigen::Vector6d  dCommand;
             vector<string> vBodyFullName;
             string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            dCommand<<0, 8000, 0,0,0,0;
+            dCommand<<0, -8000, 0,0,0,0;
             vBodyFullName.push_back("BRWheel@"+sMainRobotName);
             m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
-//            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
 
-            dCommand<<0, -8000, 0,0,0,0;
+            dCommand<<0, 8000, 0,0,0,0;
             vBodyFullName.push_back("BLWheel@"+sMainRobotName);
             m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
@@ -239,12 +248,12 @@ class RobotProxy
             vector<string> vBodyFullName;
             string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            dCommand<<0, -8000, 0,0,0,0;
+            dCommand<<0, 8000, 0,0,0,0;
             vBodyFullName.push_back("BRWheel@"+sMainRobotName);
             m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 //            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
 
-            dCommand<<0, 8000, 0,0,0,0;
+            dCommand<<0, -8000, 0,0,0,0;
             vBodyFullName.push_back("BLWheel@"+sMainRobotName);
             m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 

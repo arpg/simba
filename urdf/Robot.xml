@@ -23,6 +23,24 @@
         <damping    setting ="1000"/>
         <stiffness  setting ="1000"/>
     </joint>
+
+<!--    <joint name="FLAxleJoint" type="Hinge2Joint">
+        <parent body="Chassis"/>
+        <child body="FLWheel"/>
+        <axis axis1="0,0,-1" axis2 ="1,0,0"/>
+        <anchor setting ="-3,3,-6"/>
+        <limit lowerlinear="0,0,0" upperlinear="0,0,0" lowerangle = "3.14,0,-0.3" upperangle="0,0,0.6"/>
+    </joint>
+
+
+    <joint name="FRAxleJoint" type="Hinge2Joint">
+        <parent body="Chassis"/>
+        <child body="FRWheel"/>
+        <axis axis1="0,0,-1" axis2 ="1,0,0"/>
+        <anchor setting ="3,3,-6"/>
+        <limit lowerlinear="0,0,0" upperlinear="0,0,0" lowerangle = "3.14,0,-0.3" upperangle="0,0,0.6"/>
+    </joint>-->
+
     
     <joint name="BRAxleJoint" type="HingeJoint">
         <parent body = "Chassis"/>
