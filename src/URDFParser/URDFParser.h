@@ -426,7 +426,7 @@ bool ParseDevice(XMLDocument& doc, vector<SimDeviceInfo>&  m_vSimDeviceInfo)
                     Device.sDeviceName = sCameraName;
                     Device.sDeviceType = sType;
                     Device.m_vSensorList.push_back(sSensorName);
-                    Device.m_vModel.push_back("/Users/malu/Code/Luma/SimWorld/src/Device/lcmod.xml");
+                    Device.m_vModel.push_back("/Users/faradazerage/code/simba/src/Device/lcmod.xml");
                     m_vSimDeviceInfo.push_back(Device);
 
                     cout<<"[SimWorld/URDFBuildRobot] register "<<sType<<" (SimCam "<<sSensorName<<") success. Device Name is "<<sCameraName<<"."<<endl;
@@ -445,8 +445,8 @@ bool ParseDevice(XMLDocument& doc, vector<SimDeviceInfo>&  m_vSimDeviceInfo)
                     Device.sDeviceType = sType;
                     Device.m_vSensorList.push_back(sRGBBodyName);
                     Device.m_vSensorList.push_back(sDepthBodyName);
-                    Device.m_vModel.push_back("/Users/malu/Code/Luma/SimWorld/src/Device/lcmod.xml");
-                    Device.m_vModel.push_back("/Users/malu/Code/Luma/SimWorld/src/Device/lcmod.xml");
+                    Device.m_vModel.push_back("/Users/faradazerage/code/simba/src/Device/lcmod.xml");
+                    Device.m_vModel.push_back("/Users/faradazerage/code/simba/src/Device/lcmod.xml");
                     m_vSimDeviceInfo.push_back(Device);
 
                     cout<<"[SimWorld/URDFBuildRobot] register "<<sType<<" (SimCam "<<sMode<<") success." <<endl;

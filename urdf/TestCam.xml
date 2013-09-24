@@ -23,5 +23,5 @@
             Parent="Stick"
             Pose="0,-2,0,0,0,-1.57"
             Location="@Proxy1"
-            Model="/Users/malu/Code/Luma/Sim/src/Device/lcmod.xml" />
+            Model="/Users/faradazerage/code/simba/src/Device/lcmod.xml" />
 </robot>

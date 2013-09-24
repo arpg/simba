@@ -19,6 +19,7 @@ class SimCam
        string                         m_sDeviceName; // mesh of parent that camera attach to
        PhyModelGraphAgent             m_rPhysMGAgent;
        vector<string>                 m_vCameraModel;
+       calibu::CameraRig              m_CameraRig;
 
        // ------------------------------------------------------------------------------------------------------------------
        bool init(Eigen::Vector6d vInitPose,
@@ -29,17 +30,21 @@ class SimCam
                  GLSceneGraph& glGraph,
                  PhyModelGraphAgent& mPhyMGAgent)
        {
+
            m_sDeviceName = sDeviceName;
            m_rPhysMGAgent = mPhyMGAgent;
            m_iFPS = FPS;
 
-           calibu::CameraModel CamModel =
-               calibu::ReadXmlCameraModel(sCameraModel);
+           std::cout<<"Inside Init"<<std::endl;
+
+           m_CameraRig = calibu::ReadXmlRig(sCameraModel);
+
+           calibu::CameraModel theCam = m_CameraRig.cameras[0].camera;
 
            // // get some camera parameters
-           Eigen::Matrix3d K = CamModel.K();
-           g_nImgWidth  = CamModel.Width();
-           g_nImgHeight = CamModel.Height();
+           Eigen::Matrix3d K = theCam.K();
+           g_nImgWidth  = theCam.Width();
+           g_nImgHeight = theCam.Height();
 
            string sCvar = sDeviceName+".Pose";
            const char* cCvar = sCvar.c_str();

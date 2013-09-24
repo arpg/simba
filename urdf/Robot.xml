@@ -64,7 +64,7 @@
             Parent="Stick"
             Pose="0,-2,0,0,0,-1.57"
             Location="@Proxy1"
-            Model="/Users/malu/Code/Luma/Sim/src/Device/Sensor/lcmod.xml" />
+            Model="/Users/faradazerage/code/simba/src/Device/lcmod.xml" />
 	
     <Sensor Name="ChassisVicon" Type="Vicon" Body="Chassis"/> <!-- Must include this sensor if use robot proxy! robot proxy need this sensor to get robot's pose (chassis's pose) information -->
     <Controller Name="MController" Mode="SimpleController"/>
