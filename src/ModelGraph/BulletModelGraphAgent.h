@@ -279,9 +279,12 @@ public:
         btRigidBody* rB = e.m_pRigidBody.get();
 
         btVector3 Torque;
+
         Torque.setX(eTorque[0]);
         Torque.setY(eTorque[1]);
         Torque.setZ(eTorque[2]);
+
+        Torque = (rB->getCenterOfMassTransform().getBasis())*Torque;
 
         rB->applyTorque(Torque);
     }

@@ -4,6 +4,7 @@
 #include <Device/SimDevices.h>
 #include <ModelGraph/PhyModelGraphAgent.h>
 #include <calibu/cam/CameraXml.h>
+#include <CVars/CVar.h>
 
 // a warpper for SimCam in SceneGraph for robot proxy. See more function of origional version of SimCam in SceneGraph
 class SimCam
@@ -35,8 +36,6 @@ class SimCam
            m_rPhysMGAgent = mPhyMGAgent;
            m_iFPS = FPS;
 
-           std::cout<<"Inside Init"<<std::endl;
-
            m_CameraRig = calibu::ReadXmlRig(sCameraModel);
 
            calibu::CameraModel theCam = m_CameraRig.cameras[0].camera;
@@ -46,11 +45,16 @@ class SimCam
            g_nImgWidth  = theCam.Width();
            g_nImgHeight = theCam.Height();
 
+           std::cout<<"I set the height and width"<<std::endl;
+
            string sCvar = sDeviceName+".Pose";
            const char* cCvar = sCvar.c_str();
-           Eigen::Vector6d  g_vCamPose = CVarUtils::CreateCVar(
-               cCvar, Eigen::Vector6d( vInitPose),
-               "Camera's pose. Left is dominant camera." );
+           Eigen::Vector6d  g_vCamPose = vInitPose;
+//           Eigen::Vector6d  g_vCamPose = CVarUtils::CreateCVar(
+//               cCvar, Eigen::Vector6d( vInitPose),
+//               "Camera's pose. Left is dominant camera." );
+
+           std::cout<<"I am here:"<<std::endl;
 
            // initialize cameras
            m_iCamType = CameraType;

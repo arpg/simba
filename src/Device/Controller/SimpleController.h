@@ -20,7 +20,9 @@ public:
         m_rPhyMGAgent = rPhyMGAgent;
         m_sProxyName  = sProxyName;
         m_sRobotName  = sRobotName;
-        m_eCommand<<0,0,0,0,0,0;
+//        Eigen::Vector6d temp;
+//        temp << 0, 0, 0, 0, 0, 0;
+//        m_eCommand.push_back( temp );
     }
 
 
@@ -28,7 +30,7 @@ public:
     // update command from statekeeper (in 'with statekeeper' mode) or node controller (in 'with Network' mode) or robot proxy (in 'without network' mode)
     void UpdateCommand(vector<string> vBodyFullName, Eigen::Vector6d eCommand)
     {
-        m_eCommand = eCommand;
+        m_eCommand.push_back(eCommand);
         m_vBodyFullName = vBodyFullName;
         if(eCommand[0]!=0 || eCommand[1]!=0 || eCommand[2]!=0 || eCommand[3]!=0 ||eCommand[4]!=0 || eCommand[5]!=0)
         {
@@ -49,31 +51,35 @@ public:
         // m_MobileModel.BicycleModel(m_SimRobot, fDesireVelocity, fDesireSteering);
 
         // apply torque,
-        if(m_eCommand[0]!=0 || m_eCommand[1]!=0 || m_eCommand[2]!=0)
-        {
-            Eigen::Vector3d eTorque;
-            eTorque<<m_eCommand[0],m_eCommand[1],m_eCommand[2];
-            for(unsigned int i=0;i!=m_vBodyFullName.size();i++)
+
+        for (int ii = 0; ii < m_eCommand.size(); ii++) {
+            if(m_eCommand[ii][0]!=0 || m_eCommand[ii][1]!=0 || m_eCommand[ii][2]!=0)
             {
-                string sBodyFullName = m_vBodyFullName[i];
+                Eigen::Vector3d eTorque;
+                eTorque[0] = m_eCommand[ii][0];
+                eTorque[1] = m_eCommand[ii][1];
+                eTorque[2] = m_eCommand[ii][2];
+                string sBodyFullName = m_vBodyFullName[ii];
                 m_rPhyMGAgent.m_Agent.ApplyTorque(sBodyFullName, eTorque);
             }
         }
 
         // apply steering
-        if(m_eCommand[3]!=0 || m_eCommand[4]!=0 || m_eCommand[5]!=0)
-        {
-            Eigen::Vector3d eSteering;
-            eSteering<<m_eCommand[3],m_eCommand[4],m_eCommand[5];
-            for(unsigned int i=0;i!=m_vBodyFullName.size();i++)
-            {
-                string sBodyFullName = m_vBodyFullName[i];
-                m_rPhyMGAgent.m_Agent.ApplySteering(sBodyFullName, eSteering);
-            }
-        }
+//        if(m_eCommand[3]!=0 || m_eCommand[4]!=0 || m_eCommand[5]!=0)
+//        {
+//            Eigen::Vector3d eSteering;
+//            eSteering<<m_eCommand[3],m_eCommand[4],m_eCommand[5];
+//            for(unsigned int i=0;i!=m_vBodyFullName.size();i++)
+//            {
+//                string sBodyFullName = m_vBodyFullName[i];
+//                m_rPhyMGAgent.m_Agent.ApplySteering(sBodyFullName, eSteering);
+//            }
+//        }
 
         // after we apply command, set flag to false
         m_bCommandIsLatestFlag = false;
+        m_eCommand.clear();
+        m_vBodyFullName.clear();
         return true;
     }
 
@@ -86,7 +92,7 @@ public:
         if(m_bCommandIsLatestFlag==true)
         {
             vBodysFullName = m_vBodyFullName;
-            eCommand = m_eCommand;
+            eCommand = m_eCommand[m_eCommand.size() - 1];
             m_bCommandIsLatestFlag = false;
         }
         else
@@ -122,7 +128,7 @@ private:
     string                         m_sRobotName;
     string                         m_sProxyName;
     vector<string>                 m_vBodyFullName;    // body that will be applied latest command. In many Cases it will be pair body.
-    Eigen::Vector6d                m_eCommand;         // latest command
+    std::vector< Eigen::Vector6d > m_eCommand;         // latest command
     PhyModelGraphAgent             m_rPhyMGAgent;
 };
 
