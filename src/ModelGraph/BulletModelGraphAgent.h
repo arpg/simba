@@ -301,28 +301,14 @@ public:
         eSteer[0] = eSteering[0];
         eSteer[1] = eSteering[1];
         eSteer[2] = eSteering[2];
-//        btVector3 aVelocity = pWheel->getAngularVelocity();
-//        aVelocity.setY(0);
-//        aVelocity.setZ(aVelocity.getZ()+eSteering[2]);
-//        pWheel->setAngularVelocity(aVelocity);
 
-//        btTransform temp;
-//        btMatrix3x3 basis;
-//        basis[0][0] = cos(theta);
-//        basis[0][1] = -sin(theta);
-//        basis[0][2] = 0;
-//        basis[1][0] = sin(theta);
-//        basis[1][1] = cos(theta);
-//        basis[1][2] = 0;
-//        basis[2][0] = 0;
-//        basis[2][1] = 0;
-//        basis[2][2] = 1;
-//        temp.setBasis( basis );
-//        temp.setOrigin( btVector3(0, 0, 0));
-//        temp.mult(temp, pWheel->getCenterOfMassTransform());
-//        pWheel->setCenterOfMassTransform(temp);
+        btTransform T;
+        T = pWheel->getCenterOfMassTransform();
+        btQuaternion quat;
+        quat.setRotation(btVector3(0, 0, 1), T.getRotation().getAngle() + eSteer[2]);
+        T.setRotation(quat);
 
-        pWheel->applyTorque( eSteer );
+        pWheel->setCenterOfMassTransform(T);
     }
 
 

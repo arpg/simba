@@ -79,6 +79,10 @@ class HingeJoint : public Joint
             Eigen::Vector4d pcv; // vector in child "o" frame
             xcv << dAxisX, dAxisY, dAxisZ, 1;
             pcv << dPivotX, dPivotY, dPivotZ, 1;
+
+            xcv = Tpo.inverse()*xcv;
+            pcv = Tpo.inverse()*pcv;
+
             m_dAxis1 << dAxisX, dAxisY, dAxisZ;
             m_dPivot1 << dPivotX, dPivotY, dPivotZ;
 

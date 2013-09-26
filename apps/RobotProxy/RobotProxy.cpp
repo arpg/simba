@@ -193,11 +193,11 @@ class RobotProxy
             vector<string> vBodyFullName;
             string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            dCommand<<0, 0, 0, 0, 0, -2000;
+            dCommand<<0, 0, 0, 0, 0, -0.01;
             vBodyFullName.push_back("FRWheel@"+sMainRobotName);
             m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
-            dCommand<<0, 0, 0, 0, 0, -2000;
+            dCommand<<0, 0, 0, 0, 0, -0.01;
             vBodyFullName.push_back("FLWheel@"+sMainRobotName);
             m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
@@ -211,11 +211,11 @@ class RobotProxy
             vector<string> vBodyFullName;
             string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            dCommand<<0, 0, 0, 0, 0, 2000;
+            dCommand<<0, 0, 0, 0, 0, 0.01;
             vBodyFullName.push_back("FRWheel@"+sMainRobotName);
             m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
-            dCommand<<0, 0, 0, 0, 0, 2000;
+            dCommand<<0, 0, 0, 0, 0, 0.01;
             vBodyFullName.push_back("FLWheel@"+sMainRobotName);
             m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 

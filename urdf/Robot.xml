@@ -6,7 +6,7 @@
     <body name="BLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="-2.5,0,2.8,0,-1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
     <body name="Stick" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,-3,0,0,0,0"  dimesion="0.1,2,0.1" scale="25" type="Box"/>
     
-    <joint name="FRAxleJoint" type="HingeJoint">
+<!--    <joint name="FRAxleJoint" type="HingeJoint">
         <parent body = "Chassis"/>
         <child  body = "FRWheel"/>
         <pivot  setting  = "2.5,0,-2.8"/>
@@ -22,13 +22,13 @@
         <axis   setting = "1,0,0"/>
         <damping    setting ="1000"/>
         <stiffness  setting ="1000"/>
-    </joint>
+    </joint>-->
 
-<!--    <joint name="FLAxleJoint" type="Hinge2Joint">
+    <joint name="FLAxleJoint" type="Hinge2Joint">
         <parent body="Chassis"/>
         <child body="FLWheel"/>
         <axis axis1="0,0,-1" axis2 ="1,0,0"/>
-        <anchor setting ="-3,3,-6"/>
+        <anchor setting ="-2.5,0,-2.8"/>
         <limit lowerlinear="0,0,0" upperlinear="0,0,0" lowerangle = "3.14,0,-0.3" upperangle="0,0,0.6"/>
     </joint>
 
@@ -37,9 +37,9 @@
         <parent body="Chassis"/>
         <child body="FRWheel"/>
         <axis axis1="0,0,-1" axis2 ="1,0,0"/>
-        <anchor setting ="3,3,-6"/>
+        <anchor setting ="2.5,0,-2.8"/>
         <limit lowerlinear="0,0,0" upperlinear="0,0,0" lowerangle = "3.14,0,-0.3" upperangle="0,0,0.6"/>
-    </joint>-->
+    </joint>
 
     
     <joint name="BRAxleJoint" type="HingeJoint">
@@ -80,7 +80,7 @@
             FPS="30"
             Align="true"
             Parent="Stick"
-            Pose="0,-2,0,0,0,-1.57"
+            Pose="0,-2,0,0,0,0"
             Location="@Proxy1"
             Model="/Users/faradazerage/code/simba/src/Device/lcmod.xml" />
 	

@@ -167,47 +167,60 @@ bool ParseRobot(XMLDocument* doc, Model& m_RobotModel, Eigen::Vector6d& InitPose
                     // string sMeshdir(pElement->Attribute("Dir"));
 
                     /// create bodys
-                    // 1.1 create body for RGB Cam
-                    string sRGBBodyName = "RGB"+sCameraName;
-                    BoxShape RGBbox = BoxShape(0.1,0.1,0.1);
-                    Body* pRGBBody = new Body(sRGBBodyName, RGBbox, iMass );
-                    pRGBBody->SetPose( vPose[0]+0.6,vPose[1]+2,vPose[2]-0.1,vPose[3],vPose[4],vPose[5] );
-                    m_mBodys.insert(std::pair<std::string,Body*>(sRGBBodyName,pRGBBody));
-
-                    // 1.2 create body for Depth Cam
-                    string sDepthBodyName = "Depth"+sCameraName;
-                    BoxShape Depthbox = BoxShape(0.1,0.1,0.1);
-                    Body* pDepthBody = new Body(sDepthBodyName, Depthbox, iMass );
-                    pDepthBody->SetPose( vPose[0]-0.6,vPose[1]+2,vPose[2]-0.1,vPose[3],vPose[4],vPose[5] );
-                    m_mBodys.insert(std::pair<std::string,Body*>(sDepthBodyName,pDepthBody));
-
                     // 1.3 create body to connect RGB Cam and Depth Cam
                     BoxShape box = BoxShape(BodyDistance,0.1,0.1);
                     Body* pBody = new Body(sCameraName, box, iMass );
-                    pBody->SetPose(vPose[0],vPose[1]+2,vPose[2]-2,vPose[3],vPose[4],vPose[5] );
+                    pBody->SetPose(0,-2.1,0, 0, 0, 0 );
                     m_mBodys.insert(std::pair<std::string,Body*>(sCameraName,pBody));
 
 
                     /// create joints
                     Eigen::Vector3d vPivot;
                     Eigen::Vector3d vAxis;
+                    // 2.3 create joint for SimCam and parent
+
+                    string sJointName = "SimCamJoint"+sCameraName;
+                    vPivot<< vPose[0], vPose[1], vPose[2];
+                    vAxis<<1,0,0;
+                    HingeJoint* pRGBDHinge = new HingeJoint( sJointName,
+                                                             m_mBodys.find(sParentName)->second,
+                                                             pBody,
+                                                             vPivot[0], vPivot[1], vPivot[2],
+                                                             vAxis[0],vAxis[1],vAxis[2],
+                                                             100,100,0,0.01 );
+
+                    // 1.1 create body for RGB Cam
+                    string sRGBBodyName = "RGB"+sCameraName;
+                    BoxShape RGBbox = BoxShape(0.1,0.1,0.1);
+                    Body* pRGBBody = new Body(sRGBBodyName, RGBbox, iMass );
+                    pRGBBody->SetPose( vPose[0]-BodyDistance - 0.1,vPose[1] + 2, vPose[2], 0, 0, 0 );
+                    m_mBodys.insert(std::pair<std::string,Body*>(sRGBBodyName,pRGBBody));
+
                     // 2.1 create joint for RGB body and RGBDCamBody
                     string sRGBJointName = "SimCamJoint"+sRGBBodyName;
-                    vPivot<<vPose[0]+0.6,vPose[1]+2,vPose[2]-0.1;
-                    vAxis<<1,1,1;
-                    HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, m_mBodys.find(sCameraName)->second, m_mBodys.find(sRGBBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],100,100,-M_PI,M_PI );
+                    vPivot<<-0.5, 0, 0;
+                    vAxis<< -1,0,0;
+        //                    HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, m_mBodys.find(sCameraName)->second, m_mBodys.find(sRGBBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2], 100, 100, -M_PI, M_PI );
+                    HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, pBody, pRGBBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2], 100, 100, -M_PI, M_PI );
+
+                    // 1.2 create body for Depth Cam
+                    string sDepthBodyName = "Depth"+sCameraName;
+                    BoxShape Depthbox = BoxShape(0.1,0.1,0.1);
+                    Body* pDepthBody = new Body(sDepthBodyName, Depthbox, iMass );
+                    pDepthBody->SetPose( vPose[0]+BodyDistance+0.1,vPose[1] + 2,vPose[2], 0, 0, 0 );
+                    m_mBodys.insert(std::pair<std::string,Body*>(sDepthBodyName,pDepthBody));
 
                     // 2.2 create joint for Depth body and RGBDCamBody
                     string sDepthJointName = "SimCamJoint"+sDepthBodyName;
-                    vPivot<<vPose[0]-0.6,vPose[1]+2,vPose[2]-0.1;
-                    vAxis<<1,1,1;
-                    HingeJoint* pDepthHinge = new HingeJoint( sDepthJointName, m_mBodys.find(sCameraName)->second, m_mBodys.find(sDepthBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],100,000,-M_PI,M_PI );
-
-                    // 2.3 create joint for SimCam and parent
-                    string sJointName = "SimCamJoint"+sCameraName;
-                    vPivot<<vPose[0],vPose[1]+2,vPose[2]-2;
-                    vAxis<<0,0,1;
-                    HingeJoint* pRGBDHinge = new HingeJoint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sCameraName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],100,100,0,0.01 );
+                    vPivot<<0.5, 0, 0;
+                    vAxis<<  1, 0, 0;
+                    HingeJoint* pDepthHinge = new HingeJoint( sDepthJointName,
+                                                              pBody,
+                                                              pDepthBody,
+                                                              vPivot[0], vPivot[1], vPivot[2],
+                                                              vAxis[0],vAxis[1],vAxis[2],
+                                                              1, 0, 0,
+                                                              100,100,-M_PI,M_PI );
                 }
             }
             // ---------------------------------------------------------------------------------------- RGB-Depth Camera
