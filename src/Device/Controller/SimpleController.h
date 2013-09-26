@@ -76,19 +76,6 @@ public:
             }
         }
 
-
-        // apply steering
-//        if(m_eCommand[3]!=0 || m_eCommand[4]!=0 || m_eCommand[5]!=0)
-//        {
-//            Eigen::Vector3d eSteering;
-//            eSteering<<m_eCommand[3],m_eCommand[4],m_eCommand[5];
-//            for(unsigned int i=0;i!=m_vBodyFullName.size();i++)
-//            {
-//                string sBodyFullName = m_vBodyFullName[i];
-//                m_rPhyMGAgent.m_Agent.ApplySteering(sBodyFullName, eSteering);
-//            }
-//        }
-
         // after we apply command, set flag to false
         m_bCommandIsLatestFlag = false;
         m_eCommand.clear();

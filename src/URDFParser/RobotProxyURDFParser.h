@@ -180,8 +180,8 @@ bool ParseRobot(XMLDocument* doc, Model& m_RobotModel, Eigen::Vector6d& InitPose
                     // 2.3 create joint for SimCam and parent
 
                     string sJointName = "SimCamJoint"+sCameraName;
-                    vPivot<< vPose[0], vPose[1], vPose[2];
-                    vAxis<<1,0,0;
+                    vPivot<< 0, 0, 0;
+                    vAxis<<0,-1,0;
                     HingeJoint* pRGBDHinge = new HingeJoint( sJointName,
                                                              m_mBodys.find(sParentName)->second,
                                                              pBody,
@@ -385,7 +385,7 @@ bool ParseRobot(XMLDocument* doc, Model& m_RobotModel, Eigen::Vector6d& InitPose
                 Hinge2Joint* pHinge2 = new Hinge2Joint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sChildName)->second,
                                                         Axis1, Axis2, Anchor, 0.2, 0.2, LowerLinearLimit, UpperLinearLimit, LowerAngleLimit, UpperAngleLimit);
 
-                cout<<"create hinge2 joint success"<<endl;
+                std::cout<<"Creating a Hinge2Joint between "<<sParentName<<" and "<<sChildName<<std::endl;
             }
         }
 

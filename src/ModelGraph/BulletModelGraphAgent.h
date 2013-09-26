@@ -305,7 +305,7 @@ public:
         btTransform T;
         T = pWheel->getCenterOfMassTransform();
         btQuaternion quat;
-        quat.setRotation(btVector3(0, 0, 1), T.getRotation().getAngle() + eSteer[2]);
+        quat.setRotation(btVector3(0, 1, 0), T.getRotation().getAngle() + eSteer[2]);
         T.setRotation(quat);
 
         pWheel->setCenterOfMassTransform(T);

@@ -217,10 +217,10 @@ class Hinge2Joint : public Joint
             pChildBody->m_pParent = this;
 
             // some default parameters TODO: provide accessors!
-            m_dStiffness = 1;
-            m_dDamping = 1;
-            m_dLowerLimit << 0, 0, 0;
-            m_dUpperLimit << 0, 0, 1;
+//            m_dStiffness = 1;
+//            m_dDamping = 1;
+//            m_dLowerLimit << 0, 0, 0;
+//            m_dUpperLimit << 0, 0, 1;
 
             m_pParentBody = pParentBody;
             m_pChildBody = pChildBody;

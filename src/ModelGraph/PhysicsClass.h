@@ -500,15 +500,7 @@ class Phys
                 v3[1] -= vAB6[1];
                 v3[2] -= vAB6[2];
 
-                // No, this should be pB = Tba*pA = (Tab)^-1 *pA
-//                Eigen::Vector4d temp;
-//                temp << v3(0), v3(1), v3(2), 1;
-//                temp = pHJ->m_pChildBody->GetPoseMatrix()*(temp);
-//                v3 << temp(0), temp(1), temp(2);
-
                 btVector3 pivotB = toBulletVec3( v3 );  // The pivotB is the pivoting in the B frame
-
-//                printf("pivotB = (%f, %f, %f)\r\n", pivotB[0], pivotB[1], pivotB[2]);
 
                 btHingeConstraint* spHingeDynAB = new btHingeConstraint(*pBodyA, *pBodyB, pivotA, pivotB, axisA, axisB);
 
@@ -521,7 +513,7 @@ class Phys
                 m_pDynamicsWorld->addConstraint(spHingeDynAB, true);
 
                 // draw constraint frames and limits for debugging
-                spHingeDynAB->setDbgDrawSize(btScalar(5.f));
+//                spHingeDynAB->setDbgDrawSize(btScalar(5.f));
 
                 // save pointer to hinge contraint
                 string sHingeName = pHJ->GetName();
