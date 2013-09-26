@@ -302,13 +302,15 @@ public:
         eSteer[1] = eSteering[1];
         eSteer[2] = eSteering[2];
 
-        btTransform T;
-        T = pWheel->getCenterOfMassTransform();
-        btQuaternion quat;
-        quat.setRotation(btVector3(0, 1, 0), T.getRotation().getAngle() + eSteer[2]);
-        T.setRotation(quat);
+//        btTransform T;
+//        T = pWheel->getCenterOfMassTransform();
+//        btQuaternion quat;
+//        quat.setRotation(btVector3(0, 0, 1), T.getRotation().getAngle() + eSteer[2]);
+//        T.setRotation(quat);
 
-        pWheel->setCenterOfMassTransform(T);
+//        pWheel->setCenterOfMassTransform(T);
+//        pWheel->
+        pWheel->applyTorque(eSteer);
     }
 
 

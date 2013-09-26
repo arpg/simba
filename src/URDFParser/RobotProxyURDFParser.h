@@ -383,7 +383,7 @@ bool ParseRobot(XMLDocument* doc, Model& m_RobotModel, Eigen::Vector6d& InitPose
                 }
 
                 Hinge2Joint* pHinge2 = new Hinge2Joint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sChildName)->second,
-                                                        Axis1, Axis2, Anchor, 0.2, 0.2, LowerLinearLimit, UpperLinearLimit, LowerAngleLimit, UpperAngleLimit);
+                                                        Axis1, Axis2, Anchor, 1, 1, LowerLinearLimit, UpperLinearLimit, LowerAngleLimit, UpperAngleLimit);
 
                 std::cout<<"Creating a Hinge2Joint between "<<sParentName<<" and "<<sChildName<<std::endl;
             }
