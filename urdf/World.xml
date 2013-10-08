@@ -1,5 +1,8 @@
 <world name="SimWorld">
-    <base mesh="/Users/malu/Code/Luma/Sim/media/LostTemple/map-losttemple.pk3" scale="1" mass="0" worldpose="0,0,140" robotpose="0,0,0,0,0,2" lightpose="10,10,-100"/>
+<!--    <base mesh="/Users/malu/Code/RobotGroup/simba/media/LostTemple/map-losttemple.pk3" scale="1" mass="0" worldpose="0,0,140" robotpose="0,0,0,0,0,2" lightpose="10,10,-100"/>-->
+<base mesh="/Users/malu/Code/RobotGroup/simba-build/media/CityBlock/CityBlock.obj" scale="1" mass="0" worldpose="0,0,0" robotpose="0,0,0,0,0,2" lightpose="10,10,-100"/>
+<!--<base mesh="/Users/malu/Code/RobotGroup/simba-build/media/City.skp" scale="1" mass="0" worldpose="0,0,0" robotpose="0,0,0,0,0,2" lightpose="10,10,-100"/>-->
+
     <robot pose="15,0,-2,0,0,0"/>
     <robot pose="20,0,-2,0,0,0"/>
     <robot pose="20,9,-2,0,0,0"/>

@@ -52,7 +52,7 @@ public:
 
         // apply torque,
 
-        for (int ii = 0; ii < m_eCommand.size(); ii++) {
+        for (unsigned int ii = 0; ii < m_eCommand.size(); ii++) {
             if(m_eCommand[ii][0]!=0 || m_eCommand[ii][1]!=0 || m_eCommand[ii][2]!=0)
             {
                 Eigen::Vector3d eTorque;
@@ -64,7 +64,7 @@ public:
             }
         }
 
-        for (int ii = 0; ii < m_eCommand.size(); ii++) {
+        for (unsigned int ii = 0; ii < m_eCommand.size(); ii++) {
             if(m_eCommand[ii][3]!=0 || m_eCommand[ii][4]!=0 || m_eCommand[ii][5]!=0)
             {
                 Eigen::Vector3d eSteering;

@@ -88,7 +88,7 @@ public:
             m_rPhyMGAgent.m_Agent.GetEntity6Pose(sSensorName,initPose[0],initPose[1],initPose[2],initPose[3],initPose[4],initPose[5]);
 
 //            vector<string>::iterator it = Device.m_vModel.begin();
-            string sCameraModel="/Users/faradazerage/code/simba/src/Device/lcmod.xml"; // *it;
+            string sCameraModel="/Users/malu/Code/RobotGroup/simba/src/Device/lcmod.xml"; // *it;
 //            Device.m_vModel.erase(it);
 
 //            cout<<"[SimCam] The Camera model use is: "<<sCameraModel<<endl;
@@ -149,7 +149,6 @@ public:
          }
 
     }
-
 
 
     // ------------------------------------------------------------------------------------------------

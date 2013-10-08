@@ -18,7 +18,7 @@ int main( int argc, char* argv[] )
     GetPot cl( argc, argv );
     string sCameraName = cl.follow("LCamera",1,"-n");
     std::string sRobotURDF = cl.follow("/Users/malu/Code/Luma/Sim/urdf/Robot.xml",1,"-r");
-    if( argc != 5){
+    if( argc != 3){
         puts(USAGE);
         return -1;
     }

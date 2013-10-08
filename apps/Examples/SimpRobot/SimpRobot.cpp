@@ -67,14 +67,15 @@ int main( int argc, char** argv )
 {
     // parse command line arguments
     GetPot cl( argc, argv );
-    std::string sRobotURDF = cl.follow("/Users/malu/Code/Luma/Sim-HAL/urdf/Robot.xml",1,"-r");
+    std::string sRobotURDF = cl.follow("/Users/malu/Code/RobotGroup/Simba/urdf/Robot.xml",1,"-r");
 
     if( argc != 3 ){
         puts(USAGE);
         return -1;
     }
+
     // Create OpenGL window in single line thanks to GLUT
-    pangolin::CreateGlutWindowAndBind("Simple Car",640,480);
+    pangolin::CreateGlutWindowAndBind("Simple Robot",1280,480);
     SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
     glewInit();
 
@@ -83,9 +84,14 @@ int main( int argc, char** argv )
 
     // We define a special type of view which will accept image data
     // to display and set its bounds on screen.
-    ImageView viewImage(true,false);
-    viewImage.SetBounds(0.0, 1.0, 0, 1.0, (double)640/480);
-    container.AddDisplay(viewImage);
+    ImageView viewRGB(true,false);
+    viewRGB.SetBounds(0.0, 0.1, 0, 0.5, (double)640/480);
+
+    ImageView viewDepth(true,false);
+    viewDepth.SetBounds(0.0, 0.1, 0.5, 1.0, (double)640/480);
+
+    container.AddDisplay(viewRGB);
+    container.AddDisplay(viewDepth);
 
 /// Key
     // register a keyboard hook to trigger the reset method
@@ -105,7 +111,7 @@ int main( int argc, char** argv )
 
     // Main
     // --------------------------------------------------------------------------------------------------------------------------------------------
-    hal::Camera camera(GenURIFromURDF("RCamera", sRobotURDF));
+    hal::Camera camera(GenURIFromURDF("LCamera", sRobotURDF));
 
 //    rpg::CarController          Controler;
 
@@ -123,26 +129,8 @@ int main( int argc, char** argv )
            std::cout << "Error getting images." << std::endl;
         }
 
-//      viewImage.SetImage(vImages[0].Image.data, vImages[0].width(), vImages[0].height(), GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE); //show RGB image
-//        viewImage.SetImage(imgs[0], camera.Width(), camera.Height(), GL_INTENSITY, GL_LUMINANCE, GL_FLOAT); //show depth image
-
-//        for(size_t i=0; i<imgs.Size(); ++i ) {
-//            container[i].Activate();
-//            tex.Upload(
-//                imgs[i].data(),
-//                imgs[i].Format(), imgs[i].Type()
-//            );
-//            tex.RenderToViewportFlipY();
-//        }
-
-//        if(log && run) {
-//            pb::Msg msg;
-//            msg.set_timestamp(frame);
-//            msg.mutable_camera()->Swap(&imgs.Ref());
-//            pb::Logger::GetInstance().LogMessage(msg);
-//        }
-
-//        usleep(1E6/30);
+        viewRGB.SetImage(imgs[0].data(), camera.Width(), camera.Height(), GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE); //show RGB image
+        viewDepth.SetImage(imgs[1].data(), camera.Width(), camera.Height(), GL_INTENSITY, GL_LUMINANCE, GL_FLOAT); //show depth image
 
         pangolin::FinishGlutFrame();
     }

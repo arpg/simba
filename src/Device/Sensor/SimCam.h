@@ -23,19 +23,21 @@ class SimCam
        calibu::CameraRig              m_CameraRig;
 
        // ------------------------------------------------------------------------------------------------------------------
-       bool init(Eigen::Vector6d vInitPose,
-                 string sDeviceName,
-                 int CameraType,
-                 int FPS,
-                 string sCameraModel,
-                 GLSceneGraph& glGraph,
-                 PhyModelGraphAgent& mPhyMGAgent)
+       bool init(Eigen::Vector6d     vInitPose,
+                 string              sDeviceName,
+                 int                 CameraType,
+                 int                 FPS,
+                 string              sCameraModel,
+                 GLSceneGraph&       glGraph,
+                 PhyModelGraphAgent& mPhyMGAgent
+                 )
        {
 
            m_sDeviceName = sDeviceName;
            m_rPhysMGAgent = mPhyMGAgent;
            m_iFPS = FPS;
 
+           cout<<"camera model file name is "<<sCameraModel<<". Device name is "<<m_sDeviceName<<endl;
            m_CameraRig = calibu::ReadXmlRig(sCameraModel);
 
            calibu::CameraModel theCam = m_CameraRig.cameras[0].camera;
@@ -45,16 +47,12 @@ class SimCam
            g_nImgWidth  = theCam.Width();
            g_nImgHeight = theCam.Height();
 
-           std::cout<<"I set the height and width"<<std::endl;
-
            string sCvar = sDeviceName+".Pose";
            const char* cCvar = sCvar.c_str();
            Eigen::Vector6d  g_vCamPose = vInitPose;
 //           Eigen::Vector6d  g_vCamPose = CVarUtils::CreateCVar(
 //               cCvar, Eigen::Vector6d( vInitPose),
 //               "Camera's pose. Left is dominant camera." );
-
-           std::cout<<"I am here:"<<std::endl;
 
            // initialize cameras
            m_iCamType = CameraType;
@@ -155,11 +153,22 @@ class SimCam
            }
        }
 
+
+
+
        // ------------------------------------------------------------------------------------------------------------------
-       // update is the same for all types of sim cam
+       // get current camera pose from bullet
+       Eigen::Vector6d GetCameraPoseByBody()
+       {
+          Eigen::Vector6d CameraPose;
+          m_rPhysMGAgent.m_Agent.GetEntity6Pose(m_sDeviceName,CameraPose[0],CameraPose[1],CameraPose[2],CameraPose[3],CameraPose[4],CameraPose[5]);
+
+          return CameraPose;
+       }
+
        void Update()
        {
-           m_Camera.SetPoseRobot(Sophus::SE3d::exp(GetCameraPose()).matrix());
+//           m_Camera.SetPoseRobot(Sophus::SE3d::exp(GetCameraPoseByBody()).matrix());
            m_Camera.RenderToTexture();
            m_Camera.DrawCamera();
 
@@ -169,16 +178,26 @@ class SimCam
        }
 
        // ------------------------------------------------------------------------------------------------------------------
-       // get current camera pose from bullet
-       Eigen::Vector6d GetCameraPose()
+       Eigen::Matrix4d GetCameraPose()
        {
-          Eigen::Vector6d CameraPose;
-          m_rPhysMGAgent.m_Agent.GetEntity6Pose(m_sDeviceName,CameraPose[0],CameraPose[1],CameraPose[2],CameraPose[3],CameraPose[4],CameraPose[5]);
+          Eigen::Matrix4d dPose = m_Camera.GetPoseRobot();
 
-          return CameraPose;
+          cout<<"Get camera pose "<<endl<< _T2Cart(dPose)<<endl;
+          return dPose;
        }
 
+       void UpdateByPose(Eigen::Matrix4d DesirePose)
+       {
+           m_Camera.SetPoseRobot(DesirePose);
+           m_Camera.RenderToTexture();
+           m_Camera.DrawCamera();
 
+           cout<<"[SimCam] UpdateByPose Success. New Camera pose is "<<endl<<_T2Cart( m_Camera.GetPoseRobot() )<<endl;
+
+           // simluate frame rate. This is not a clever method because the whole will sleep because of this line.
+           // However, what we want is just to capture 30 image in a second. Need to improve in the futrue.
+           usleep(1E0/m_iFPS);
+       }
 };
 
 

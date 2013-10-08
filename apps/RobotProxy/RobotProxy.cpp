@@ -19,6 +19,7 @@
 #include <Robots/RobotsManager.h>             // for manage all robots
 #include <Robots/SimRobot.h>                  // for user's robot
 #include <ModelGraph/PhyModelGraphAgent.h>    // for communicate between Physic Engine and Model Graph
+#include <Device/Controller/PoseController.h>
 
 using namespace std;
 using namespace CVarUtils;
@@ -57,6 +58,7 @@ class RobotProxy
         RobotsManager               m_RobotManager;
         NetworkManager              m_NetworkManager;
         PhyModelGraphAgent          m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
+        PoseController              m_SimpPoseController;
 
         // TODO TODO
         ///////////////////////////////////////////////////////////////////
@@ -80,7 +82,7 @@ class RobotProxy
                 exit(-1);
             }
 
-
+            m_SimpPoseController.Init("/Users/malu/Code/RobotGroup/simba/media/CityBlock/Run-Loop.txt");
 
         // 2, Read Robot.xml file. Get reference to xmldocument.
             XMLDocument RobotURDF;
@@ -89,7 +91,6 @@ class RobotProxy
                 cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<endl;
                 exit(-1);
             }
-
 
 
         // 3, Init Agent between Physic Engine and ModelGraph
@@ -167,15 +168,16 @@ class RobotProxy
             ground->SetWPose( m_ground.GetPose4x4_po() );
             m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground", m_ground.GetPose());
 
+            m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
             // maybe dangerous to always reload meshes?  maybe we should separate Init from Reset?
             try
             {
-//                cout<<"try init mesh: "<<m_WorldManager.m_sMesh<<endl;
-//                m_Map.Init(m_WorldManager.m_sMesh);
-//                m_Map.SetPerceptable(true);
-//                m_Map.SetScale(m_WorldManager.iScale);
-//                m_Map.SetPosition(m_WorldManager.vWorldPose[0], m_WorldManager.vWorldPose[1],m_WorldManager.vWorldPose[2]);
-//                m_rSceneGraph.AddChild( &m_Map );
+                cout<<"try init mesh: "<<m_WorldManager.m_sMesh<<endl;
+                m_Map.Init(m_WorldManager.m_sMesh);
+                m_Map.SetPerceptable(true);
+                m_Map.SetScale(m_WorldManager.iScale);
+                m_Map.SetPosition(m_WorldManager.vWorldPose[0], m_WorldManager.vWorldPose[1],m_WorldManager.vWorldPose[2]);
+                m_rSceneGraph.AddChild( &m_Map );
             } catch (std::exception e) {
                 printf( "Cannot load world map\n");
                 exit(-1);
@@ -184,139 +186,112 @@ class RobotProxy
             m_Render.AddToScene( &m_rSceneGraph );
         }
 
+        // apply pose directlly for camera
+        void ApplyCameraPose(Eigen::Vector6d dPose)
+        {
+            string sMainRobotName = m_pMainRobot->GetRobotName();
 
+            // update RGB camera pose
+            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
+            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPose));
 
-        //----------------------------------------------------------------------------------------------------------------------------------------------
+            // update Depth camera pose
+            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
+            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPose));
+        }
+
+        // apply keys to entity
         void LeftKey()
         {
-            Eigen::Vector6d  dCommand;
-            vector<string> vBodyFullName;
             string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            dCommand<<0, 0, 0, 0, 0, -400;
-            vBodyFullName.push_back("FRWheel@"+sMainRobotName);
-            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+            // update RGB camera pose
+            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-            dCommand<<0, 0, 0, 0, 0, -400;
-            vBodyFullName.push_back("FLWheel@"+sMainRobotName);
-            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+            Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+            dPoseRGB(5,0) = dPoseRGB(5,0) - 0.1;
+            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
-            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
+            // update Depth camera pose
+            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
+
+            Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+            dPoseDepth(5,0) = dPoseDepth(5,0) - 0.1;
+            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
+
+//            string sMainRobotName = m_pMainRobot->GetRobotName();
+//            string sName = "RCamera@" + sMainRobotName;
+//            Eigen::Vector6d dPose;
+//            m_PhyMGAgent.m_Agent.GetEntity6Pose(sName, dPose);
+//            dPose(0,0) = dPose(0,0) + 1;
+//            m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
         }
 
-        ///////////////////////////////////////////////////////////////////
+        // (3,0) Rotate, (4,0) up/down (5,0) left right
         void RightKey()
         {
-            Eigen::Vector6d  dCommand;
-            vector<string> vBodyFullName;
             string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            dCommand<<0, 0, 0, 0, 0, 400;
-            vBodyFullName.push_back("FRWheel@"+sMainRobotName);
-            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+            // update RGB camera pose
+            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-            dCommand<<0, 0, 0, 0, 0, 400;
-            vBodyFullName.push_back("FLWheel@"+sMainRobotName);
-            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+            Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+            dPoseRGB(5,0) = dPoseRGB(5,0) + 0.1;
+            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
-            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
+            // update Depth camera pose
+            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
+
+            Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+            dPoseDepth(5,0) = dPoseDepth(5,0) + 0.1;
+            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
         }
 
-        ///////////////////////////////////////////////////////////////////
         void ForwardKey()
         {
-            Eigen::Vector6d  dCommand;
-            vector<string> vBodyFullName;
             string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            dCommand<<0, -4000, 0,0,0,0;
-            vBodyFullName.push_back("BRWheel@"+sMainRobotName);
-            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+            // update RGB camera pose
+            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-            dCommand<<0, 4000, 0,0,0,0;
-            vBodyFullName.push_back("BLWheel@"+sMainRobotName);
-            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+            Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+            dPoseRGB(1,0) = dPoseRGB(1,0) + 1;
+            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
-            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
+            // update Depth camera pose
+            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
+            Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+            dPoseDepth(1,0) = dPoseDepth(1,0) + 1;
+            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
         }
 
-        ///////////////////////////////////////////////////////////////////
         void ReverseKey()
         {
-            Eigen::Vector6d  dCommand;
-            vector<string> vBodyFullName;
             string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            dCommand<<0, 4000, 0,0,0,0;
-            vBodyFullName.push_back("BRWheel@"+sMainRobotName);
-            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
-//            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
+            // update RGB camera pose
+            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-            dCommand<<0, -4000, 0,0,0,0;
-            vBodyFullName.push_back("BLWheel@"+sMainRobotName);
-            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+            Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+            dPoseRGB(1,0) = dPoseRGB(1,0) - 1;
+            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
-            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
+            // update Depth camera pose
+            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
+
+            Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+            dPoseDepth(1,0) = dPoseDepth(1,0) - 1;
+            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
+
         }
 
-        // ---- roll
-        void IncreaseCamRoll()
+
+        void ApplyPoseToEntity(string sName, Eigen::Vector6d dPose)
         {
-//            double roll,pitch,yaw;
-//            roll = 0.1;
-//            pitch = 0;
-//            yaw = 0;
-//            m_SimRobot->m_Controller.SetRotation("RCameraRGB",roll,pitch,yaw);
+            m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
         }
 
-        void DecreaseCamRoll()
-        {
-//            double roll =-0.1;
-//            double pitch = 0;
-//            double yaw =0;
-//            m_SimRobot->m_Controller.SetRotation("RCameraRGB",roll,pitch,yaw);
-        }
-
-        // ---- pitch
-        void IncreaseCamPitch()
-        {
-//           double roll,pitch,yaw;
-//            roll = 0;
-//            pitch = 0.1;
-//            yaw = 0;
-//            m_SimRobot->m_Controller.SetRotation("RCameraRGB",roll,pitch,yaw);
-        }
-
-        void DecreaseCamPitch()
-        {
-//            double roll,pitch,yaw;
-//            roll = 0;
-//            pitch = -0.1;
-//            yaw = 0;
-//            m_SimRobot->m_Controller.SetRotation("RCameraRGB",roll,pitch,yaw);
-        }
-
-        // ---- Yaw
-        void IncreaseCamYaw()
-        {
-//            double roll,pitch,yaw;
-//            roll = 0;
-//            pitch = 0;
-//            yaw = 0.1;
-            cout<<"you press increase yaw"<<endl;
-//            m_SimRobot->m_Controller.SetRotation("RCameraRGB",roll,pitch,yaw);
-        }
-
-        void DecreaseCamYaw()
-        {
-//            double roll,pitch,yaw;
-//            roll = 0;
-//            pitch = 0;
-//            yaw = -0.1;
-//            cout<<"you press decrease yaw"<<endl;
-//            m_SimRobot->m_Controller.SetRotation("RCameraRGB",roll,pitch,yaw);
-        }
 
         // ---- Step Forward
         void StepForward( void )
@@ -406,6 +381,14 @@ class RobotProxy
             return true;
         }
 
+        // save image to HardDisk
+        void SaveImgToDisk(string sPath)
+        {
+            cout<<"Saving images to Path "<<sPath<<endl;
+
+        }
+
+        // the following is not working yet
 //        void TestSerialize()
 //        {
 //            unsigned const char* pData;
@@ -413,13 +396,12 @@ class RobotProxy
 //            for(int i=0;i!=m_RobotManager.GetMainRobot()->GetAllBodyName().size();i++)
 //            {
 //                string sName = m_RobotManager.GetMainRobot()->GetAllBodyName()[i];
-////                cout<<"try to serialize "<<sName<<endl;
+//                cout<<"try to serialize "<<sName<<endl;
 //                m_RobotManager.m_PhyMGAgent.m_Agent.SerializeRigidBodyToChar(sName,pData,iDataSize);
-////                m_RobotManager.m_PhyMGAgent.m_Agent.SerializeDynmaticWorldToChar(pData,iDataSize);
+//                m_RobotManager.m_PhyMGAgent.m_Agent.SerializeDynmaticWorldToChar(pData,iDataSize);
 //                m_PhyMGAgent.m_Agent.ApplySerializeInforToAllBelongBody(sName,pData,iDataSize);
 //            }
 //        }
-
 };
 
 
@@ -491,7 +473,6 @@ int main( int argc, char** argv )
     pangolin::DisplayBase().AddDisplay( LSimCamImage );
     pangolin::DisplayBase().AddDisplay( RSimCamImage );
 
-
     //---------------------------------------------------------------------------------------------
     // register a keyboard hook to trigger the reset method
     RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r', boost::bind( &RobotProxy::InitReset, &mProxy ) );
@@ -510,33 +491,39 @@ int main( int argc, char** argv )
     RegisterKeyPressCallback( 'W', bind( &RobotProxy::ForwardKey, &mProxy ) );
     RegisterKeyPressCallback( ' ', bind( &RobotProxy::StepForward, &mProxy ) );
 
-    // SimCam control
-    RegisterKeyPressCallback( '8', bind( &RobotProxy::IncreaseCamPitch, &mProxy ) ); // up
-    RegisterKeyPressCallback( '5', bind( &RobotProxy::DecreaseCamPitch, &mProxy ) ); // down
-    RegisterKeyPressCallback( '4', bind( &RobotProxy::IncreaseCamYaw, &mProxy ) );// letf
-    RegisterKeyPressCallback( '6', bind( &RobotProxy::DecreaseCamYaw, &mProxy ) );// right
-    RegisterKeyPressCallback( '1', bind( &RobotProxy::IncreaseCamRoll, &mProxy ) );
-    RegisterKeyPressCallback( '3', bind( &RobotProxy::DecreaseCamRoll, &mProxy ) );
+    // SimCam control keys. need to implement later
+//    RegisterKeyPressCallback( '8', bind( &RobotProxy::IncreaseCamPitch, &mProxy ) ); // up
+//    RegisterKeyPressCallback( '5', bind( &RobotProxy::DecreaseCamPitch, &mProxy ) ); // down
+//    RegisterKeyPressCallback( '4', bind( &RobotProxy::IncreaseCamYaw, &mProxy ) );// letf
+//    RegisterKeyPressCallback( '6', bind( &RobotProxy::DecreaseCamYaw, &mProxy ) );// right
+//    RegisterKeyPressCallback( '1', bind( &RobotProxy::IncreaseCamRoll, &mProxy ) );
+//    RegisterKeyPressCallback( '3', bind( &RobotProxy::DecreaseCamRoll, &mProxy ) );
 
 
     //---------------------------------------------------------------------------------------------
-
-//    while(mProxy.m_ProxyNetwork.m_SubscribeNum == 0)
-//    {
-//        cout<<"["<<sProxyName<<"] wait for RPG Device to register"<<endl;
-//        sleep(1);
-//    }
-
+    // wait for robot to connect
+    if(sServerOption== "WithoutStateKeeper")
+    {
+        while(mProxy.m_NetworkManager.m_SubscribeNum == 0)
+        {
+            cout<<"["<<sProxyName<<"] wait for RPG Device to register"<<endl;
+            sleep(1);
+        }
+    }
 
     // Default hooks for exiting (Esc) and fullscreen (tab).
     while( !pangolin::ShouldQuit() )
     {
+
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         view3d.Activate(stacks3d);
 
+        // 0. read camera pose for update
+        mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
+
         // 1. Update physic and scene
-        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
-        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
+//        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
+//        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
         mProxy.m_Render.UpdateScene();
 
         // 2. update all sim device

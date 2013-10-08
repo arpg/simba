@@ -45,7 +45,7 @@ public:
         btScalar roll, pitch, yaw;
         WorldTransform.getBasis().getEulerZYX(yaw,pitch,roll);
 
-        x= WorldTransform.getOrigin().getX();
+        x = WorldTransform.getOrigin().getX();
         y = WorldTransform.getOrigin().getY();
         z = WorldTransform.getOrigin().getZ();
         r = roll;
@@ -53,6 +53,34 @@ public:
         p = yaw;
     }
 
+    void GetEntity6Pose(string name, Eigen::Vector6d& rPose)
+    {
+        Entity e = m_pPhys->getEntity(name);
+        btRigidBody* rB = e.m_pRigidBody.get();
+
+        btTransform WorldTransform = rB->getCenterOfMassTransform();
+
+        btScalar roll, pitch, yaw;
+        WorldTransform.getBasis().getEulerZYX(yaw,pitch,roll);
+
+        rPose[0] = WorldTransform.getOrigin().getX();
+        rPose[1] = WorldTransform.getOrigin().getY();
+        rPose[2] = WorldTransform.getOrigin().getZ();
+        rPose[3] = roll;
+        rPose[4] = pitch;
+        rPose[5] = yaw;
+    }
+
+
+
+    void SetEntity6Pose(string sName, Eigen::Vector6d Pose)
+    {
+        SetEntityRotation(sName, Pose(3,0), Pose(4,0), Pose(5,0));
+
+        Eigen::Vector3d eOrigin;
+        eOrigin<<Pose(0,0), Pose(1,0), Pose(2,0);
+        SetEntityOrigin(sName, eOrigin);
+    }
 
 
     // --------------------------------------------------------------------------------------------------------------
@@ -288,6 +316,8 @@ public:
 
         rB->applyTorque(Torque);
     }
+
+
 
 
 

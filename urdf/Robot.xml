@@ -23,6 +23,16 @@
         <limit lowerlinear="0,0,0" upperlinear="0,0.2,0" lowerangle = "-3.14,-0.5,0" upperangle="3.14,0.5,0"/>
     </joint>
 
+
+<!--    <joint name="FWAxleJoint" type="HingeJoint">
+        <parent body = "FRWheel"/>
+        <child  body = "FLWheel"/>
+        <pivot  setting = "-5,0,0"/>
+        <axis   setting = "1,0,0"/>
+        <damping    setting ="1000"/>
+        <stiffness  setting ="1000"/>
+    </joint>-->
+
     
     <joint name="BRAxleJoint" type="HingeJoint">
         <parent body = "Chassis"/>
@@ -41,6 +51,8 @@
         <damping    setting ="1000"/>
         <stiffness  setting ="1000"/>
     </joint>
+
+
     
     <joint name="StickJoint" type="HingeJoint">
         <parent body = "Chassis"/>

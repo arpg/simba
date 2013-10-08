@@ -1,7 +1,7 @@
 <robot name="Robot">
-    <bodybase name="Chassis" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="1000"  pose="0,0,0,0,0,1.5707" dimesion="2,1,3" scale="100"  type="Box"/>
-    
-    <Sensor Name="RCamera" 
+    <bodybase name="Stick" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="0"  pose="0,-3,0,-1.5707,0,0"  dimesion="0.1,2,0.1" scale="25" type="Box"/>
+
+<!--    <Sensor Name="RCamera"
 		    Type="Camera" 
 			Driver="Kinect" 
 			Size="640*480" 
@@ -11,7 +11,7 @@
 			Align="true" 
 			Parent="Stick" 
 			Pose="0,-2,0,0,0,-1.57" 
-			Location="Local" />
+                        Location="Local" />-->
 			
     <Sensor Name="LCamera"
             Type="Camera"
