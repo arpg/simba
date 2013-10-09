@@ -13,56 +13,78 @@ using namespace std;
 class PoseController
 {
 public:
-    void Init(string sDataFile = "example.txt")
+    void Init(string sDataFile)
     {
-        std::ifstream infile(sDataFile);
-        cout<<"[Device/PoseController] File Path is "<<sDataFile<<endl;
-
-        std::string line;
-        int         PoseNum =0;
-        while (std::getline(infile, line))
+        m_bInit = false;
+        if(sDataFile == "None")
         {
-            std::istringstream iss(line);
-            double x,y,z,p,q,r;
-            if (!(iss >> x >> y >> z >> p >>q >>r ))
-            {
-                cout<<"[Device/PoseController] Finish Reading Pose Information. Read "<<PoseNum<<" Pose in Total."<<endl;
-                break;
-            }
-            else
-            {
-                PoseNum++;
-                Eigen::Vector6d Pose;
-                Pose<<x,y,z,p,q,r;
-                m_vPoseVector.push_back(Pose);
-            }
+            cout<<"[Device/PoseController] Did Not use Pose Controlloer"<<endl;
         }
+        else
+        {
+            m_bInit = true;
+            std::ifstream infile(sDataFile);
+            cout<<"[Device/PoseController] File Path is "<<sDataFile<<endl;
 
-        m_CurPoseIndex = 0;
+            std::string line;
+            int         PoseNum =0;
+            while (std::getline(infile, line))
+            {
+                std::istringstream iss(line);
+                double x,y,z,p,q,r;
+                if (!(iss >> x >> y >> z >> p >>q >>r ))
+                {
+                    cout<<"[Device/PoseController] Finish Reading Pose Information. Read "<<PoseNum<<" Pose in Total."<<endl;
+                    break;
+                }
+                else
+                {
+                    PoseNum++;
+                    Eigen::Vector6d Pose;
+                    Pose<<x,y,z,p,q,r;
+                    m_vPoseVector.push_back(Pose);
+                }
+            }
+
+            m_CurPoseIndex = 0;
+        }
     }
+
+
 
     Eigen::Vector6d ReadNextPose()
     {
         Eigen::Vector6d Pose;
-        if(m_CurPoseIndex !=m_vPoseVector.size())
+
+        if(m_bInit == false)
         {
-            Pose = m_vPoseVector[m_CurPoseIndex];
-            m_CurPoseIndex++;
+            Pose<<1,88,99,111,00,44;
+            return Pose;
         }
         else
         {
-            cout<<"[Device/PoseContorller] Finish read pose of a loop. Now restart."<<endl;
-            m_CurPoseIndex = 0;
-            Pose = m_vPoseVector[m_CurPoseIndex];
-            m_CurPoseIndex++;
-        }
+            if(m_CurPoseIndex !=m_vPoseVector.size())
+            {
+                Pose = m_vPoseVector[m_CurPoseIndex];
+                m_CurPoseIndex++;
+            }
+            else
+            {
+                cout<<"[Device/PoseContorller] Finish read pose of a loop. Now restart."<<endl;
+                m_CurPoseIndex = 0;
+                Pose = m_vPoseVector[m_CurPoseIndex];
+                m_CurPoseIndex++;
+            }
 
-        cout<<"[Device/PoseController] Get pose "<<Pose<<endl;
+        }
         return Pose;
+
     }
 
+    // =======================================================
     int                          m_CurPoseIndex;
     vector<Eigen::Vector6d>      m_vPoseVector;
+    bool                         m_bInit;
 };
 
 #endif // POSECONTROLLER_H

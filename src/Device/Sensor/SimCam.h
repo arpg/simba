@@ -192,8 +192,6 @@ class SimCam
            m_Camera.RenderToTexture();
            m_Camera.DrawCamera();
 
-           cout<<"[SimCam] UpdateByPose Success. New Camera pose is "<<endl<<_T2Cart( m_Camera.GetPoseRobot() )<<endl;
-
            // simluate frame rate. This is not a clever method because the whole will sleep because of this line.
            // However, what we want is just to capture 30 image in a second. Need to improve in the futrue.
            usleep(1E0/m_iFPS);

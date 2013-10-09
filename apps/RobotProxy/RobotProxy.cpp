@@ -46,7 +46,7 @@ class RobotProxy
         std::string                 m_sWorldURDFFile;
 
         SceneGraph::GLLight         m_light;
-        SceneGraph::GLBox           m_ground;
+//        SceneGraph::GLBox           m_ground;
         SceneGraph::GLGrid          m_grid;
         SceneGraph::GLSceneGraph&   m_rSceneGraph;
         SceneGraph::GLMesh          m_Map;                 // mesh for the world.
@@ -67,7 +67,8 @@ class RobotProxy
                 const std::string& sProxyName,      //< Input: name of robot proxy
                 const std::string& sRobotURDF,        //< Input: location of meshes, models, maps etc
                 const std::string& sWorldURDF,
-                const std::string& sServerName
+                const std::string& sServerName,
+                const std::string& sPoseFileName
                 )
             : m_rSceneGraph( glGraph )
         {
@@ -81,8 +82,6 @@ class RobotProxy
                 cout<<"[RobotProxy] Cannot parse "<< m_sWorldURDFFile<<". Exit."<<endl;
                 exit(-1);
             }
-
-            m_SimpPoseController.Init("/Users/malu/Code/RobotGroup/simba/media/CityBlock/Run-Loop.txt");
 
         // 2, Read Robot.xml file. Get reference to xmldocument.
             XMLDocument RobotURDF;
@@ -122,8 +121,6 @@ class RobotProxy
                 exit(-1);
             }
 
-
-
         // 6, init Sim Device (SimCam, SimGPS, SimVicon, etc)
             if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF, m_sProxyName)!= true)
             {
@@ -131,7 +128,7 @@ class RobotProxy
                 exit(-1);
             }
 
-
+            m_SimpPoseController.Init(sPoseFileName);
 
         // 7, if run in with network mode, proxy network will publish sim device
             if(sServerName !="WithoutNetwork")
@@ -153,22 +150,21 @@ class RobotProxy
             m_light.SetPosition( m_WorldManager.vLightPose[0],  m_WorldManager.vLightPose[1],  m_WorldManager.vLightPose[2]);
             m_rSceneGraph.AddChild( &m_light );
 
-            m_grid.SetNumLines(20);
-            m_grid.SetLineSpacing(1);
-            m_rSceneGraph.AddChild(&m_grid);
+//            m_grid.SetNumLines(20);
+//            m_grid.SetLineSpacing(1);
+//            m_rSceneGraph.AddChild(&m_grid);
 
-            double dThickness = 1;
-            m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
-            m_ground.SetExtent( 200,200, dThickness );
-            m_rSceneGraph.AddChild( &m_ground );
+//            double dThickness = 1;
+//            m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
+//            m_ground.SetExtent( 200,200, dThickness );
+//            m_rSceneGraph.AddChild( &m_ground );
 
-            BoxShape bs = BoxShape(100, 100, 1/2.0f);
-            Body* ground = new Body("Ground", bs);
-            ground->m_dMass = 0;
-            ground->SetWPose( m_ground.GetPose4x4_po() );
-            m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground", m_ground.GetPose());
-
-            m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
+//            BoxShape bs = BoxShape(100, 100, 1/2.0f);
+//            Body* ground = new Body("Ground", bs);
+//            ground->m_dMass = 0;
+//            ground->SetWPose( m_ground.GetPose4x4_po() );
+//            m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground", m_ground.GetPose());
+//            m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
             // maybe dangerous to always reload meshes?  maybe we should separate Init from Reset?
             try
             {
@@ -176,28 +172,39 @@ class RobotProxy
                 m_Map.Init(m_WorldManager.m_sMesh);
                 m_Map.SetPerceptable(true);
                 m_Map.SetScale(m_WorldManager.iScale);
-                m_Map.SetPosition(m_WorldManager.vWorldPose[0], m_WorldManager.vWorldPose[1],m_WorldManager.vWorldPose[2]);
+                m_Map.SetPose( 0, 0, 0, 0, M_PI/2, 0);
+                m_Map.SetPose( 0, 0, 0, M_PI/2, 0, 0);
+//                m_Map.SetPosition(m_WorldManager.vWorldPose[0], m_WorldManager.vWorldPose[1],m_WorldManager.vWorldPose[2]);
                 m_rSceneGraph.AddChild( &m_Map );
             } catch (std::exception e) {
                 printf( "Cannot load world map\n");
                 exit(-1);
             }
 
-            m_Render.AddToScene( &m_rSceneGraph );
+//            m_Render.AddToScene( &m_rSceneGraph );
         }
 
         // apply pose directlly for camera
         void ApplyCameraPose(Eigen::Vector6d dPose)
         {
-            string sMainRobotName = m_pMainRobot->GetRobotName();
+            Eigen::Vector6d InvalidPose;
+            InvalidPose<<1,88,99,111,00,44;
+            if(dPose == InvalidPose)
+            {
 
-            // update RGB camera pose
-            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPose));
+            }
+            else
+            {
+                string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            // update Depth camera pose
-            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPose));
+                // update RGB camera pose
+                string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
+                m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPose));
+
+                // update Depth camera pose
+                string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
+                m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPose));
+            }
         }
 
         // apply keys to entity
@@ -414,10 +421,10 @@ int main( int argc, char** argv )
     std::string sProxyName = cl.follow( "SimWorld", 1,"-n" );
     std::string sRobotURDF = cl.follow("/Users/malu/Code/Luma/Sim/urdf/Robot.xml",1,"-r");
     std::string sWorldURDF = cl.follow( "/Users/malu/Code/Luma/Sim/urdf/World.xml", 1, "-w" );
+    std::string sPoseFile  = cl.follow("None",1,"-p");
     std::string sServerOption = cl.follow("WithoutStateKeeper", 1 ,"-s");
 
-
-    if( argc != 9){
+    if( argc != 11){
         puts(USAGE);
         return -1;
     }
@@ -429,7 +436,7 @@ int main( int argc, char** argv )
 
     // sinle application context holds everything
     SceneGraph::GLSceneGraph  glGraph;
-    RobotProxy mProxy( glGraph, sProxyName, sRobotURDF, sWorldURDF, sServerOption); // initialize exactly one RobotProxy
+    RobotProxy mProxy( glGraph, sProxyName, sRobotURDF, sWorldURDF, sServerOption, sPoseFile); // initialize exactly one RobotProxy
     mProxy.InitReset(); // this will populate the scene graph with objects and
     // register these objects with the simulator.
 
@@ -514,7 +521,6 @@ int main( int argc, char** argv )
     // Default hooks for exiting (Esc) and fullscreen (tab).
     while( !pangolin::ShouldQuit() )
     {
-
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         view3d.Activate(stacks3d);
 
@@ -524,7 +530,7 @@ int main( int argc, char** argv )
         // 1. Update physic and scene
 //        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
 //        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
-        mProxy.m_Render.UpdateScene();
+//        mProxy.m_Render.UpdateScene();
 
         // 2. update all sim device
         mProxy.m_SimDeviceManager.UpdateAlLDevice();
@@ -537,6 +543,9 @@ int main( int argc, char** argv )
 
         // 5. reflash screen
         pangolin::FinishGlutFrame();
+
+        // Pause for 1/60th of a second.
+        usleep( 1E6 / 60 );
     }
 
     return 0;
