@@ -46,7 +46,7 @@ class RobotProxy
         std::string                 m_sWorldURDFFile;
 
         SceneGraph::GLLight         m_light;
-//        SceneGraph::GLBox           m_ground;
+        SceneGraph::GLBox           m_ground;
         SceneGraph::GLGrid          m_grid;
         SceneGraph::GLSceneGraph&   m_rSceneGraph;
         SceneGraph::GLMesh          m_Map;                 // mesh for the world.
@@ -77,23 +77,48 @@ class RobotProxy
             m_sRobotURDFFile = sRobotURDF;
 
         // 1, parse world.xml file.
-            if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true)
-            {
-                cout<<"[RobotProxy] Cannot parse "<< m_sWorldURDFFile<<". Exit."<<endl;
-                exit(-1);
+            if (m_sWorldURDFFile != "") {
+                if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true)
+                {
+                    cout<<"[RobotProxy] Cannot parse "<< m_sWorldURDFFile<<". Exit."<<endl;
+                    exit(-1);
+                }
+            }
+            else {
+                m_WorldManager.iMass = 0;
+                m_WorldManager.iScale = 1;
+                m_WorldManager.m_sMesh = "World";
+                m_WorldManager.vWorldPose.push_back(0);
+                m_WorldManager.vWorldPose.push_back(0);
+                m_WorldManager.vWorldPose.push_back(0);
+                m_WorldManager.vWorldPose.push_back(0);
+                m_WorldManager.vWorldPose.push_back(0);
+                m_WorldManager.vWorldPose.push_back(0);
+                m_WorldManager.vLightPose.push_back( 0 );
+                m_WorldManager.vLightPose.push_back( 0 );
+                m_WorldManager.vLightPose.push_back( -100 );
+                m_WorldManager.vLightPose.push_back( 0 );
+                m_WorldManager.vLightPose.push_back( 0 );
+                m_WorldManager.vLightPose.push_back( 0 );
+
             }
 
         // 2, Read Robot.xml file. Get reference to xmldocument.
             XMLDocument RobotURDF;
-            if(GetXMLdoc(sRobotURDF, RobotURDF)!= true)
-            {
-                cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<endl;
-                exit(-1);
+            if (sRobotURDF != "") {
+                if(GetXMLdoc(sRobotURDF, RobotURDF)!= true)
+                {
+                    cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<endl;
+                    exit(-1);
+                }
+            }
+            else {
+
             }
 
 
         // 3, Init Agent between Physic Engine and ModelGraph
-            if(m_PhyMGAgent.init()!=true)
+            if(m_PhyMGAgent.init() != true)
             {
                 cout<<"[RobotProxy] Cannot init Physic ModelGraph Agent."<<endl;
                 exit(-1);
@@ -150,38 +175,43 @@ class RobotProxy
             m_light.SetPosition( m_WorldManager.vLightPose[0],  m_WorldManager.vLightPose[1],  m_WorldManager.vLightPose[2]);
             m_rSceneGraph.AddChild( &m_light );
 
-//            m_grid.SetNumLines(20);
-//            m_grid.SetLineSpacing(1);
-//            m_rSceneGraph.AddChild(&m_grid);
+            std::cout<<m_sWorldURDFFile<<std::endl;
 
-//            double dThickness = 1;
-//            m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
-//            m_ground.SetExtent( 200,200, dThickness );
-//            m_rSceneGraph.AddChild( &m_ground );
+            if (m_sWorldURDFFile.empty()) {
+                m_grid.SetNumLines(20);
+                m_grid.SetLineSpacing(1);
+                m_rSceneGraph.AddChild(&m_grid);
 
-//            BoxShape bs = BoxShape(100, 100, 1/2.0f);
-//            Body* ground = new Body("Ground", bs);
-//            ground->m_dMass = 0;
-//            ground->SetWPose( m_ground.GetPose4x4_po() );
-//            m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground", m_ground.GetPose());
-//            m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
-            // maybe dangerous to always reload meshes?  maybe we should separate Init from Reset?
-            try
-            {
-                cout<<"try init mesh: "<<m_WorldManager.m_sMesh<<endl;
-                m_Map.Init(m_WorldManager.m_sMesh);
-                m_Map.SetPerceptable(true);
-                m_Map.SetScale(m_WorldManager.iScale);
-                m_Map.SetPose( 0, 0, 0, 0, M_PI/2, 0);
-                m_Map.SetPose( 0, 0, 0, M_PI/2, 0, 0);
-//                m_Map.SetPosition(m_WorldManager.vWorldPose[0], m_WorldManager.vWorldPose[1],m_WorldManager.vWorldPose[2]);
-                m_rSceneGraph.AddChild( &m_Map );
-            } catch (std::exception e) {
-                printf( "Cannot load world map\n");
-                exit(-1);
+                double dThickness = 1;
+                m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
+                m_ground.SetExtent( 200,200, dThickness );
+                m_rSceneGraph.AddChild( &m_ground );
+
+                BoxShape bs = BoxShape(100, 100, 1/2.0f);
+                Body* ground = new Body("Ground", bs);
+                ground->m_dMass = 0;
+                ground->SetWPose( m_ground.GetPose4x4_po() );
+                m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground", m_ground.GetPose());
+                m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
             }
-
-//            m_Render.AddToScene( &m_rSceneGraph );
+            // maybe dangerous to always reload meshes?  maybe we should separate Init from Reset?
+            else {
+                try
+                {
+                    cout<<"try init mesh: "<<m_WorldManager.m_sMesh<<endl;
+                    m_Map.Init(m_WorldManager.m_sMesh);
+                    m_Map.SetPerceptable(true);
+                    m_Map.SetScale(m_WorldManager.iScale);
+                    m_Map.SetPose( 0, 0, 0, 0, M_PI/2, 0);
+                    m_Map.SetPose( 0, 0, 0, M_PI/2, 0, 0);
+                    //                m_Map.SetPosition(m_WorldManager.vWorldPose[0], m_WorldManager.vWorldPose[1],m_WorldManager.vWorldPose[2]);
+                    m_rSceneGraph.AddChild( &m_Map );
+                } catch (std::exception e) {
+                    printf( "Cannot load world map\n");
+                    exit(-1);
+                }
+            }
+            m_Render.AddToScene( &m_rSceneGraph );
         }
 
         // apply pose directlly for camera
@@ -418,20 +448,16 @@ int main( int argc, char** argv )
 {
     // parse command line arguments
     GetPot cl( argc, argv );
-    std::string sProxyName = cl.follow( "SimWorld", 1,"-n" );
-    std::string sRobotURDF = cl.follow("/Users/malu/Code/Luma/Sim/urdf/Robot.xml",1,"-r");
-    std::string sWorldURDF = cl.follow( "/Users/malu/Code/Luma/Sim/urdf/World.xml", 1, "-w" );
+    std::string sProxyName = cl.follow( "SimWorld", "-n" );
+    std::string sRobotURDF = cl.follow("", "-r");
+    std::string sWorldURDF = cl.follow( "", "-w" );
     std::string sPoseFile  = cl.follow("None",1,"-p");
-    std::string sServerOption = cl.follow("WithoutStateKeeper", 1 ,"-s");
-
-    if( argc != 11){
-        puts(USAGE);
-        return -1;
-    }
+    std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
 
     // Create OpenGL window in single line thanks to GLUT
     pangolin::CreateGlutWindowAndBind(sProxyName,640,480);
     SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
+    glClearColor(0, 0, 0, 1);
     glewInit();
 
     // sinle application context holds everything
@@ -448,7 +474,6 @@ int main( int argc, char** argv )
     const double size = bbox.Size().norm();
     const double far = 2*size;
     const double near = far / 1E3;
-    cout<<"center is "<<center<<endl;
 
     // Define Camera Render Object (for view / scene browsing)
     pangolin::OpenGlRenderState stacks3d(
@@ -509,14 +534,14 @@ int main( int argc, char** argv )
 
     //---------------------------------------------------------------------------------------------
     // wait for robot to connect
-    if(sServerOption== "WithoutStateKeeper")
-    {
-        while(mProxy.m_NetworkManager.m_SubscribeNum == 0)
-        {
-            cout<<"["<<sProxyName<<"] wait for RPG Device to register"<<endl;
-            sleep(1);
-        }
-    }
+//    if(sServerOption== "WithoutStateKeeper")
+//    {
+//        while(mProxy.m_NetworkManager.m_SubscribeNum == 0)
+//        {
+//            cout<<"["<<sProxyName<<"] wait for RPG Device to register"<<endl;
+//            sleep(1);
+//        }
+//    }
 
     // Default hooks for exiting (Esc) and fullscreen (tab).
     while( !pangolin::ShouldQuit() )
@@ -525,21 +550,21 @@ int main( int argc, char** argv )
         view3d.Activate(stacks3d);
 
         // 0. read camera pose for update
-        mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
+//        mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
 
-        // 1. Update physic and scene
+        // 1. Update physics and scene
 //        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
 //        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
 //        mProxy.m_Render.UpdateScene();
 
         // 2. update all sim device
-        mProxy.m_SimDeviceManager.UpdateAlLDevice();
+//        mProxy.m_SimDeviceManager.UpdateAlLDevice();
 
         // 3. update network
-        mProxy.m_NetworkManager.UpdateNetWork();
+//        mProxy.m_NetworkManager.UpdateNetWork();
 
         // 4. show image in current window
-        mProxy.SetImagesToWindow(LSimCamImage,RSimCamImage);
+//        mProxy.SetImagesToWindow(LSimCamImage,RSimCamImage);
 
         // 5. reflash screen
         pangolin::FinishGlutFrame();

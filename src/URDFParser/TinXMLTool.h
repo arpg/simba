@@ -1,7 +1,7 @@
 #ifndef TINXMLTOOL_H
 #define TINXMLTOOL_H
 
-#include <tinyxml2.h>
+#include "/usr/local/include/tinyxml2.h"
 #include <vector>
 
 using namespace tinyxml2;

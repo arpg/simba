@@ -14,7 +14,7 @@
 
 // -----------------------------------------------------------------------------------------------------------------------
 // parse world.xml file and build world in RobotProxy.
-bool ParseWorld(const char* filename, WorldManager& mWroldManager)
+bool ParseWorld(const char* filename, WorldManager& mWorldManager)
 {
     XMLDocument doc;
     if(doc.LoadFile(filename) !=0)
@@ -34,18 +34,18 @@ bool ParseWorld(const char* filename, WorldManager& mWroldManager)
         if(strcmp(sRootContent,"base")==0)
         {
             string  sMesh(pElement->Attribute("mesh"));
-            mWroldManager.m_sMesh = sMesh;
-            mWroldManager.iScale =::atoi( pElement->Attribute("scale"));
-            mWroldManager.iMass =::atoi( pElement->Attribute("mass"));
-            mWroldManager.vWorldPose = GenNumFromChar(pElement->Attribute("worldpose"));
-            mWroldManager.vRobotPose= GenNumFromChar(pElement->Attribute("robotpose"));
-            mWroldManager.vLightPose= GenNumFromChar(pElement->Attribute("lightpose"));
+            mWorldManager.m_sMesh = sMesh;
+            mWorldManager.iScale =::atoi( pElement->Attribute("scale"));
+            mWorldManager.iMass =::atoi( pElement->Attribute("mass"));
+            mWorldManager.vWorldPose = GenNumFromChar(pElement->Attribute("worldpose"));
+            mWorldManager.vRobotPose= GenNumFromChar(pElement->Attribute("robotpose"));
+            mWorldManager.vLightPose= GenNumFromChar(pElement->Attribute("lightpose"));
         }
 
         pElement=pElement->NextSiblingElement();
     }
 
-    mWroldManager.PrintAll();
+    mWorldManager.PrintAll();
 
     return true;
 }
