@@ -154,21 +154,17 @@ class SimCam
        }
 
 
-
-
        // ------------------------------------------------------------------------------------------------------------------
        // get current camera pose from bullet
        Eigen::Vector6d GetCameraPoseByBody()
        {
-          Eigen::Vector6d CameraPose;
-          m_rPhysMGAgent.m_Agent.GetEntity6Pose(m_sDeviceName,CameraPose[0],CameraPose[1],CameraPose[2],CameraPose[3],CameraPose[4],CameraPose[5]);
-
-          return CameraPose;
+          return m_rPhysMGAgent.m_Agent.GetEntity6Pose( m_sDeviceName );
        }
 
        void Update()
        {
-//           m_Camera.SetPoseRobot(Sophus::SE3d::exp(GetCameraPoseByBody()).matrix());
+           m_Camera.SetPoseRobot( _Cart2T(GetCameraPoseByBody()) );
+//           m_Camera.SetPoseRobot( Eigen::Matrix4d::Identity() );
            m_Camera.RenderToTexture();
            m_Camera.DrawCamera();
 

@@ -105,7 +105,7 @@ class RobotProxy
 
         // 2, Read Robot.xml file. Get reference to xmldocument.
             XMLDocument RobotURDF;
-            if (sRobotURDF != "") {
+            if (!sRobotURDF.empty()) {
                 if(GetXMLdoc(sRobotURDF, RobotURDF)!= true)
                 {
                     cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<endl;
@@ -117,7 +117,7 @@ class RobotProxy
             }
 
 
-        // 3, Init Agent between Physic Engine and ModelGraph
+        // 3, Init Agent between Physics Engine and ModelGraph
             if(m_PhyMGAgent.init() != true)
             {
                 cout<<"[RobotProxy] Cannot init Physic ModelGraph Agent."<<endl;
@@ -174,8 +174,6 @@ class RobotProxy
 
             m_light.SetPosition( m_WorldManager.vLightPose[0],  m_WorldManager.vLightPose[1],  m_WorldManager.vLightPose[2]);
             m_rSceneGraph.AddChild( &m_light );
-
-            std::cout<<m_sWorldURDFFile<<std::endl;
 
             if (m_sWorldURDFFile.empty()) {
                 m_grid.SetNumLines(20);
@@ -286,12 +284,14 @@ class RobotProxy
 
         void ForwardKey()
         {
+            //  you should update the pose of the rig and then the poses of the cameras would always be relative to the rig
+
             string sMainRobotName = m_pMainRobot->GetRobotName();
 
             // update RGB camera pose
             string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-            Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+            Eigen::Vector6d dPoseRGB = _T2Cart( m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
             dPoseRGB(1,0) = dPoseRGB(1,0) + 1;
             m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
@@ -487,17 +487,17 @@ int main( int argc, char** argv )
     // We set the views location on screen and add a handler which will
     // let user input update the model_view matrix (stacks3d) and feed through
     // to our scenegraph
-    view3d.SetBounds( 0.0, 1.0, 0.0, 0.8, -640.0f/480.0f );
+    view3d.SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
     view3d.SetHandler( new SceneGraph::HandlerSceneGraph( glGraph, stacks3d) );
     view3d.SetDrawFunction( SceneGraph::ActivateDrawFunctor( glGraph, stacks3d) );
 
     // window for display image capture from simcam
     SceneGraph::ImageView LSimCamImage(true,true);
-    LSimCamImage.SetBounds( 0.0, 0.5, 0.8, 1.0, 512.0f/384.0f );
+    LSimCamImage.SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
 
     // window for display image capture from simcam
     SceneGraph::ImageView RSimCamImage(true,true);
-    RSimCamImage.SetBounds( 0.5, 1.0, 0.8, 1.0, 512.0f/384.0f );
+    RSimCamImage.SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
 
 
     // Add our views as children to the base container.
@@ -521,6 +521,7 @@ int main( int argc, char** argv )
 
     RegisterKeyPressCallback( 'w', bind( &RobotProxy::ForwardKey, &mProxy ) );
     RegisterKeyPressCallback( 'W', bind( &RobotProxy::ForwardKey, &mProxy ) );
+
     RegisterKeyPressCallback( ' ', bind( &RobotProxy::StepForward, &mProxy ) );
 
     // SimCam control keys. need to implement later
@@ -550,21 +551,26 @@ int main( int argc, char** argv )
         view3d.Activate(stacks3d);
 
         // 0. read camera pose for update
-//        mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
+        if (!sProxyName.empty()) {
+            mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
+        }
 
         // 1. Update physics and scene
-//        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
-//        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
-//        mProxy.m_Render.UpdateScene();
+        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
+//        if (bStep) {
+//            mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
+//            bStep = false;
+//        }
+        mProxy.m_Render.UpdateScene();
 
         // 2. update all sim device
-//        mProxy.m_SimDeviceManager.UpdateAlLDevice();
+        mProxy.m_SimDeviceManager.UpdateAlLDevice();
 
         // 3. update network
 //        mProxy.m_NetworkManager.UpdateNetWork();
 
         // 4. show image in current window
-//        mProxy.SetImagesToWindow(LSimCamImage,RSimCamImage);
+        mProxy.SetImagesToWindow(LSimCamImage,RSimCamImage);
 
         // 5. reflash screen
         pangolin::FinishGlutFrame();

@@ -34,23 +34,27 @@ public:
 
 
     // --------------------------------------------------------------------------------------------------------------
-    // get x, y, z, p, q, r of entity. This function is experimental
-    void GetEntity6Pose(string name, double& x, double &y, double &z,double &p,double &q, double &r)
+    // get pose of entity. This function is experimental
+    Eigen::Vector6d GetEntity6Pose( string name )
     {
-        Entity e = m_pPhys->getEntity(name);
+        Entity e = m_pPhys->getEntity( name );
         btRigidBody* rB = e.m_pRigidBody.get();
 
         btTransform WorldTransform = rB->getCenterOfMassTransform();
 
         btScalar roll, pitch, yaw;
         WorldTransform.getBasis().getEulerZYX(yaw,pitch,roll);
-
+        double x, y, z, r, p, q;
         x = WorldTransform.getOrigin().getX();
         y = WorldTransform.getOrigin().getY();
         z = WorldTransform.getOrigin().getZ();
         r = roll;
-        q = pitch;
-        p = yaw;
+        p = pitch;
+        q = yaw;
+        Eigen::Vector6d toRet;
+        toRet << x, y, z, r, p, q;
+
+        return toRet;
     }
 
     void GetEntity6Pose(string name, Eigen::Vector6d& rPose)

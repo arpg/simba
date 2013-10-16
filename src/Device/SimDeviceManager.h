@@ -85,7 +85,7 @@ public:
             string sSensorName = Device.m_vSensorList[j]; // e.g. LCameraRGB. This may be bad
 
             Eigen::Vector6d initPose;
-            m_rPhyMGAgent.m_Agent.GetEntity6Pose(sSensorName,initPose[0],initPose[1],initPose[2],initPose[3],initPose[4],initPose[5]);
+            initPose = m_rPhyMGAgent.m_Agent.GetEntity6Pose(sSensorName);
 
             cout<<"[SimCam] The Camera model use is: "<<sCameraModel<<endl;
 

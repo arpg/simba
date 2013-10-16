@@ -21,7 +21,7 @@ public:
     void Update()
     {
          // update pose
-         m_rPhyMGAgent.m_Agent.GetEntity6Pose(m_sBodyName,m_Poses[0],m_Poses[1],m_Poses[2],m_Poses[3],m_Poses[4],m_Poses[5]);
+         m_Poses = m_rPhyMGAgent.m_Agent.GetEntity6Pose( m_sBodyName );
     }
 
     Eigen::Vector6d GetLatestPose()

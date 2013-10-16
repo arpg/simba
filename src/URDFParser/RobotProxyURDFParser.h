@@ -193,13 +193,13 @@ bool ParseRobot(XMLDocument* doc, Model& m_RobotModel, Eigen::Vector6d& InitPose
                     string sRGBBodyName = "RGB"+sCameraName;
                     BoxShape RGBbox = BoxShape(0.1,0.1,0.1);
                     Body* pRGBBody = new Body(sRGBBodyName, RGBbox, iMass );
-                    pRGBBody->SetPose( vPose[0]-BodyDistance - 0.1,vPose[1] + 2, vPose[2], 0, 0, 0 );
+                    pRGBBody->SetPose( vPose[0]-BodyDistance - 0.1,vPose[1] + 2, vPose[2], /*-M_PI / 2*/0, 0, /*-M_PI / 2*/0 );
                     m_mBodys.insert(std::pair<std::string,Body*>(sRGBBodyName,pRGBBody));
 
                     // 2.1 create joint for RGB body and RGBDCamBody
                     string sRGBJointName = "SimCamJoint"+sRGBBodyName;
                     vPivot<<-0.5, 0, 0;
-                    vAxis<< -1,0,0;
+                    vAxis<< 1,0,0;
         //                    HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, m_mBodys.find(sCameraName)->second, m_mBodys.find(sRGBBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2], 100, 100, -M_PI, M_PI );
                     HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, pBody, pRGBBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2], 100, 100, -M_PI, M_PI );
 
@@ -212,7 +212,7 @@ bool ParseRobot(XMLDocument* doc, Model& m_RobotModel, Eigen::Vector6d& InitPose
 
                     // 2.2 create joint for Depth body and RGBDCamBody
                     string sDepthJointName = "SimCamJoint"+sDepthBodyName;
-                    vPivot<<0.5, 0, 0;
+                    vPivot<< 0.5, 0, 0;
                     vAxis<<  1, 0, 0;
                     HingeJoint* pDepthHinge = new HingeJoint( sDepthJointName,
                                                               pBody,
