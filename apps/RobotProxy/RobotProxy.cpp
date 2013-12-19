@@ -72,50 +72,24 @@ class RobotProxy
                 )
             : m_rSceneGraph( glGraph )
         {
-            m_sProxyName = sProxyName;
+            m_sProxyName     = sProxyName;
             m_sWorldURDFFile = sWorldURDF;
             m_sRobotURDFFile = sRobotURDF;
 
         // 1, parse world.xml file.
-            if (m_sWorldURDFFile != "") {
-                if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true)
-                {
-                    cout<<"[RobotProxy] Cannot parse "<< m_sWorldURDFFile<<". Exit."<<endl;
-                    exit(-1);
-                }
-            }
-            else {
-                m_WorldManager.iMass = 0;
-                m_WorldManager.iScale = 1;
-                m_WorldManager.m_sMesh = "World";
-                m_WorldManager.vWorldPose.push_back(0);
-                m_WorldManager.vWorldPose.push_back(0);
-                m_WorldManager.vWorldPose.push_back(0);
-                m_WorldManager.vWorldPose.push_back(0);
-                m_WorldManager.vWorldPose.push_back(0);
-                m_WorldManager.vWorldPose.push_back(0);
-                m_WorldManager.vLightPose.push_back( 0 );
-                m_WorldManager.vLightPose.push_back( 0 );
-                m_WorldManager.vLightPose.push_back( -100 );
-                m_WorldManager.vLightPose.push_back( 0 );
-                m_WorldManager.vLightPose.push_back( 0 );
-                m_WorldManager.vLightPose.push_back( 0 );
-
+            if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true)
+            {
+                cout<<"[RobotProxy] Cannot parse "<< m_sWorldURDFFile<<". Exit. Please check if the file exist and the syntax is valid."<<endl;
+                exit(-1);
             }
 
-        // 2, Read Robot.xml file. Get reference to xmldocument.
+            // 2, Read Robot.xml file. Get reference to xmldocument.
             XMLDocument RobotURDF;
-            if (!sRobotURDF.empty()) {
-                if(GetXMLdoc(sRobotURDF, RobotURDF)!= true)
-                {
-                    cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<endl;
-                    exit(-1);
-                }
+            if(GetXMLdoc(sRobotURDF, RobotURDF)!= true)
+            {
+                cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<". Please check if the file exist and the syntax is valid."<<endl;
+                exit(-1);
             }
-            else {
-
-            }
-
 
         // 3, Init Agent between Physics Engine and ModelGraph
             if(m_PhyMGAgent.init() != true)
@@ -123,8 +97,6 @@ class RobotProxy
                 cout<<"[RobotProxy] Cannot init Physic ModelGraph Agent."<<endl;
                 exit(-1);
             }
-
-
 
         // 4, Init user's Robot and add it to RobotManager
             m_RobotManager.Init(m_sProxyName, sServerName ,m_PhyMGAgent,m_Render);
@@ -137,10 +109,8 @@ class RobotProxy
             // get pointer of main robot. (*** temporty code. need to be delete once we implement node controller ***)
             m_pMainRobot = m_RobotManager.GetMainRobot();
 
-
-
         // 5, init NetWork
-            if(m_NetworkManager.initNetwork(m_sProxyName,  &m_SimDeviceManager, &m_RobotManager,  sServerName)!=true)
+            if(m_NetworkManager.initNetwork(m_sProxyName, &m_SimDeviceManager, &m_RobotManager,  sServerName)!=true)
             {
                 cout<<"[RobotProxy] You choice to connect to '"<<sServerName<<"' but we cannot init Nextwrok. Please make sure the StateKeeper is running."<<endl;
                 exit(-1);
@@ -164,10 +134,18 @@ class RobotProxy
                     exit(-1);
                 }
             }
+            else
+            {
+                cout<<"[RobotProxy] Init Robot Proxy without Network."<<endl;
+            }
+
+            cout<<"[RobotProxy] Init RobotProxy Success!"<<endl;
         }
 
-        //----------------------------------------------------------------------------------------------------------------------------------------------
-        // Re-allocate the simulator each time. ***** Need to be init from URDF later *****
+
+
+        //======================================================================================================================================
+        // Re-allocate the simulator each time.
         void InitReset()
         {
             m_rSceneGraph.Clear();
@@ -175,7 +153,10 @@ class RobotProxy
             m_light.SetPosition( m_WorldManager.vLightPose[0],  m_WorldManager.vLightPose[1],  m_WorldManager.vLightPose[2]);
             m_rSceneGraph.AddChild( &m_light );
 
-            if (m_sWorldURDFFile.empty()) {
+            // init world without mesh
+            if (m_WorldManager.m_sMesh =="NONE")
+            {
+                cout<<"[RobotRroxy] Try init empty world."<<endl;
                 m_grid.SetNumLines(20);
                 m_grid.SetLineSpacing(1);
                 m_rSceneGraph.AddChild(&m_grid);
@@ -192,17 +173,16 @@ class RobotProxy
                 m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground", m_ground.GetPose());
                 m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
             }
+            // init world with mesh
             // maybe dangerous to always reload meshes?  maybe we should separate Init from Reset?
             else {
                 try
                 {
-                    cout<<"try init mesh: "<<m_WorldManager.m_sMesh<<endl;
+                    cout<<"[RobotRroxy] Try init word with mesh: "<<m_WorldManager.m_sMesh<<endl;
                     m_Map.Init(m_WorldManager.m_sMesh);
                     m_Map.SetPerceptable(true);
                     m_Map.SetScale(m_WorldManager.iScale);
-                    m_Map.SetPose( 0, 0, 0, 0, M_PI/2, 0);
-                    m_Map.SetPose( 0, 0, 0, M_PI/2, 0, 0);
-                    //                m_Map.SetPosition(m_WorldManager.vWorldPose[0], m_WorldManager.vWorldPose[1],m_WorldManager.vWorldPose[2]);
+                    m_Map.SetPosition(m_WorldManager.vWorldPose[0], m_WorldManager.vWorldPose[1],m_WorldManager.vWorldPose[2]);
                     m_rSceneGraph.AddChild( &m_Map );
                 } catch (std::exception e) {
                     printf( "Cannot load world map\n");
@@ -212,6 +192,9 @@ class RobotProxy
             m_Render.AddToScene( &m_rSceneGraph );
         }
 
+
+
+        // =======================================================================================================================================
         // apply pose directlly for camera
         void ApplyCameraPose(Eigen::Vector6d dPose)
         {
@@ -323,12 +306,10 @@ class RobotProxy
 
         }
 
-
         void ApplyPoseToEntity(string sName, Eigen::Vector6d dPose)
         {
             m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
         }
-
 
         // ---- Step Forward
         void StepForward( void )
@@ -336,7 +317,6 @@ class RobotProxy
             m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
             m_Render.UpdateScene();
         }
-
 
         //-------------------------------------------------------------------------------------------------------------------------------------
         // scan all sim cam and set image to pangolin window. Now only support up to two window.
@@ -418,27 +398,6 @@ class RobotProxy
             return true;
         }
 
-        // save image to HardDisk
-        void SaveImgToDisk(string sPath)
-        {
-            cout<<"Saving images to Path "<<sPath<<endl;
-
-        }
-
-        // the following is not working yet
-//        void TestSerialize()
-//        {
-//            unsigned const char* pData;
-//            int     iDataSize;
-//            for(int i=0;i!=m_RobotManager.GetMainRobot()->GetAllBodyName().size();i++)
-//            {
-//                string sName = m_RobotManager.GetMainRobot()->GetAllBodyName()[i];
-//                cout<<"try to serialize "<<sName<<endl;
-//                m_RobotManager.m_PhyMGAgent.m_Agent.SerializeRigidBodyToChar(sName,pData,iDataSize);
-//                m_RobotManager.m_PhyMGAgent.m_Agent.SerializeDynmaticWorldToChar(pData,iDataSize);
-//                m_PhyMGAgent.m_Agent.ApplySerializeInforToAllBelongBody(sName,pData,iDataSize);
-//            }
-//        }
 };
 
 
@@ -529,55 +488,51 @@ int main( int argc, char** argv )
 //    RegisterKeyPressCallback( '5', bind( &RobotProxy::DecreaseCamPitch, &mProxy ) ); // down
 //    RegisterKeyPressCallback( '4', bind( &RobotProxy::IncreaseCamYaw, &mProxy ) );// letf
 //    RegisterKeyPressCallback( '6', bind( &RobotProxy::DecreaseCamYaw, &mProxy ) );// right
-//    RegisterKeyPressCallback( '1', bind( &RobotProxy::IncreaseCamRoll, &mProxy ) );
-//    RegisterKeyPressCallback( '3', bind( &RobotProxy::DecreaseCamRoll, &mProxy ) );
 
 
     //---------------------------------------------------------------------------------------------
-    // wait for robot to connect
-//    if(sServerOption== "WithoutStateKeeper")
-//    {
-//        while(mProxy.m_NetworkManager.m_SubscribeNum == 0)
-//        {
-//            cout<<"["<<sProxyName<<"] wait for RPG Device to register"<<endl;
-//            sleep(1);
-//        }
-//    }
+       // wait for robot to connect
+   //    if(sServerOption== "WithoutStateKeeper")
+   //    {
+   //        while(mProxy.m_NetworkManager.m_SubscribeNum == 0)
+   //        {
+   //            cout<<"["<<sProxyName<<"] wait for RPG Device to register"<<endl;
+   //            sleep(1);
+   //        }
+   //    }
 
-    // Default hooks for exiting (Esc) and fullscreen (tab).
-    while( !pangolin::ShouldQuit() )
-    {
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        view3d.Activate(stacks3d);
+       // Default hooks for exiting (Esc) and fullscreen (tab).
+       while( !pangolin::ShouldQuit() )
+       {
+           glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+           view3d.Activate(stacks3d);
 
-        // 0. read camera pose for update
-        if (!sProxyName.empty()) {
-            mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
-        }
+           // 0. read camera pose for update
+           if (!sProxyName.empty()) {
+               mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
+           }
 
-        // 1. Update physics and scene
-        mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
-//        if (bStep) {
-//            mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
-//            bStep = false;
-//        }
-        mProxy.m_Render.UpdateScene();
+           // 1. Update physics and scene
+           mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
+           mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
 
-        // 2. update all sim device
-        mProxy.m_SimDeviceManager.UpdateAlLDevice();
+           mProxy.m_Render.UpdateScene();
 
-        // 3. update network
-//        mProxy.m_NetworkManager.UpdateNetWork();
+           // 2. update all sim device
+           mProxy.m_SimDeviceManager.UpdateAlLDevice();
 
-        // 4. show image in current window
-        mProxy.SetImagesToWindow(LSimCamImage,RSimCamImage);
+           // 3. update network
+           mProxy.m_NetworkManager.UpdateNetWork();
 
-        // 5. reflash screen
-        pangolin::FinishGlutFrame();
+           // 4. show image in current window
+           mProxy.SetImagesToWindow(LSimCamImage,RSimCamImage);
 
-        // Pause for 1/60th of a second.
-        usleep( 1E6 / 60 );
-    }
+           // 5. reflash screen
+           pangolin::FinishGlutFrame();
+
+           // Pause for 1/60th of a second.
+           usleep( 1E6 / 60 );
+       }
 
     return 0;
 }

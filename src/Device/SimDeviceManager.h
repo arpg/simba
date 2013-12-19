@@ -33,7 +33,7 @@ public:
 
 
     // ------------------------------------------------------------------------------------------------
-    bool Init(PhyModelGraphAgent& pPhyMGAgent, GLSceneGraph&  rSceneGraph, tinyxml2::XMLDocument& doc, string sProxyName)
+    bool Init(PhyModelGraphAgent& pPhyMGAgent, GLSceneGraph& rSceneGraph, tinyxml2::XMLDocument& doc, string sProxyName)
     {
         ParseDevice(doc, m_SimDevices, sProxyName);
         m_rPhyMGAgent = pPhyMGAgent;
@@ -87,7 +87,7 @@ public:
             Eigen::Vector6d initPose;
             initPose = m_rPhyMGAgent.m_Agent.GetEntity6Pose(sSensorName);
 
-            cout<<"[SimCam] The Camera model use is: "<<sCameraModel<<endl;
+            cout<<"[SimCam] The Camera model use define by RobotURDF is: "<<sCameraModel<<endl;
 
             SimCam* pSimCam = new SimCam();
 
@@ -100,8 +100,6 @@ public:
             {
                     cout<<"[SimDeviceManager] try to init RGB camera, name is "<<sSensorName<<endl;
                     pSimCam->init(initPose, sSensorName, eSimCamRGB,  iFPS, sCameraModel, rSceneGraph, m_rPhyMGAgent );
-                    std::cout<<"There was an error here: "<<sCameraModel<<std::endl;
-
             }
             else if(sSensorName == "Depth" + sCameraName)     //---------- init Depth Cam
             {

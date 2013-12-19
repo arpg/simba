@@ -18,8 +18,6 @@ include_directories( ${EIGEN3_INCLUDE_DIRS} )
 include_directories( ${TinyXML2_INCLUDE_DIRS} )
 include_directories( ${Pangolin_INCLUDE_DIRS})
 
-
-#link_libraries( ${EIGEN3_LIBRARIES})
 link_libraries( ${TinyXML2_LIBRARIES})
 link_libraries( SimMessages) # common protocol buffers
 link_libraries( ${Pangolin_LIBRARIES})

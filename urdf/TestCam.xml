@@ -1,17 +1,17 @@
 <robot name="Robot">
-    <bodybase name="Stick" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="0"  pose="0,-3,0,-1.5707,0,0"  dimesion="0.1,2,0.1" scale="25" type="Box"/>
+    <bodybase name="Stick" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media" mass="0" pose="0,-3,0,-1.5707,0,0" dimesion="0.1,2,0.1" scale="25" type="Box"/>
 
 <!--    <Sensor Name="RCamera"
-		    Type="Camera" 
-			Driver="Kinect" 
-			Size="640*480" 
-			Mode="RGBD" 
-			Resolution="VGA" 
-			FPS="30" 
-			Align="true" 
-			Parent="Stick" 
-			Pose="0,-2,0,0,0,-1.57" 
-                        Location="Local" />-->
+    Type="Camera"
+        Driver="Kinect"
+        Size="640*480"
+        Mode="RGBD"
+        Resolution="VGA"
+        FPS="30"
+        Align="true"
+        Parent="Stick"
+        Pose="0,-2,0,0,0,-1.57"
+        Location="Local"/>-->
 			
     <Sensor Name="LCamera"
             Type="Camera"
@@ -23,5 +23,5 @@
             Parent="Stick"
             Pose="0,-2,0,0,0,-1.57"
             Location="@Proxy1"
-            Model="/Users/malu/Code/RobotGroup/simba/src/Device/lcmod.xml" />
+            Model="/Users/luma/Code/RobotGroup/simba/src/Device/lcmod.xml" />
 </robot>

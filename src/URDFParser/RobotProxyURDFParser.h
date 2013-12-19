@@ -33,7 +33,7 @@ bool ParseWorld(const char* filename, WorldManager& mWorldManager)
 
         if(strcmp(sRootContent,"base")==0)
         {
-            string  sMesh(pElement->Attribute("mesh"));
+            string sMesh(pElement->Attribute("mesh"));
             mWorldManager.m_sMesh = sMesh;
             mWorldManager.iScale =::atoi( pElement->Attribute("scale"));
             mWorldManager.iMass =::atoi( pElement->Attribute("mass"));

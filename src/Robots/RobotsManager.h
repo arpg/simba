@@ -78,6 +78,7 @@ public:
     }
 
 
+
     // ---------------------------------------------------------------------------------------------------------------------------
     // delete all body and joints of rigid body.
     // ************************ Notice! Sometimes the proxy will exit when we delete joint of robot. ***************************

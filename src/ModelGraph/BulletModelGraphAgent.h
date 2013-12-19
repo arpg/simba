@@ -4,7 +4,7 @@
 #define BULLETMODELGRAPHAGENT_H
 
 #include <ModelGraph/PhysicsClass.h>
-#include <bullet/BulletWorldImporter/btBulletWorldImporter.h>
+//#include <bullet/BulletWorldImporter/btBulletWorldImporter.h>
 
 class BulletModelGraphAgent
 {
@@ -371,15 +371,15 @@ public:
 
     // --------------------------------------------------------------------------------------------------------------
     // get world transform from serialize data
-    bool ApplySerializeInforToAllBelongBody(string sBodyName, const unsigned char* pData, int iDataSize)
-    {
-        btBulletWorldImporter* fileLoader = new btBulletWorldImporter(m_pPhys->GetDynamicsWorld());
-        fileLoader->setVerboseMode(true);
-        fileLoader->loadFileFromMemory((char*)pData, iDataSize);
-        cout<<"num of rigid body "<< fileLoader->getNumRigidBodies()<<". num of collection shape "<<fileLoader->getNumCollisionShapes()<<". Num of fix body"<<fileLoader->getNumTriangleInfoMaps()<<endl;
+//    bool ApplySerializeInforToAllBelongBody(string sBodyName, const unsigned char* pData, int iDataSize)
+//    {
+//        btBulletWorldImporter* fileLoader = new btBulletWorldImporter(m_pPhys->GetDynamicsWorld());
+//        fileLoader->setVerboseMode(true);
+//        fileLoader->loadFileFromMemory((char*)pData, iDataSize);
+//        cout<<"num of rigid body "<< fileLoader->getNumRigidBodies()<<". num of collection shape "<<fileLoader->getNumCollisionShapes()<<". Num of fix body"<<fileLoader->getNumTriangleInfoMaps()<<endl;
 
-        return true;
-    }
+//        return true;
+//    }
 
     // add more function here...
 

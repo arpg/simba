@@ -7,24 +7,20 @@ endif()
 
 find_package( Pangolin 0.1 QUIET )
 find_package( SceneGraph 0.1 REQUIRED )
-find_package( Bullet 0.1 REQUIRED )
+find_package( Bullet REQUIRED )
 find_package( TinyXML2 REQUIRED )
 find_package( HAL 0.1 QUIET)
 find_package( Calibu 0.1 REQUIRED )
 find_package( NODE REQUIRED)
 
-
 include_directories( ${CMAKE_SOURCE_DIR}/.. )
-include_directories( ${BULLET_INCLUDE_DIRS})
+include_directories( ${BULLET_INCLUDE_DIR})
 include_directories( ${Pangolin_INCLUDE_DIRS})
 include_directories( ${SceneGraph_INCLUDE_DIRS})
 include_directories( ${TinyXML2_INCLUDE_DIRS})
 include_directories( ${HAL_INCLUDE_DIRS} )
 include_directories( ${Calibu_INCLUDE_DIRS} )
 include_directories( ${NODE_INCLUDE_DIRS})
-
-link_directories( ${Pangolin_LIBRARY_DIRS} ) # this is bad form, libraries should specify full paths
-link_directories( ${Calibu_LIBRARY_DIRS} )
 
 add_executable( RobotProxy RobotProxy.cpp )
 

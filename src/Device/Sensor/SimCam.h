@@ -178,7 +178,7 @@ class SimCam
        {
           Eigen::Matrix4d dPose = m_Camera.GetPoseRobot();
 
-          cout<<"Get camera pose "<<endl<< _T2Cart(dPose)<<endl;
+//          cout<<"Get camera pose "<<endl<< _T2Cart(dPose)<<endl;
           return dPose;
        }
 
