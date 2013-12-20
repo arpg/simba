@@ -1,11 +1,17 @@
 SimBA - Simulating 'Bots in Action
 ====================================
 How to build:
+
 1, Compile Node in HAL. By default HAL does not build Node.
+
 2, To build Node, please make sure:
+
     2.1 You have latest version of Protobuf (Recommand compile and install protobuf manually)
+    
     2.2 You have zmq and please put zmp.hpp in Node root Dir to path that you install zmq i.e. /usr/local/include
+    
 3, After compile zmq, now we can compile simba.
+
 4, If you want to test HAL Node driver, please copy Node2Cam driver from Dev/luma and put it in HAL/Camera/Drivers/ and compile HAL again (turn Node2Cam on in ccmake)
 
 How to run: (remember to modify path relative settings in URDF file, e.g. Robot.xml. If you do not use mesh, just change camera model file path in .xml file)
