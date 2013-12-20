@@ -1,7 +1,7 @@
 SimBA - Simulating 'Bots in Action
 ====================================
 How to build:
-
+-----------------
 1, Compile Node in HAL. By default HAL does not build Node.
 
 2, To build Node, please make sure:
