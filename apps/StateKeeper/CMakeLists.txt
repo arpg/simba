@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8)
-
 project(StateKeeper)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
@@ -24,6 +23,4 @@ link_libraries( ${Pangolin_LIBRARIES})
 
 add_executable( StateKeeper StateKeeper.cpp )
 
-target_link_libraries( StateKeeper
-  ${NODE_LIBRARIES}
-  )
+target_link_libraries( StateKeeper ${NODE_LIBRARIES} )
