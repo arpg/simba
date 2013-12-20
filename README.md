@@ -12,7 +12,7 @@ How to build:
     
 3, After compile zmq, now we can compile simba.
 
-4, If you want to test HAL Node driver, please copy Node2Cam driver from Dev/luma and put it in HAL/Camera/Drivers/ and compile HAL again (turn Node2Cam on in ccmake)
+4, If you want to test HAL Node driver, turn Node2Cam driver on in HAL and compile HAL again.
 
 How to run: (remember to modify path relative settings in URDF file, e.g. Robot.xml. If you do not use mesh, just change camera model file path in .xml file)
 
