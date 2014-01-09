@@ -1,2 +1,4 @@
 build
 *~
+*.xml
+*.txt.user
