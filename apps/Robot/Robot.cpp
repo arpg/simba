@@ -2,7 +2,7 @@
 
    Simple example of robot Sense, Plan, Act loop.
 
- */ 
+ */
 
 #include <iostream>
 #include <boost/bind.hpp>
@@ -15,8 +15,9 @@
 #include <Utils/CVarHelpers.h>           // for parsing Eigen vars as CVars
 #include <CVars/CVar.h>            // for glconsole
 
-#include <RPG/Utils/InitCam.h>
-#include <RPG/Devices/Camera/CameraDevice.h>
+//#include <RPG/Utils/InitCam.h>  Deprecated
+#include <HAL/Camera/CameraDevice.h>
+#include <HAL/Camera/CameraDriverInterface.h>
 
 
 using namespace std;
@@ -39,13 +40,13 @@ class Robot
         std::string                 m_sRobotProxyName;
 
         Eigen::Vector6d             m_command;
-        CameraDevice                m_Cam;
+        hal::Camera                 m_Cam;
 
         ///////////////////////////////////////////////////////////////////
-        Robot( 
+        Robot(
                 SceneGraph::GLSceneGraph& glGraph,  //< Input: reference to glGraph
                 const char* URDFFileName
-                ) 
+                )
             : m_rSceneGraph( glGraph )
         {
 
@@ -58,7 +59,7 @@ class Robot
                     1;
 
 
-            if(  rpg::InitCam(m_Cam, "RCamera", URDFFileName) == false)
+            if(  hal::Camera(m_Cam, "RCamera", URDFFileName) == false)
             {
                 cout<<"[RobotCode] cannot init camera"<<endl;
                 exit(-1);
@@ -69,25 +70,25 @@ class Robot
         void LeftKey()
         {
             m_command(5,0)=m_command(5,0)-0.1;
-        } 
+        }
 
         ///////////////////////////////////////////////////////////////////
         void RightKey()
         {
             m_command(5,0)=m_command(5,0)+0.1;
-        } 
+        }
 
         ///////////////////////////////////////////////////////////////////
         void ForwardKey()
         {
             m_command(0,0)=m_command(0,0)+10.0;
-        } 
+        }
 
         ///////////////////////////////////////////////////////////////////
         void ReverseKey()
         {
             m_command(0,0)=m_command(0,0)-10.0;
-        } 
+        }
 
 
 

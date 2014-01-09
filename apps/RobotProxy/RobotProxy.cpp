@@ -1,539 +1,521 @@
 /*
    RobotProxy, By luma. 2013.03
- */ 
+   Edited by bminortx.
+ */
 
-#include <iostream>
-#include <boost/bind.hpp>         
-#include <boost/shared_ptr.hpp>               // for reference counting pointers
-#include <Eigen/Eigen>                        // for vector maths
-#include <pangolin/pangolin.h>                // for open GL state management
-#include <SceneGraph/SceneGraph.h>            // for open GL scene graph
-#include <Utils/GetPot>                       // for command line parsing
-#include <Utils/CVarHelpers.h>                // for parsing Eigen vars as CVars
-#include <CVars/CVar.h>                       // for glconsole
-
-#include <URDFParser/RobotProxyURDFParser.h>            // for parse URDF file
-#include <World/WorldManager.h>               // for manage world information
-#include <Network/NetworkManager.h>           // for manager Network
-#include <Device/SimDeviceManager.h>          // for manage all Simdevice of the Robot we control
-#include <Robots/RobotsManager.h>             // for manage all robots
-#include <Robots/SimRobot.h>                  // for user's robot
-#include <ModelGraph/PhyModelGraphAgent.h>    // for communicate between Physic Engine and Model Graph
-#include <Device/Controller/PoseController.h>
+#include <RobotProxy.h>
 
 using namespace std;
 using namespace CVarUtils;
-using namespace pangolin;
-using namespace SceneGraph;
-using namespace boost;
+
+////////////////////////////////////////////////////////////////////////
+/// CONSTRUCTOR
+/// RobotProxy does not get produced willy-nilly; it is only produced if there
+/// is a SIM.
+////////////////////////////////////////////////////////////////////////
+
+RobotProxy::RobotProxy(
+    SceneGraph::GLSceneGraph& glGraph,  //< Input: reference to glGraph
+    const std::string& sProxyName,      //< Input: name of robot proxy
+    const std::string& sRobotURDF,      //< Input: location of meshes, maps etc
+    const std::string& sWorldURDF,
+    const std::string& sServerName,
+    const std::string& sPoseFileName
+    )
+  : m_rSceneGraph( glGraph ), m_sProxyName(sProxyName),
+    m_sWorldURDFFile(sWorldURDF), m_sRobotURDFFile(sRobotURDF){
+
+  // This is used to interface with the user's main function.
+  m_Node.init(sProxyName);
+
+  // 1. Parse world.xml file.
+  if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true){
+    cout<<"[RobotProxy] Cannot parse "<< m_sWorldURDFFile<<
+          ". Please check if the file exist and the syntax is valid."<<endl;
+    exit(-1);
+  }
+
+  // 2. Read Robot.xml file.
+  XMLDocument RobotURDF;
+  if(GetXMLdoc(sRobotURDF, RobotURDF)!= true){
+    cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<
+          ". Please check if the file exist and the syntax is valid."<<endl;
+    exit(-1);
+  }
+
+  // 3. Initialize agent between Physics Engine and ModelGraph
+  if(m_PhyMGAgent.init() != true){
+    exit(-1);
+  }
+
+  // 4. Init User's Robot and add it to RobotManager
+  m_RobotManager.Init(m_sProxyName, sServerName ,m_PhyMGAgent,m_Render);
+  if( m_RobotManager.AddRobot(RobotURDF, m_sProxyName) !=true )
+  {
+    cout<<"[RobotProxy] Cannot add new robot to RobotManager."<<endl;
+    exit(-1);
+  }
 
 
-#define USAGE    \
-"USAGE: Robot -n <ProxyName> -r <robot.xml directory> -w <world.xml directory> -s <StateKeeper Option>\n"\
-"      Options:\n"\
-"      --ProxyName, -n              Name of this RobotProxy.\n"\
-"      --Robot.xml, -r              Directory where robot.xml is stored.\n"\
-"      --World.xml, -w              Directory where world.xml is store.\n"\
-"      --Statekeeper Option -s      input 'StateKeeperName' or 'WithoutStateKeeper' or 'WithoutNetwork'"
+  ////What to do here....
+  ////
+  ///////--> get pointer of main robot. (*** temporty code.
+  ///////need to be delete once we implement node controller ***)
+  m_pMainRobot = m_RobotManager.GetMainRobot();
+  //////
+  //////
 
+  // 5. Initialize the Network
+  if(m_NetworkManager.initNetwork(m_sProxyName, &m_SimDeviceManager,
+                                  &m_RobotManager,  sServerName)!=true){
+    cout<<"[RobotProxy] You chose to connect to '"<<sServerName<<
+          "' but we cannot initialize Network."<<
+          "Please make sure the StateKeeper is running."<<endl;
+    exit(-1);
+  }
 
-class RobotProxy
+  // 6. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
+  if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF,
+                             m_sProxyName)!= true){
+    cout<<"[RobotProxy] Cannot init SimDeviceManager."<<endl;
+    exit(-1);
+  }
+
+  m_SimpPoseController.Init(sPoseFileName);
+
+  // 7, if run in with network mode, proxy network will publish sim device
+  if(sServerName !="WithoutNetwork"){
+    if(m_NetworkManager.initDevices()!=true){
+      cout<<"[RobotProxy] Cannot init Nextwrok"<<endl;
+      exit(-1);
+    }
+  }
+  else{
+    cout<<"[RobotProxy] Init Robot Proxy without Network."<<endl;
+  }
+
+  cout<<"[RobotProxy] Init RobotProxy Success!"<<endl;
+
+}
+
+////////////////////////////////////////////////////////////////////////
+/// FUNCTIONS
+////////////////////////////////////////////////////////////////////////
+
+// InitReset will populate SceneGraph with objects, and
+// register these objects with the simulator.
+
+void RobotProxy::InitReset()
 {
-    public:
-        ///////////////////////////////////////////////////////////////////
-        std::string                 m_sProxyName;
-        std::string                 m_sRobotURDFFile;
-        std::string                 m_sWorldURDFFile;
+  m_rSceneGraph.Clear();
 
-        SceneGraph::GLLight         m_light;
-        SceneGraph::GLBox           m_ground;
-        SceneGraph::GLGrid          m_grid;
-        SceneGraph::GLSceneGraph&   m_rSceneGraph;
-        SceneGraph::GLMesh          m_Map;                 // mesh for the world.
+  m_light.SetPosition( m_WorldManager.vLightPose[0],
+                       m_WorldManager.vLightPose[1],
+                       m_WorldManager.vLightPose[2]);
+  m_rSceneGraph.AddChild( &m_light );
 
-        Render                      m_Render;
-        SimRobot*                   m_pMainRobot;            // user's robot. will be delete in final version of robot proxy (as we are not going to key control main robot in proxy)
-        WorldManager                m_WorldManager;
-        SimDeviceManager            m_SimDeviceManager;
-        RobotsManager               m_RobotManager;
-        NetworkManager              m_NetworkManager;
-        PhyModelGraphAgent          m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
-        PoseController              m_SimpPoseController;
+  // init world without mesh
+  if (m_WorldManager.m_sMesh =="NONE")
+  {
+    cout<<"[RobotRroxy] Try init empty world."<<endl;
+    m_grid.SetNumLines(20);
+    m_grid.SetLineSpacing(1);
+    m_rSceneGraph.AddChild(&m_grid);
 
-        // TODO TODO
-        ///////////////////////////////////////////////////////////////////
-        RobotProxy(
-                SceneGraph::GLSceneGraph& glGraph,  //< Input: reference to glGraph
-                const std::string& sProxyName,      //< Input: name of robot proxy
-                const std::string& sRobotURDF,        //< Input: location of meshes, models, maps etc
-                const std::string& sWorldURDF,
-                const std::string& sServerName,
-                const std::string& sPoseFileName
-                )
-            : m_rSceneGraph( glGraph )
-        {
-            m_sProxyName     = sProxyName;
-            m_sWorldURDFFile = sWorldURDF;
-            m_sRobotURDFFile = sRobotURDF;
+    double dThickness = 1;
+    m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
+    m_ground.SetExtent( 200,200, dThickness );
+    m_rSceneGraph.AddChild( &m_ground );
 
-        // 1, parse world.xml file.
-            if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true)
-            {
-                cout<<"[RobotProxy] Cannot parse "<< m_sWorldURDFFile<<". Exit. Please check if the file exist and the syntax is valid."<<endl;
-                exit(-1);
-            }
+    BoxShape bs = BoxShape(100, 100, 1/2.0f);
+    Body* ground = new Body("Ground", bs);
+    ground->m_dMass = 0;
+    ground->SetWPose( m_ground.GetPose4x4_po() );
+    m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground",
+                                                   m_ground.GetPose());
+    m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
+  }
+  // init world with mesh
+  // maybe dangerous to always reload meshes?
+  /// maybe we should separate Init from Reset?
+  else {
+    try
+    {
+      cout<<"[RobotRroxy] Try init word with mesh: "
+         <<m_WorldManager.m_sMesh<<endl;
+      m_Map.Init(m_WorldManager.m_sMesh);
+      m_Map.SetPerceptable(true);
+      m_Map.SetScale(m_WorldManager.iScale);
+      m_Map.SetPosition(m_WorldManager.vWorldPose[0],
+                        m_WorldManager.vWorldPose[1],
+                        m_WorldManager.vWorldPose[2]);
+      m_rSceneGraph.AddChild( &m_Map );
+    } catch (std::exception e) {
+      printf( "Cannot load world map\n");
+      exit(-1);
+    }
+  }
+  m_Render.AddToScene( &m_rSceneGraph );
+}
 
-            // 2, Read Robot.xml file. Get reference to xmldocument.
-            XMLDocument RobotURDF;
-            if(GetXMLdoc(sRobotURDF, RobotURDF)!= true)
-            {
-                cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<". Please check if the file exist and the syntax is valid."<<endl;
-                exit(-1);
-            }
+//////////////////////////////////////////////////////////////////
 
-        // 3, Init Agent between Physics Engine and ModelGraph
-            if(m_PhyMGAgent.init() != true)
-            {
-                cout<<"[RobotProxy] Cannot init Physic ModelGraph Agent."<<endl;
-                exit(-1);
-            }
+// Apply the camera's pose directly to the SimCamera
 
-        // 4, Init user's Robot and add it to RobotManager
-            m_RobotManager.Init(m_sProxyName, sServerName ,m_PhyMGAgent,m_Render);
-            if( m_RobotManager.AddRobot(RobotURDF, m_sProxyName) !=true)
-            {
-                cout<<"[RobotProxy] Cannot add new robot to RobotManager."<<endl;
-                exit(-1);
-            }
+void RobotProxy::ApplyCameraPose(Eigen::Vector6d dPose){
+  Eigen::Vector6d InvalidPose;
+  InvalidPose<<1,88,99,111,00,44;
+  if(dPose == InvalidPose){
+  }
+  else{
+    string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            // get pointer of main robot. (*** temporty code. need to be delete once we implement node controller ***)
-            m_pMainRobot = m_RobotManager.GetMainRobot();
+    // update RGB camera pose
+    string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
+    m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPose));
 
-        // 5, init NetWork
-            if(m_NetworkManager.initNetwork(m_sProxyName, &m_SimDeviceManager, &m_RobotManager,  sServerName)!=true)
-            {
-                cout<<"[RobotProxy] You choice to connect to '"<<sServerName<<"' but we cannot init Nextwrok. Please make sure the StateKeeper is running."<<endl;
-                exit(-1);
-            }
+    // update Depth camera pose
+    string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
+    m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPose));
+  }
+}
 
-        // 6, init Sim Device (SimCam, SimGPS, SimVicon, etc)
-            if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF, m_sProxyName)!= true)
-            {
-                cout<<"[RobotProxy] Cannot init SimDeviceManager."<<endl;
-                exit(-1);
-            }
+void RobotProxy::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
+  m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
+}
 
-            m_SimpPoseController.Init(sPoseFileName);
+// ---- Step Forward
+void RobotProxy::StepForward(){
+  m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
+  m_Render.UpdateScene();
+}
 
-        // 7, if run in with network mode, proxy network will publish sim device
-            if(sServerName !="WithoutNetwork")
-            {
-                if(m_NetworkManager.initDevices()!=true)
-                {
-                    cout<<"[RobotProxy] Cannot init Nextwrok"<<endl;
-                    exit(-1);
-                }
-            }
-            else
-            {
-                cout<<"[RobotProxy] Init Robot Proxy without Network."<<endl;
-            }
+//////////////////////////////////////////////////////////////////
 
-            cout<<"[RobotProxy] Init RobotProxy Success!"<<endl;
+// Scan all SimDevices and send the simulated camera images to Pangolin.
+// Right now, we can only support up to two windows.
+
+bool RobotProxy::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
+                                   SceneGraph::ImageView& RSimCamWnd ){
+  int WndCounter = 0;
+
+  for(unsigned int i =0 ; i!= m_SimDeviceManager.m_SimDevices.size(); i++){
+    SimDeviceInfo Device = m_SimDeviceManager.m_SimDevices[i];
+
+    for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
+
+      string sSimCamName = Device.m_vSensorList[j];
+      SimCam* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
+
+      SceneGraph::ImageView* ImageWnd;
+
+      // get pointer to window
+      if(WndCounter == 0){
+        ImageWnd = &LSimCamWnd;
+      }
+      else if(WndCounter == 1){
+        ImageWnd = &RSimCamWnd;
+      }
+
+      WndCounter++;
+
+      // set image to window
+      if (pSimCam->m_iCamType == 5){       // for depth image
+        float* pImgbuf = (float*) malloc( pSimCam->g_nImgWidth *
+                                          pSimCam->g_nImgHeight *
+                                          sizeof(float) );
+
+        if(pSimCam->capture(pImgbuf)==true){
+          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
+                             pSimCam->g_nImgHeight,
+                             GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
+          free(pImgbuf);
         }
-
-
-
-        //======================================================================================================================================
-        // Re-allocate the simulator each time.
-        void InitReset()
-        {
-            m_rSceneGraph.Clear();
-
-            m_light.SetPosition( m_WorldManager.vLightPose[0],  m_WorldManager.vLightPose[1],  m_WorldManager.vLightPose[2]);
-            m_rSceneGraph.AddChild( &m_light );
-
-            // init world without mesh
-            if (m_WorldManager.m_sMesh =="NONE")
-            {
-                cout<<"[RobotRroxy] Try init empty world."<<endl;
-                m_grid.SetNumLines(20);
-                m_grid.SetLineSpacing(1);
-                m_rSceneGraph.AddChild(&m_grid);
-
-                double dThickness = 1;
-                m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
-                m_ground.SetExtent( 200,200, dThickness );
-                m_rSceneGraph.AddChild( &m_ground );
-
-                BoxShape bs = BoxShape(100, 100, 1/2.0f);
-                Body* ground = new Body("Ground", bs);
-                ground->m_dMass = 0;
-                ground->SetWPose( m_ground.GetPose4x4_po() );
-                m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground", m_ground.GetPose());
-                m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
-            }
-            // init world with mesh
-            // maybe dangerous to always reload meshes?  maybe we should separate Init from Reset?
-            else {
-                try
-                {
-                    cout<<"[RobotRroxy] Try init word with mesh: "<<m_WorldManager.m_sMesh<<endl;
-                    m_Map.Init(m_WorldManager.m_sMesh);
-                    m_Map.SetPerceptable(true);
-                    m_Map.SetScale(m_WorldManager.iScale);
-                    m_Map.SetPosition(m_WorldManager.vWorldPose[0], m_WorldManager.vWorldPose[1],m_WorldManager.vWorldPose[2]);
-                    m_rSceneGraph.AddChild( &m_Map );
-                } catch (std::exception e) {
-                    printf( "Cannot load world map\n");
-                    exit(-1);
-                }
-            }
-            m_Render.AddToScene( &m_rSceneGraph );
+        else{
+          cout<<"[SetImagesToWindow] Set depth Image fail"<<endl;
+          return false;
         }
+      }
+      else if(pSimCam->m_iCamType == 2){   // for RGB image
+        char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
+                                      pSimCam->g_nImgHeight * 3);
 
-
-
-        // =======================================================================================================================================
-        // apply pose directlly for camera
-        void ApplyCameraPose(Eigen::Vector6d dPose)
-        {
-            Eigen::Vector6d InvalidPose;
-            InvalidPose<<1,88,99,111,00,44;
-            if(dPose == InvalidPose)
-            {
-
-            }
-            else
-            {
-                string sMainRobotName = m_pMainRobot->GetRobotName();
-
-                // update RGB camera pose
-                string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-                m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPose));
-
-                // update Depth camera pose
-                string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-                m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPose));
-            }
+        if(pSimCam->capture(pImgbuf)==true){
+          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
+                             pSimCam->g_nImgHeight,
+                             GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
+          free(pImgbuf);
         }
-
-        // apply keys to entity
-        void LeftKey()
-        {
-            string sMainRobotName = m_pMainRobot->GetRobotName();
-
-            // update RGB camera pose
-            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-
-            Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
-            dPoseRGB(5,0) = dPoseRGB(5,0) - 0.1;
-            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
-
-            // update Depth camera pose
-            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-
-            Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
-            dPoseDepth(5,0) = dPoseDepth(5,0) - 0.1;
-            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
-
-//            string sMainRobotName = m_pMainRobot->GetRobotName();
-//            string sName = "RCamera@" + sMainRobotName;
-//            Eigen::Vector6d dPose;
-//            m_PhyMGAgent.m_Agent.GetEntity6Pose(sName, dPose);
-//            dPose(0,0) = dPose(0,0) + 1;
-//            m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
+        else{
+          cout<<"[SetImagesToWindow] Set RGB Image fail"<<endl;
+          return false;
         }
-
-        // (3,0) Rotate, (4,0) up/down (5,0) left right
-        void RightKey()
-        {
-            string sMainRobotName = m_pMainRobot->GetRobotName();
-
-            // update RGB camera pose
-            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-
-            Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
-            dPoseRGB(5,0) = dPoseRGB(5,0) + 0.1;
-            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
-
-            // update Depth camera pose
-            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-
-            Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
-            dPoseDepth(5,0) = dPoseDepth(5,0) + 0.1;
-            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
+      }
+      else if(pSimCam->m_iCamType == 1){    //to show greyscale image
+        char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
+                                      pSimCam->g_nImgHeight);
+        if(pSimCam->capture(pImgbuf)==true){
+          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
+                             pSimCam->g_nImgHeight,
+                             GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+          free(pImgbuf);
         }
-
-        void ForwardKey()
-        {
-            //  you should update the pose of the rig and then the poses of the cameras would always be relative to the rig
-
-            string sMainRobotName = m_pMainRobot->GetRobotName();
-
-            // update RGB camera pose
-            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-
-            Eigen::Vector6d dPoseRGB = _T2Cart( m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
-            dPoseRGB(1,0) = dPoseRGB(1,0) + 1;
-            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
-
-            // update Depth camera pose
-            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-
-            Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
-            dPoseDepth(1,0) = dPoseDepth(1,0) + 1;
-            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
+        else{
+          cout<<"[SetImagesToWindow] Set Gray Image fail"<<endl;
+          return false;
         }
+      }
+    }
+  }
+  return true;
+}
 
-        void ReverseKey()
-        {
-            string sMainRobotName = m_pMainRobot->GetRobotName();
+////////////////////
+/// INPUT KEYS
+////////////////////
 
-            // update RGB camera pose
-            string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
+void RobotProxy::LeftKey(){
+  string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
-            dPoseRGB(1,0) = dPoseRGB(1,0) - 1;
-            m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
+  // update RGB camera pose
+  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-            // update Depth camera pose
-            string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
+  Eigen::Vector6d dPoseRGB =
+      _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+  dPoseRGB(5,0) = dPoseRGB(5,0) - 0.1;
+  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
-            Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
-            dPoseDepth(1,0) = dPoseDepth(1,0) - 1;
-            m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
+  // update Depth camera pose
+  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
-        }
+  Eigen::Vector6d dPoseDepth =
+      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+  dPoseDepth(5,0) = dPoseDepth(5,0) - 0.1;
+  m_SimDeviceManager.
+      GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
 
-        void ApplyPoseToEntity(string sName, Eigen::Vector6d dPose)
-        {
-            m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
-        }
+  //            string sMainRobotName = m_pMainRobot->GetRobotName();
+  //            string sName = "RCamera@" + sMainRobotName;
+  //            Eigen::Vector6d dPose;
+  //            m_PhyMGAgent.m_Agent.GetEntity6Pose(sName, dPose);
+  //            dPose(0,0) = dPose(0,0) + 1;
+  //            m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
+}
 
-        // ---- Step Forward
-        void StepForward( void )
-        {
-            m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
-            m_Render.UpdateScene();
-        }
+void RobotProxy::RightKey(){
+  string sMainRobotName = m_pMainRobot->GetRobotName();
 
-        //-------------------------------------------------------------------------------------------------------------------------------------
-        // scan all sim cam and set image to pangolin window. Now only support up to two window.
-        bool SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::ImageView& RSimCamWnd )
-        {
-            int WndCounter = 0;
+  // update RGB camera pose
+  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-            for(unsigned int i =0 ; i!= m_SimDeviceManager.m_SimDevices.size(); i++)
-            {
-                SimDeviceInfo Device = m_SimDeviceManager.m_SimDevices[i];
+  Eigen::Vector6d dPoseRGB =
+      _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+  dPoseRGB(5,0) = dPoseRGB(5,0) + 0.1;
+  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
-                for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
+  // update Depth camera pose
+  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
-                    string sSimCamName = Device.m_vSensorList[j];
-                    SimCam* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
+  Eigen::Vector6d dPoseDepth =
+      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+  dPoseDepth(5,0) = dPoseDepth(5,0) + 0.1;
+  m_SimDeviceManager.
+      GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
+}
 
-                    SceneGraph::ImageView* ImageWnd;
+void RobotProxy::ForwardKey(){
+  //  you should update the pose of the rig and then the poses of the cameras would always be relative to the rig
+  string sMainRobotName = m_pMainRobot->GetRobotName();
 
-                    // get pointer to window
-                    if(WndCounter == 0)
-                    {
-                        ImageWnd = &LSimCamWnd;
-                    }
-                    else if(WndCounter == 1)
-                    {
-                        ImageWnd = &RSimCamWnd;
-                    }
+  // update RGB camera pose
+  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-                    WndCounter++;
+  Eigen::Vector6d dPoseRGB =
+      _T2Cart( m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+  dPoseRGB(1,0) = dPoseRGB(1,0) + 1;
+  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
-                    // set image to window
-                            if (pSimCam->m_iCamType == 5)       // for depth image
-                            {
-                                float* pImgbuf = (float*) malloc( pSimCam->g_nImgWidth * pSimCam->g_nImgHeight * sizeof(float) );
+  // update Depth camera pose
+  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
-                                if(pSimCam->capture(pImgbuf)==true)
-                                {
-                                    ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth, pSimCam->g_nImgHeight,  GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
-                                    free(pImgbuf);
-                                }
-                                else
-                                {
-                                    cout<<"[SetImagesToWindow] Set depth Image fail"<<endl;
-                                    return false;
-                                }
-                            }
-                            else if(pSimCam->m_iCamType == 2)   // for RGB image
-                            {
-                                char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth * pSimCam->g_nImgHeight * 3);
+  Eigen::Vector6d dPoseDepth =
+      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+  dPoseDepth(1,0) = dPoseDepth(1,0) + 1;
+  m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
+}
 
-                                if(pSimCam->capture(pImgbuf)==true)
-                                {
-                                    ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth, pSimCam->g_nImgHeight, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
-                                    free(pImgbuf);
-                                }
-                                else
-                                {
-                                    cout<<"[SetImagesToWindow] Set RGB Image fail"<<endl;
-                                    return false;
-                                }
-                            }
-                            else if(pSimCam->m_iCamType == 1)   // for show gray scale image
-                            {
-                                char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth * pSimCam->g_nImgHeight);
-                                if(pSimCam->capture(pImgbuf)==true)
-                                {
-                                    ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth, pSimCam->g_nImgHeight,  GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
-                                    free(pImgbuf);
-                                }
-                                else
-                                {
-                                    cout<<"[SetImagesToWindow] Set Gray Image fail"<<endl;
-                                    return false;
-                                }
-                            }
-                    }
-            }
+void RobotProxy::ReverseKey(){
+  string sMainRobotName = m_pMainRobot->GetRobotName();
 
-            return true;
-        }
+  // update RGB camera pose
+  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-};
+  Eigen::Vector6d dPoseRGB =
+      _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+  dPoseRGB(1,0) = dPoseRGB(1,0) - 1;
+  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
+  // update Depth camera pose
+  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
+
+  Eigen::Vector6d dPoseDepth =
+      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+  dPoseDepth(1,0) = dPoseDepth(1,0) - 1;
+  m_SimDeviceManager.
+      GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
+}
 
 
 ///////////////////////////////////////////////////////////////////
+/////
+///// MAIN LOOP:
+///// 1. Parses arguments in xml file
+///// 2. Develops the SceneGraph
+///// 3. Renders the objects in the Sim.
+/////
+///////////////////////////////////////////////////////////////////
+
+
 int main( int argc, char** argv )
 {
-    // parse command line arguments
-    GetPot cl( argc, argv );
-    std::string sProxyName = cl.follow( "SimWorld", "-n" );
-    std::string sRobotURDF = cl.follow("", "-r");
-    std::string sWorldURDF = cl.follow( "", "-w" );
-    std::string sPoseFile  = cl.follow("None",1,"-p");
-    std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
+  // parse command line arguments
+  if(argc){
+    std::cout<<"USAGE: Robot -n <ProxyName> -r <robot.xml directory>"<<
+               "-w <world.xml directory> -s <StateKeeper Option>"<<std::endl;
+    std::cout<<"Options:"<<std::endl;
+    std::cout<<"--ProxyName, -n         ||   Name of this RobotProxy."
+            <<std::endl;
+    std::cout<<"--Robot.xml, -r         ||   robot.xml's directory"
+            <<std::endl;
+    std::cout<<"--World.xml, -w         ||   world.xml's directory."
+            <<std::endl;
+    std::cout<<"--Statekeeper Option -s ||   input 'StateKeeperName',"<<
+               " 'WithoutStateKeeper', or 'WithoutNetwork'"<<std::endl;
 
-    // Create OpenGL window in single line thanks to GLUT
-    pangolin::CreateGlutWindowAndBind(sProxyName,640,480);
-    SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
-    glClearColor(0, 0, 0, 1);
-    glewInit();
+  }
+  GetPot cl( argc, argv );
+  std::string sProxyName = cl.follow( "SimWorld", "-n" );
+  std::string sRobotURDF = cl.follow("", "-r");
+  std::string sWorldURDF = cl.follow( "", "-w" );
+  std::string sPoseFile  = cl.follow("None",1,"-p");
+  std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
 
-    // sinle application context holds everything
-    SceneGraph::GLSceneGraph  glGraph;
-    RobotProxy mProxy( glGraph, sProxyName, sRobotURDF, sWorldURDF, sServerOption, sPoseFile); // initialize exactly one RobotProxy
-    mProxy.InitReset(); // this will populate the scene graph with objects and
-    // register these objects with the simulator.
+  //Start our SceneGraph interface
+  pangolin::CreateGlutWindowAndBind(sProxyName,640,480);
+  SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
+  glClearColor(0, 0, 0, 1);
+  glewInit();
+  SceneGraph::GLSceneGraph  glGraph;
 
-
-    //---------------------------------------------------------------------------------------------
-    // <Pangolin boilerplate>
-    const SceneGraph::AxisAlignedBoundingBox bbox = glGraph.ObjectAndChildrenBounds();
-    const Eigen::Vector3d center = bbox.Center();
-    const double size = bbox.Size().norm();
-    const double far = 2*size;
-    const double near = far / 1E3;
-
-    // Define Camera Render Object (for view / scene browsing)
-    pangolin::OpenGlRenderState stacks3d(
-            pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
-            pangolin::ModelViewLookAt(center(0), center(1) + size, center(2) - size/4,
-                center(0), center(1), center(2), pangolin::AxisNegZ) );
-
-    // We define a new view which will reside within the container.
-    pangolin::View view3d;
-
-    // We set the views location on screen and add a handler which will
-    // let user input update the model_view matrix (stacks3d) and feed through
-    // to our scenegraph
-    view3d.SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
-    view3d.SetHandler( new SceneGraph::HandlerSceneGraph( glGraph, stacks3d) );
-    view3d.SetDrawFunction( SceneGraph::ActivateDrawFunctor( glGraph, stacks3d) );
-
-    // window for display image capture from simcam
-    SceneGraph::ImageView LSimCamImage(true,true);
-    LSimCamImage.SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
-
-    // window for display image capture from simcam
-    SceneGraph::ImageView RSimCamImage(true,true);
-    RSimCamImage.SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
+  // Initialize a RobotProxy.
+  RobotProxy mProxy( glGraph, sProxyName, sRobotURDF,
+                     sWorldURDF, sServerOption, sPoseFile);
+  mProxy.InitReset();
 
 
-    // Add our views as children to the base container.
-    pangolin::DisplayBase().AddDisplay( view3d );
-    pangolin::DisplayBase().AddDisplay( LSimCamImage );
-    pangolin::DisplayBase().AddDisplay( RSimCamImage );
+  //---------------------------------------------------------------------------
+  // <Pangolin boilerplate>
+  const SceneGraph::AxisAlignedBoundingBox bbox =
+      glGraph.ObjectAndChildrenBounds();
+  const Eigen::Vector3d center = bbox.Center();
+  const double size = bbox.Size().norm();
+  const double far = 2*size;
+  const double near = far / 1E3;
 
-    //---------------------------------------------------------------------------------------------
-    // register a keyboard hook to trigger the reset method
-    RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r', boost::bind( &RobotProxy::InitReset, &mProxy ) );
+  // Define Camera Render Object (for view / scene browsing)
+  pangolin::OpenGlRenderState stacks3d(
+        pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
+        pangolin::ModelViewLookAt(center(0), center(1) + size,
+                                  center(2) - size/4,
+                                  center(0), center(1), center(2),
+                                  pangolin::AxisNegZ) );
 
-    // simple asdw control
-    RegisterKeyPressCallback( 'a', bind( &RobotProxy::LeftKey, &mProxy ) );
-    RegisterKeyPressCallback( 'A', bind( &RobotProxy::LeftKey, &mProxy ) );
+  // We define a new view which will reside within the container.
+  pangolin::View view3d;
 
-    RegisterKeyPressCallback( 's', bind( &RobotProxy::ReverseKey, &mProxy ) );
-    RegisterKeyPressCallback( 'S', bind( &RobotProxy::ReverseKey, &mProxy ) );
+  // We set the views location on screen and add a handler which will
+  // let user input update the model_view matrix (stacks3d) and feed through
+  // to our scenegraph
+  view3d.SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
+  view3d.SetHandler( new SceneGraph::HandlerSceneGraph( glGraph, stacks3d) );
+  view3d.SetDrawFunction( SceneGraph::ActivateDrawFunctor( glGraph, stacks3d) );
 
-    RegisterKeyPressCallback( 'd', bind( &RobotProxy::RightKey, &mProxy ) );
-    RegisterKeyPressCallback( 'D', bind( &RobotProxy::RightKey, &mProxy ) );
+  // window for display image capture from simcam
+  SceneGraph::ImageView LSimCamImage(true,true);
+  LSimCamImage.SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
 
-    RegisterKeyPressCallback( 'w', bind( &RobotProxy::ForwardKey, &mProxy ) );
-    RegisterKeyPressCallback( 'W', bind( &RobotProxy::ForwardKey, &mProxy ) );
-
-    RegisterKeyPressCallback( ' ', bind( &RobotProxy::StepForward, &mProxy ) );
-
-    // SimCam control keys. need to implement later
-//    RegisterKeyPressCallback( '8', bind( &RobotProxy::IncreaseCamPitch, &mProxy ) ); // up
-//    RegisterKeyPressCallback( '5', bind( &RobotProxy::DecreaseCamPitch, &mProxy ) ); // down
-//    RegisterKeyPressCallback( '4', bind( &RobotProxy::IncreaseCamYaw, &mProxy ) );// letf
-//    RegisterKeyPressCallback( '6', bind( &RobotProxy::DecreaseCamYaw, &mProxy ) );// right
+  // window for display image capture from simcam
+  SceneGraph::ImageView RSimCamImage(true,true);
+  RSimCamImage.SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
 
 
-    //---------------------------------------------------------------------------------------------
-       // wait for robot to connect
-   //    if(sServerOption== "WithoutStateKeeper")
-   //    {
-   //        while(mProxy.m_NetworkManager.m_SubscribeNum == 0)
-   //        {
-   //            cout<<"["<<sProxyName<<"] wait for RPG Device to register"<<endl;
-   //            sleep(1);
-   //        }
-   //    }
+  // Add our views as children to the base container.
+  pangolin::DisplayBase().AddDisplay( view3d );
+  pangolin::DisplayBase().AddDisplay( LSimCamImage );
+  pangolin::DisplayBase().AddDisplay( RSimCamImage );
 
-       // Default hooks for exiting (Esc) and fullscreen (tab).
-       while( !pangolin::ShouldQuit() )
-       {
-           glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-           view3d.Activate(stacks3d);
+  //----------------------------------------------------------------------------
+  // Register a keyboard hook to trigger the reset method
+  RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
+                            boost::bind( &RobotProxy::InitReset, &mProxy ) );
 
-           // 0. read camera pose for update
-           if (!sProxyName.empty()) {
-               mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
-           }
+  // Simple asdw control
+  RegisterKeyPressCallback( 'a', boost::bind( &RobotProxy::LeftKey, &mProxy ) );
+  RegisterKeyPressCallback( 'A', boost::bind( &RobotProxy::LeftKey, &mProxy ) );
 
-           // 1. Update physics and scene
-           mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
-           mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
+  RegisterKeyPressCallback( 's', boost::bind( &RobotProxy::ReverseKey, &mProxy ) );
+  RegisterKeyPressCallback( 'S', boost::bind( &RobotProxy::ReverseKey, &mProxy ) );
 
-           mProxy.m_Render.UpdateScene();
+  RegisterKeyPressCallback( 'd', boost::bind( &RobotProxy::RightKey, &mProxy ) );
+  RegisterKeyPressCallback( 'D', boost::bind( &RobotProxy::RightKey, &mProxy ) );
 
-           // 2. update all sim device
-           mProxy.m_SimDeviceManager.UpdateAlLDevice();
+  RegisterKeyPressCallback( 'w', boost::bind( &RobotProxy::ForwardKey, &mProxy ) );
+  RegisterKeyPressCallback( 'W', boost::bind( &RobotProxy::ForwardKey, &mProxy ) );
 
-           // 3. update network
-           mProxy.m_NetworkManager.UpdateNetWork();
+  RegisterKeyPressCallback( ' ', boost::bind( &RobotProxy::StepForward, &mProxy ) );
 
-           // 4. show image in current window
-           mProxy.SetImagesToWindow(LSimCamImage,RSimCamImage);
+  //----------------------------------------------------------------------------
+  // wait for robot to connect
+  //    if(sServerOption== "WithoutStateKeeper")
+  //    {
+  //        while(mProxy.m_NetworkManager.m_SubscribeNum == 0)
+  //        {
+  //            cout<<"["<<sProxyName<<"] wait for RPG Device to register"<<endl;
+  //            sleep(1);
+  //        }
+  //    }
 
-           // 5. reflash screen
-           pangolin::FinishGlutFrame();
+  // Default hooks for exiting (Esc) and fullscreen (tab).
+  while( !pangolin::ShouldQuit() )
+  {
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    view3d.Activate(stacks3d);
 
-           // Pause for 1/60th of a second.
-           usleep( 1E6 / 60 );
-       }
+    // 1. Read the Camera pose for the update
+    if (!sProxyName.empty()) {
+      mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
+    }
 
-    return 0;
+    // 2. Update physics and scene
+    mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
+    mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
+    mProxy.m_Render.UpdateScene();
+
+    // 3. Update SimDevices
+    mProxy.m_SimDeviceManager.UpdateAlLDevice();
+
+    // 4. Update the Network
+    mProxy.m_NetworkManager.UpdateNetWork();
+
+    // 5. Show the image in the current window
+    mProxy.SetImagesToWindow(LSimCamImage,RSimCamImage);
+
+    // 6. Refresh screen
+    pangolin::FinishGlutFrame();
+    usleep( 1E6 / 60 );
+  }
+
+  return 0;
+
 }
 
