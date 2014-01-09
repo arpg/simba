@@ -16,7 +16,7 @@ using namespace std;
 class StateKeeper
 {
 public:
-    rpg::node                               m_Node;
+    hal::node                               m_Node;
 
     // ------------------------------------------------------------------------------------------------------------------------------
     // init StateKeeper
@@ -90,7 +90,7 @@ public:
                pReplyURDF->set_robot_name(iter->first);
                pReplyURDF->set_xml(pPreviousURDF->xml());
                cout<<"[StateKeeper/RegisterRobotProxy] Prepare previous robot URDF with robot name "<<sRobotName<<", key string name "<<iter->first<<" for "<<mRequest.proxy_name()<<endl;
-           }  
+           }
 
 
            // 4. subscribe to RobotPorxy's Robot state topic

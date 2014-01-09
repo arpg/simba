@@ -22,7 +22,7 @@ include_directories( ${HAL_INCLUDE_DIRS} )
 include_directories( ${Calibu_INCLUDE_DIRS} )
 include_directories( ${NODE_INCLUDE_DIRS})
 
-add_executable( RobotProxy RobotProxy.cpp )
+add_executable( RobotProxy RobotProxy.h RobotProxy.cpp )
 target_link_libraries( RobotProxy
                        ${NODE_LIBRARIES}
                        ${SceneGraph_LIBRARIES}
