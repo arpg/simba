@@ -21,6 +21,6 @@ link_libraries( ${TinyXML2_LIBRARIES})
 link_libraries( SimMessages) # common protocol buffers
 link_libraries( ${Pangolin_LIBRARIES})
 
-add_executable( StateKeeper StateKeeper.cpp )
+add_executable( StateKeeper StateKeeper.h StateKeeper.cpp )
 
 target_link_libraries( StateKeeper ${NODE_LIBRARIES} )

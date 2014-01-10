@@ -8,19 +8,20 @@ class PhyModelGraphAgent
 {
 
 public:
-    BulletModelGraphAgent  m_Agent;
+  BulletModelGraphAgent  m_Agent;
 
-    bool init()
+  bool init()
+  {
+    if(m_Agent.Init()== true)
     {
-        if(m_Agent.Init()== true)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+      return true;
     }
+    else
+    {
+      cout<<"Cannot init Physic ModelGraph Agent."<<endl;
+      return false;
+    }
+  }
 };
 
 

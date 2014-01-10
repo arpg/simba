@@ -11,26 +11,24 @@
 
 #include <iostream>
 #include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>               // for reference counting pointers
-#include <Eigen/Eigen>                        // for vector math
-#include <pangolin/pangolin.h>                // for OpenGL state management
-#include <SceneGraph/SceneGraph.h>            // for OpenGL SceneGraph
-#include <Utils/GetPot>                       // for command line parsing
-#include <Utils/CVarHelpers.h>                // for parsing Eigen Vars as CVars
-#include <CVars/CVar.h>                       // for GLConsole
+#include <Eigen/Eigen>                         // for vector math
+#include <SceneGraph/SceneGraph.h>             // for OpenGL SceneGraph
+#include <Utils/GetPot>                        // for command line parsing
+#include <Utils/CVarHelpers.h>                 // for parsing Eigen Vars as CVars
+#include <CVars/CVar.h>                        // for GLConsole
 
-#include <URDFParser/RobotProxyURDFParser.h>  // for parsing URDF file
-#include <World/WorldManager.h>               // for managing the World
-#include <Network/NetworkManager.h>           // for managing the Network
-#include <Device/SimDeviceManager.h>          // for managing all the SimDevices
-                                              // of the Robot we control
-#include <Robots/RobotsManager.h>             // for managing all robots
-#include <Robots/SimRobot.h>                  // for managing the User's robot
-#include <ModelGraph/PhyModelGraphAgent.h>    // for communicating between the
-                                              // Physics Engine and ModelGraph
+#include <URDFParser/RobotProxyURDFParser.h>   // for parsing URDF file
+#include <Managers/WorldManager.h>             // for managing the World
+#include <Managers/NetworkManager.h>           // for managing the Network
+#include <Managers/SimDeviceManager.h>         // for managing all the SimDevices
+                                               // of the Robot we control
+#include <Managers/RobotsManager.h>            // for managing all robots
+#include <Robots/SimRobot.h>                   // for managing the User's robot
+#include <ModelGraph/PhyModelGraphAgent.h>     // for communicating between the
+                                               // Physics Engine and ModelGraph
 #include <Device/Controller/PoseController.h>
-#include <Node/Node.h>                        // Node used for communication
-                                              // between RP and any devices
+#include <Node/Node.h>                         // Node used for communication
+                                               // between RP and any devices
 
 class RobotProxy{
 
@@ -82,10 +80,6 @@ public:
   void ForwardKey();
   void ReverseKey();
 
-
 };
-
-
-
 
 #endif // ROBOTPROXY_H

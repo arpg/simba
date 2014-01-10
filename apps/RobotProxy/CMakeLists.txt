@@ -21,6 +21,7 @@ include_directories( ${TinyXML2_INCLUDE_DIRS})
 include_directories( ${HAL_INCLUDE_DIRS} )
 include_directories( ${Calibu_INCLUDE_DIRS} )
 include_directories( ${NODE_INCLUDE_DIRS})
+include_directories( ../../src/Managers )
 
 add_executable( RobotProxy RobotProxy.h RobotProxy.cpp )
 target_link_libraries( RobotProxy
