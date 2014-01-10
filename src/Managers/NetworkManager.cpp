@@ -6,8 +6,8 @@
 ////////////////////////////////////////////////////////////////////////
 
 bool NetworkManager::initNetwork(string sProxyName, SimDeviceManager* pSimDeviceManager,
-                 RobotsManager* pRobotsManager,  string sServerName,
-                 int verbocity=0){
+                                 RobotsManager* pRobotsManager,  string sServerName,
+                                 int verbocity=0){
 
   // 1, check if we need to init Node for RobotProxy
   m_sServerName = sServerName;

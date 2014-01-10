@@ -5,10 +5,12 @@
 #include <string>
 #include <iostream>
 #include <URDFParser/RobotProxyURDFParser.h>
+
 using namespace std;
 
 class WorldManager
 {
+
 public:
     vector<double> vWorldPose;
     vector<double> vRobotPose;
@@ -18,15 +20,19 @@ public:
     int            iMass;
 
 
-    void PrintAll()
-    {
-        cout<<"---------------------------------------------------------------------------"<<endl<<
+    void PrintAll(){
+        cout<<"--------------------------------------------------------"<<endl<<
               "finish build world from world.XML"<<endl<<
-              "mesh dir is "<<m_sMesh<<endl<<"Scale is "<<iScale<<". mass is "<<iMass<<endl<<
-              "world pose is "<<vWorldPose[0]<<", "<<vWorldPose[1]<<", "<<vWorldPose[2]<<", "<<endl<<
-              "robot pose is "<<vRobotPose[0]<<", "<<vRobotPose[1]<<", "<<vRobotPose[2]<<", "<<vRobotPose[3]<<", "<<vRobotPose[4]<<", "<<vRobotPose[5]<<endl<<
-              "light pose is "<<vLightPose[0]<<", "<<vLightPose[1]<<", "<<vLightPose[2]<<", "<<endl<<
-              "---------------------------------------------------------------------------"<<endl;
+              "mesh dir is "<<m_sMesh<<endl<<"Scale is "<<iScale<<
+              ". mass is "<<iMass<<endl<<
+              "world pose is "<<vWorldPose[0]<<", "<<vWorldPose[1]<<", "<<
+              vWorldPose[2]<<", "<<endl<<
+              "robot pose is "<<vRobotPose[0]<<", "<<vRobotPose[1]<<", "<<
+              vRobotPose[2]<<", "<<vRobotPose[3]<<", "<<vRobotPose[4]<<", "<<
+              vRobotPose[5]<<endl<<
+              "light pose is "<<vLightPose[0]<<", "<<vLightPose[1]<<", "<<
+              vLightPose[2]<<", "<<endl<<
+              "--------------------------------------------------------"<<endl;
     }
 
 };
