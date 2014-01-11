@@ -6,7 +6,7 @@
 
 #include <SceneGraph/SceneGraph.h> // for open GL scene graph
 #include <SceneGraph/SimCam.h>     // for sim cam
-#include <ModelGraph/PhysicsClass.h>
+#include <ModelGraph/PhysicsEngine.h>
 
 // sensors
 #include <Device/Sensor/SimCam.h>

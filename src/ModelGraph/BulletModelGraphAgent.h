@@ -1,9 +1,9 @@
-// this is a bullet PhysicsClass warpper.
+// this is a bullet PhysicsEngine warpper.
 
 #ifndef BULLETMODELGRAPHAGENT_H
 #define BULLETMODELGRAPHAGENT_H
 
-#include <ModelGraph/PhysicsClass.h>
+#include <ModelGraph/PhysicsEngine.h>
 //#include <bullet/BulletWorldImporter/btBulletWorldImporter.h>
 
 class BulletModelGraphAgent

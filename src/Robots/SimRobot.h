@@ -5,7 +5,7 @@
 #include <SceneGraph/SceneGraph.h> // for open GL scene graph
 #include <ModelGraph/Models.h>
 #include <ModelGraph/RenderClass.h>
-#include <ModelGraph/PhysicsClass.h>
+#include <ModelGraph/PhysicsEngine.h>
 #include <ModelGraph/ModelGraphBuilder.h>
 #include <ModelGraph/PhyModelGraphAgent.h>
 #include <URDFParser/RobotProxyURDFParser.h>

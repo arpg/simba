@@ -3,7 +3,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>               // for reference counting pointers
-#include <ModelGraph/PhysicsClass.h>
+#include <ModelGraph/PhysicsEngine.h>
 
 
 

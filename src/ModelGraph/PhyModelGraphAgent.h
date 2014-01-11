@@ -8,6 +8,7 @@ class PhyModelGraphAgent
 {
 
 public:
+
   BulletModelGraphAgent  m_Agent;
 
   bool init()
@@ -23,7 +24,5 @@ public:
     }
   }
 };
-
-
 
 #endif // BULLETMODELGRAPHAGENT_H

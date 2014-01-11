@@ -3,7 +3,7 @@
 
 #include <ModelGraph/Models.h>
 #include <ModelGraph/RenderClass.h>
-#include <ModelGraph/PhysicsClass.h>
+#include <ModelGraph/PhysicsEngine.h>
 
 
 class ModelGraphBuilder{
