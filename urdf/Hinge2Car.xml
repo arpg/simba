@@ -1,10 +1,10 @@
 <robot name="Car">
-    <bodybase name="Chassis" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="3000"  pose="0,0,0,0,0,0"   dimesion="2,3,1"  scale="100"  type="Box"/>
-    <body name="FRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="100"  pose="3,3,2,0,1.5707,0"  dimesion="1,2"  scale="25" type="Cylinder"/>
-    <body name="FLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="100"  pose="-3,3,2,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
-    <body name="BRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="100"  pose="3,-3,2,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
-    <body name="BLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="100"  pose="-3,-3,2,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
-    <body name="Stick" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,-3,0,0,0"  dimesion="0.1,0.1,2" scale="25" type="Box"/>
+    <bodybase name="Chassis" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="3000"  pose="0,0,0,0,0,0"   dimesion="2,3,1"  scale="100"  type="Box"/>
+    <body name="FRWheel" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="100"  pose="3,3,2,0,1.5707,0"  dimesion="1,2"  scale="25" type="Cylinder"/>
+    <body name="FLWheel" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="100"  pose="-3,3,2,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
+    <body name="BRWheel" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="100"  pose="3,-3,2,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
+    <body name="BLWheel" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="100"  pose="-3,-3,2,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
+    <body name="Stick" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,-3,0,0,0"  dimesion="0.1,0.1,2" scale="25" type="Box"/>
 
     
     <joint name="FLWheelJoint" type="Hinge2Joint">

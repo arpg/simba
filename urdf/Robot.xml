@@ -1,10 +1,14 @@
 <robot name="Robot">
-    <bodybase name="Chassis" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="1000"  pose="0,0,0,0,0,1.5707" dimesion="1,1,3" scale="100"  type="Box"/>
-    <body name="FRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="2.5,0,-2,0,1.5707,0"  dimesion="1,2"  scale="25" type="Cylinder"/>
-    <body name="FLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="-2.5,0,-2,0,-1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
-    <body name="BRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="2.5,0,2.8,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
-    <body name="BLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="-2.5,0,2.8,0,-1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
-    <body name="Stick" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,-3,0,0,0,0"  dimesion="0.1,2,0.1" scale="25" type="Box"/>
+  <!--We do this so that we don't have five instances of a filepath to modify -->
+  <media_dir>
+    "/home/bminortx/Code/Dev/luma/SIM/media"
+  </media_dir>
+    <bodybase name="Chassis" dir="/home/bminortx/Code/Dev/luma/SIM/media" mass="1000"  pose="0,0,0,0,0,1.5707" dimesion="1,1,3" scale="100"  type="Box"/>
+    <body name="FRWheel" dir="/home/bminortx/Code/Dev/luma/SIM/media"  mass="10"  pose="2.5,0,-2,0,1.5707,0"  dimesion="1,2"  scale="25" type="Cylinder"/>
+    <body name="FLWheel" dir="/home/bminortx/Code/Dev/luma/SIM/media" mass="10"  pose="-2.5,0,-2,0,-1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
+    <body name="BRWheel" dir="/home/bminortx/Code/Dev/luma/SIM/media" mass="10"  pose="2.5,0,2.8,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
+    <body name="BLWheel" dir="/home/bminortx/Code/Dev/luma/SIM/media" mass="10"  pose="-2.5,0,2.8,0,-1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
+    <body name="Stick" dir="/home/bminortx/Code/Dev/luma/SIM/media" mass="10"  pose="0,-3,0,0,0,0"  dimesion="0.1,2,0.1" scale="25" type="Box"/>
     
     <joint name="FLAxleJoint" type="Hinge2Joint">
         <parent body="Chassis"/>
@@ -34,7 +38,7 @@
     </joint>-->
 
     
-    <joint name="BRAxleJoint" type="HingeJoint">
+    <joint name="braxlejoint" type="HingeJoint">
         <parent body = "Chassis"/>
         <child  body = "BRWheel"/>
         <pivot  setting = "2.5,0,2.8"/>
@@ -76,7 +80,7 @@
             Parent="Stick"
             Pose="0,-2,0,0,0,0"
             Location="@Proxy1"
-            Model="/Users/luma/Code/RobotGroup/simba/src/Device/lcmod.xml" />
+            Model="/home/bminortx/Code/SimBA/src/Device/lcmod.xml" />
 	
     <Sensor Name="ChassisVicon" Type="Vicon" Body="Chassis"/> <!-- Must include this sensor if use robot proxy! robot proxy need this sensor to get robot's pose (chassis's pose) information -->
     <Controller Name="MController" Mode="SimpleController"/>

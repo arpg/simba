@@ -3,7 +3,9 @@
  <Controller Name="MController" Type="CarController" SteeringBody="FLWheel,FRWheel" DrivingBody="BLWheel,BRWheel"/>
 
  <Device name="RCamera" type="Kinect" mode="RGBD" resolution="VGA" FPS="30" location="@SimWorld"/>
-
+<urdf_dir>
+"/Users/
+</urdf_dir>
  <Car name="myCar" type="FourWheelCar" model="bicycle" controller="PID"/>
          <bodybase name="Chassis" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="1000"  pose="0,0,0,0,0,1.5707" dimesion="2,1,3" scale="100"  type="Box"/>
          <body name="FRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="2.5,0,-2.8,0,1.5707,0"  dimesion="1,2"  scale="25" type="Cylinder"/>
