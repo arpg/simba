@@ -9,6 +9,7 @@
 #include <Utils/ConvertName.h>
 #include <URDFParser/StateKeeperURDFParser.h>
 
+
 class StateKeeper
 {
 
@@ -20,9 +21,6 @@ public:
 
   ///Functions
   void InitRobotPose();
-  static void _RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
-                                  RegisterRobotProxyRepMsg& mReply,
-                                  void* pUserData);
   void RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
                           RegisterRobotProxyRepMsg& mReply);
   bool CheckIfNeedToSendProxysURDF();
@@ -30,6 +28,21 @@ public:
   bool ReceiveWorldFullState();
   bool PublishWorldFullState();
   void ClearAllPreviousMessageIfNecessary();
+
+  ////////////////////////////////////////////////////////////////////////
+
+  // Register a RobotProxy with the StateKeeper using its name.
+
+  static void _RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
+                                               RegisterRobotProxyRepMsg& mReply,
+                                               void* pUserData){
+    ((StateKeeper*)pUserData)->RegisterRobotProxy(mRequest, mReply);
+  }
+
+  /////////
+
+
+
 
 
 private:

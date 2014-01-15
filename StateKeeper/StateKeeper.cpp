@@ -36,15 +36,7 @@ void StateKeeper::InitRobotPose()
   ParseWorldForInitialPoses(m_sWorldURDFFileName.c_str(), m_vInitialPose);
 }
 
-////////////////////////////////////////////////////////////////////////
 
-// Register a RobotProxy with the StateKeeper using its name.
-
-static void StateKeeper::_RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
-                                             RegisterRobotProxyRepMsg& mReply,
-                                             void* pUserData){
-  ((StateKeeper*)pUserData)->RegisterRobotProxy(mRequest, mReply);
-}
 
 ////////////////////////////////////////////////////////////////////////
 

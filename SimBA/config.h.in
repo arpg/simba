@@ -1,0 +1,19 @@
+#ifndef SIMBA_CONFIG_H
+#define SIMBA_CONFIG_H
+
+/// Platform
+#cmakedefine _UNIX_
+#cmakedefine _WIN_
+#cmakedefine _OSX_
+#cmakedefine _LINUX_
+#cmakedefine _ANDROID_
+
+/// Configured libraries
+#cmakedefine HAVE_PANGOLIN
+#cmakedefine HAVE_BULLET
+#cmakedefine HAVE_SCENEGRAPH
+#cmakedefine HAVE_CALIBU
+#cmakedefine HAVE_PROTOBUF
+#cmakedefine HAVE_NODE
+
+#endif //SIMBA_CONFIG_H
