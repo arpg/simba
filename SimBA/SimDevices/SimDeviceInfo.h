@@ -1,0 +1,25 @@
+#ifndef SIMDEVICEINFO_H
+#define SIMDEVICEINFO_H
+
+#include <vector>
+#include <string>
+
+using namespace std;
+
+// class for every Sensor SimDevice.
+class SimDeviceInfo
+{
+public:
+    string           sDeviceName;    // device name
+    string           sDeviceType;    // name for device type
+    string           sDeviceMode;
+    string           sBodyName;
+    string           sRobotName;
+    int              m_iFPS;
+    vector<string>   m_vSensorList;  // name for sensor of the device
+    vector<string>   m_vModel;       // path of model.xml file for the sensor
+
+};
+
+
+#endif // SIMDEVICEINFO_H
