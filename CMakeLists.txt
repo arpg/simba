@@ -15,6 +15,4 @@ add_subdirectory( SimBA/PB_Headers )
 
 #Create everything else.
 add_subdirectory( SimBA )
-add_subdirectory( RobotProxy )
-add_subdirectory( StateKeeper )
-add_subdirectory( Examples )
+add_subdirectory( Applications )
