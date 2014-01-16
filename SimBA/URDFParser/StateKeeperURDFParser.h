@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <Eigen/Eigen>
-#include <URDFParser/TinXMLTool.h>
+#include <URDFParser/TinyXMLTool.h>
 
 using namespace tinyxml2;
 using namespace std;

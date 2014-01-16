@@ -1,0 +1,13 @@
+<camera_model name="right" index="1" serialno="-1" type="MVL_CAMERA_LINEAR" version="7">
+    <width> 512 </width>
+    <height> 384 </height>
+    <pose> 0; 0.1; 0; 0; -0; 0 </pose>
+    <right> 0; 1; 0 </right>
+    <down> 0; 0; 1 </down>
+    <forward> 1; 0; 0 </forward>
+    <fx> 352 </fx>
+    <cx> 262.4 </cx>
+    <fy> 414.4 </fy>
+    <cy> 150.4 </cy>
+    <sx> 0 </sx>
+</camera_model>

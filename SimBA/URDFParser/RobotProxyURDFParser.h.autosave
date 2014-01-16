@@ -76,7 +76,7 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
     const char* sRootContent = pElement->Name();
 
     /// Since all parts to the robot are in the same directory, then just make
-    /// one mesh_dir variable for every part.
+    /// one mesh_dir variable for every part.`
     //    if(strcmp(sRootContent,"mesh_dir")==1){
     //      pElement=pElement->NextSiblingElement();
     //    }

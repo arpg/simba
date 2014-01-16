@@ -1,4 +1,8 @@
 build
 *~
-*.xml
 *.txt.user
+/#CMakeLists.txt#
+/.#CMakeLists.txt
+/SimBA/#CMakeLists.txt#
+/SimBA/.#CMakeLists.txt
+/Unnamed_coqscript_1.crashcoqide

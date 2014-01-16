@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <string>
-#include <URDFParser/TinXMLTool.h>
+#include <URDFParser/TinyXMLTool.h>
 
 using namespace std;
 

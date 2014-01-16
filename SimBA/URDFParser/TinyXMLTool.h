@@ -1,5 +1,5 @@
-#ifndef TINXMLTOOL_H
-#define TINXMLTOOL_H
+#ifndef TINYXMLTOOL_H
+#define TINYXMLTOOL_H
 
 #include "/usr/local/include/tinyxml2.h"
 #include <vector>
@@ -65,4 +65,4 @@ inline string GetAttribute(tinyxml2::XMLElement *pElement, const char* cAttribut
 }
 
 
-#endif // TINXMLTOOL_H
+#endif // TINYXMLTOOL_H
