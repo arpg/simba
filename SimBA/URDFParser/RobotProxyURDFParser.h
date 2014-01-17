@@ -58,8 +58,7 @@ inline bool ParseWorld(const char* filename, WorldManager& mWorldManager)
 // This is also considered as RobotName.
 // the name of any body of robot is: BodyName@RobotName@ProxyName, first, middle and last name
 // the name of any joint of robot is: JointName@RobotName@ProxyName, first, middle and last name
-inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
-                       Eigen::Vector6d& InitPose, string sProxyName)
+inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel, Eigen::Vector6d& InitPose, string sProxyName)
 {
   XMLElement *pParent=doc->RootElement();
   XMLElement *pElement=pParent->FirstChildElement();
@@ -99,6 +98,7 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
         Body* pBodyBase = new Body(sBodyName, box, iMass );
         pBodyBase->SetPose( vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5] );
         m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pBodyBase));
+
         m_RobotModel.SetBase( pBodyBase ); // main body
       }
     }
@@ -120,6 +120,7 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
         Body* pBody = new Body(sBodyName, box, iMass );
         pBody->SetPose( vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5] );
         m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pBody));
+
       }
       else if(strcmp(sType,"Cylinder")==0)
       {
@@ -127,6 +128,7 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
         Body* pCylinder = new Body(sBodyName, cylinder, iMass);
         pCylinder->SetPose(vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5]);
         m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pCylinder));
+
       }
     }
 
@@ -137,6 +139,7 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
 
       if(sType == "Camera")
       {
+          cout<<"[ParseRobot] Init Camera"<<endl;
         const char* sMode = pElement->Attribute("Mode");
         //----------------------------------------------------------------------------------------- Singel Camera
         if(strcmp(sMode, "RGB")==0 || strcmp(sMode,"Depth")==0 ||strcmp(sMode,"Gray")==0)
@@ -161,7 +164,7 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
           Eigen::Vector3d vAxis;
           vPivot<<vPose[0],vPose[1]+2,vPose[2]-3.2;
           vAxis<<1,1,1;
-          //HingeJoint* pHinge = new HingeJoint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sSensorName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],1000,1000,0,3.1415926 );
+          HingeJoint* pHinge = new HingeJoint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sSensorName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2] );
         }
 
         // ---------------------------------------------------------------------------------------- RGB-Depth Camera
@@ -181,21 +184,14 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
           pBody->SetPose(0,-2.1,0, 0, 0, 0 );
           m_mBodys.insert(std::pair<std::string,Body*>(sCameraName,pBody));
 
-
           /// create joints
           Eigen::Vector3d vPivot;
           Eigen::Vector3d vAxis;
           // 2.3 create joint for SimCam and parent
-
           string sJointName = "SimCamJoint"+sCameraName;
           vPivot<< 0, 0, 0;
           vAxis<<0,-1,0;
-          //HingeJoint* pRGBDHinge = new HingeJoint( sJointName,
-          //                                                             m_mBodys.find(sParentName)->second,
-          //                                                             pBody,
-          //                                                             vPivot[0], vPivot[1], vPivot[2],
-          //                                                             vAxis[0],vAxis[1],vAxis[2],
-          //                                                             100,100,0,0.01 );
+          HingeJoint* pRGBDHinge = new HingeJoint( sJointName, m_mBodys.find(sParentName)->second, pBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
 
           // 1.1 create body for RGB Cam
           string sRGBBodyName = "RGB"+sCameraName;
@@ -208,7 +204,7 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
           string sRGBJointName = "SimCamJoint"+sRGBBodyName;
           vPivot<<-0.5, 0, 0;
           vAxis<< 1,0,0;
-          //                    HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, m_mBodys.find(sCameraName)->second, m_mBodys.find(sRGBBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2], 100, 100, -M_PI, M_PI );
+          HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, m_mBodys.find(sCameraName)->second, m_mBodys.find(sRGBBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2] );
           //HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, pBody, pRGBBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2], 100, 100, -M_PI, M_PI );
 
           // 1.2 create body for Depth Cam
@@ -222,13 +218,7 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
           string sDepthJointName = "SimCamJoint"+sDepthBodyName;
           vPivot<< 0.5, 0, 0;
           vAxis<<  1, 0, 0;
-          //HingeJoint* pDepthHinge = new HingeJoint( sDepthJointName,
-          //                                                              pBody,
-          //                                                              pDepthBody,
-          //                                                              vPivot[0], vPivot[1], vPivot[2],
-          //                                                              vAxis[0],vAxis[1],vAxis[2],
-          //                                                              1, 0, 0,
-          //                                                              100,100,-M_PI,M_PI );
+          HingeJoint* pDepthHinge = new HingeJoint( sDepthJointName,pBody, pDepthBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
         }
       }
       // ---------------------------------------------------------------------------------------- RGB-Depth Camera
@@ -319,8 +309,8 @@ inline bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
           pChild=pChild->NextSiblingElement();
         }
 
-        //HingeJoint* pHinge = new HingeJoint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sChildName)->second,
-        //                                                     vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],dStiffness,dDamping,dLowerLimit,dUpperLimit );
+        HingeJoint* pHinge = new HingeJoint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sChildName)->second,
+                                             vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
 
       }
       else if(sJointType=="Hinge2Joint")
@@ -438,14 +428,16 @@ inline bool ParseDevice(XMLDocument& doc, vector<SimDeviceInfo>&  m_vSimDeviceIn
           string sCamMode(sMode);
           string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
+          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
 
           // save device info
           SimDeviceInfo Device;
-          Device.sDeviceName = sCameraName;
-          Device.sDeviceType = sType;
+          Device.m_sDeviceName = sCameraName;
+          Device.m_sDeviceType = sType;
           Device.m_iFPS = iFPS;
           Device.m_vSensorList.push_back(sSensorName);
           Device.m_vModel.push_back(sModel);
+          Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
           m_vSimDeviceInfo.push_back(Device);
 
           cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCam "<<sSensorName<<") success. Device Name is "<<sCameraName<<"."<<endl;
@@ -458,16 +450,18 @@ inline bool ParseDevice(XMLDocument& doc, vector<SimDeviceInfo>&  m_vSimDeviceIn
           string sRGBBodyName = "RGB"+sCameraName;
           string sDepthBodyName = "Depth"+sCameraName;
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
+          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
 
           // 3 save intp device, this device have two sensors
           SimDeviceInfo Device;
-          Device.sDeviceName = sCameraName;
-          Device.sDeviceType = sType;
+          Device.m_sDeviceName = sCameraName;
+          Device.m_sDeviceType = sType;
           Device.m_iFPS = iFPS;
           Device.m_vSensorList.push_back(sRGBBodyName);
           Device.m_vSensorList.push_back(sDepthBodyName);
           Device.m_vModel.push_back(sModel);
           Device.m_vModel.push_back(sModel);
+          Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
           m_vSimDeviceInfo.push_back(Device);
 
           cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCam "<<sMode<<") success." <<endl;
@@ -488,9 +482,9 @@ inline bool ParseDevice(XMLDocument& doc, vector<SimDeviceInfo>&  m_vSimDeviceIn
         string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
 
         SimDeviceInfo Device;
-        Device.sDeviceName = sViconName;
-        Device.sDeviceType = sType;
-        Device.sBodyName = sBodyName;
+        Device.m_sDeviceName = sViconName;
+        Device.m_sDeviceType = sType;
+        Device.m_sBodyName = sBodyName;
         m_vSimDeviceInfo.push_back(Device);
         cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<" success."<<endl;
       }
@@ -507,10 +501,10 @@ inline bool ParseDevice(XMLDocument& doc, vector<SimDeviceInfo>&  m_vSimDeviceIn
         string  sControllerName = GetAttribute(pElement, "Name");
 
         SimDeviceInfo Device;
-        Device.sDeviceName = sControllerName;
-        Device.sDeviceType = sType;
-        Device.sDeviceMode = sMode;
-        Device.sRobotName = sRobotName;
+        Device.m_sDeviceName = sControllerName;
+        Device.m_sDeviceType = sType;
+        Device.m_sDeviceMode = sMode;
+        Device.m_sRobotName = sRobotName;
         m_vSimDeviceInfo.push_back(Device);
         cout<<"[Proxy/ParseDevice] Add controller device "<<sControllerName<<" success."<<endl;
       }

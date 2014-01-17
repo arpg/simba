@@ -75,6 +75,6 @@ Planned modes (not currently supported):
 ===================
 As its name suggests, the StateKeeper object records the sensor info from our robot over time. In this example, we name it 'StateKeeper', and initialize our world with the 'World.xml' URDF file. You'll notice that the Robot object has not been initialized; this is done separately.
 
->>	./StateKeeper -n StateKeeper -w /Users/malu/Code/Luma/simba/urdf/World.xml
+>>	./StateKeeper -n StateKeeper -w /Users/luma/Code/RobotGroup/simba/urdf/World.xml
 
 

@@ -14,7 +14,6 @@
 #include <Eigen/Eigen>                         // for vector math
 #include <SceneGraph/SceneGraph.h>             // for OpenGL SceneGraph
 
-
 #include "Managers/NetworkManager.h"           // for managing the Network
 #include "Managers/WorldManager.h"             // for managing the World
 #include "Managers/SimDeviceManager.h"         // for managing all the SimDevices
@@ -25,7 +24,6 @@
 #include "Utils/CVarHelpers.h"                 // for parsing Eigen Vars as CVars
 #include <CVars/CVar.h>                        // for GLConsole
 #include <Utils/GetPot>                        // for command line parsing
-
 
 
 #include "Managers/RobotsManager.h"            // for managing all robots

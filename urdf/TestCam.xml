@@ -23,5 +23,5 @@
             Parent="Stick"
             Pose="0,-2,0,0,0,-1.57"
             Location="@Proxy1"
-            Model="/home/bminortx/Code/SimBA/src/Device/lcmod.xml" />
+            Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml" />
 </robot>

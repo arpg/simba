@@ -77,7 +77,7 @@ bool NetworkManager::initDevices()
     for(unsigned int i = 0; i!= m_pSimDeviceManager->m_SimDevices.size();i++)
     {
       SimDeviceInfo Device = m_pSimDeviceManager->m_SimDevices[i];
-      string sServiceName = GetFirstName(Device.sDeviceName);
+      string sServiceName = GetFirstName(Device.m_sDeviceName);
 
       if(m_Node.advertise(sServiceName)==true)
       {
@@ -428,8 +428,8 @@ bool NetworkManager::UpdateNetWork()
   for(unsigned int i=0;i!= m_pSimDeviceManager->m_SimDevices.size();i++)
   {
     SimDeviceInfo Device = m_pSimDeviceManager->m_SimDevices[i];
-    string sDeviceType = Device.sDeviceType;
-    string sDeviceName = Device.sDeviceName;
+    string sDeviceType = Device.m_sDeviceType;
+    string sDeviceName = Device.m_sDeviceName;
 
     if( sDeviceType == "Camera")                      // update Camera info
     {
@@ -540,7 +540,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
   for(unsigned int i = 0; i!= m_pSimDeviceManager->m_SimDevices.size(); i++)
   {
     SimDeviceInfo Device = m_pSimDeviceManager->m_SimDevices[i];
-    string sDeviceName = Device.sDeviceName;
+    string sDeviceName = Device.m_sDeviceName;
 
     if(sDeviceName == sCamName)
     {

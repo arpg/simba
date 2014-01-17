@@ -17,8 +17,11 @@ bool SimDeviceManager::Init(PhyModelGraphAgent& pPhyMGAgent,
                             tinyxml2::XMLDocument& doc,
                             string sProxyName){
   ParseDevice(doc, m_SimDevices, sProxyName);
+  cout<<"[SimDeviceManager] Parse all Devices succes!"<<endl;
   m_rPhyMGAgent = pPhyMGAgent;
+
   InitDevices(rSceneGraph);
+  cout<<"[SimDeviceManager] Init all Devices success!"<<endl;
   return true;
 }
 
@@ -28,7 +31,7 @@ bool SimDeviceManager::Init(PhyModelGraphAgent& pPhyMGAgent,
 void SimDeviceManager::InitDevices(SceneGraph::GLSceneGraph&  rSceneGraph){
   for(unsigned int i = 0; i!= m_SimDevices.size(); i++){
     SimDeviceInfo Device = m_SimDevices[i];
-    string sDeviceType = Device.sDeviceType;
+    string sDeviceType = Device.m_sDeviceType;
 
     if(sDeviceType == "Camera"){
       InitCamDevice(Device, Device.m_vModel[0], rSceneGraph);
@@ -55,17 +58,18 @@ void SimDeviceManager::InitDevices(SceneGraph::GLSceneGraph&  rSceneGraph){
 void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel,
                                      SceneGraph::GLSceneGraph&  rSceneGraph)
 {
-  string sCameraName = Device.sDeviceName;
+  string sCameraName = Device.m_sDeviceName;
   int iFPS = Device.m_iFPS;
   for(unsigned int j = 0; j!= Device.m_vSensorList.size(); j++)
   {
     string sSensorName = Device.m_vSensorList[j]; // e.g. LCameraRGB. This may be bad
 
-    Eigen::Vector6d initPose;
-    initPose = m_rPhyMGAgent.m_Agent.GetEntity6Pose(sSensorName);
+    // get init pose for camera via its entity
+//    Eigen::Vector6d initPose = m_rPhyMGAgent.m_Agent.GetEntity6Pose(sSensorName);
 
-    cout<<"[SimCam] The Camera model use define by RobotURDF is: "<<sCameraModel<<endl;
-
+    Eigen::Vector6d initPose = Device.m_vPose;
+    // init sim cam
+    cout<<"[SimCam] Camera model use define by RobotURDF is: "<<sCameraModel<<endl;
     SimCam* pSimCam = new SimCam();
 
     if(sSensorName == "Gray" + sCameraName)           //---------- init gray Cam
@@ -92,8 +96,8 @@ void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel,
 
 void SimDeviceManager::InitViconDevice(SimDeviceInfo& Device)
 {
-  string sDeviceName = Device.sDeviceName;
-  string sBodyName = Device.sBodyName;
+  string sDeviceName = Device.m_sDeviceName;
+  string sBodyName = Device.m_sBodyName;
   SimVicon* pSimVicon = new SimVicon;
   pSimVicon->init(sDeviceName, sBodyName, m_rPhyMGAgent );
   m_SimViconList.insert(pair<string, SimVicon*>(sDeviceName,pSimVicon));
@@ -103,9 +107,9 @@ void SimDeviceManager::InitViconDevice(SimDeviceInfo& Device)
 
 void SimDeviceManager::InitController(SimDeviceInfo& Device)
 {
-  string sDeviceName = Device.sDeviceName;
-  string sDeviceMode = Device.sDeviceMode;
-  string sRobotName = Device.sRobotName;
+  string sDeviceName = Device.m_sDeviceName;
+  string sDeviceMode = Device.m_sDeviceMode;
+  string sRobotName = Device.m_sRobotName;
 
   if(sDeviceMode == "SimpleController")
   {

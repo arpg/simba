@@ -49,13 +49,12 @@ RobotProxy::RobotProxy(
   }
 
   // 4. Init User's Robot and add it to RobotManager
-  m_RobotManager.Init(m_sProxyName, sServerName ,m_PhyMGAgent,m_Render);
+  m_RobotManager.Init(m_sProxyName, sServerName, m_PhyMGAgent, m_Render);
   if( m_RobotManager.AddRobot(RobotURDF, m_sProxyName) !=true )
   {
-    cout<<"[RobotProxy] Cannot add new robot to RobotManager."<<endl;
-    exit(-1);
+      cout<<"[RobotProxy] Cannot add new robot to RobotManager."<<endl;
+      exit(-1);
   }
-
 
   ////What to do here....
   ////
@@ -66,19 +65,19 @@ RobotProxy::RobotProxy(
   //////
 
   // 5. Initialize the Network
-  if(m_NetworkManager.initNetwork(m_sProxyName, &m_SimDeviceManager,
-                                  &m_RobotManager,  sServerName)!=true){
-    cout<<"[RobotProxy] You chose to connect to '"<<sServerName<<
-          "' but we cannot initialize Network."<<
-          "Please make sure the StateKeeper is running."<<endl;
-    exit(-1);
+  if(m_NetworkManager.initNetwork(m_sProxyName, &m_SimDeviceManager, &m_RobotManager,  sServerName)!=true)
+  {
+      cout<<"[RobotProxy] You chose to connect to '"<<sServerName<<
+            "' but we cannot initialize Network."<<
+            "Please make sure the StateKeeper is running."<<endl;
+      exit(-1);
   }
 
   // 6. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
-  if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF,
-                             m_sProxyName)!= true){
-    cout<<"[RobotProxy] Cannot init SimDeviceManager."<<endl;
-    exit(-1);
+  if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF, m_sProxyName)!= true)
+  {
+      cout<<"[RobotProxy] Cannot init SimDeviceManager."<<endl;
+      exit(-1);
   }
 
   m_SimpPoseController.Init(sPoseFileName);
@@ -90,7 +89,8 @@ RobotProxy::RobotProxy(
       exit(-1);
     }
   }
-  else{
+  else
+  {
     cout<<"[RobotProxy] Init Robot Proxy without Network."<<endl;
   }
 
@@ -104,7 +104,6 @@ RobotProxy::RobotProxy(
 
 // InitReset will populate SceneGraph with objects, and
 // register these objects with the simulator.
-
 void RobotProxy::InitReset()
 {
   m_rSceneGraph.Clear();
@@ -131,8 +130,7 @@ void RobotProxy::InitReset()
     Body* ground = new Body("Ground", bs);
     ground->m_dMass = 0;
     ground->SetWPose( m_ground.GetPose4x4_po() );
-    m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground",
-                                                   m_ground.GetPose());
+    m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground", m_ground.GetPose());
     m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
   }
   // init world with mesh
@@ -155,13 +153,13 @@ void RobotProxy::InitReset()
       exit(-1);
     }
   }
+
+  cout<<"Init World Success"<<endl;
   m_Render.AddToScene( &m_rSceneGraph );
 }
 
 //////////////////////////////////////////////////////////////////
-
 // Apply the camera's pose directly to the SimCamera
-
 void RobotProxy::ApplyCameraPose(Eigen::Vector6d dPose){
   Eigen::Vector6d InvalidPose;
   InvalidPose<<1,88,99,111,00,44;
@@ -185,89 +183,87 @@ void RobotProxy::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
 }
 
 // ---- Step Forward
-void RobotProxy::StepForward(){
+void RobotProxy::StepForward()
+{
   m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
   m_Render.UpdateScene();
 }
 
 //////////////////////////////////////////////////////////////////
-
 // Scan all SimDevices and send the simulated camera images to Pangolin.
 // Right now, we can only support up to two windows.
+bool RobotProxy::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::ImageView& RSimCamWnd ){
+    int WndCounter = 0;
 
-bool RobotProxy::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
-                                   SceneGraph::ImageView& RSimCamWnd ){
-  int WndCounter = 0;
+    for(unsigned int i =0 ; i!= m_SimDeviceManager.m_SimDevices.size(); i++){
+      SimDeviceInfo Device = m_SimDeviceManager.m_SimDevices[i];
 
-  for(unsigned int i =0 ; i!= m_SimDeviceManager.m_SimDevices.size(); i++){
-    SimDeviceInfo Device = m_SimDeviceManager.m_SimDevices[i];
+      for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
 
-    for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
+        string sSimCamName = Device.m_vSensorList[j];
+        SimCam* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
 
-      string sSimCamName = Device.m_vSensorList[j];
-      SimCam* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
+        SceneGraph::ImageView* ImageWnd;
 
-      SceneGraph::ImageView* ImageWnd;
-
-      // get pointer to window
-      if(WndCounter == 0){
-        ImageWnd = &LSimCamWnd;
-      }
-      else if(WndCounter == 1){
-        ImageWnd = &RSimCamWnd;
-      }
-
-      WndCounter++;
-
-      // set image to window
-      if (pSimCam->m_iCamType == 5){       // for depth image
-        float* pImgbuf = (float*) malloc( pSimCam->g_nImgWidth *
-                                          pSimCam->g_nImgHeight *
-                                          sizeof(float) );
-
-        if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
-                             pSimCam->g_nImgHeight,
-                             GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
-          free(pImgbuf);
+        // get pointer to window
+        if(WndCounter == 0){
+          ImageWnd = &LSimCamWnd;
         }
-        else{
-          cout<<"[SetImagesToWindow] Set depth Image fail"<<endl;
-          return false;
+        else if(WndCounter == 1){
+          ImageWnd = &RSimCamWnd;
         }
-      }
-      else if(pSimCam->m_iCamType == 2){   // for RGB image
-        char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
-                                      pSimCam->g_nImgHeight * 3);
 
-        if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
-                             pSimCam->g_nImgHeight,
-                             GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
-          free(pImgbuf);
+        WndCounter++;
+
+        // set image to window
+        if (pSimCam->m_iCamType == 5){       // for depth image
+          float* pImgbuf = (float*) malloc( pSimCam->g_nImgWidth *
+                                            pSimCam->g_nImgHeight *
+                                            sizeof(float) );
+
+          if(pSimCam->capture(pImgbuf)==true){
+            ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
+                               pSimCam->g_nImgHeight,
+                               GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
+            free(pImgbuf);
+          }
+          else{
+            cout<<"[SetImagesToWindow] Set depth Image fail"<<endl;
+            return false;
+          }
         }
-        else{
-          cout<<"[SetImagesToWindow] Set RGB Image fail"<<endl;
-          return false;
+        else if(pSimCam->m_iCamType == 2){   // for RGB image
+          char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
+                                        pSimCam->g_nImgHeight * 3);
+
+          if(pSimCam->capture(pImgbuf)==true){
+            ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
+                               pSimCam->g_nImgHeight,
+                               GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
+            free(pImgbuf);
+          }
+          else{
+            cout<<"[SetImagesToWindow] Set RGB Image fail"<<endl;
+            return false;
+          }
         }
-      }
-      else if(pSimCam->m_iCamType == 1){    //to show greyscale image
-        char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
-                                      pSimCam->g_nImgHeight);
-        if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
-                             pSimCam->g_nImgHeight,
-                             GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
-          free(pImgbuf);
-        }
-        else{
-          cout<<"[SetImagesToWindow] Set Gray Image fail"<<endl;
-          return false;
+        else if(pSimCam->m_iCamType == 1){    //to show greyscale image
+          char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
+                                        pSimCam->g_nImgHeight);
+          if(pSimCam->capture(pImgbuf)==true){
+            ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
+                               pSimCam->g_nImgHeight,
+                               GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+            free(pImgbuf);
+          }
+          else{
+            cout<<"[SetImagesToWindow] Set Gray Image fail"<<endl;
+            return false;
+          }
         }
       }
     }
-  }
-  return true;
+    return true;
 }
 
 ////////////////////
@@ -280,8 +276,7 @@ void RobotProxy::LeftKey(){
   // update RGB camera pose
   string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-  Eigen::Vector6d dPoseRGB =
-      _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
   dPoseRGB(5,0) = dPoseRGB(5,0) - 0.1;
   m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
@@ -308,8 +303,7 @@ void RobotProxy::RightKey(){
   // update RGB camera pose
   string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-  Eigen::Vector6d dPoseRGB =
-      _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
   dPoseRGB(5,0) = dPoseRGB(5,0) + 0.1;
   m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
@@ -330,16 +324,14 @@ void RobotProxy::ForwardKey(){
   // update RGB camera pose
   string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-  Eigen::Vector6d dPoseRGB =
-      _T2Cart( m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+  Eigen::Vector6d dPoseRGB = _T2Cart( m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
   dPoseRGB(1,0) = dPoseRGB(1,0) + 1;
   m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
   // update Depth camera pose
   string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
-  Eigen::Vector6d dPoseDepth =
-      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+  Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
   dPoseDepth(1,0) = dPoseDepth(1,0) + 1;
   m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
 }
@@ -350,16 +342,14 @@ void RobotProxy::ReverseKey(){
   // update RGB camera pose
   string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-  Eigen::Vector6d dPoseRGB =
-      _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
   dPoseRGB(1,0) = dPoseRGB(1,0) - 1;
   m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
   // update Depth camera pose
   string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
-  Eigen::Vector6d dPoseDepth =
-      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+  Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
   dPoseDepth(1,0) = dPoseDepth(1,0) - 1;
   m_SimDeviceManager.
       GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
@@ -411,7 +401,6 @@ int main( int argc, char** argv )
   RobotProxy mProxy( glGraph, sProxyName, sRobotURDF,
                      sWorldURDF, sServerOption, sPoseFile);
   mProxy.InitReset();
-
 
   //---------------------------------------------------------------------------
   // <Pangolin boilerplate>
@@ -500,10 +489,11 @@ int main( int argc, char** argv )
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     view3d.Activate(stacks3d);
 
-    // 1. Read the Camera pose for the update
-    if (!sProxyName.empty()) {
-      mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
-    }
+//    // 1. Read the Camera pose for the update
+//    if (!sProxyName.empty())
+//    {
+//      mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
+//    }
 
     // 2. Update physics and scene
     mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
