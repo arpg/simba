@@ -101,7 +101,7 @@ list(APPEND SIMROBOTS_HDRS
 
 list(APPEND URDFPARSER_HDRS
   URDFParser/RobotProxyURDFParser.h
-  URDFParser/TinyXMLTool.h
+  URDFParser/TinXMLTool.h
   URDFParser/GenURIFromURDF.h
   URDFParser/StateKeeperURDFParser.h
 )
