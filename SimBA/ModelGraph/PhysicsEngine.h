@@ -277,7 +277,6 @@ public:
   /// OBJECT DELETION
   ///
   //////////////////////////////////////////////////////////
-
   void DeleteHingeConstraintFromDynamicsWorld(string sConstraintName){
     btHingeConstraint* h = getHingeConstraint(sConstraintName);
     btDiscreteDynamicsWorld* dynmaicsWorld = m_pDynamicsWorld.get();
@@ -285,7 +284,6 @@ public:
   }
 
   ///////////////////////////////////////////////////////////////////
-
   void DeleteHinge2ConstraintFromDynamicsWorld(string sConstraintName){
     btHinge2Constraint* h = getHinge2Constraint(sConstraintName);
     btDiscreteDynamicsWorld* dynmaicsWorld = m_pDynamicsWorld.get();
@@ -293,9 +291,7 @@ public:
   }
 
   ///////////////////////////////////////////////////////////////////
-
   // Important! Must remove the constraint before removing the rigid body
-
   void DeleteRigidbodyFromDynamicsWorld(string sBodyFullName){
     Entity e = getEntity(sBodyFullName);
     btRigidBody* objectbody = e.m_pRigidBody.get();
@@ -317,9 +313,7 @@ public:
   }
 
   ///////////////////////////////////////////////////////////////////
-
   // Remove all bodies and joints in m_mEntities mapping
-
   void EraseBodyInEntitiesList(string sEntityName){
     boost::shared_ptr<Entity> pEntity =  m_mEntities.find(sEntityName)->second;
     pEntity.reset();
@@ -331,7 +325,6 @@ public:
   /// GETTERS
   ///
   //////////////////////////////////////////////////////////
-
   boost::shared_ptr<Entity> GetParentEntity( Entity &e )
   {
     if (e.GetParentName()) {
@@ -341,7 +334,6 @@ public:
   }
 
   ///////////////////////////////////////////////////////////////////
-
   Eigen::Matrix4d GetRelativePose( Entity &rChild)
   {
     boost::shared_ptr<Entity> pParent = GetParentEntity(rChild);
@@ -354,21 +346,22 @@ public:
   }
 
   ///////////////////////////////////////////////////////////////////
-
-  Entity getEntity(string name){
-    if(m_mEntities.find(name) !=m_mEntities.end()){
-      Entity e =*m_mEntities.find(name)->second;
-      return e;
+  Entity getEntity(string name)
+  {
+    if(m_mEntities.find(name) !=m_mEntities.end())
+    {
+        Entity e =*m_mEntities.find(name)->second;
+        return e;
     }
-    else{
-      cout<<"Fatal Error! Cannot get entity '"<<name<<"'. Exit!"<<endl;
-      Entity e =*m_mEntities.find(name)->second;
-      return e;
+    else
+    {
+        cout<<"[PhysicsEngine] Fatal Error! Cannot get entity '"<<name<<"'. Exit!"<<endl;
+        Entity e =*m_mEntities.find(name)->second;
+        return e;
     }
   }
 
   ///////////////////////////////////////////////////////////////////
-
   vector<string> GetAllEntityName(){
     vector<string> vNameList;
     std::map<string, boost::shared_ptr<Entity> >::iterator iter = m_mEntities.begin();
@@ -378,6 +371,7 @@ public:
     }
     return vNameList;
   }
+
 
   ///////////////////////////////////////////////////////////////////
 

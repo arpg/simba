@@ -4,11 +4,10 @@
 /// INITIALIZE the RobotsManager
 ////////////////////////////////////////////////////////////////////////
 
-void RobotsManager::Init(string sProxyName, string sServerName,
-                         PhyModelGraphAgent& rPhyMGAgent, Render& rRender)
+void RobotsManager::Init(string sProxyName, string sServerName, PhyModelGraphAgent& rPhyMGAgent, Render& rRender)
 {
   m_PhyMGAgent = rPhyMGAgent;
-  m_Render = rRender;
+  m_Render     = rRender;
   m_sProxyName = sProxyName;
 
   if(sServerName == "WithoutStateKeeper" || sServerName =="WithoutNetwork")

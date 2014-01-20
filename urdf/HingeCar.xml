@@ -5,7 +5,6 @@
     <body name="BRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="2.5,0,2.8,0,1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
     <body name="BLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="-2.5,0,2.8,0,-1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>
 
-
     <joint name="FRWheelJoint" type="HingeJoint">
         <parent body = "Chassis"/>
         <child  body = "FRWheel"/>
@@ -34,8 +33,6 @@
         <axis   setting = "1,0,0"/>
     </joint>
     
-    
-     
     <SimDevice type="SimGPS" name="GPS1" parent="Chassis" pose="-2.5,0,0,0,0,0"/>
     <!--
     <SimDevice type="SimVicon" name="Vicon1" parent="Chassis">

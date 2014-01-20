@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <Utils/SE3.h>
 
 using namespace std;
 
@@ -10,11 +11,12 @@ using namespace std;
 class SimDeviceInfo
 {
 public:
-    string           sDeviceName;    // device name
-    string           sDeviceType;    // name for device type
-    string           sDeviceMode;
-    string           sBodyName;
-    string           sRobotName;
+    string           m_sDeviceName;    // device name
+    string           m_sDeviceType;    // name for device type
+    string           m_sDeviceMode;
+    string           m_sBodyName;
+    string           m_sRobotName;
+    Eigen::Vector6d  m_vPose;          // init pose of camera
     int              m_iFPS;
     vector<string>   m_vSensorList;  // name for sensor of the device
     vector<string>   m_vModel;       // path of model.xml file for the sensor

@@ -95,6 +95,7 @@ public:
 
            if( ParseRobot(m_pRobotURDF->GetDocument(), m_RobotModel, m_eRobotInitPoseInURDF, m_sProxyName)==false )
            {
+               cout<<"[SimRobot] Parse Robot Fail"<<endl;
                return false;
            }
 
