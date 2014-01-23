@@ -13,8 +13,8 @@
 #include <SimRobots/SimRobot.h>
 // to communicate between
 //the physics engine and the ModelGraph
-#include <ModelGraph/PhyModelGraphAgent.h>
-#include <ModelGraph/RenderClass.h>
+#include <ModelGraph/PhysicsEngine.h>
+#include <ModelGraph/RenderEngine.h>
 #include <tinyxml2.h>
 
 using namespace std;
@@ -26,13 +26,13 @@ public:
 
   map<string, SimRobot*>            m_mSimRobotsList;  // the first robot join the list will be user's robot.
   WorldFullStateMsg                 m_WorldFullState;  // world state (pose, velocity) message. inlude the state of bodies.
-  PhyModelGraphAgent                m_PhyMGAgent;
+  PhysicsEngine                    m_PhysWrapper;
   Render                            m_Render;
   string                            m_sProxyName;
   string                            m_sMainRobotName;
   bool                              m_bStateKeeperOn;
 
-  void Init(string sProxyName, string sServerName, PhyModelGraphAgent& rPhyMGAgent, Render& rRender);
+  void Init(string sProxyName, string sServerName, PhysicsEngine& rPhysWrapper, Render& rRender);
   bool AddRobot(XMLDocument& doc, string sProxyName);
   void DeleteRobot(string sRobotName);
   void UpdateWorldFullState(WorldFullStateMsg worldfullstate);

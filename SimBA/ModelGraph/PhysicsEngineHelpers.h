@@ -1,84 +1,29 @@
 #ifndef PHYSICSENGINEHELPERS_H
 #define PHYSICSENGINEHELPERS_H
 
-#include <boost/shared_ptr.hpp>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <ModelGraph/Models.h>
-#include <ModelGraph/SE3.h>
-#include <bullet/LinearMath/btIDebugDraw.h>
 #include <math.h>
+#include <boost/shared_ptr.hpp>
 
-using namespace std;
+// Our ModelNode Objects
+#include <ModelGraph/Shape.h>
+#include <ModelGraph/Constraint.h>
+#include <ModelGraph/RaycastVehicle.h>
 
-//////////////////////////////////////////////////////////
-///
-/// EIGEN-TO-BULLET-TO-EIGEN CONVERTERS
-///
-//////////////////////////////////////////////////////////
+// Bullet libraries
+#include <bullet/LinearMath/btIDebugDraw.h>
+#include <bullet/LinearMath/btAlignedAllocator.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
-inline Eigen::Matrix4d
-getInverseTransformation (const Eigen::Matrix4d &transformation)
-{
-  Eigen::Matrix4d transformation_inverse;
-  float tx = transformation (0, 3);
-  float ty = transformation (1, 3);
-  float tz = transformation (2, 3);
+//All of our Bullet Objects
+#include <ModelGraph/Bullet_shapes/bullet_shape.h>
+#include <ModelGraph/Bullet_shapes/bullet_cube.h>
+#include <ModelGraph/Bullet_shapes/bullet_cylinder.h>
+#include <ModelGraph/Bullet_shapes/bullet_sphere.h>
+#include <ModelGraph/Bullet_shapes/bullet_vehicle.h>
 
-  transformation_inverse (0, 0) = transformation (0, 0);
-  transformation_inverse (0, 1) = transformation (1, 0);
-  transformation_inverse (0, 2) = transformation (2, 0);
-  transformation_inverse (0, 3) = - (transformation (0, 0) * tx + transformation (0, 1) * ty + transformation (0, 2) * tz);
-
-
-  transformation_inverse (1, 0) = transformation (0, 1);
-  transformation_inverse (1, 1) = transformation (1, 1);
-  transformation_inverse (1, 2) = transformation (2, 1);
-  transformation_inverse (1, 3) = - (transformation (1, 0) * tx + transformation (1, 1) * ty + transformation (1, 2) * tz);
-
-  transformation_inverse (2, 0) = transformation (0, 2);
-  transformation_inverse (2, 1) = transformation (1, 2);
-  transformation_inverse (2, 2) = transformation (2, 2);
-  transformation_inverse (2, 3) = - (transformation (2, 0) * tx + transformation (2, 1) * ty + transformation (2, 2) * tz);
-
-  transformation_inverse (3, 0) = 0;
-  transformation_inverse (3, 1) = 0;
-  transformation_inverse (3, 2) = 0;
-  transformation_inverse (3, 3) = 1;
-  return transformation_inverse;
-}
-
-inline Eigen::Matrix<double,4,4> toEigen(const btTransform& T)
-{
-  Eigen::Matrix<btScalar,4,4> eT;
-  T.getOpenGLMatrix(eT.data());
-  return eT.cast<double>();
-}
-
-inline btTransform toBullet(const Eigen::Matrix<double,4,4>& T)
-{
-  btTransform bT;
-  Eigen::Matrix<btScalar,4,4> eT = T.cast<btScalar>();
-  bT.setFromOpenGLMatrix(eT.data());
-  return bT;
-}
-
-inline btVector3 toBulletVec3(const Eigen::Vector3d& v)
-{
-  btVector3 bv;
-  bv.setX(v(0));
-  bv.setY(v(1));
-  bv.setZ(v(2));
-  return bv;
-}
-
-inline btVector3 toBulletVec3(const double x, const double y, const double z)
-{
-  btVector3 bv;
-  bv.setX(x);
-  bv.setY(y);
-  bv.setZ(z);
-  return bv;
-}
+enum Compounds{
+  VEHICLE = 0
+};
 
 //////////////////////////////////////////////////////////
 ///
@@ -90,14 +35,12 @@ inline btVector3 toBulletVec3(const double x, const double y, const double z)
 class NodeMotionState : public btMotionState {
 public:
   NodeMotionState(ModelNode& obj, Eigen::Vector6d& wp)
-    : object(obj)
-  {
+    : object(obj){
     m_WorldPose = _Cart2T(wp);
   }
 
   NodeMotionState(ModelNode& obj, Eigen::Matrix4d& wp)
-    : object(obj), m_WorldPose(wp)
-  {
+    : object(obj), m_WorldPose(wp){
   }
 
   virtual void getWorldTransform(btTransform &worldTrans) const {
@@ -105,10 +48,10 @@ public:
   }
 
   virtual void setWorldTransform(const btTransform &worldTrans) {
-    if (dynamic_cast<Body*>(&object))
+    if (dynamic_cast<Shape*>(&object))
     {
-      Body* pBody = (Body*) &object;
-      if (dynamic_cast<CylinderShape*>(pBody->m_CollisionShape))
+      Shape* pShape = (Shape*) &object;
+      if (dynamic_cast<CylinderShape*>(pShape))
       {
         Eigen::Vector6d temp;
         temp << 0, 0, 0, M_PI / 2, 0, 0;
@@ -116,18 +59,18 @@ public:
         rot = toEigen(worldTrans);
         rot = rot*_Cart2T(temp);
         m_WorldPose = rot;
-        object.SetWPose(m_WorldPose);
+        object.SetPose(m_WorldPose);
       }
       else
       {
         m_WorldPose = toEigen(worldTrans);
-        object.SetWPose(m_WorldPose);
+        object.SetPose(m_WorldPose);
       }
     }
     else
     {
       m_WorldPose = toEigen(worldTrans);
-      object.SetWPose(m_WorldPose);
+      object.SetPose(m_WorldPose);
     }
   }
 
@@ -289,15 +232,15 @@ public:
 
 typedef  boost::shared_ptr<btCollisionShape>            CollisionShapePtr;
 typedef  boost::shared_ptr<btRigidBody>                 RigidBodyPtr;
-typedef  boost::shared_ptr<NodeMotionState>             NodeMotionStatePtr;
+typedef  boost::shared_ptr<btMotionState>               MotionStatePtr;
+typedef  boost::shared_ptr<btRaycastVehicle>            VehiclePtr;
 
-//////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
 ///
-/// Entity class
-/// Entity is a capsule containing the important info behind Rigid Bodies in the
-/// ModelGraph.
+/// The Entity class
+/// Holds our bullet shapes and terrain.
 ///
-//////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
 
 class Entity
 {
@@ -305,35 +248,80 @@ public:
   Entity(){
   }
 
-  ~Entity(){
-  }
-
-  Entity(
-      string sName,
-      CollisionShapePtr  pShape, //< Input:
-      NodeMotionStatePtr  pMotionState, //< Input:
-      RigidBodyPtr pRigidBody //< Input:
-      )
-  {
+  Entity(CollisionShapePtr  pShape, MotionStatePtr  pMotionState,
+         RigidBodyPtr pRigidShape, string sName){
     m_sName        = sName;
     m_pShape       = pShape;
     m_pMotionState = pMotionState;
-    m_pRigidBody   = pRigidBody;
+    m_pRigidBody   = pRigidShape;
   }
 
-
-  const char* GetParentName(){
-    if (m_pMotionState->object.m_pParent) {
-      return m_pMotionState->object.m_pParent->GetName().c_str();
-    }
-    return NULL;
-  }
-
+  //member variables
   string                  m_sName;
   CollisionShapePtr       m_pShape;
-  NodeMotionStatePtr      m_pMotionState;
+  MotionStatePtr          m_pMotionState;
   RigidBodyPtr            m_pRigidBody;
+};
 
+///////////////////////////////////////////////////////
+///
+/// The Compound_Entity class
+/// Holds all of our compound shapes and constraints, as well as the type of
+/// compound we have.
+///
+///////////////////////////////////////////////////////
+
+class Compound_Entity
+{
+public:
+  Compound_Entity()
+  {
+
+  }
+  Compound_Entity(double* Shape_ids,
+                  double* Con_ids,
+                  Compounds type,
+                  string sName
+                  ){
+    m_sName        = sName;
+    m_vShape_ids = Shape_ids;
+    m_vCon_ids = Con_ids;
+    m_Type = type;
+  }
+  string    m_sName;
+  double*   m_vShape_ids;
+  double*   m_vCon_ids;
+  Compounds m_Type;
+};
+
+///////////////////////////////////////////////////////
+///
+/// The Vehicle_Entity class
+/// Holds all of our RaycastVehicles
+///
+///////////////////////////////////////////////////////
+
+class Vehicle_Entity
+{
+public:
+  Vehicle_Entity()
+  {
+
+  }
+  Vehicle_Entity(CollisionShapePtr  pShape, MotionStatePtr  pMotionState,
+                 RigidBodyPtr pRigidShape, VehiclePtr pVehicle, string sName){
+    m_sName        = sName;
+    m_pShape       = pShape;
+    m_pMotionState = pMotionState;
+    m_pRigidBody   = pRigidShape;
+    m_pVehicle     = pVehicle;
+  }
+  //member variables
+  string                  m_sName;
+  CollisionShapePtr       m_pShape;
+  MotionStatePtr          m_pMotionState;
+  RigidBodyPtr            m_pRigidBody;
+  VehiclePtr              m_pVehicle;
 };
 
 #endif // PHYSICSENGINEHELPERS_H

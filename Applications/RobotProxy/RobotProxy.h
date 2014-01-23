@@ -17,7 +17,7 @@
 #include "Managers/NetworkManager.h"           // for managing the Network
 #include "Managers/WorldManager.h"             // for managing the World
 #include "Managers/SimDeviceManager.h"         // for managing all the SimDevices
-                                               // of the Robot we control
+// of the Robot we control
 
 #include <URDFParser/RobotProxyURDFParser.h>   // for parsing URDF file
 
@@ -28,11 +28,11 @@
 
 #include "Managers/RobotsManager.h"            // for managing all robots
 #include <SimRobots/SimRobot.h>                // for managing the User's robot
-#include <ModelGraph/PhyModelGraphAgent.h>     // for communicating between the
-                                               // Physics Engine and ModelGraph
+#include <ModelGraph/PhysicsWrapper.h>         // for communicating between the
+// Physics Engine and ModelGraph
 #include <SimDevices/Controller/PoseController.h>
 #include <Node/Node.h>                         // Node used for communication
-                                               // between RP and any devices
+// between RP and any devices
 
 class RobotProxy{
 

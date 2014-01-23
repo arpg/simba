@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <URDFParser/RobotProxyURDFParser.h>
+#include <URDFParser/URDF_Parser.h>
 
 using namespace std;
 

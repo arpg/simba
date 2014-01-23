@@ -3,7 +3,7 @@
 
 
 #include <SimDevices/SimDevices.h>
-#include <ModelGraph/PhyModelGraphAgent.h>
+#include <ModelGraph/PhysicsEngine.h>.h>
 
 // return x,y,z,p,q,r of body A.
 class SimVicon
@@ -11,9 +11,9 @@ class SimVicon
 
 public:
     // request bullet the pose of object.
-    void init(string DeviceName, string BodyName, PhyModelGraphAgent& rPhyMGAgent)
+    void init(string DeviceName, string BodyName, PhysicsEngine& rPhysWrapper)
     {
-        m_rPhyMGAgent = rPhyMGAgent;
+        m_rPhysWrapper = rPhysWrapper;
         m_sDeviceName  = DeviceName;
         m_sBodyName  = BodyName;
     }
@@ -21,7 +21,7 @@ public:
     void Update()
     {
          // update pose
-         m_Poses = m_rPhyMGAgent.m_Agent.GetEntity6Pose( m_sBodyName );
+         m_Poses = m_rPhysWrapper.GetEntity6Pose( m_sBodyName );
     }
 
     Eigen::Vector6d GetLatestPose()
@@ -35,7 +35,7 @@ public:
     }
 
 private:
-    PhyModelGraphAgent                 m_rPhyMGAgent;
+    PhysicsEngine                     m_rPhysWrapper;
     string                             m_sDeviceName;
     string                             m_sBodyName;
     Eigen::Vector6d                    m_Poses;

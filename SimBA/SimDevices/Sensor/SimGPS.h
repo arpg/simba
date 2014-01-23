@@ -2,21 +2,21 @@
 #define SIMGPS_H
 
 #include <SimDevices/SimDevices.h>
-#include <ModelGraph/PhyModelGraphAgent.h>
+#include <ModelGraph/PhysicsEngine.h>.h>
 
 // return x,y,z of a GPS sensor.
 class SimGPS
 {
 public:
-    void init(string DeviceName, PhyModelGraphAgent* mPhyMGAgent)
+    void init(string DeviceName, PhysicsEngine* mPhysWrapper)
     {
-        m_pPhysMGAgent = mPhyMGAgent;
+        m_pPhysWrapper = mPhysWrapper;
         m_sDeviceName = DeviceName;
     }
 
     void Update()
     {
-        m_CurPose = m_pPhysMGAgent->m_Agent.GetEntityOrigin(m_sDeviceName);
+        m_CurPose = m_pPhysWrapper->GetEntityOrigin(m_sDeviceName);
     }
 
     void GetPose(Eigen::Vector3d &pose)
@@ -30,8 +30,7 @@ public:
     }
 
 private:
-    PhyModelGraphAgent*           m_pPhysMGAgent;
-    Phys*                         m_pPhys;
+    PhysicsEngine*               m_pPhysWrapper;
     string                        m_sDeviceName;
     Eigen::Vector3d               m_CurPose;
 };
