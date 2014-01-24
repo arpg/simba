@@ -1,7 +1,6 @@
 #ifndef URDF_PARSER_H
 #define URDF_PARSER_H
 
-
 #include <vector>
 #include <Eigen/Eigen>
 #include <URDFParser/TinyXMLTool.h>
@@ -10,7 +9,6 @@
 #include <ModelGraph/RaycastVehicle.h>
 #include <SimDevices/SimDeviceInfo.h>
 #include <Managers/WorldManager.h>
-
 
 /////////////////////////////////
 /// URDF PARSER
@@ -24,6 +22,8 @@
 /////////////////////////////////
 
 using namespace std;
+
+/// I'm not sure what this does yet, but here it is.
 namespace Eigen{
     typedef Matrix<double, 6, 1> Vector6d;
 }
@@ -36,23 +36,14 @@ public:
   // Parses the world for the mesh and conditions.
   bool ParseWorld(const char* filename, WorldManager& mWorldManager);
 
-  // Parses the Robot.xml file describing a RaycastVehicle.
-  bool ParseRaycastVehicle(XMLDocument* doc, ModelNode& m_RobotModel,
-                           Eigen::Vector6d& InitPose, string sProxyName);
-
   // ParseRobot really parses each of the robot parts, and then generates a set
   // of commands that the PhysicsEngine can use to create bullet objects.
-  bool ParseRobot(XMLDocument* doc, ModelNode& m_RobotModel,
+  bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
                          Eigen::Vector6d& InitPose, string sProxyName);
 
   // ParseDevices uses the information given in the Robot.xml file to create the
   // sensor views that we see later in the Sim.
   bool ParseDevices(XMLDocument& doc,
-                          vector<SimDeviceInfo>& m_vSimDeviceInfo,
-                          string sProxyName);
-
-  // the following parse SDF device, support SDF 1.4.
-  bool ParseSDFDevices(XMLDocument& doc,
                           vector<SimDeviceInfo>& m_vSimDeviceInfo,
                           string sProxyName);
 
