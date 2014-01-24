@@ -2,7 +2,7 @@
 #define SIMPLECONTROLLER_H
 
 #include <SimDevices/SimDevices.h>
-#include <ModelGraph/PhyModelGraphAgent.h>
+#include <ModelGraph/PhysicsEngine.h>
 #include <Eigen/Eigen>
 
 
@@ -14,10 +14,10 @@ public:
 
 
     // -----------------------------------------------------------------------------------------------------------------------
-    void init(string sDeviceName, string sRobotName, string sProxyName, PhyModelGraphAgent& rPhyMGAgent)
+    void init(string sDeviceName, string sRobotName, string sProxyName, PhysicsEngine& rPhysWrapper)
     {
         m_sDeviceName = sDeviceName;
-        m_rPhyMGAgent = rPhyMGAgent;
+        m_rPhysWrapper = rPhysWrapper;
         m_sProxyName  = sProxyName;
         m_sRobotName  = sRobotName;
 //        Eigen::Vector6d temp;
@@ -60,7 +60,7 @@ public:
                 eTorque[1] = m_eCommand[ii][1];
                 eTorque[2] = m_eCommand[ii][2];
                 string sBodyFullName = m_vBodyFullName[ii];
-                m_rPhyMGAgent.m_Agent.ApplyTorque(sBodyFullName, eTorque);
+                m_rPhysWrapper.ApplyTorque(sBodyFullName, eTorque);
             }
         }
 
@@ -72,7 +72,7 @@ public:
                 eSteering[1] = m_eCommand[ii][4];
                 eSteering[2] = m_eCommand[ii][5];
                 string sBodyFullName = m_vBodyFullName[ii];
-                m_rPhyMGAgent.m_Agent.ApplySteering(sBodyFullName, eSteering);
+                m_rPhysWrapper.ApplySteering(sBodyFullName, eSteering);
             }
         }
 
@@ -109,7 +109,7 @@ protected:
     {
         string sFullName = sBodyFirstName+"@"+m_sRobotName;
         cout<<"apply torque to body "<<sFullName<<endl;
-        m_rPhyMGAgent.m_Agent.ApplyTorque(sFullName,eTorque);
+        m_rPhysWrapper.ApplyTorque(sFullName,eTorque);
     }
 
 
@@ -117,7 +117,7 @@ protected:
     void ApplySteering(string sBodyFirstName, Eigen::Vector3d eDegree)
     {
         string sFullName = sBodyFirstName+"@"+m_sRobotName;
-        m_rPhyMGAgent.m_Agent.ApplySteering(sFullName,eDegree);
+        m_rPhysWrapper.ApplySteering(sFullName,eDegree);
     }
 
 
@@ -129,7 +129,7 @@ private:
     string                         m_sProxyName;
     vector<string>                 m_vBodyFullName;    // body that will be applied latest command. In many Cases it will be pair body.
     std::vector< Eigen::Vector6d > m_eCommand;         // latest command
-    PhyModelGraphAgent             m_rPhyMGAgent;
+    PhysicsEngine                 m_rPhysWrapper;
 };
 
 #endif // SIMROBOTCONTROLLER_H

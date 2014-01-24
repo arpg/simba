@@ -3,15 +3,15 @@
 #ifndef SIMPLEAICONTROLLER_H
 #define SIMPLEAICONTROLLER_H
 
-#include <ModelGraph/PhyModelGraphAgent.h>
+#include <ModelGraph/PhysicsEngine.h>.h>
 
 class SimpleAIController
 {
 public:
-    void init(string DeviceName, PhyModelGraphAgent& rPhyMGAgent)
+    void init(string DeviceName, PhysicsEngine& rPhysWrapper)
     {
         m_sDeviceName = DeviceName;
-        m_rPhyMGAgent = rPhyMGAgent;
+        m_rPhysWrapper = rPhysWrapper;
     }
 
     // define some AI behaviour here.
@@ -20,7 +20,7 @@ public:
 
 private:
     string                         m_sDeviceName;
-    PhyModelGraphAgent             m_rPhyMGAgent;
+    PhysicsEngine                 m_rPhysWrapper;
 };
 
 

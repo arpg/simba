@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <URDFParser/LocalSimURDFParser.h>
+#include <URDFParser/URDF_Parser.h>
 
 using namespace std;
 

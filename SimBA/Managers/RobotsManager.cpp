@@ -4,9 +4,9 @@
 /// INITIALIZE the RobotsManager
 ////////////////////////////////////////////////////////////////////////
 
-void RobotsManager::Init(string sProxyName, string sServerName, PhyModelGraphAgent& rPhyMGAgent, Render& rRender)
+void RobotsManager::Init(string sProxyName, string sServerName, PhysicsEngine& rPhysWrapper, Render& rRender)
 {
-  m_PhyMGAgent = rPhyMGAgent;
+  m_PhysWrapper = rPhysWrapper;
   m_Render     = rRender;
   m_sProxyName = sProxyName;
 
@@ -29,7 +29,7 @@ bool RobotsManager::AddRobot(XMLDocument& doc, string sProxyName)
 {
   SimRobot* pSimRobot = new SimRobot;
   string sRobotName;
-  if( pSimRobot->Init(sProxyName, m_bStateKeeperOn, m_PhyMGAgent,m_Render,doc) != true)
+  if( pSimRobot->Init(sProxyName, m_bStateKeeperOn, m_PhysWrapper, m_Render,doc) != true)
   {
     cout<<"[RobotsManager] FatalError! Cannot init Robot!!"<<endl;
     return false;
@@ -56,7 +56,7 @@ bool RobotsManager::AddRobot(XMLDocument& doc, string sProxyName)
 
 // THE BELOW WILL NOT HAPPEN WITH A RAYCAST_VEHICLE
 // ************************ Notice! Sometimes the proxy will exit when we delete joint of robot. ***************************
-// ****** the error is exist in  ' for(; Hiter!=m_rPhyMGAgent.m_Agent.GetPhys()->m_HingeJointList.end(); Hiter++)  ' *******
+// ****** the error is exist in  ' for(; Hiter!=m_rPhyMGAgent.m_Agent.m_HingeJointList.end(); Hiter++)  ' *******
 // **when we want to use iter of ' std::_Rb_tree_iterator<std::pair<std::string const, btHingeConstraint*> >::operator++' **
 
 void RobotsManager::DeleteRobot(string sRobotName)
@@ -135,10 +135,10 @@ void RobotsManager::ApplyWorldFullState()
             origin.x31(), origin.x32(), origin.x33();
 
         // apply in bullet engine
-        m_PhyMGAgent.m_Agent.SetEntityOrigin(sBodyName ,eOrigin);
-        m_PhyMGAgent.m_Agent.SetEntityBasis(sBodyName ,mBasis);
-        m_PhyMGAgent.m_Agent.SetEntityLinearvelocity(sBodyName, eLinearVelocity);
-        m_PhyMGAgent.m_Agent.SetEntityAngularvelocity(sBodyName, eAngularVelocity);
+        m_PhysWrapper.SetEntityOrigin(sBodyName ,eOrigin);
+        m_PhysWrapper.SetEntityBasis(sBodyName ,mBasis);
+        m_PhysWrapper.SetEntityLinearvelocity(sBodyName, eLinearVelocity);
+        m_PhysWrapper.SetEntityAngularvelocity(sBodyName, eAngularVelocity);
       }
     }
   }

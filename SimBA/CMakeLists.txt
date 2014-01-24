@@ -46,22 +46,23 @@ list(APPEND MANAGERS_HDRS
 )
 
 list(APPEND MODELGRAPH_HDRS
-  ModelGraph/Body.h
-  ModelGraph/Joint.h
-  ModelGraph/Models.h
-  ModelGraph/SE3.h
-  ModelGraph/BulletModelGraphAgent.h
-  ModelGraph/Link.h
-  ModelGraph/PhyModelGraphAgent.h
+  ModelGraph/RaycastVehicle.h
+  ModelGraph/Constraint.h
   ModelGraph/Shape.h
   ModelGraph/ModelGraphBuilder.h
   ModelGraph/PhysicsEngine.h
-  ModelGraph/GL_ShapeDrawer.h
-  ModelGraph/Model.h
   ModelGraph/PhysicsEngineHelpers.h
+  ModelGraph/GL_ShapeDrawer.h
   ModelGraph/GlutStuff.h
   ModelGraph/ModelNode.h
-  ModelGraph/RenderClass.h
+  ModelGraph/RenderEngine.h
+  ModelGraph/EigenHelpers.h
+  ModelGraph/Bullet_shapes/bullet_cube
+  ModelGraph/Bullet_shapes/bullet_cylinder
+  ModelGraph/Bullet_shapes/bullet_heightmap
+  ModelGraph/Bullet_shapes/bullet_shape
+  ModelGraph/Bullet_shapes/bullet_sphere
+  ModelGraph/Bullet_shapes/bullet_vehicle
 )
 
 list(APPEND NETWORK_HDRS
@@ -100,11 +101,9 @@ list(APPEND SIMROBOTS_HDRS
 )
 
 list(APPEND URDFPARSER_HDRS
-  URDFParser/LocalSimURDFParser.h
+  URDFParser/URDF_Parser.h
   URDFParser/TinyXMLTool.h
   URDFParser/GenURIFromURDF.h
-  URDFParser/StateKeeperURDFParser.h
-#  URDFParser/URDFParser.h
 )
 
 list(APPEND UTILS_HDRS
@@ -136,10 +135,15 @@ list(APPEND NETWORK_SRCS)
 list(APPEND SIMDEVICES_CONTROL_SRCS)
 list(APPEND SIMDEVICES_SENSOR_SRCS)
 list(APPEND SIMROBOTS_SRCS)
-list(APPEND URDFPARSER_SRCS)
+list(APPEND URDFPARSER_SRCS
+  URDFParser/URDF_Parser.cpp
+)
+list(APPEND PHYSMODEL_SRCS
+  URDFParser/URDF_Parser.cpp
+)
 list(APPEND UTILS_SRCS)
 
-list(APPEND SIMBA_SRCS ${MANAGERS_SRCS})
+list(APPEND SIMBA_SRCS ${MANAGERS_SRCS} ${URDFPARSER_SRCS} ${PHYSMODEL_SRCS})
 
 ##################
 # CREATE THE SIMBA LIBRARY

@@ -2,7 +2,7 @@
 #define SIMCAM_H
 
 #include <SimDevices/SimDevices.h>
-#include <ModelGraph/PhyModelGraphAgent.h>
+#include <ModelGraph/PhysicsEngine.h>
 #include <calibu/cam/CameraXml.h>
 #include <CVars/CVar.h>
 
@@ -18,7 +18,7 @@ class SimCam
        int                            m_iCamType;
        int                            m_iFPS;
        string                         m_sDeviceName; // mesh of parent that camera attach to
-       PhyModelGraphAgent             m_rPhysMGAgent;
+       PhysicsEngine                 m_rPhysWrapper;
        vector<string>                 m_vCameraModel;
        calibu::CameraRig              m_CameraRig;
 
@@ -29,12 +29,9 @@ class SimCam
                  int                 FPS,
                  string              sCameraModel,
                  GLSceneGraph&       glGraph,
-                 PhyModelGraphAgent& mPhyMGAgent
-                 )
-       {
-
+                 PhysicsEngine&     mPhysWrapper){
            m_sDeviceName = sDeviceName;
-           m_rPhysMGAgent = mPhyMGAgent;
+           m_rPhysWrapper = mPhysWrapper;
            m_iFPS = FPS;
 
            cout<<"[SimCam] camera model file name is "<<sCameraModel<<". Device name is "<<m_sDeviceName<<endl;
@@ -145,7 +142,7 @@ class SimCam
        // get current camera pose from bullet
        Eigen::Vector6d GetCameraPoseByBody()
        {
-          return m_rPhysMGAgent.m_Agent.GetEntity6Pose( m_sDeviceName );
+          return m_rPhysWrapper.GetEntity6Pose( m_sDeviceName );
        }
 
        // ------------------------------------------------------------------------------------------------------------------

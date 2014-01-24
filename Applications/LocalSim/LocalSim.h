@@ -17,7 +17,7 @@
 #include "Managers/NetworkManager.h"           // for managing the Network
 #include "Managers/WorldManager.h"             // for managing the World
 #include "Managers/SimDeviceManager.h"         // for managing all the SimDevices
-                                               // of the Robot we control
+// of the Robot we control
 
 #include <URDFParser/LocalSimURDFParser.h>   // for parsing URDF file
 
@@ -25,14 +25,13 @@
 #include <CVars/CVar.h>                        // for GLConsole
 #include <Utils/GetPot>                        // for command line parsing
 
-
 #include "Managers/RobotsManager.h"            // for managing all robots
 #include <SimRobots/SimRobot.h>                // for managing the User's robot
-#include <ModelGraph/PhyModelGraphAgent.h>     // for communicating between the
-                                               // Physics Engine and ModelGraph
+#include <ModelGraph/PhysicsEngine.h>        // for communicating between the
+// Physics Engine and ModelGraph
 #include <SimDevices/Controller/PoseController.h>
 #include <Node/Node.h>                         // Node used for communication
-                                               // between RP and any devices
+// between RP and any devices
 
 class LocalSim{
 
@@ -56,7 +55,7 @@ public:
   SimDeviceManager            m_SimDeviceManager;
   RobotsManager               m_RobotManager;
   NetworkManager              m_NetworkManager;
-  PhyModelGraphAgent          m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
+  PhysicsEngine               m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
   PoseController              m_SimpPoseController;
 
   hal::node                   m_Node;

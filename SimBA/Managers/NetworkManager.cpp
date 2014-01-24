@@ -256,13 +256,13 @@ bool NetworkManager::PublishRobotFullStateToStateKeeper()
   {
     string sBodyName = vAllBodyFullName[i];
     // prepare pose info
-    Eigen::Vector3d eOrigin = m_pRobotsManager->m_PhyMGAgent.m_Agent.GetEntityOrigin(sBodyName);
-    Eigen::Matrix3d eBasis = m_pRobotsManager->m_PhyMGAgent.m_Agent.GetEntityBasis(sBodyName);
+    Eigen::Vector3d eOrigin = m_pRobotsManager->m_PhysWrapper.GetEntityOrigin(sBodyName);
+    Eigen::Matrix3d eBasis = m_pRobotsManager->m_PhysWrapper.GetEntityBasis(sBodyName);
 
 
     // prepare veloicty info
-    Eigen::Vector3d eLinearV = m_pRobotsManager->m_PhyMGAgent.m_Agent.GetEntityLinearVelocity(sBodyName);
-    Eigen::Vector3d eAngularV = m_pRobotsManager->m_PhyMGAgent.m_Agent.GetEntityAngularVelocity(sBodyName);
+    Eigen::Vector3d eLinearV = m_pRobotsManager->m_PhysWrapper.GetEntityLinearVelocity(sBodyName);
+    Eigen::Vector3d eAngularV = m_pRobotsManager->m_PhysWrapper.GetEntityAngularVelocity(sBodyName);
 
 
     // set pose infor
