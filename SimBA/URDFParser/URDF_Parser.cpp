@@ -55,7 +55,7 @@ bool URDF_Parser::ParseWorld(const char* filename,
 ////////////////////////////////////////////////////////////
 
 bool URDF_Parser::ParseRobot(XMLDocument* doc,
-                             Model& m_RobotModel,
+                             ModelNode& m_RobotModel,
                              Eigen::Vector6d& InitPose,
                              string sProxyName){
 
@@ -66,9 +66,9 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
   XMLElement *pElement = pParent->FirstChildElement();
 
   //This was used as a mapping scheme, but I'm going to try and get rid of it.
-  //  std::map<string, Body*> m_mBodys; // map to all body with key (name)
+    std::map<string, Shape*> m_mBodys; // map to all body with key (name)
 
-  if(strcmp(sRobotType, "RaycastVehicle")){
+  if(strcmp(sRobotType, "RaycastVehicle") ==0){
     double* parameters = new double[29];
     double* position = new double[6];
     double* rotation = new double[9];
@@ -78,7 +78,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       // Car paramters
       if(strcmp(sAttrName, "param")){
         std::string param = pElement->Attribute("name");
-        if(strcmp(param, "control delay")){
+        if (param.compare("control delay") == 0) {
           parameters[6] = pElement->Attribute("value");
         }
         if(strcmp(param, "stiffness")){: parameters[12] = pElement->Attribute("value");
@@ -353,11 +353,8 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
 
       const char* sType = pElement->Attribute("type");
       if(strcmp(sType, "Box") ==0){
-        BoxShape box = BoxShape(vDimesion[0],vDimesion[1],vDimesion[2]);
-        Body* pBodyBase = new Body(sBodyName, box, iMass );
-        pBodyBase->SetPose( vPose[0],vPose[1],vPose[2],
-                            vPose[3],vPose[4],vPose[5] );
-        m_RobotModel.SetBase( pBodyBase ); // main body
+        BoxShape* pBox =new BoxShape(sBodyName, vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1, vPose);
+        m_RobotModel.SetBase( pBox ); // main body
       }
     }
 
@@ -373,20 +370,16 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
 
       const char* sType = pElement->Attribute("type");
       if(strcmp(sType, "Box") ==0){
-        BoxShape box = BoxShape(vDimesion[0],vDimesion[1],vDimesion[2]);
-        Body* pBody = new Body(sBodyName, box, iMass );
-        pBody->SetPose( vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5] );
-        m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pBody));
+        BoxShape* pBox =new BoxShape(sBodyName,vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1,vPose);
+        m_mBodys.insert(std::pair<std::string,Shape*>(sBodyName, pBox));
 
       }
       else if(strcmp(sType,"Cylinder")==0){
-        CylinderShape cylinder = CylinderShape(vDimesion[0], vDimesion[1]);
-        Body* pCylinder = new Body(sBodyName, cylinder, iMass);
-        pCylinder->SetPose(vPose[0],vPose[1],vPose[2],
-                           vPose[3],vPose[4],vPose[5]);
-        m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pCylinder));
+        CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimesion[0], vDimesion[1],iMass,1, vPose);
+        m_mBodys.insert(std::pair<std::string, Shape*>(sBodyName, pCylinder));
       }
     }
+
 
     // create sim device
     if(strcmp(sRootContent,"Sensor")==0){
@@ -407,11 +400,9 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           // string sMeshdir(pElement->Attribute("Dir"));
 
           // create body for simcam
-          BoxShape box = BoxShape(0.1,0.1,0.1);
-          Body* pBody = new Body(sSensorName, box, iMass );
-          pBody->SetPose( vPose[0],vPose[1]+2,vPose[2]-3.2,
-                          vPose[3],vPose[4],vPose[5] );
-          m_mBodys.insert(std::pair<std::string,Body*>(sSensorName,pBody));
+          vPose[1] = vPose[1]+2; vPose[2] = vPose[2] -3.2;
+          BoxShape* pBox =new BoxShape(sSensorName,0.1,0.1,0.1,iMass,1,vPose);
+          m_mBodys.insert(std::pair<std::string,Shape*>(sSensorName, pBox));
 
           // create joint for SimCam
           string sJointName = "SimCamJoint"+sCameraName; // e.g. SimCamJointLCam@robot1@proxy
@@ -437,10 +428,12 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
 
           /// create bodys
           // 1.3 create body to connect RGB Cam and Depth Cam
-          BoxShape box = BoxShape(BodyDistance,0.1,0.1);
-          Body* pBody = new Body(sCameraName, box, iMass );
-          pBody->SetPose(0,-2.1,0, 0, 0, 0 );
-          m_mBodys.insert(std::pair<std::string,Body*>(sCameraName,pBody));
+          vector<double> vCameraPose;
+          vCameraPose.push_back(0);vCameraPose.push_back(-2.1);vCameraPose.push_back(0);
+          vCameraPose.push_back(0);vCameraPose.push_back(0);vCameraPose.push_back(0);
+
+          BoxShape* pBox = new BoxShape(sCameraName,BodyDistance,0.1,0.1,iMass, 1, vCameraPose);
+          m_mBodys.insert(std::pair<std::string,Shape*>(sCameraName,pBox));
 
           /// create joints
           Eigen::Vector3d vPivot;
@@ -456,11 +449,16 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
 
           // 1.1 create body for RGB Cam
           string sRGBBodyName = "RGB"+sCameraName;
-          BoxShape RGBbox = BoxShape(0.1,0.1,0.1);
-          Body* pRGBBody = new Body(sRGBBodyName, RGBbox, iMass );
-          pRGBBody->SetPose( vPose[0]-BodyDistance - 0.1,vPose[1] + 2, vPose[2],
-                             /*-M_PI / 2*/0, 0, /*-M_PI / 2*/0 );
-          m_mBodys.insert(std::pair<std::string,Body*>(sRGBBodyName,pRGBBody));
+          vector<double> vRGBCameraPose;
+          vRGBCameraPose.push_back(vPose[0]-BodyDistance - 0.1);
+          vRGBCameraPose.push_back(vPose[1] + 2);
+          vRGBCameraPose.push_back(vPose[2]);
+          vRGBCameraPose.push_back(0);
+          vRGBCameraPose.push_back(0);
+          vRGBCameraPose.push_back(0);
+
+          BoxShape* pRGBbox =new BoxShape(sRGBBodyName, 0.1,0.1,0.1, iMass, 1, vRGBCameraPose);
+          m_mBodys.insert(std::pair<std::string,Shape*>(sRGBBodyName,pRGBbox));
 
           // 2.1 create joint for RGB body and RGBDCamBody
           string sRGBJointName = "SimCamJoint"+sRGBBodyName;
@@ -476,12 +474,17 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
 
           // 1.2 create body for Depth Cam
           string sDepthBodyName = "Depth"+sCameraName;
-          BoxShape Depthbox = BoxShape(0.1,0.1,0.1);
-          Body* pDepthBody = new Body(sDepthBodyName, Depthbox, iMass );
-          pDepthBody->SetPose( vPose[0]+BodyDistance+0.1,vPose[1] + 2,vPose[2],
-                               0, 0, 0 );
-          m_mBodys.
-              insert(std::pair<std::string,Body*>(sDepthBodyName,pDepthBody));
+          vector<double> vDepthCameraPose;
+          vDepthCameraPose.push_back(vPose[0]+BodyDistance+0.1);
+          vDepthCameraPose.push_back(vPose[1] + 2);
+          vDepthCameraPose.push_back(vPose[2]);
+          vDepthCameraPose.push_back(0);
+          vDepthCameraPose.push_back(0);
+          vDepthCameraPose.push_back(0);
+
+          BoxShape* pDepthBox =new BoxShape(sDepthBodyName, 0.1,0.1,0.1,iMass,1,vPose);
+
+          m_mBodys.insert(std::pair<std::string,Shape*>(sDepthBodyName,pDepthBox));
 
           // 2.2 create joint for Depth body and RGBDCamBody
           string sDepthJointName = "SimCamJoint"+sDepthBodyName;
@@ -503,10 +506,8 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
         // string sMeshdir(pElement->Attribute("Dir"));
 
         // create body for it
-        BoxShape box = BoxShape(0.1,0.1,0.1);
-        Body* pBody = new Body(sBodyName, box, iMass );
-        pBody->SetPose( vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5] );
-        m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pBody));
+        BoxShape* pBox =new BoxShape(sBodyName, 0.1,0.1,0.1,iMass, 1, vPose);
+        m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pBox));
 
         // create joint for SimGPS
         string sJointName = "GPSJoint"+sBodyName;
