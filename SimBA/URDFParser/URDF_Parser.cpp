@@ -31,11 +31,11 @@ bool URDF_Parser::ParseWorld(const char* filename,
       mWorldManager.iScale =::atoi( pElement->Attribute("scale"));
       mWorldManager.iMass =::atoi( pElement->Attribute("mass"));
       mWorldManager.vWorldPose =
-          pElement->Attribute("worldpose");
+          GenNumFromChar(pElement->Attribute("worldpose"));
       mWorldManager.vRobotPose=
-          pElement->Attribute("robotpose");
+          GenNumFromChar(pElement->Attribute("robotpose"));
       mWorldManager.vLightPose=
-          pElement->Attribute("lightpose");
+          GenNumFromChar(pElement->Attribute("lightpose"));
     }
 
     pElement=pElement->NextSiblingElement();
@@ -66,7 +66,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
   XMLElement *pElement = pParent->FirstChildElement();
 
   //This was used as a mapping scheme, but I'm going to try and get rid of it.
-    std::map<string, Shape*> m_mBodys; // map to all body with key (name)
+  std::map<string, Shape*> m_mBodys; // map to all body with key (name)
 
   if(!sRobotType.compare("RaycastVehicle")){
     std::vector<double> parameters;
@@ -322,13 +322,14 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
 
     }
 
-    m_RobotModel.SetBase();
+    /// Build the car here.
+    //    m_RobotModel.SetBase();
 
   }
 
   //////////////////////////////////////////
 
-  else if(strcmp(sRobotType, "Compound")){
+  else if(!sRobotType.compare("Compound")){
 
 
   }
@@ -336,7 +337,6 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
   else{
     std::cerr<<"I have no idea what I'm doing"<<std::endl;
   }
-
 
   // read high level parent (root parent)
   while (pElement){
@@ -347,9 +347,9 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
     if(strcmp(sRootContent,"bodybase")==0){
       string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
       int iMass =::atoi( pElement->Attribute("mass"));
-      vector<double> vPose = pElement->Attribute("pose"));
+      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
       InitPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
-      vector<double> vDimesion= pElement->Attribute("dimesion"));
+      vector<double> vDimesion= GenNumFromChar(pElement->Attribute("dimesion"));
       int iScale =::atoi( pElement->Attribute("scale"));
 
       const char* sType = pElement->Attribute("type");
@@ -364,9 +364,9 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
       string sMeshdir(pElement->Attribute("dir"));
       int iMass =::atoi( pElement->Attribute("mass"));
-      vector<double> vPose = pElement->Attribute("pose"));
+      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
       vector<double> vDimesion =
-          pElement->Attribute("dimesion"));
+          GenNumFromChar(pElement->Attribute("dimesion"));
       int iScale =::atoi( pElement->Attribute("scale"));
 
       const char* sType = pElement->Attribute("type");
@@ -396,7 +396,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
           string sCamMode(sMode);
           string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
-          vector<double> vPose = pElement->Attribute("Pose"));
+          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
           int iMass = 1;
           // string sMeshdir(pElement->Attribute("Dir"));
 
@@ -411,10 +411,11 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           Eigen::Vector3d vAxis;
           vPivot<<vPose[0],vPose[1]+2,vPose[2]-3.2;
           vAxis<<1,1,1;
-          HingeJoint* pHinge =
-              new HingeJoint(sJointName, m_mBodys.find(sParentName)->second,
-                             m_mBodys.find(sSensorName)->second, vPivot[0],
-                             vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
+          HingeTwoPivot* pHinge =
+              new HingeTwoPivot(sJointName, *m_mBodys.find(sParentName)->second,
+                                *m_mBodys.find(sSensorName)->second,
+                                vPivot, Eigen::Vector3d::Identity(),
+                                vAxis, Eigen::Vector3d::Identity());
         }
 
         /// RGB-Depth Camera
@@ -422,7 +423,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
         {
           string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
           string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
-          vector<double> vPose = pElement->Attribute("Pose"));
+          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
           int iMass = 1;
           double BodyDistance = 0.5;
           // string sMeshdir(pElement->Attribute("Dir"));
@@ -443,10 +444,10 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           string sJointName = "SimCamJoint"+sCameraName;
           vPivot<< 0, 0, 0;
           vAxis<<0,-1,0;
-          HingeJoint* pRGBDHinge =
-              new HingeJoint(sJointName, m_mBodys.find(sParentName)->second,
-                             pBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],
-                             vAxis[1],vAxis[2]);
+          HingeTwoPivot* pRGBDHinge =
+              new HingeTwoPivot(sJointName, *m_mBodys.find(sParentName)->second,
+                                *pBox, vPivot, Eigen::Vector3d::Identity(),
+                                vAxis, Eigen::Vector3d::Identity());
 
           // 1.1 create body for RGB Cam
           string sRGBBodyName = "RGB"+sCameraName;
@@ -465,10 +466,12 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           string sRGBJointName = "SimCamJoint"+sRGBBodyName;
           vPivot<<-0.5, 0, 0;
           vAxis<< 1,0,0;
-          HingeJoint* pRGBHinge =
-              new HingeJoint(sRGBJointName, m_mBodys.find(sCameraName)->second,
-                             m_mBodys.find(sRGBBodyName)->second, vPivot[0],
-                             vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2] );
+          HingeTwoPivot* pRGBHinge =
+              new HingeTwoPivot(sRGBJointName,
+                                *m_mBodys.find(sCameraName)->second,
+                                *m_mBodys.find(sRGBBodyName)->second,
+                                vPivot, Eigen::Vector3d::Identity(),
+                                vAxis, Eigen::Vector3d::Identity());
           //HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, pBody,
           //pRGBBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],
           //vAxis[2], 100, 100, -M_PI, M_PI );
@@ -491,9 +494,10 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           string sDepthJointName = "SimCamJoint"+sDepthBodyName;
           vPivot<< 0.5, 0, 0;
           vAxis<<  1, 0, 0;
-          HingeJoint* pDepthHinge =
-              new HingeJoint( sDepthJointName,pBody, pDepthBody, vPivot[0],
-                              vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
+          HingeTwoPivot* pDepthHinge =
+              new HingeTwoPivot( sDepthJointName, *pBox, *pDepthBox,
+                                 vPivot, Eigen::Vector3d::Identity(),
+                                 vAxis, Eigen::Vector3d::Identity());
         }
       }
 
@@ -502,13 +506,13 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       {
         string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
         string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-        vector<double> vPose = pElement->Attribute("Pose"));
+        vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
         int iMass = 1;
         // string sMeshdir(pElement->Attribute("Dir"));
 
         // create body for it
         BoxShape* pBox =new BoxShape(sBodyName, 0.1,0.1,0.1,iMass, 1, vPose);
-        m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pBox));
+        m_mBodys.insert(std::pair<std::string, Shape*>(sBodyName,pBox));
 
         // create joint for SimGPS
         string sJointName = "GPSJoint"+sBodyName;
@@ -582,11 +586,15 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           // read next child (joint)
           pChild=pChild->NextSiblingElement();
         }
-
-        HingeJoint* pHinge =
-            new HingeJoint( sJointName, m_mBodys.find(sParentName)->second,
-                            m_mBodys.find(sChildName)->second, vPivot[0],
-                            vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
+        Eigen::Vector3d pivot;
+        pivot<<vPivot[0], vPivot[1], vPivot[2];
+        Eigen::Vector3d axis;
+        axis<<vAxis[0], vAxis[1], vAxis[2];
+        HingeTwoPivot* pHinge =
+            new HingeTwoPivot( sJointName, *m_mBodys.find(sParentName)->second,
+                               *m_mBodys.find(sChildName)->second,
+                               pivot, Eigen::Vector3d::Identity(),
+                               axis, Eigen::Vector3d::Identity());
 
       }
       else if(sJointType=="Hinge2Joint")
@@ -656,8 +664,12 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           pChild=pChild->NextSiblingElement();
         }
 
-        Hinge2Joint* pHinge2 = new Hinge2Joint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sChildName)->second,
-                                                Axis1, Axis2, Anchor, 1, 1, LowerLinearLimit, UpperLinearLimit, LowerAngleLimit, UpperAngleLimit);
+        Hinge2* pHinge2 = new Hinge2( sJointName,
+                                      *m_mBodys.find(sParentName)->second,
+                                      *m_mBodys.find(sChildName)->second,
+                                      Anchor, Axis1, Axis2);
+//        pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
+        //LowerAngleLimit, UpperAngleLimit);
 
         std::cout<<"Creating a Hinge2Joint between "<<sParentName<<" and "<<sChildName<<std::endl;
       }
@@ -708,7 +720,7 @@ bool URDF_Parser::ParseDevices(
           string sCamMode(sMode);
           string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
-          vector<double> vPose = pElement->Attribute("Pose"));
+          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
 
           // save device info
           SimDeviceInfo Device;
@@ -730,7 +742,7 @@ bool URDF_Parser::ParseDevices(
           string sRGBBodyName = "RGB"+sCameraName;
           string sDepthBodyName = "Depth"+sCameraName;
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
-          vector<double> vPose = pElement->Attribute("Pose"));
+          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
 
           // 3 save intp device, this device have two sensors
           SimDeviceInfo Device;
@@ -829,7 +841,7 @@ bool URDF_Parser::ParseWorldForInitialPoses(
   while (pElement){
     const char* sRootContent = pElement->Name();
     if(strcmp(sRootContent,"robot")==0){
-      vector<double> vPose = pElement->Attribute("pose"));
+      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
       Eigen::Vector6d ePose;
       ePose<<vPose[0], vPose[1], vPose[2], vPose[3], vPose[4], vPose[5];
       vRobotInitPose.push_back(ePose);
