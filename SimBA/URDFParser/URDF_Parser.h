@@ -38,7 +38,7 @@ public:
 
   // ParseRobot really parses each of the robot parts, and then generates a set
   // of commands that the PhysicsEngine can use to create bullet objects.
-  bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
+  bool ParseRobot(XMLDocument* doc, ModelNode& m_RobotModel,
                          Eigen::Vector6d& InitPose, string sProxyName);
 
   // ParseDevices uses the information given in the Robot.xml file to create the
