@@ -1,5 +1,5 @@
-#ifndef ROBOTPROXY_H
-#define ROBOTPROXY_H
+#ifndef LOCALSIM_H
+#define LOCALSIM_H
 
 ////////////////////////////////////////////
 ///
@@ -19,7 +19,7 @@
 #include "Managers/SimDeviceManager.h"         // for managing all the SimDevices
                                                // of the Robot we control
 
-#include <URDFParser/RobotProxyURDFParser.h>   // for parsing URDF file
+#include <URDFParser/LocalSimURDFParser.h>   // for parsing URDF file
 
 #include "Utils/CVarHelpers.h"                 // for parsing Eigen Vars as CVars
 #include <CVars/CVar.h>                        // for GLConsole
@@ -34,7 +34,7 @@
 #include <Node/Node.h>                         // Node used for communication
                                                // between RP and any devices
 
-class RobotProxy{
+class LocalSim{
 
 public:
 
@@ -62,7 +62,7 @@ public:
   hal::node                   m_Node;
 
   /// Constructor
-  RobotProxy(
+  LocalSim(
       SceneGraph::GLSceneGraph& glGraph,
       const std::string& sProxyName,
       const std::string& sRobotURDF,
@@ -86,4 +86,4 @@ public:
 
 };
 
-#endif // ROBOTPROXY_H
+#endif // LocalSim_H

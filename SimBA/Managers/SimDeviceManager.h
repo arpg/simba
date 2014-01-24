@@ -4,7 +4,7 @@
 #include <SimDevices/SimDeviceInfo.h>
 #include <SimDevices/SimDevices.h>
 #include <ModelGraph/PhyModelGraphAgent.h>
-#include <URDFParser/RobotProxyURDFParser.h>
+#include <URDFParser/LocalSimURDFParser.h>
 
 using namespace std;
 

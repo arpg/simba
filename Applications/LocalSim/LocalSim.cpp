@@ -1,20 +1,20 @@
 /*
-   RobotProxy, By luma. 2013.03
+   LocalSim, By luma. 2013.03
    Edited by bminortx.
  */
 
-#include "RobotProxy.h"
+#include "LocalSim.h"
 
 using namespace std;
 using namespace CVarUtils;
 
 ////////////////////////////////////////////////////////////////////////
 /// CONSTRUCTOR
-/// RobotProxy does not get produced willy-nilly; it is only produced if there
+/// LocalSim does not get produced willy-nilly; it is only produced if there
 /// is a SIM.
 ////////////////////////////////////////////////////////////////////////
 
-RobotProxy::RobotProxy(
+LocalSim::LocalSim(
     SceneGraph::GLSceneGraph& glGraph,  //< Input: reference to glGraph
     const std::string& sProxyName,      //< Input: name of robot proxy
     const std::string& sRobotURDF,      //< Input: location of meshes, maps etc
@@ -30,7 +30,7 @@ RobotProxy::RobotProxy(
 
   // 1. Parse world.xml file.
   if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true){
-    cout<<"[RobotProxy] Cannot parse "<< m_sWorldURDFFile<<
+    cout<<"[LocalSim] Cannot parse "<< m_sWorldURDFFile<<
           ". Please check if the file exist and the syntax is valid."<<endl;
     exit(-1);
   }
@@ -38,7 +38,7 @@ RobotProxy::RobotProxy(
   // 2. Read Robot.xml file.
   XMLDocument RobotURDF;
   if(GetXMLdoc(sRobotURDF, RobotURDF)!= true){
-    cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<
+    cout<<"[LocalSim] Cannot open "<<sRobotURDF<<
           ". Please check if the file exist and the syntax is valid."<<endl;
     exit(-1);
   }
@@ -52,7 +52,7 @@ RobotProxy::RobotProxy(
   m_RobotManager.Init(m_sProxyName, sServerName, m_PhyMGAgent, m_Render);
   if( m_RobotManager.AddRobot(RobotURDF, m_sProxyName) !=true )
   {
-      cout<<"[RobotProxy] Cannot add new robot to RobotManager."<<endl;
+      cout<<"[LocalSim] Cannot add new robot to RobotManager."<<endl;
       exit(-1);
   }
 
@@ -67,7 +67,7 @@ RobotProxy::RobotProxy(
   // 5. Initialize the Network
   if(m_NetworkManager.initNetwork(m_sProxyName, &m_SimDeviceManager, &m_RobotManager,  sServerName)!=true)
   {
-      cout<<"[RobotProxy] You chose to connect to '"<<sServerName<<
+      cout<<"[LocalSim] You chose to connect to '"<<sServerName<<
             "' but we cannot initialize Network."<<
             "Please make sure the StateKeeper is running."<<endl;
       exit(-1);
@@ -76,7 +76,7 @@ RobotProxy::RobotProxy(
   // 6. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
   if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF, m_sProxyName)!= true)
   {
-      cout<<"[RobotProxy] Cannot init SimDeviceManager."<<endl;
+      cout<<"[LocalSim] Cannot init SimDeviceManager."<<endl;
       exit(-1);
   }
 
@@ -85,16 +85,16 @@ RobotProxy::RobotProxy(
   // 7, if run in with network mode, proxy network will publish sim device
   if(sServerName !="WithoutNetwork"){
     if(m_NetworkManager.initDevices()!=true){
-      cout<<"[RobotProxy] Cannot init Nextwrok"<<endl;
+      cout<<"[LocalSim] Cannot init Nextwrok"<<endl;
       exit(-1);
     }
   }
   else
   {
-    cout<<"[RobotProxy] Init Robot Proxy without Network."<<endl;
+    cout<<"[LocalSim] Init Robot Proxy without Network."<<endl;
   }
 
-  cout<<"[RobotProxy] Init RobotProxy Success!"<<endl;
+  cout<<"[LocalSim] Init LocalSim Success!"<<endl;
 
 }
 
@@ -104,7 +104,7 @@ RobotProxy::RobotProxy(
 
 // InitReset will populate SceneGraph with objects, and
 // register these objects with the simulator.
-void RobotProxy::InitReset()
+void LocalSim::InitReset()
 {
   m_rSceneGraph.Clear();
 
@@ -160,7 +160,7 @@ void RobotProxy::InitReset()
 
 //////////////////////////////////////////////////////////////////
 // Apply the camera's pose directly to the SimCamera
-void RobotProxy::ApplyCameraPose(Eigen::Vector6d dPose){
+void LocalSim::ApplyCameraPose(Eigen::Vector6d dPose){
   Eigen::Vector6d InvalidPose;
   InvalidPose<<1,88,99,111,00,44;
   if(dPose == InvalidPose){
@@ -178,12 +178,12 @@ void RobotProxy::ApplyCameraPose(Eigen::Vector6d dPose){
   }
 }
 
-void RobotProxy::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
+void LocalSim::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
   m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
 }
 
 // ---- Step Forward
-void RobotProxy::StepForward()
+void LocalSim::StepForward()
 {
   m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
   m_Render.UpdateScene();
@@ -192,7 +192,7 @@ void RobotProxy::StepForward()
 //////////////////////////////////////////////////////////////////
 // Scan all SimDevices and send the simulated camera images to Pangolin.
 // Right now, we can only support up to two windows.
-bool RobotProxy::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::ImageView& RSimCamWnd ){
+bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::ImageView& RSimCamWnd ){
     int WndCounter = 0;
 
     for(unsigned int i =0 ; i!= m_SimDeviceManager.m_SimDevices.size(); i++){
@@ -270,7 +270,7 @@ bool RobotProxy::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph
 /// INPUT KEYS
 ////////////////////
 
-void RobotProxy::LeftKey(){
+void LocalSim::LeftKey(){
   string sMainRobotName = m_pMainRobot->GetRobotName();
 
   // update RGB camera pose
@@ -297,7 +297,7 @@ void RobotProxy::LeftKey(){
   //            m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
 }
 
-void RobotProxy::RightKey(){
+void LocalSim::RightKey(){
   string sMainRobotName = m_pMainRobot->GetRobotName();
 
   // update RGB camera pose
@@ -317,7 +317,7 @@ void RobotProxy::RightKey(){
       GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
 }
 
-void RobotProxy::ForwardKey(){
+void LocalSim::ForwardKey(){
   //  you should update the pose of the rig and then the poses of the cameras would always be relative to the rig
   string sMainRobotName = m_pMainRobot->GetRobotName();
 
@@ -336,7 +336,7 @@ void RobotProxy::ForwardKey(){
   m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
 }
 
-void RobotProxy::ReverseKey(){
+void LocalSim::ReverseKey(){
   string sMainRobotName = m_pMainRobot->GetRobotName();
 
   // update RGB camera pose
@@ -373,7 +373,7 @@ int main( int argc, char** argv )
     std::cout<<"USAGE: Robot -n <ProxyName> -r <robot.xml directory>"<<
                "-w <world.xml directory> -s <StateKeeper Option>"<<std::endl;
     std::cout<<"Options:"<<std::endl;
-    std::cout<<"--ProxyName, -n         ||   Name of this RobotProxy."
+    std::cout<<"--ProxyName, -n         ||   Name of this LocalSim."
             <<std::endl;
     std::cout<<"--Robot.xml, -r         ||   robot.xml's directory"
             <<std::endl;
@@ -397,8 +397,8 @@ int main( int argc, char** argv )
   glewInit();
   SceneGraph::GLSceneGraph  glGraph;
 
-  // Initialize a RobotProxy.
-  RobotProxy mProxy( glGraph, sProxyName, sRobotURDF,
+  // Initialize a LocalSim.
+  LocalSim mProxy( glGraph, sProxyName, sRobotURDF,
                      sWorldURDF, sServerOption, sPoseFile);
   mProxy.InitReset();
 
@@ -446,31 +446,31 @@ int main( int argc, char** argv )
   //----------------------------------------------------------------------------
   // Register a keyboard hook to trigger the reset method
   pangolin::RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
-                            boost::bind( &RobotProxy::InitReset, &mProxy ) );
+                            boost::bind( &LocalSim::InitReset, &mProxy ) );
 
   // Simple asdw control
   pangolin::RegisterKeyPressCallback(
-        'a', boost::bind( &RobotProxy::LeftKey, &mProxy ) );
+        'a', boost::bind( &LocalSim::LeftKey, &mProxy ) );
   pangolin::RegisterKeyPressCallback(
-        'A', boost::bind( &RobotProxy::LeftKey, &mProxy ) );
+        'A', boost::bind( &LocalSim::LeftKey, &mProxy ) );
 
   pangolin::RegisterKeyPressCallback(
-        's', boost::bind( &RobotProxy::ReverseKey, &mProxy ) );
+        's', boost::bind( &LocalSim::ReverseKey, &mProxy ) );
   pangolin::RegisterKeyPressCallback(
-        'S', boost::bind( &RobotProxy::ReverseKey, &mProxy ) );
+        'S', boost::bind( &LocalSim::ReverseKey, &mProxy ) );
 
   pangolin::RegisterKeyPressCallback(
-        'd', boost::bind( &RobotProxy::RightKey, &mProxy ) );
+        'd', boost::bind( &LocalSim::RightKey, &mProxy ) );
   pangolin::RegisterKeyPressCallback(
-        'D', boost::bind( &RobotProxy::RightKey, &mProxy ) );
+        'D', boost::bind( &LocalSim::RightKey, &mProxy ) );
 
   pangolin::RegisterKeyPressCallback(
-        'w', boost::bind( &RobotProxy::ForwardKey, &mProxy ) );
+        'w', boost::bind( &LocalSim::ForwardKey, &mProxy ) );
   pangolin::RegisterKeyPressCallback(
-        'W', boost::bind( &RobotProxy::ForwardKey, &mProxy ) );
+        'W', boost::bind( &LocalSim::ForwardKey, &mProxy ) );
 
   pangolin::RegisterKeyPressCallback(
-        ' ', boost::bind( &RobotProxy::StepForward, &mProxy ) );
+        ' ', boost::bind( &LocalSim::StepForward, &mProxy ) );
 
   //----------------------------------------------------------------------------
   // wait for robot to connect

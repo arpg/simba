@@ -466,7 +466,34 @@ inline bool ParseDevice(XMLDocument& doc, vector<SimDeviceInfo>&  m_vSimDeviceIn
 
           cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCam "<<sMode<<") success." <<endl;
         }
+
+        // ---------------------------------------------------------------------------------------- Stereo Camera
+        /// TODO: the following need to test
+        if(strcmp(sMode, "Stereo")==0)
+        {
+            string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+            string sLRGBBodyName = "RGBL"+sCameraName;
+            string sRRGBBodyName = "RGBR"+sCameraName;
+            int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
+            vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+
+            // 3 save intp device, this device have two sensors
+            SimDeviceInfo Device;
+            Device.m_sDeviceName = sCameraName;
+            Device.m_sDeviceType = sType;
+            Device.m_iFPS = iFPS;
+            Device.m_vSensorList.push_back(sLRGBBodyName);
+            Device.m_vSensorList.push_back(sRRGBBodyName);
+            Device.m_vModel.push_back(sModel);
+            Device.m_vModel.push_back(sModel);
+            Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
+            m_vSimDeviceInfo.push_back(Device);
+
+            cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCam "<<sMode<<") success." <<endl;
+        }
       }
+
+
 
       if(sType=="GPS")
       {

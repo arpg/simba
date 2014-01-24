@@ -8,7 +8,7 @@
 #include <ModelGraph/PhysicsEngine.h>
 #include <ModelGraph/ModelGraphBuilder.h>
 #include <ModelGraph/PhyModelGraphAgent.h>
-#include <URDFParser/RobotProxyURDFParser.h>
+#include <URDFParser/LocalSimURDFParser.h>
 #include <SimDevices/Controller/Controller.h>
 #include <Utils/ConvertName.h>
 

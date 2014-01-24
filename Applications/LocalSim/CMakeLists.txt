@@ -17,10 +17,10 @@ include_directories( ${Pangolin_INCLUDE_DIRS}
   ${Calibu_INCLUDE_DIRS}
   ${SimBA_INCLUDE_DIRS} )
 
-add_executable( RobotProxy RobotProxy.cpp
-                           RobotProxy.h )
+add_executable( LocalSim LocalSim.cpp
+                           LocalSim.h )
 
-target_link_libraries( RobotProxy
+target_link_libraries( LocalSim
                        ${SceneGraph_LIBRARIES}
                        ${NODE_LIBRARIES}
                        ${SimBA_LIBRARIES}
