@@ -3,12 +3,11 @@
 
 ////////////////////////////////////////////
 ///
-/// ROBOT PROXY
+/// LOCALSIM
 /// This is the Simulator that we use to interface between the SimDevices and
 /// the GUI (run by SceneGraph)
 ///
 /////////////////////////////////////////////
-
 #include <iostream>
 #include <boost/bind.hpp>
 #include <Eigen/Eigen>                         // for vector math
@@ -33,13 +32,14 @@
 #include <Node/Node.h>                         // Node used for communication
 // between RP and any devices
 
+
 class LocalSim{
 
 public:
 
   ///////////////////////////////////////////////////////////////////
   //member variables
-  std::string                 m_sProxyName;
+  std::string                 m_sLocalSimName;
   std::string                 m_sRobotURDFFile;
   std::string                 m_sWorldURDFFile;
 
@@ -50,20 +50,23 @@ public:
   SceneGraph::GLMesh          m_Map;                 // mesh for the world.
 
   Render                      m_Render;
-  SimRobot*                   m_pMainRobot;            // user's robot. will be delete in final version of robot proxy (as we are not going to key control main robot in proxy)
+  SimRobot*                   m_pMainRobot;            // user's robot. will be delete in final version of robot LocalSim (as we are not going to key control main robot in LocalSim)
   WorldManager                m_WorldManager;
   SimDeviceManager            m_SimDeviceManager;
   RobotsManager               m_RobotManager;
   NetworkManager              m_NetworkManager;
+<<<<<<< HEAD
   PhysicsEngine               m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
+=======
+  PhyModelGraphAgent          m_PhyMGAgent;          // for one sim LocalSim, there is one PhyAgent
+>>>>>>> 49a0a9a4d9620eb3e927cb102a3bb32f1f34a020
   PoseController              m_SimpPoseController;
-
   hal::node                   m_Node;
 
   /// Constructor
   LocalSim(
       SceneGraph::GLSceneGraph& glGraph,
-      const std::string& sProxyName,
+      const std::string& sLocalSimName,
       const std::string& sRobotURDF,
       const std::string& sWorldURDF,
       const std::string& sServerName,
