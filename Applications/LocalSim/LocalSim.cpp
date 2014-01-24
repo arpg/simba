@@ -16,17 +16,17 @@ using namespace CVarUtils;
 
 LocalSim::LocalSim(
     SceneGraph::GLSceneGraph& glGraph,  //< Input: reference to glGraph
-    const std::string& sProxyName,      //< Input: name of robot proxy
+    const std::string& sLocalSimName,      //< Input: name of robot LocalSim
     const std::string& sRobotURDF,      //< Input: location of meshes, maps etc
     const std::string& sWorldURDF,
     const std::string& sServerName,
     const std::string& sPoseFileName
     )
-  : m_rSceneGraph( glGraph ), m_sProxyName(sProxyName),
+  : m_rSceneGraph( glGraph ), m_sLocalSimName(sLocalSimName),
     m_sWorldURDFFile(sWorldURDF), m_sRobotURDFFile(sRobotURDF){
 
   // This is used to interface with the user's main function.
-  m_Node.init(sProxyName);
+  m_Node.init(sLocalSimName);
 
   // 1. Parse world.xml file.
   if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true){
@@ -49,8 +49,8 @@ LocalSim::LocalSim(
   }
 
   // 4. Init User's Robot and add it to RobotManager
-  m_RobotManager.Init(m_sProxyName, sServerName, m_PhyMGAgent, m_Render);
-  if( m_RobotManager.AddRobot(RobotURDF, m_sProxyName) !=true )
+  m_RobotManager.Init(m_sLocalSimName, sServerName, m_PhyMGAgent, m_Render);
+  if( m_RobotManager.AddRobot(RobotURDF, m_sLocalSimName) !=true )
   {
       cout<<"[LocalSim] Cannot add new robot to RobotManager."<<endl;
       exit(-1);
@@ -65,7 +65,7 @@ LocalSim::LocalSim(
   //////
 
   // 5. Initialize the Network
-  if(m_NetworkManager.initNetwork(m_sProxyName, &m_SimDeviceManager, &m_RobotManager,  sServerName)!=true)
+  if(m_NetworkManager.initNetwork(m_sLocalSimName, &m_SimDeviceManager, &m_RobotManager,  sServerName)!=true)
   {
       cout<<"[LocalSim] You chose to connect to '"<<sServerName<<
             "' but we cannot initialize Network."<<
@@ -74,7 +74,7 @@ LocalSim::LocalSim(
   }
 
   // 6. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
-  if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF, m_sProxyName)!= true)
+  if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF, m_sLocalSimName)!= true)
   {
       cout<<"[LocalSim] Cannot init SimDeviceManager."<<endl;
       exit(-1);
@@ -82,7 +82,7 @@ LocalSim::LocalSim(
 
   m_SimpPoseController.Init(sPoseFileName);
 
-  // 7, if run in with network mode, proxy network will publish sim device
+  // 7, if run in with network mode, LocalSim network will publish sim device
   if(sServerName !="WithoutNetwork"){
     if(m_NetworkManager.initDevices()!=true){
       cout<<"[LocalSim] Cannot init Nextwrok"<<endl;
@@ -91,7 +91,7 @@ LocalSim::LocalSim(
   }
   else
   {
-    cout<<"[LocalSim] Init Robot Proxy without Network."<<endl;
+    cout<<"[LocalSim] Init Robot LocalSim without Network."<<endl;
   }
 
   cout<<"[LocalSim] Init LocalSim Success!"<<endl;
@@ -370,10 +370,10 @@ int main( int argc, char** argv )
 {
   // parse command line arguments
   if(argc){
-    std::cout<<"USAGE: Robot -n <ProxyName> -r <robot.xml directory>"<<
+    std::cout<<"USAGE: Robot -n <LocalSimName> -r <robot.xml directory>"<<
                "-w <world.xml directory> -s <StateKeeper Option>"<<std::endl;
     std::cout<<"Options:"<<std::endl;
-    std::cout<<"--ProxyName, -n         ||   Name of this LocalSim."
+    std::cout<<"--LocalSimName, -n         ||   Name of this LocalSim."
             <<std::endl;
     std::cout<<"--Robot.xml, -r         ||   robot.xml's directory"
             <<std::endl;
@@ -384,23 +384,23 @@ int main( int argc, char** argv )
 
   }
   GetPot cl( argc, argv );
-  std::string sProxyName = cl.follow( "SimWorld", "-n" );
+  std::string sLocalSimName = cl.follow( "SimWorld", "-n" );
   std::string sRobotURDF = cl.follow("", "-r");
   std::string sWorldURDF = cl.follow( "", "-w" );
   std::string sPoseFile  = cl.follow("None",1,"-p");
   std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
 
   //Start our SceneGraph interface
-  pangolin::CreateGlutWindowAndBind(sProxyName,640,480);
+  pangolin::CreateGlutWindowAndBind(sLocalSimName,640,480);
   SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
   glClearColor(0, 0, 0, 1);
   glewInit();
   SceneGraph::GLSceneGraph  glGraph;
 
   // Initialize a LocalSim.
-  LocalSim mProxy( glGraph, sProxyName, sRobotURDF,
+  LocalSim mLocalSim( glGraph, sLocalSimName, sRobotURDF,
                      sWorldURDF, sServerOption, sPoseFile);
-  mProxy.InitReset();
+  mLocalSim.InitReset();
 
   //---------------------------------------------------------------------------
   // <Pangolin boilerplate>
@@ -446,39 +446,39 @@ int main( int argc, char** argv )
   //----------------------------------------------------------------------------
   // Register a keyboard hook to trigger the reset method
   pangolin::RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
-                            boost::bind( &LocalSim::InitReset, &mProxy ) );
+                            boost::bind( &LocalSim::InitReset, &mLocalSim ) );
 
   // Simple asdw control
   pangolin::RegisterKeyPressCallback(
-        'a', boost::bind( &LocalSim::LeftKey, &mProxy ) );
+        'a', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
   pangolin::RegisterKeyPressCallback(
-        'A', boost::bind( &LocalSim::LeftKey, &mProxy ) );
+        'A', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
 
   pangolin::RegisterKeyPressCallback(
-        's', boost::bind( &LocalSim::ReverseKey, &mProxy ) );
+        's', boost::bind( &LocalSim::ReverseKey, &mLocalSim ) );
   pangolin::RegisterKeyPressCallback(
-        'S', boost::bind( &LocalSim::ReverseKey, &mProxy ) );
+        'S', boost::bind( &LocalSim::ReverseKey, &mLocalSim ) );
 
   pangolin::RegisterKeyPressCallback(
-        'd', boost::bind( &LocalSim::RightKey, &mProxy ) );
+        'd', boost::bind( &LocalSim::RightKey, &mLocalSim ) );
   pangolin::RegisterKeyPressCallback(
-        'D', boost::bind( &LocalSim::RightKey, &mProxy ) );
+        'D', boost::bind( &LocalSim::RightKey, &mLocalSim ) );
 
   pangolin::RegisterKeyPressCallback(
-        'w', boost::bind( &LocalSim::ForwardKey, &mProxy ) );
+        'w', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
   pangolin::RegisterKeyPressCallback(
-        'W', boost::bind( &LocalSim::ForwardKey, &mProxy ) );
+        'W', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
 
   pangolin::RegisterKeyPressCallback(
-        ' ', boost::bind( &LocalSim::StepForward, &mProxy ) );
+        ' ', boost::bind( &LocalSim::StepForward, &mLocalSim ) );
 
   //----------------------------------------------------------------------------
   // wait for robot to connect
   //    if(sServerOption== "WithoutStateKeeper")
   //    {
-  //        while(mProxy.m_NetworkManager.m_SubscribeNum == 0)
+  //        while(mLocalSim.m_NetworkManager.m_SubscribeNum == 0)
   //        {
-  //            cout<<"["<<sProxyName<<"] wait for RPG Device to register"<<endl;
+  //            cout<<"["<<sLocalSimName<<"] wait for RPG Device to register"<<endl;
   //            sleep(1);
   //        }
   //    }
@@ -490,24 +490,24 @@ int main( int argc, char** argv )
     view3d.Activate(stacks3d);
 
 //    // 1. Read the Camera pose for the update
-//    if (!sProxyName.empty())
+//    if (!sLocalSimName.empty())
 //    {
-//      mProxy.ApplyCameraPose(mProxy.m_SimpPoseController.ReadNextPose());
+//      mLocalSim.ApplyCameraPose(mLocalSim.m_SimpPoseController.ReadNextPose());
 //    }
 
     // 2. Update physics and scene
-    mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
-    mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
-    mProxy.m_Render.UpdateScene();
+    mLocalSim.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
+    mLocalSim.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
+    mLocalSim.m_Render.UpdateScene();
 
     // 3. Update SimDevices
-    mProxy.m_SimDeviceManager.UpdateAllDevices();
+    mLocalSim.m_SimDeviceManager.UpdateAllDevices();
 
     // 4. Update the Network
-    mProxy.m_NetworkManager.UpdateNetWork();
+    mLocalSim.m_NetworkManager.UpdateNetWork();
 
     // 5. Show the image in the current window
-    mProxy.SetImagesToWindow(LSimCamImage,RSimCamImage);
+    mLocalSim.SetImagesToWindow(LSimCamImage,RSimCamImage);
 
     // 6. Refresh screen
     pangolin::FinishGlutFrame();

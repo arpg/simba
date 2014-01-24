@@ -104,7 +104,6 @@ list(APPEND URDFPARSER_HDRS
   URDFParser/TinyXMLTool.h
   URDFParser/GenURIFromURDF.h
   URDFParser/StateKeeperURDFParser.h
-#  URDFParser/URDFParser.h
 )
 
 list(APPEND UTILS_HDRS
