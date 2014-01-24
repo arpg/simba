@@ -38,7 +38,6 @@ public:
     m_dTimeStep    = dTimeStep;
     m_dGravity     = dGravity;
     m_nMaxSubSteps = nMaxSubSteps;
-    return true;
     // Physics stuff
     // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
@@ -56,12 +55,14 @@ public:
                                       m_pSolver.get(),
                                       &m_CollisionConfiguration)
           );
+
     m_pDynamicsWorld->setGravity( btVector3(0,0,m_dGravity) );
     m_pDynamicsWorld->setDebugDrawer( &m_DebugDrawer );
     m_pDynamicsWorld->getDebugDrawer()->
         setDebugMode(btIDebugDraw::DBG_DrawWireframe +
                      btIDebugDraw::DBG_FastWireframe +
                      btIDebugDraw::DBG_DrawConstraints);
+    return true;
   }
 
   //////////////////////////////////////////////////////////
@@ -762,7 +763,7 @@ public:
   std::map<string, btHinge2Constraint*>                   m_mHinge2; // map of all hinge 2 constraints
   std::map<string, btGeneric6DofConstraint*>              m_mSixDOF;
   std::map<string, btPoint2PointConstraint*>              m_mPtoP;
-  boost::shared_ptr<btDiscreteDynamicsWorld>             m_pDynamicsWorld;
+  boost::shared_ptr<btDiscreteDynamicsWorld>              m_pDynamicsWorld;
 
 private:
 
