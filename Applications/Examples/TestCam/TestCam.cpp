@@ -26,7 +26,8 @@ int main( int argc, char* argv[] )
     hal::Camera camera(GenURIFromURDF(sCameraName, sRobotURDF));
 
     // Capture first image
-    pb::ImageArray imgs;
+    std::shared_ptr<pb::ImageArray> imgs =
+        pb::ImageArray::Create();
 
     // N cameras, each w*h in dimension, greyscale
     const size_t N = camera.NumChannels();
@@ -69,7 +70,7 @@ int main( int argc, char* argv[] )
         glColor3f(1,1,1);
 
         if(go) {
-            if( !camera.Capture(imgs) ) {
+            if( !camera.Capture( *imgs.get()) ) {
                 run = false;
             }
 
@@ -81,11 +82,11 @@ int main( int argc, char* argv[] )
             }
         }
 
-        for(size_t i=0; i<imgs.Size(); ++i ) {
+        for(size_t i=0; i<imgs->Size(); ++i ) {
             container[i].Activate();
             tex.Upload(
-                imgs[i].data(),
-                imgs[i].Format(), imgs[i].Type()
+                imgs->at(i).data(),
+                imgs->at(i).Format(), imgs->at(i).Type()
             );
             tex.RenderToViewportFlipY();
         }
@@ -93,7 +94,7 @@ int main( int argc, char* argv[] )
         if(log && run) {
             pb::Msg msg;
             msg.set_timestamp(frame);
-            msg.mutable_camera()->Swap(&imgs.Ref());
+            msg.mutable_camera()->Swap(&imgs->Ref());
             pb::Logger::GetInstance().LogMessage(msg);
         }
 

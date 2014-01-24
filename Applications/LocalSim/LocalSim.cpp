@@ -29,7 +29,7 @@ LocalSim::LocalSim(
   m_Node.init(sLocalSimName);
 
   // 1. Parse world.xml file.
-  if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true){
+  if( m_Parser.ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true){
     cout<<"[LocalSim] Cannot parse "<< m_sWorldURDFFile<<
           ". Please check if the file exist and the syntax is valid."<<endl;
     exit(-1);
@@ -126,11 +126,8 @@ void LocalSim::InitReset()
     m_ground.SetExtent( 200,200, dThickness );
     m_rSceneGraph.AddChild( &m_ground );
 
-    BoxShape bs = BoxShape(100, 100, 1/2.0f);
-    Body* ground = new Body("Ground", bs);
-    ground->m_dMass = 0;
-    ground->SetWPose( m_ground.GetPose4x4_po() );
-    m_PhyMGAgent.RegisterObject(ground, "Ground", m_ground.GetPose());
+    BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1, m_WorldManager.vWorldPose);
+    m_PhyMGAgent.RegisterObject(pGround);
     m_PhyMGAgent.SetFriction("Ground", 888);
   }
   // init world with mesh
@@ -179,7 +176,7 @@ void LocalSim::ApplyCameraPose(Eigen::Vector6d dPose){
 }
 
 void LocalSim::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
-  m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
+  m_PhyMGAgent.SetEntity6Pose(sName, dPose);
 }
 
 // ---- Step Forward
@@ -496,9 +493,9 @@ int main( int argc, char** argv )
 //    }
 
     // 2. Update physics and scene
-    mProxy.m_PhyMGAgent.DebugDrawWorld();
-    mProxy.m_PhyMGAgent.StepSimulation();
-    mProxy.m_Render.UpdateScene();
+    mLocalSim.m_PhyMGAgent.DebugDrawWorld();
+    mLocalSim.m_PhyMGAgent.StepSimulation();
+    mLocalSim.m_Render.UpdateScene();
 
     // 3. Update SimDevices
     mLocalSim.m_SimDeviceManager.UpdateAllDevices();

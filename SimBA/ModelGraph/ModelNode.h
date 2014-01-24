@@ -29,8 +29,11 @@ public:
   ////////////////////////////////////////////////////////////////////
   /// SETTERS
 
-
-
+  void SetBase( ModelNode* pBase )
+  {
+    pBase->m_pParent = this;
+    this->AddChild( pBase );
+  }
 
   void SetName( const std::string& sName ){
     m_sName = sName;

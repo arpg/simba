@@ -41,12 +41,6 @@ public:
     m_dPose[2] = z;
   }
 
-  void SetBase( Shape* pBase )
-  {
-    pBase->m_pParent = this;
-    this->AddChild( pBase );
-  }
-
   /// GETTERS
   Eigen::Vector3d GetScale(){
     return m_dScale;

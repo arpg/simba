@@ -37,17 +37,22 @@ public:
   bool ParseWorld(const char* filename, WorldManager& mWorldManager);
 
   // Parses the Robot.xml file describing a RaycastVehicle.
-  bool ParseRaycastVehicle(XMLDocument* doc, Model& m_RobotModel,
+  bool ParseRaycastVehicle(XMLDocument* doc, ModelNode& m_RobotModel,
                            Eigen::Vector6d& InitPose, string sProxyName);
 
   // ParseRobot really parses each of the robot parts, and then generates a set
   // of commands that the PhysicsEngine can use to create bullet objects.
-  bool ParseRobot(XMLDocument* doc, Model& m_RobotModel,
+  bool ParseRobot(XMLDocument* doc, ModelNode& m_RobotModel,
                          Eigen::Vector6d& InitPose, string sProxyName);
 
   // ParseDevices uses the information given in the Robot.xml file to create the
   // sensor views that we see later in the Sim.
   bool ParseDevices(XMLDocument& doc,
+                          vector<SimDeviceInfo>& m_vSimDeviceInfo,
+                          string sProxyName);
+
+  // the following parse SDF device, support SDF 1.4.
+  bool ParseSDFDevices(XMLDocument& doc,
                           vector<SimDeviceInfo>& m_vSimDeviceInfo,
                           string sProxyName);
 

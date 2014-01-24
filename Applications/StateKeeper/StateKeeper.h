@@ -7,7 +7,7 @@
 #include <PB_Headers/SimMessages.pb.h>
 #include <Utils/GetPot>                  // for command line parsing
 #include <Utils/ConvertName.h>
-#include <URDFParser/StateKeeperURDFParser.h>
+#include <URDFParser/URDF_Parser.h>
 
 
 class StateKeeper

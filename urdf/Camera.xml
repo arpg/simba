@@ -1,0 +1,35 @@
+<robot name="Robot">
+<!--    <bodybase name="Stick" dir="/home/bminortx/Code/Dev/luma/SIM/media" mass="0" pose="0,-3,0,-1.5707,0,0" dimesion="0.1,2,0.1" scale="25" type="Box"/>-->
+			
+<!--    <Sensor Name="LCamera"
+            Type="Camera"
+            Driver="Node2Cam"
+            Size="512*384"
+            Mode="RGBD"
+            FPS="30"
+            Align="true"
+            Parent="Stick"
+            Pose="0,-2,0,0,0,-1.57"
+            Location="@Proxy1"
+            Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml" />-->
+
+
+<!--    <link name="kinect_link">
+    <inertial mass="0.01">
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>-->
+
+    <sensor name="sensor_camera" type="RGBD" always_on="true" update_rate="30.0">
+      <origin pose="0.0 0.0 0.0 0.0 0.0 0.0"/>
+      <camera>
+            <horizontal_fov angle="1.578"/>
+            <image width="640" height="480" format="R8G8B8"/>
+            <clip near="0.01" far="10.0"/>
+            <save enabled="false" path="/tmp"/>
+            <depth_camera output="points" />
+      </camera>
+      <plugin name="CameraModel" filename="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml">
+      </plugin>
+    </sensor>
+
+</robot>

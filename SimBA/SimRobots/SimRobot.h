@@ -5,7 +5,7 @@
 #include <ModelGraph/RenderEngine.h>
 #include <ModelGraph/PhysicsEngine.h>
 #include <ModelGraph/ModelGraphBuilder.h>
-#include <URDFParser/URDF_Parser.h>.h>
+#include <URDFParser/URDF_Parser.h>
 #include <SimDevices/Controller/Controller.h>
 #include <Utils/ConvertName.h>
 
@@ -87,13 +87,14 @@ public:
   // -----------------------------------------------------------------------------------------------------------------
   bool Init(string ProxyName,bool bStateKeeperOn ,PhysicsEngine& rPhysWrapper,
             Render& rRender, XMLDocument& doc){
+    URDF_Parser* m_Parser = new URDF_Parser();
     m_rPhysWrapper = rPhysWrapper;
     m_Render = rRender;
     m_sProxyName = ProxyName;
     m_pRobotURDF = doc.ToDocument();
 
-    if( m_Parser.ParseRobot(m_pRobotURDF->GetDocument(), m_RobotModel,
-                            m_eRobotInitPoseInURDF, m_sProxyName)==false )
+    if( m_Parser->ParseRobot(m_pRobotURDF->GetDocument(), m_RobotModel,
+                            m_eRobotInitPoseInURDF, m_sProxyName)==false)
     {
       cout<<"[SimRobot] Parse Robot Fail"<<endl;
       return false;
@@ -208,7 +209,6 @@ public:
 
 private:
   Render                      m_Render;
-  URDF_Parser                 m_Parser;
   PhysicsEngine               m_rPhysWrapper;
   ModelGraphBuilder           m_MGBuilder;
   string                      m_sRobotName;

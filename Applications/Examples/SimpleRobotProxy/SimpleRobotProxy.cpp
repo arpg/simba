@@ -16,7 +16,7 @@
 #include <World/WorldManager.h>               // for manage world information
 #include <Robots/RobotsManager.h>             // for manage all robots
 #include <Robots/SimRobot.h>                  // for user's robot
-#include <ModelGraph/PhyModelGraphAgent.h>    // for communicate between Physic Engine and Model Graph
+#include <ModelGraph/PhyModelGraphAgent.h>    // for communicate between Physic Engine and ModelNode Graph
 
 using namespace std;
 using namespace CVarUtils;

@@ -18,7 +18,7 @@
 #include "Managers/SimDeviceManager.h"         // for managing all the SimDevices
 // of the Robot we control
 
-#include <URDFParser/LocalSimURDFParser.h>   // for parsing URDF file
+#include <URDFParser/URDF_Parser.h>   // for parsing URDF file
 
 #include "Utils/CVarHelpers.h"                 // for parsing Eigen Vars as CVars
 #include <CVars/CVar.h>                        // for GLConsole
@@ -55,13 +55,10 @@ public:
   SimDeviceManager            m_SimDeviceManager;
   RobotsManager               m_RobotManager;
   NetworkManager              m_NetworkManager;
-<<<<<<< HEAD
   PhysicsEngine               m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
-=======
-  PhyModelGraphAgent          m_PhyMGAgent;          // for one sim LocalSim, there is one PhyAgent
->>>>>>> 49a0a9a4d9620eb3e927cb102a3bb32f1f34a020
   PoseController              m_SimpPoseController;
   hal::node                   m_Node;
+  URDF_Parser                 m_Parser;
 
   /// Constructor
   LocalSim(
