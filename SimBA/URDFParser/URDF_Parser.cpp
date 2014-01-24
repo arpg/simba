@@ -77,229 +77,247 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
 
       // Car paramters
       if(strcmp(sAttrName, "param")){
-        switch(pElement->Attribute("name")){
-        case "control delay": parameters[6] = pElement->Attribute("value");
-          break;
-        case "stiffness": parameters[12] = pElement->Attribute("value");
-          break;
-        case "susp conn height": parameters[11] = pElement->Attribute("value");
-          break;
-        case "max susp force": parameters[13] = pElement->Attribute("value");
-          break;
-        case "damp factor": parameters[16] = pElement->Attribute("value");
-          break;
-        case "exp damp factor": parameters[17] = pElement->Attribute("value");
-          break;
-        case "roll influence": parameters[18] = pElement->Attribute("value");
-          break;
-        case "steering coeff": parameters[19] = pElement->Attribute("value");
-          break;
-        case "max steering": parameters[20] = pElement->Attribute("value");
-          break;
-        case "max steering rate": parameters[21] = pElement->Attribute("value");
-          break;
-        case "accel offset": parameters[22] = pElement->Attribute("value");
-          break;
-        case "steering offset": parameters[23] = pElement->Attribute("value");
-          break;
-        case "stall torque coeff":
+        std::string param = pElement->Attribute("name");
+        if(strcmp(param, "control delay")){
+          parameters[6] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "stiffness")){: parameters[12] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "susp conn height")){
+          parameters[11] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "max susp force")){
+          parameters[13] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "damp factor")){
+          parameters[16] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "exp damp factor")){
+          parameters[17] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "roll influence")){
+          parameters[18] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "steering coeff")){
+          parameters[19] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "max steering")){
+          parameters[20] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "max steering rate")){
+          parameters[21] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "accel offset")){
+          parameters[22] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "steering offset")){
+          parameters[23] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "stall torque coeff")){
+
           parameters[24] = pElement->Attribute("value");
-          break;
-        case "torque speed slope":
+        }
+        if(strcmp(param, "torque speed slope")){
+
           parameters[25] = pElement->Attribute("value");
-          break;
-        case "susp rest length": parameters[15] = pElement->Attribute("value");
-          break;
-        case "max susp travel": parameters[14] = pElement->Attribute("value");
-          break;
-        case "Magic B": parameters[26] = pElement->Attribute("value");
-          break;
-        case "Magic C": parameters[27] = pElement->Attribute("value");
-          break;
-        case "Magic E": parameters[28] = pElement->Attribute("value");
-          break;
-        default:
-          std::cerr<<"There is no parameter matching"<<
-                     pElement->Attribute("name")<<std::endl;
-          break;
+        }
+        if(strcmp(param, "susp rest length")){
+          parameters[15] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "max susp travel")){
+          parameters[14] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "Magic B")){
+          parameters[26] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "Magic C")){
+          parameters[27] = pElement->Attribute("value");
+        }
+        if(strcmp(param, "Magic E")){
+          parameters[28] = pElement->Attribute("value");
         }
       }
 
       // Vehicle body parameters
       else if(strcmp(sAttrName, "body")){
-        switch(pElement->Attribute("name")){
-        case "length": parameters[0] = pElement->Attribute("value");
-          break;
-        case "width": parameters[1] = pElement->Attribute("value");
-          break;
-        case "height": parameters[2] = pElement->Attribute("value");
-          break;
-        case "mass": parameters[7] = pElement->Attribute("value");
-          break;
-        case "position": position = GenNumFromChar(pElement->Attribute("value"));
-          break;
-        case "rotation": rotation = GenNumFromChar(pElement->Attribute("value"));
-          break;
-        default:
-          std::cerr<<"There is no body param matching"<<
-                     pElement->Attribute("name")<<std::endl;
-          break;
+        std::string body = pElement->Attribute("name");
+        if(strcmp(body, "length")){
+          parameters[0] = pElement->Attribute("value");
         }
+        if(strcmp(body, "width")){
+          parameters[1] = pElement->Attribute("value");
+        }
+        if(strcmp(body, "height")){
+          parameters[2] = pElement->Attribute("value");
+        }
+        if(strcmp(body, "mass")){
+          parameters[7] = pElement->Attribute("value");
+        }
+        if(strcmp(body, "position")){
+          position = GenNumFromChar(pElement->Attribute("value"));
+        }
+        if(strcmp(body, "rotation")){
+          rotation = GenNumFromChar(pElement->Attribute("value"));
+        }
+
       }
 
       // Vehicle wheel parameters
       else if(strcmp(sAttrName, "wheel")){
-        switch(pElement->Attribute("name")){
-        case "radius": parameters[8] = pElement->Attribute("value");
-          break;
-        case "width": parameters[9] = pElement->Attribute("value");
-          break;
-        case "dyn friction": parameters[3] = pElement->Attribute("value");
-          break;
-        case "slip coeff": parameters[5] = GenNumFromChar(pElement->Attribute("value"));
-          break;
-        case "traction friction": parameters[10] = GenNumFromChar(pElement->Attribute("value"));
-          break;
-        case "side friction": parameters[4] = GenNumFromChar(pElement->Attribute("value"));
-          break;
-        default:
-          std::cerr<<"There is no wheel param matching"<<
-                     pElement->Attribute("name")<<std::endl;
-          break;
+        std::string wheel = pElement->Attribute("name");
+        if(strcmp(wheel, "radius")){
+          parameters[8] = pElement->Attribute("value");
+        }
+        if(strcmp(wheel, "width")){
+          parameters[9] = pElement->Attribute("value");
+        }
+        if(strcmp(wheel, "dyn friction")){
+          parameters[3] = pElement->Attribute("value");
+        }
+        if(strcmp(wheel, "slip coeff")){
+          parameters[5] = GenNumFromChar(pElement->Attribute("value"));
+        }
+        if(strcmp(wheel, "traction friction")){
+          parameters[10] = GenNumFromChar(pElement->Attribute("value"));
+        }
+        if(strcmp(wheel, "side friction")){
+          parameters[4] = GenNumFromChar(pElement->Attribute("value"));
         }
       }
 
-//      // Sensors
-//      // create sim device
-//      if(strcmp(sRootContent,"Sensor")){
-//        string sType( pElement->Attribute("Type"));
-//        if(sType == "Camera"){
-//          cout<<"[ParseRobot] Init Camera"<<endl;
-//          const char* sMode = pElement->Attribute("Mode");
 
-//          /// Single Camera
-//          if(strcmp(sMode, "RGB")==0 || strcmp(sMode,"Depth")==0 ||
-//             strcmp(sMode,"Gray")==0){
-//            string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-//            string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
-//            string sCamMode(sMode);
-//            string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
-//            vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-//            int iMass = 1;
-//            // string sMeshdir(pElement->Attribute("Dir"));
 
-//            // create body for simcam
-//            BoxShape box = BoxShape(0.1,0.1,0.1);
-//            Body* pBody = new Body(sSensorName, box, iMass );
-//            pBody->SetPose( vPose[0],vPose[1]+2,vPose[2]-3.2,
-//                            vPose[3],vPose[4],vPose[5] );
-//            m_mBodys.insert(std::pair<std::string,Body*>(sSensorName,pBody));
+      //      // Sensors
+      //      // create sim device
+      //      if(strcmp(sRootContent,"Sensor")){
+      //        string sType( pElement->Attribute("Type"));
+      //        if(sType == "Camera"){
+      //          cout<<"[ParseRobot] Init Camera"<<endl;
+      //          const char* sMode = pElement->Attribute("Mode");
 
-//            // create joint for SimCam
-//            string sJointName = "SimCamJoint"+sCameraName; // e.g. SimCamJointLCam@robot1@proxy
-//            Eigen::Vector3d vPivot;
-//            Eigen::Vector3d vAxis;
-//            vPivot<<vPose[0],vPose[1]+2,vPose[2]-3.2;
-//            vAxis<<1,1,1;
-//            HingeJoint* pHinge =
-//                new HingeJoint(sJointName, m_mBodys.find(sParentName)->second,
-//                               m_mBodys.find(sSensorName)->second, vPivot[0],
-//                               vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
-//          }
+      //          /// Single Camera
+      //          if(strcmp(sMode, "RGB")==0 || strcmp(sMode,"Depth")==0 ||
+      //             strcmp(sMode,"Gray")==0){
+      //            string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+      //            string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
+      //            string sCamMode(sMode);
+      //            string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
+      //            vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+      //            int iMass = 1;
+      //            // string sMeshdir(pElement->Attribute("Dir"));
 
-//          /// RGB-Depth Camera
-//          if(strcmp(sMode, "RGBD")==0 )
-//          {
-//            string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-//            string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
-//            vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-//            int iMass = 1;
-//            double BodyDistance = 0.5;
-//            // string sMeshdir(pElement->Attribute("Dir"));
+      //            // create body for simcam
+      //            BoxShape box = BoxShape(0.1,0.1,0.1);
+      //            Body* pBody = new Body(sSensorName, box, iMass );
+      //            pBody->SetPose( vPose[0],vPose[1]+2,vPose[2]-3.2,
+      //                            vPose[3],vPose[4],vPose[5] );
+      //            m_mBodys.insert(std::pair<std::string,Body*>(sSensorName,pBody));
 
-//            /// create bodys
-//            // 1.3 create body to connect RGB Cam and Depth Cam
-//            BoxShape box = BoxShape(BodyDistance,0.1,0.1);
-//            Body* pBody = new Body(sCameraName, box, iMass );
-//            pBody->SetPose(0,-2.1,0, 0, 0, 0 );
-//            m_mBodys.insert(std::pair<std::string,Body*>(sCameraName,pBody));
+      //            // create joint for SimCam
+      //            string sJointName = "SimCamJoint"+sCameraName; // e.g. SimCamJointLCam@robot1@proxy
+      //            Eigen::Vector3d vPivot;
+      //            Eigen::Vector3d vAxis;
+      //            vPivot<<vPose[0],vPose[1]+2,vPose[2]-3.2;
+      //            vAxis<<1,1,1;
+      //            HingeJoint* pHinge =
+      //                new HingeJoint(sJointName, m_mBodys.find(sParentName)->second,
+      //                               m_mBodys.find(sSensorName)->second, vPivot[0],
+      //                               vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
+      //          }
 
-//            /// create joints
-//            Eigen::Vector3d vPivot;
-//            Eigen::Vector3d vAxis;
-//            // 2.3 create joint for SimCam and parent
-//            string sJointName = "SimCamJoint"+sCameraName;
-//            vPivot<< 0, 0, 0;
-//            vAxis<<0,-1,0;
-//            HingeJoint* pRGBDHinge =
-//                new HingeJoint(sJointName, m_mBodys.find(sParentName)->second,
-//                               pBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],
-//                               vAxis[1],vAxis[2]);
+      //          /// RGB-Depth Camera
+      //          if(strcmp(sMode, "RGBD")==0 )
+      //          {
+      //            string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+      //            string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
+      //            vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+      //            int iMass = 1;
+      //            double BodyDistance = 0.5;
+      //            // string sMeshdir(pElement->Attribute("Dir"));
 
-//            // 1.1 create body for RGB Cam
-//            string sRGBBodyName = "RGB"+sCameraName;
-//            BoxShape RGBbox = BoxShape(0.1,0.1,0.1);
-//            Body* pRGBBody = new Body(sRGBBodyName, RGBbox, iMass );
-//            pRGBBody->SetPose( vPose[0]-BodyDistance - 0.1,vPose[1] + 2, vPose[2],
-//                               /*-M_PI / 2*/0, 0, /*-M_PI / 2*/0 );
-//            m_mBodys.insert(std::pair<std::string,Body*>(sRGBBodyName,pRGBBody));
+      //            /// create bodys
+      //            // 1.3 create body to connect RGB Cam and Depth Cam
+      //            BoxShape box = BoxShape(BodyDistance,0.1,0.1);
+      //            Body* pBody = new Body(sCameraName, box, iMass );
+      //            pBody->SetPose(0,-2.1,0, 0, 0, 0 );
+      //            m_mBodys.insert(std::pair<std::string,Body*>(sCameraName,pBody));
 
-//            // 2.1 create joint for RGB body and RGBDCamBody
-//            string sRGBJointName = "SimCamJoint"+sRGBBodyName;
-//            vPivot<<-0.5, 0, 0;
-//            vAxis<< 1,0,0;
-//            HingeJoint* pRGBHinge =
-//                new HingeJoint(sRGBJointName, m_mBodys.find(sCameraName)->second,
-//                               m_mBodys.find(sRGBBodyName)->second, vPivot[0],
-//                               vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2] );
-//            //HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, pBody,
-//            //pRGBBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],
-//            //vAxis[2], 100, 100, -M_PI, M_PI );
+      //            /// create joints
+      //            Eigen::Vector3d vPivot;
+      //            Eigen::Vector3d vAxis;
+      //            // 2.3 create joint for SimCam and parent
+      //            string sJointName = "SimCamJoint"+sCameraName;
+      //            vPivot<< 0, 0, 0;
+      //            vAxis<<0,-1,0;
+      //            HingeJoint* pRGBDHinge =
+      //                new HingeJoint(sJointName, m_mBodys.find(sParentName)->second,
+      //                               pBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],
+      //                               vAxis[1],vAxis[2]);
 
-//            // 1.2 create body for Depth Cam
-//            string sDepthBodyName = "Depth"+sCameraName;
-//            BoxShape Depthbox = BoxShape(0.1,0.1,0.1);
-//            Body* pDepthBody = new Body(sDepthBodyName, Depthbox, iMass );
-//            pDepthBody->SetPose( vPose[0]+BodyDistance+0.1,vPose[1] + 2,vPose[2],
-//                                 0, 0, 0 );
-//            m_mBodys.
-//                insert(std::pair<std::string,Body*>(sDepthBodyName,pDepthBody));
+      //            // 1.1 create body for RGB Cam
+      //            string sRGBBodyName = "RGB"+sCameraName;
+      //            BoxShape RGBbox = BoxShape(0.1,0.1,0.1);
+      //            Body* pRGBBody = new Body(sRGBBodyName, RGBbox, iMass );
+      //            pRGBBody->SetPose( vPose[0]-BodyDistance - 0.1,vPose[1] + 2, vPose[2],
+      //                               /*-M_PI / 2*/0, 0, /*-M_PI / 2*/0 );
+      //            m_mBodys.insert(std::pair<std::string,Body*>(sRGBBodyName,pRGBBody));
 
-//            // 2.2 create joint for Depth body and RGBDCamBody
-//            string sDepthJointName = "SimCamJoint"+sDepthBodyName;
-//            vPivot<< 0.5, 0, 0;
-//            vAxis<<  1, 0, 0;
-//            HingeJoint* pDepthHinge =
-//                new HingeJoint( sDepthJointName,pBody, pDepthBody, vPivot[0],
-//                                vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
-//          }
-//        }
+      //            // 2.1 create joint for RGB body and RGBDCamBody
+      //            string sRGBJointName = "SimCamJoint"+sRGBBodyName;
+      //            vPivot<<-0.5, 0, 0;
+      //            vAxis<< 1,0,0;
+      //            HingeJoint* pRGBHinge =
+      //                new HingeJoint(sRGBJointName, m_mBodys.find(sCameraName)->second,
+      //                               m_mBodys.find(sRGBBodyName)->second, vPivot[0],
+      //                               vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2] );
+      //            //HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, pBody,
+      //            //pRGBBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],
+      //            //vAxis[2], 100, 100, -M_PI, M_PI );
 
-//        /// RGB-Depth Camera
-//        if(sType=="GPS")
-//        {
-//          string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-//          string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-//          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-//          int iMass = 1;
-//          // string sMeshdir(pElement->Attribute("Dir"));
+      //            // 1.2 create body for Depth Cam
+      //            string sDepthBodyName = "Depth"+sCameraName;
+      //            BoxShape Depthbox = BoxShape(0.1,0.1,0.1);
+      //            Body* pDepthBody = new Body(sDepthBodyName, Depthbox, iMass );
+      //            pDepthBody->SetPose( vPose[0]+BodyDistance+0.1,vPose[1] + 2,vPose[2],
+      //                                 0, 0, 0 );
+      //            m_mBodys.
+      //                insert(std::pair<std::string,Body*>(sDepthBodyName,pDepthBody));
 
-//          // create body for it
-//          BoxShape box = BoxShape(0.1,0.1,0.1);
-//          Body* pBody = new Body(sBodyName, box, iMass );
-//          pBody->SetPose( vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5] );
-//          m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pBody));
+      //            // 2.2 create joint for Depth body and RGBDCamBody
+      //            string sDepthJointName = "SimCamJoint"+sDepthBodyName;
+      //            vPivot<< 0.5, 0, 0;
+      //            vAxis<<  1, 0, 0;
+      //            HingeJoint* pDepthHinge =
+      //                new HingeJoint( sDepthJointName,pBody, pDepthBody, vPivot[0],
+      //                                vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2]);
+      //          }
+      //        }
 
-//          // create joint for SimGPS
-//          string sJointName = "GPSJoint"+sBodyName;
-//          Eigen::Vector3d vPivot;
-//          Eigen::Vector3d vAxis;
-//          vPivot<<vPose[0],vPose[1],vPose[2];
-//          vAxis<<1,0,0;
-//          //HingeJoint* pHinge = new HingeJoint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],100,100,0,M_PI );
-//        }
+      //        /// RGB-Depth Camera
+      //        if(sType=="GPS")
+      //        {
+      //          string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+      //          string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+      //          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+      //          int iMass = 1;
+      //          // string sMeshdir(pElement->Attribute("Dir"));
 
-//      }
+      //          // create body for it
+      //          BoxShape box = BoxShape(0.1,0.1,0.1);
+      //          Body* pBody = new Body(sBodyName, box, iMass );
+      //          pBody->SetPose( vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5] );
+      //          m_mBodys.insert(std::pair<std::string,Body*>(sBodyName,pBody));
+
+      //          // create joint for SimGPS
+      //          string sJointName = "GPSJoint"+sBodyName;
+      //          Eigen::Vector3d vPivot;
+      //          Eigen::Vector3d vAxis;
+      //          vPivot<<vPose[0],vPose[1],vPose[2];
+      //          vAxis<<1,0,0;
+      //          //HingeJoint* pHinge = new HingeJoint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],100,100,0,M_PI );
+      //        }
+
+      //      }
 
     }
 
