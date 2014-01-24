@@ -31,11 +31,11 @@ bool URDF_Parser::ParseWorld(const char* filename,
       mWorldManager.iScale =::atoi( pElement->Attribute("scale"));
       mWorldManager.iMass =::atoi( pElement->Attribute("mass"));
       mWorldManager.vWorldPose =
-          GenNumFromChar(pElement->Attribute("worldpose"));
+          pElement->Attribute("worldpose");
       mWorldManager.vRobotPose=
-          GenNumFromChar(pElement->Attribute("robotpose"));
+          pElement->Attribute("robotpose");
       mWorldManager.vLightPose=
-          GenNumFromChar(pElement->Attribute("lightpose"));
+          pElement->Attribute("lightpose");
     }
 
     pElement=pElement->NextSiblingElement();
@@ -68,120 +68,121 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
   //This was used as a mapping scheme, but I'm going to try and get rid of it.
   //  std::map<string, Body*> m_mBodys; // map to all body with key (name)
 
-  if(strcmp(sRobotType, "RaycastVehicle")){
-    double* parameters = new double[29];
-    double* position = new double[6];
-    double* rotation = new double[9];
+  if(!sRobotType.compare("RaycastVehicle")){
+    std::vector<double> parameters;
+    parameters.resize(29);
+    std::vector<double> position;
+    std::vector<double> rotation;
     while(pElement){
-      const char* sAttrName = pElement->Name();
+      string sAttrName = pElement->Name();
+
 
       // Car paramters
-      if(strcmp(sAttrName, "param")){
+      if(!sAttrName.compare("param")){
         std::string param = pElement->Attribute("name");
-        if(strcmp(param, "control delay")){
-          parameters[6] = pElement->Attribute("value");
+        if(!param.compare("control delay")){
+          parameters[6] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "stiffness")){: parameters[12] = pElement->Attribute("value");
+        if(!param.compare("stiffness")){
+          parameters[12] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "susp conn height")){
-          parameters[11] = pElement->Attribute("value");
+        if(!param.compare("susp conn height")){
+          parameters[11] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "max susp force")){
-          parameters[13] = pElement->Attribute("value");
+        if(!param.compare("max susp force")){
+          parameters[13] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "damp factor")){
-          parameters[16] = pElement->Attribute("value");
+        if(!param.compare("damp factor")){
+          parameters[16] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "exp damp factor")){
-          parameters[17] = pElement->Attribute("value");
+        if(!param.compare("exp damp factor")){
+          parameters[17] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "roll influence")){
-          parameters[18] = pElement->Attribute("value");
+        if(!param.compare("roll influence")){
+          parameters[18] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "steering coeff")){
-          parameters[19] = pElement->Attribute("value");
+        if(!param.compare("steering coeff")){
+          parameters[19] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "max steering")){
-          parameters[20] = pElement->Attribute("value");
+        if(!param.compare("max steering")){
+          parameters[20] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "max steering rate")){
-          parameters[21] = pElement->Attribute("value");
+        if(!param.compare("max steering rate")){
+          parameters[21] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "accel offset")){
-          parameters[22] = pElement->Attribute("value");
+        if(!param.compare("accel offset")){
+          parameters[22] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "steering offset")){
-          parameters[23] = pElement->Attribute("value");
+        if(!param.compare("steering offset")){
+          parameters[23] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "stall torque coeff")){
-
-          parameters[24] = pElement->Attribute("value");
+        if(!param.compare("stall torque coeff")){
+          parameters[24] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "torque speed slope")){
-
-          parameters[25] = pElement->Attribute("value");
+        if(!param.compare("torque speed slope")){
+          parameters[25] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "susp rest length")){
-          parameters[15] = pElement->Attribute("value");
+        if(!param.compare("susp rest length")){
+          parameters[15] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "max susp travel")){
-          parameters[14] = pElement->Attribute("value");
+        if(!param.compare("max susp travel")){
+          parameters[14] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "Magic B")){
-          parameters[26] = pElement->Attribute("value");
+        if(!param.compare("Magic B")){
+          parameters[26] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "Magic C")){
-          parameters[27] = pElement->Attribute("value");
+        if(!param.compare("Magic C")){
+          parameters[27] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(param, "Magic E")){
-          parameters[28] = pElement->Attribute("value");
+        if(!param.compare("Magic E")){
+          parameters[28] = GenNumFromChar(pElement->Attribute("value")).front();
         }
       }
 
       // Vehicle body parameters
-      else if(strcmp(sAttrName, "body")){
+      else if(!sAttrName.compare("body")){
         std::string body = pElement->Attribute("name");
-        if(strcmp(body, "length")){
-          parameters[0] = pElement->Attribute("value");
+        if(!body.compare("length")){
+          parameters[0] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(body, "width")){
-          parameters[1] = pElement->Attribute("value");
+        if(!body.compare("width")){
+          parameters[1] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(body, "height")){
-          parameters[2] = pElement->Attribute("value");
+        if(!body.compare("height")){
+          parameters[2] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(body, "mass")){
-          parameters[7] = pElement->Attribute("value");
+        if(!body.compare("mass")){
+          parameters[7] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(body, "position")){
+        if(!body.compare("position")){
           position = GenNumFromChar(pElement->Attribute("value"));
         }
-        if(strcmp(body, "rotation")){
+        if(!body.compare("rotation")){
           rotation = GenNumFromChar(pElement->Attribute("value"));
         }
 
       }
 
       // Vehicle wheel parameters
-      else if(strcmp(sAttrName, "wheel")){
+      else if(!sAttrName.compare("wheel")){
         std::string wheel = pElement->Attribute("name");
-        if(strcmp(wheel, "radius")){
-          parameters[8] = pElement->Attribute("value");
+        if(!wheel.compare("radius")){
+          parameters[8] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(wheel, "width")){
-          parameters[9] = pElement->Attribute("value");
+        if(!wheel.compare("width")){
+          parameters[9] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(wheel, "dyn friction")){
-          parameters[3] = pElement->Attribute("value");
+        if(!wheel.compare("dyn friction")){
+          parameters[3] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(wheel, "slip coeff")){
-          parameters[5] = GenNumFromChar(pElement->Attribute("value"));
+        if(!wheel.compare("slip coeff")){
+          parameters[5] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(wheel, "traction friction")){
-          parameters[10] = GenNumFromChar(pElement->Attribute("value"));
+        if(!wheel.compare("traction friction")){
+          parameters[10] = GenNumFromChar(pElement->Attribute("value")).front();
         }
-        if(strcmp(wheel, "side friction")){
-          parameters[4] = GenNumFromChar(pElement->Attribute("value"));
+        if(!wheel.compare("side friction")){
+          parameters[4] = GenNumFromChar(pElement->Attribute("value")).front();
         }
       }
 
@@ -202,7 +203,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       //            string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
       //            string sCamMode(sMode);
       //            string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
-      //            vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+      //            vector<double> vPose = pElement->Attribute("Pose"));
       //            int iMass = 1;
       //            // string sMeshdir(pElement->Attribute("Dir"));
 
@@ -230,7 +231,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       //          {
       //            string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
       //            string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
-      //            vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+      //            vector<double> vPose = pElement->Attribute("Pose"));
       //            int iMass = 1;
       //            double BodyDistance = 0.5;
       //            // string sMeshdir(pElement->Attribute("Dir"));
@@ -298,7 +299,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       //        {
       //          string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
       //          string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-      //          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+      //          vector<double> vPose = pElement->Attribute("Pose"));
       //          int iMass = 1;
       //          // string sMeshdir(pElement->Attribute("Dir"));
 
@@ -346,9 +347,9 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
     if(strcmp(sRootContent,"bodybase")==0){
       string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
       int iMass =::atoi( pElement->Attribute("mass"));
-      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
+      vector<double> vPose = pElement->Attribute("pose"));
       InitPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
-      vector<double> vDimesion= GenNumFromChar(pElement->Attribute("dimesion"));
+      vector<double> vDimesion= pElement->Attribute("dimesion"));
       int iScale =::atoi( pElement->Attribute("scale"));
 
       const char* sType = pElement->Attribute("type");
@@ -366,9 +367,9 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
       string sMeshdir(pElement->Attribute("dir"));
       int iMass =::atoi( pElement->Attribute("mass"));
-      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
+      vector<double> vPose = pElement->Attribute("pose"));
       vector<double> vDimesion =
-          GenNumFromChar(pElement->Attribute("dimesion"));
+          pElement->Attribute("dimesion"));
       int iScale =::atoi( pElement->Attribute("scale"));
 
       const char* sType = pElement->Attribute("type");
@@ -402,7 +403,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
           string sCamMode(sMode);
           string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
-          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+          vector<double> vPose = pElement->Attribute("Pose"));
           int iMass = 1;
           // string sMeshdir(pElement->Attribute("Dir"));
 
@@ -430,7 +431,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
         {
           string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
           string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
-          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+          vector<double> vPose = pElement->Attribute("Pose"));
           int iMass = 1;
           double BodyDistance = 0.5;
           // string sMeshdir(pElement->Attribute("Dir"));
@@ -498,7 +499,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       {
         string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
         string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-        vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+        vector<double> vPose = pElement->Attribute("Pose"));
         int iMass = 1;
         // string sMeshdir(pElement->Attribute("Dir"));
 
@@ -706,7 +707,7 @@ bool URDF_Parser::ParseDevices(
           string sCamMode(sMode);
           string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
-          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+          vector<double> vPose = pElement->Attribute("Pose"));
 
           // save device info
           SimDeviceInfo Device;
@@ -728,7 +729,7 @@ bool URDF_Parser::ParseDevices(
           string sRGBBodyName = "RGB"+sCameraName;
           string sDepthBodyName = "Depth"+sCameraName;
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
-          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+          vector<double> vPose = pElement->Attribute("Pose"));
 
           // 3 save intp device, this device have two sensors
           SimDeviceInfo Device;
@@ -827,7 +828,7 @@ bool URDF_Parser::ParseWorldForInitialPoses(
   while (pElement){
     const char* sRootContent = pElement->Name();
     if(strcmp(sRootContent,"robot")==0){
-      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
+      vector<double> vPose = pElement->Attribute("pose"));
       Eigen::Vector6d ePose;
       ePose<<vPose[0], vPose[1], vPose[2], vPose[3], vPose[4], vPose[5];
       vRobotInitPose.push_back(ePose);
