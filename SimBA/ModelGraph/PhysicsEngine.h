@@ -38,7 +38,6 @@ public:
     m_dTimeStep    = dTimeStep;
     m_dGravity     = dGravity;
     m_nMaxSubSteps = nMaxSubSteps;
-    return true;
     // Physics stuff
     // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
@@ -62,6 +61,7 @@ public:
         setDebugMode(btIDebugDraw::DBG_DrawWireframe +
                      btIDebugDraw::DBG_FastWireframe +
                      btIDebugDraw::DBG_DrawConstraints);
+    return true;
   }
 
   //////////////////////////////////////////////////////////
