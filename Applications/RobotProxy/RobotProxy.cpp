@@ -44,7 +44,7 @@ RobotProxy::RobotProxy(
   }
 
   // 3. Initialize agent between Physics Engine and ModelGraph
-  if(m_PhyMGAgent.init() != true){
+  if(m_PhyMGAgent.Init() != true){
     exit(-1);
   }
 
@@ -130,8 +130,8 @@ void RobotProxy::InitReset()
     Body* ground = new Body("Ground", bs);
     ground->m_dMass = 0;
     ground->SetWPose( m_ground.GetPose4x4_po() );
-    m_PhyMGAgent.m_Agent.GetPhys()->RegisterObject(ground, "Ground", m_ground.GetPose());
-    m_PhyMGAgent.m_Agent.SetFriction("Ground", 888);
+    m_PhyMGAgent.RegisterObject(ground, "Ground", m_ground.GetPose());
+    m_PhyMGAgent.SetFriction("Ground", 888);
   }
   // init world with mesh
   // maybe dangerous to always reload meshes?
@@ -179,13 +179,13 @@ void RobotProxy::ApplyCameraPose(Eigen::Vector6d dPose){
 }
 
 void RobotProxy::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
-  m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
+  m_PhyMGAgent.SetEntity6Pose(sName, dPose);
 }
 
 // ---- Step Forward
 void RobotProxy::StepForward()
 {
-  m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
+  m_PhyMGAgent.StepSimulation();
   m_Render.UpdateScene();
 }
 
@@ -292,9 +292,9 @@ void RobotProxy::LeftKey(){
   //            string sMainRobotName = m_pMainRobot->GetRobotName();
   //            string sName = "RCamera@" + sMainRobotName;
   //            Eigen::Vector6d dPose;
-  //            m_PhyMGAgent.m_Agent.GetEntity6Pose(sName, dPose);
+  //            m_PhyMGAgent.GetEntity6Pose(sName, dPose);
   //            dPose(0,0) = dPose(0,0) + 1;
-  //            m_PhyMGAgent.m_Agent.SetEntity6Pose(sName, dPose);
+  //            m_PhyMGAgent.SetEntity6Pose(sName, dPose);
 }
 
 void RobotProxy::RightKey(){
@@ -496,8 +496,8 @@ int main( int argc, char** argv )
 //    }
 
     // 2. Update physics and scene
-    mProxy.m_PhyMGAgent.m_Agent.GetPhys()->DebugDrawWorld();
-    mProxy.m_PhyMGAgent.m_Agent.GetPhys()->StepSimulation();
+    mProxy.m_PhyMGAgent.DebugDrawWorld();
+    mProxy.m_PhyMGAgent.StepSimulation();
     mProxy.m_Render.UpdateScene();
 
     // 3. Update SimDevices

@@ -30,7 +30,7 @@ public:
     m_nMaxSubSteps = 10; // bullet -- for stepSimulation
   }
 
-  void Init(
+  bool Init(
       double dGravity = 9.8,       //< Input:
       double dTimeStep = 1.0/60.0, //< Input:
       double nMaxSubSteps = 1     //< Input: for stepSimulation
@@ -38,7 +38,7 @@ public:
     m_dTimeStep    = dTimeStep;
     m_dGravity     = dGravity;
     m_nMaxSubSteps = nMaxSubSteps;
-
+    return true;
     // Physics stuff
     // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
