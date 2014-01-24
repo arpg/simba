@@ -1,4 +1,4 @@
-<robot name="Robot">
+<robot name="Robot" type="Compound">
   <!--We do this so that we don't have five instances of a filepath to modify -->
   <media_dir>
     "/Users/luma/Code/RobotGroup/simba/media"

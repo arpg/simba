@@ -1,4 +1,4 @@
-<robot name="Robot">
+<robot name="Robot" type="Compound">
     <bodybase name="Stick" dir="/home/bminortx/Code/Dev/luma/SIM/media" mass="0" pose="0,-3,0,-1.5707,0,0" dimesion="0.1,2,0.1" scale="25" type="Box"/>
 
 <!--    <Sensor Name="RCamera"

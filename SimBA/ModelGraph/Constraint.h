@@ -32,14 +32,14 @@ class Constraint : public ModelNode
 class PToPOne : public Constraint
 {
 public:
-  PToPOne(std::string sName, Shape Shape_A, Eigen::Vector3d pivot_in_A){
+  PToPOne(std::string sName, Shape* Shape_A, Eigen::Vector3d pivot_in_A){
     SetName(sName);
-    m_Shape_A = Shape_A.GetName();
+    m_Shape_A = Shape_A->GetName();
     m_pivot_in_A = pivot_in_A;
 
     // Connect the shapes
-    Shape_A.AddChild( this );
-    this->m_pParent = &Shape_A;
+    Shape_A->AddChild( this );
+    this->m_pParent = Shape_A;
   }
   std::string m_Shape_A;
   Eigen::Vector3d m_pivot_in_A;
@@ -48,19 +48,19 @@ public:
 class PToPTwo : public Constraint
 {
 public:
-  PToPTwo(std::string sName, Shape Shape_A, Shape Shape_B,
+  PToPTwo(std::string sName, Shape* Shape_A, Shape* Shape_B,
           Eigen::Vector3d pivot_in_A, Eigen::Vector3d pivot_in_B){
     SetName(sName);
-    m_Shape_A = Shape_A.GetName();
-    m_Shape_B = Shape_B.GetName();
+    m_Shape_A = Shape_A->GetName();
+    m_Shape_B = Shape_B->GetName();
     m_pivot_in_A = pivot_in_A;
     m_pivot_in_B = pivot_in_B;
 
     // Connect the shapes
-    Shape_A.AddChild( this );
-    this->AddChild( &Shape_B );
-    this->m_pParent = &Shape_A;
-    Shape_B.m_pParent = this;
+    Shape_A->AddChild( this );
+    this->AddChild( Shape_B );
+    this->m_pParent = Shape_A;
+    Shape_B->m_pParent = this;
   }
   std::string m_Shape_A;
   std::string m_Shape_B;
@@ -74,11 +74,11 @@ public:
 class HingeOnePivot : public Constraint
 {
 public:
-  HingeOnePivot(std::string sName, Shape Shape_A,
+  HingeOnePivot(std::string sName, Shape* Shape_A,
                 Eigen::Vector3d pivot_in_A,
                 Eigen::Vector3d Axis_in_A){
     SetName(sName);
-    m_Shape_A = Shape_A.GetName();
+    m_Shape_A = Shape_A->GetName();
     m_axis_in_A = Axis_in_A;
     m_pivot_in_A = pivot_in_A;
     m_low_limit = -1;
@@ -88,8 +88,8 @@ public:
     m_relaxation = 1;
 
     // Connect the shapes
-    Shape_A.AddChild( this );
-    this->m_pParent = &Shape_A;
+    Shape_A->AddChild( this );
+    this->m_pParent = Shape_A;
   }
 
   void SetLimits(  double low_limit, double high_limit, double softness,
@@ -115,12 +115,12 @@ public:
 class HingeTwoPivot : public Constraint
 {
 public:
-  HingeTwoPivot(std::string sName, Shape Shape_A, Shape Shape_B,
+  HingeTwoPivot(std::string sName, Shape* Shape_A, Shape* Shape_B,
                 Eigen::Vector3d pivot_in_A, Eigen::Vector3d pivot_in_B,
                 Eigen::Vector3d Axis_in_A, Eigen::Vector3d Axis_in_B){
     SetName(sName);
-    m_Shape_A = Shape_A.GetName();
-    m_Shape_B = Shape_B.GetName();
+    m_Shape_A = Shape_A->GetName();
+    m_Shape_B = Shape_B->GetName();
     m_axis_in_A = Axis_in_A;
     m_axis_in_B = Axis_in_B;
     m_pivot_in_A = pivot_in_A;
@@ -132,10 +132,10 @@ public:
     m_relaxation = 1;
 
     // Connect the shapes
-    Shape_A.AddChild( this );
-    this->AddChild( &Shape_B );
-    this->m_pParent = &Shape_A;
-    Shape_B.m_pParent = this;
+    Shape_A->AddChild( this );
+    this->AddChild( Shape_B );
+    this->m_pParent = Shape_A;
+    Shape_B->m_pParent = this;
   }
 
   void SetLimits(  double low_limit, double high_limit, double softness,
@@ -167,12 +167,12 @@ public:
 
 class Hinge2 : public Constraint{
 public:
-  Hinge2(std::string sName, Shape Shape_A, Shape Shape_B,
+  Hinge2(std::string sName, Shape* Shape_A, Shape* Shape_B,
          Eigen::Vector3d Anchor,
          Eigen::Vector3d Axis_1, Eigen::Vector3d Axis_2){
     SetName(sName);
-    m_Shape_A = Shape_A.GetName();
-    m_Shape_B = Shape_B.GetName();
+    m_Shape_A = Shape_A->GetName();
+    m_Shape_B = Shape_B->GetName();
     m_Anchor = Anchor;
     m_Axis_1 = Axis_1;
     m_Axis_2 = Axis_2;
@@ -181,10 +181,10 @@ public:
     m_steering_angle = 3.14159/6;
 
     // Connect the shapes
-    Shape_A.AddChild( this );
-    this->AddChild( &Shape_B );
-    this->m_pParent = &Shape_A;
-    Shape_B.m_pParent = this;
+    Shape_A->AddChild( this );
+    this->AddChild( Shape_B );
+    this->m_pParent = Shape_A;
+    Shape_B->m_pParent = this;
   }
 
 

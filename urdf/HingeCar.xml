@@ -1,4 +1,4 @@
-<robot name="Robot">
+<robot name="Robot" type="Compound">
     <bodybase name="Chassis" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="1000"  pose="0,0,0,0,0,1.5707"   dimesion="2,1,3"  scale="100"  type="Box"/>
     <body name="FRWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="2.5,0,-2.8,0,1.5707,0"  dimesion="1,2"  scale="25" type="Cylinder"/>
     <body name="FLWheel" dir="/Users/malu/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="-2.5,0,-2.8,0,-1.5707,0"  dimesion="1,2" scale="25" type="Cylinder"/>

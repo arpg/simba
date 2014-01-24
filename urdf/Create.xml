@@ -1,4 +1,4 @@
-<robot name="Create">
+<robot name="Create" type="Compound">
   <media_dir>
     "/home/bminortx/Code/Dev/luma/SIM/media"
   </media_dir>
