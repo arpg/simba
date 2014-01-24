@@ -71,7 +71,7 @@ LocalSim::LocalSim(
             "' but we cannot initialize Network."<<
             "Please make sure the StateKeeper is running."<<endl;
       exit(-1);
-  }
+  }else{cout<<"init Network Manager success."<<endl;}
 
   // 6. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
   if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF, m_sLocalSimName)!= true)
