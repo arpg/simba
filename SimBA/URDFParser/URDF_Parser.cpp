@@ -215,12 +215,17 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
         if(strcmp(sType, "Box") ==0){
           BoxShape* pBox =new BoxShape(sBodyName, vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1, vPose);
           m_RobotModel.SetBase( pBox ); // main body
+          cout<<"[Parse Robot] Build Bodybase: "<<sBodyName<<" success."<<endl;
+          m_mBodys.insert(std::pair<std::string,Shape*>(sBodyName, pBox));
         }
       }
 
       // build body
-      if(strcmp(sRootContent,"body")==0){
+      if(strcmp(sRootContent,"body")==0)
+      {
         string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
+        cout<<"Try to build body "<<sBodyName<<endl;
+
         string sMeshdir(pElement->Attribute("dir"));
         int iMass =::atoi( pElement->Attribute("mass"));
         vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
@@ -232,14 +237,14 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
         if(strcmp(sType, "Box") ==0){
           BoxShape* pBox =new BoxShape(sBodyName,vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1,vPose);
           m_mBodys.insert(std::pair<std::string,Shape*>(sBodyName, pBox));
-
+          cout<<"[RobotParser] Finish building body "<<sBodyName<<endl;
         }
         else if(strcmp(sType,"Cylinder")==0){
           CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimesion[0], vDimesion[1],iMass,1, vPose);
           m_mBodys.insert(std::pair<std::string, Shape*>(sBodyName, pCylinder));
+          cout<<"[RobotParser] Finish building body "<<sBodyName<<endl;
         }
       }
-
 
       // create sim device
       if(strcmp(sRootContent,"Sensor")==0){
@@ -407,11 +412,13 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       // construct parent, (joint)
       if(strcmp(sRootContent,"joint")==0)
       {
+        cout<<"[Parse Robot] try to build joint"<<endl;
         string sJointName= GetAttribute( pElement, "name")+"@"+sRobotName; // get joint name. e.g. BLAxleJoint@robot1@proxy
         string sJointType(pElement->Attribute("type"));
 
         if(sJointType == "HingeJoint")
         {
+          cout<<"[Parse Robot] try to build Hinge joint."<<endl;
           string sParentName;
           string sChildName;
           vector<double> vPivot;
@@ -475,9 +482,12 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
                                  pivot, Eigen::Vector3d::Identity(),
                                  axis, Eigen::Vector3d::Identity());
 
+          cout<<"Build Hinge joint "<<sJointName<<" success"<<endl;
         }
         else if(sJointType=="Hinge2Joint")
         {
+          cout<<"[Parse Robot] try to build Hinge2 joint."<<endl;
+
           string sParentName;
           string sChildName;
           vector<double> vAnchor;
@@ -543,6 +553,22 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
             pChild=pChild->NextSiblingElement();
           }
 
+          cout<<"before build joint"<<endl;
+          if(m_mBodys.find(sParentName) !=m_mBodys.end())
+          {
+            cout<<"find "<<sParentName<<endl;
+          }
+          else
+          {
+            cout<<"Cannot find"<<sParentName<<endl;
+          }
+
+          for(std::map<string, Shape*>::iterator it =m_mBodys.begin(); it!=m_mBodys.end(); it++ )
+          {
+            cout<<"find "<<it->first<<endl;
+          }
+
+
           Hinge2* pHinge2 = new Hinge2( sJointName,
                                         m_mBodys.find(sParentName)->second,
                                         m_mBodys.find(sChildName)->second,
@@ -550,7 +576,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
   //        pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
           //LowerAngleLimit, UpperAngleLimit);
 
-          std::cout<<"Creating a Hinge2Joint between "<<sParentName<<" and "<<sChildName<<std::endl;
+          std::cout<<"[ParseRobot] Creating a Hinge2Joint between "<<sParentName<<" and "<<sChildName<<std::endl;
         }
       }
 
