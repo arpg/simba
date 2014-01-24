@@ -2,17 +2,10 @@
 #define SIMROBOT_H
 
 //#include <Network/Messages.h>
-#include <SceneGraph/SceneGraph.h> // for open GL scene graph
 #include <ModelGraph/RenderEngine.h>
 #include <ModelGraph/PhysicsEngine.h>
 #include <ModelGraph/ModelGraphBuilder.h>
-<<<<<<< HEAD
-#include <ModelGraph/PhyModelGraphAgent.h>
-#include <URDFParser/LocalSimURDFParser.h>
-=======
-#include <ModelGraph/PhysicsEngine.h>
-#include <URDFParser/URDF_Parser.h>
->>>>>>> PhysChanges
+#include <URDFParser/URDF_Parser.h>.h>
 #include <SimDevices/Controller/Controller.h>
 #include <Utils/ConvertName.h>
 
