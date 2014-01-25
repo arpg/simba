@@ -25,7 +25,7 @@ using namespace std;
 
 /// I'm not sure what this does yet, but here it is.
 namespace Eigen{
-    typedef Matrix<double, 6, 1> Vector6d;
+typedef Matrix<double, 6, 1> Vector6d;
 }
 
 class URDF_Parser
@@ -38,19 +38,24 @@ public:
 
   // ParseRobot really parses each of the robot parts, and then generates a set
   // of commands that the PhysicsEngine can use to create bullet objects.
-  bool ParseRobot(XMLDocument* doc, ModelNode& m_RobotModel,
-                         Eigen::Vector6d& InitPose, string sProxyName);
+  bool ParseRobot(XMLDocument* doc, RobotModel &m_RobotModel, string sProxyName);
 
   // ParseDevices uses the information given in the Robot.xml file to create the
   // sensor views that we see later in the Sim.
   bool ParseDevices(XMLDocument& doc,
-                          vector<SimDeviceInfo>& m_vSimDeviceInfo,
-                          string sProxyName);
+                    vector<SimDeviceInfo>& m_vSimDeviceInfo,
+                    string sProxyName);
 
   // This method is used in StateKeeper to initialize the position of every
   // object in the RobotProxy.
   bool ParseWorldForInitialPoses(const char* filename,
                                  vector<Eigen::Vector6d>& vRobotInitPose);
+
+  std::vector<ModelNode*> GetModelNodes();
+
+  ////////////////////////////////////////
+
+  std::map<std::string, ModelNode*> m_mModelNodes;
 
 };
 

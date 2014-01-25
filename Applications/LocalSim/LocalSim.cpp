@@ -15,15 +15,14 @@ using namespace CVarUtils;
 ////////////////////////////////////////////////////////////////////////
 
 LocalSim::LocalSim(
-    SceneGraph::GLSceneGraph& glGraph,  //< Input: reference to glGraph
     const std::string& sLocalSimName,      //< Input: name of robot LocalSim
     const std::string& sRobotURDF,      //< Input: location of meshes, maps etc
     const std::string& sWorldURDF,
     const std::string& sServerName,
     const std::string& sPoseFileName
     )
-  : m_rSceneGraph( glGraph ), m_sLocalSimName(sLocalSimName),
-    m_sWorldURDFFile(sWorldURDF), m_sRobotURDFFile(sRobotURDF){
+  : m_sLocalSimName(sLocalSimName), m_sWorldURDFFile(sWorldURDF),
+    m_sRobotURDFFile(sRobotURDF){
 
   // This is used to interface with the user's main function.
   m_Node.init(sLocalSimName);
@@ -37,49 +36,26 @@ LocalSim::LocalSim(
 
   // 2. Read Robot.xml file.
   XMLDocument RobotURDF;
-  if(GetXMLdoc(sRobotURDF, RobotURDF)!= true){
-    cout<<"[LocalSim] Cannot open "<<sRobotURDF<<
-          ". Please check if the file exist and the syntax is valid."<<endl;
-    exit(-1);
-  }
-
-  // 3. Initialize agent between Physics Engine and ModelGraph
-  if(m_PhyMGAgent.Init() != true){
-    exit(-1);
-  }
+  GetXMLdoc(sRobotURDF, RobotURDF);
 
   // 4. Init User's Robot and add it to RobotManager
-  m_RobotManager.Init(m_sLocalSimName, sServerName, m_PhyMGAgent, m_Render);
-  if( m_RobotManager.AddRobot(RobotURDF, m_sLocalSimName) !=true )
-  {
-      cout<<"[LocalSim] Cannot add new robot to RobotManager."<<endl;
-      exit(-1);
-  }
-
-  ////What to do here....
-  ////
-  ///////--> get pointer of main robot. (*** temporty code.
-  ///////need to be delete once we implement node controller ***)
+  m_RobotManager.Init(m_sLocalSimName, sServerName, m_Scene);
+  m_RobotManager.BuildRobot(RobotURDF, m_sLocalSimName);
   m_pMainRobot = m_RobotManager.GetMainRobot();
-  //////
-  //////
+  // Add the robot to the Model Graph Scene
+  m_Scene.Init(ModelGraphBuilder::All, m_pMainRobot->GetRobotModel(),
+               sLocalSimName);
 
   // 5. Initialize the Network
-  if(m_NetworkManager.initNetwork(m_sLocalSimName, &m_SimDeviceManager, &m_RobotManager,  sServerName)!=true)
-  {
-      cout<<"[LocalSim] You chose to connect to '"<<sServerName<<
-            "' but we cannot initialize Network."<<
-            "Please make sure the StateKeeper is running."<<endl;
-      exit(-1);
-  }else{cout<<"init Network Manager success."<<endl;}
+  m_NetworkManager.initNetwork(m_sLocalSimName, &m_SimDeviceManager,
+                               &m_RobotManager,  sServerName);
 
   // 6. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
-  if(m_SimDeviceManager.Init(m_PhyMGAgent,  m_rSceneGraph, RobotURDF, m_sLocalSimName)!= true)
-  {
-      cout<<"[LocalSim] Cannot init SimDeviceManager."<<endl;
-      exit(-1);
-  }
 
+  // This has to be fixed up (there are a lot of references that shouldn't be
+  // there), but we'll run with it for now.
+  m_SimDeviceManager.Init(m_Scene.m_Phys, m_Scene.m_Render.glGraph,
+                          RobotURDF, m_sLocalSimName);
   m_SimpPoseController.Init(sPoseFileName);
 
   // 7, if run in with network mode, LocalSim network will publish sim device
@@ -104,56 +80,56 @@ LocalSim::LocalSim(
 
 // InitReset will populate SceneGraph with objects, and
 // register these objects with the simulator.
-void LocalSim::InitReset()
-{
-  m_rSceneGraph.Clear();
+//void LocalSim::InitReset()
+//{
+//  m_rSceneGraph.Clear();
 
-  m_light.SetPosition( m_WorldManager.vLightPose[0],
-                       m_WorldManager.vLightPose[1],
-                       m_WorldManager.vLightPose[2]);
-  m_rSceneGraph.AddChild( &m_light );
+//  m_light.SetPosition( m_WorldManager.vLightPose[0],
+//                       m_WorldManager.vLightPose[1],
+//                       m_WorldManager.vLightPose[2]);
+//  m_rSceneGraph.AddChild( &m_light );
 
-  // init world without mesh
-  if (m_WorldManager.m_sMesh =="NONE")
-  {
-    cout<<"[RobotRroxy] Try init empty world."<<endl;
-    m_grid.SetNumLines(20);
-    m_grid.SetLineSpacing(1);
-    m_rSceneGraph.AddChild(&m_grid);
+//  // init world without mesh
+//  if (m_WorldManager.m_sMesh =="NONE")
+//  {
+//    cout<<"[RobotRroxy] Try init empty world."<<endl;
+//    m_grid.SetNumLines(20);
+//    m_grid.SetLineSpacing(1);
+//    m_rSceneGraph.AddChild(&m_grid);
 
-    double dThickness = 1;
-    m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
-    m_ground.SetExtent( 200,200, dThickness );
-    m_rSceneGraph.AddChild( &m_ground );
+//    double dThickness = 1;
+//    m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
+//    m_ground.SetExtent( 200,200, dThickness );
+//    m_rSceneGraph.AddChild( &m_ground );
 
-    BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1, m_WorldManager.vWorldPose);
-    m_PhyMGAgent.RegisterObject(pGround);
-    m_PhyMGAgent.SetFriction("Ground", 888);
-  }
-  // init world with mesh
-  // maybe dangerous to always reload meshes?
-  /// maybe we should separate Init from Reset?
-  else {
-    try
-    {
-      cout<<"[RobotRroxy] Try init word with mesh: "
-         <<m_WorldManager.m_sMesh<<endl;
-      m_Map.Init(m_WorldManager.m_sMesh);
-      m_Map.SetPerceptable(true);
-      m_Map.SetScale(m_WorldManager.iScale);
-      m_Map.SetPosition(m_WorldManager.vWorldPose[0],
-                        m_WorldManager.vWorldPose[1],
-                        m_WorldManager.vWorldPose[2]);
-      m_rSceneGraph.AddChild( &m_Map );
-    } catch (std::exception e) {
-      printf( "Cannot load world map\n");
-      exit(-1);
-    }
-  }
+//    BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1, m_WorldManager.vWorldPose);
+//    m_PhysEngine.RegisterObject(pGround);
+//    m_PhysEngine.SetFriction("Ground", 888);
+//  }
+//  // init world with mesh
+//  // maybe dangerous to always reload meshes?
+//  /// maybe we should separate Init from Reset?
+//  else {
+//    try
+//    {
+//      cout<<"[RobotRroxy] Try init word with mesh: "
+//         <<m_WorldManager.m_sMesh<<endl;
+//      m_Map.Init(m_WorldManager.m_sMesh);
+//      m_Map.SetPerceptable(true);
+//      m_Map.SetScale(m_WorldManager.iScale);
+//      m_Map.SetPosition(m_WorldManager.vWorldPose[0],
+//                        m_WorldManager.vWorldPose[1],
+//                        m_WorldManager.vWorldPose[2]);
+//      m_rSceneGraph.AddChild( &m_Map );
+//    } catch (std::exception e) {
+//      printf( "Cannot load world map\n");
+//      exit(-1);
+//    }
+//  }
 
-  cout<<"Init World Success"<<endl;
-  m_Render.AddToScene( &m_rSceneGraph );
-}
+//  cout<<"Init World Success"<<endl;
+//  m_Render.AddToScene( &m_rSceneGraph );
+//}
 
 //////////////////////////////////////////////////////////////////
 // Apply the camera's pose directly to the SimCamera
@@ -176,91 +152,84 @@ void LocalSim::ApplyCameraPose(Eigen::Vector6d dPose){
 }
 
 void LocalSim::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
-  m_PhyMGAgent.SetEntity6Pose(sName, dPose);
-}
-
-// ---- Step Forward
-void LocalSim::StepForward()
-{
-  m_PhyMGAgent.StepSimulation();
-  m_Render.UpdateScene();
+  m_Scene.m_Phys.SetEntity6Pose(sName, dPose);
 }
 
 //////////////////////////////////////////////////////////////////
 // Scan all SimDevices and send the simulated camera images to Pangolin.
 // Right now, we can only support up to two windows.
 bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::ImageView& RSimCamWnd ){
-    int WndCounter = 0;
+  int WndCounter = 0;
 
-    for(unsigned int i =0 ; i!= m_SimDeviceManager.m_SimDevices.size(); i++){
-      SimDeviceInfo Device = m_SimDeviceManager.m_SimDevices[i];
+  for(unsigned int i =0 ; i!= m_SimDeviceManager.m_SimDevices.size(); i++){
+    SimDeviceInfo Device = m_SimDeviceManager.m_SimDevices[i];
 
-      for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
+    for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
 
-        string sSimCamName = Device.m_vSensorList[j];
-        SimCam* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
+      string sSimCamName = Device.m_vSensorList[j];
+      SimCam* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
 
-        SceneGraph::ImageView* ImageWnd;
+      SceneGraph::ImageView* ImageWnd;
 
-        // get pointer to window
-        if(WndCounter == 0){
-          ImageWnd = &LSimCamWnd;
+      // get pointer to window
+      if(WndCounter == 0){
+        ImageWnd = &LSimCamWnd;
+      }
+      else if(WndCounter == 1){
+        ImageWnd = &RSimCamWnd;
+      }
+
+      WndCounter++;
+
+      // set image to window
+      if (pSimCam->m_iCamType == 5){       // for depth image
+        float* pImgbuf = (float*) malloc( pSimCam->g_nImgWidth *
+                                          pSimCam->g_nImgHeight *
+                                          sizeof(float) );
+
+        if(pSimCam->capture(pImgbuf)==true){
+          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
+                             pSimCam->g_nImgHeight,
+                             GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
+          free(pImgbuf);
         }
-        else if(WndCounter == 1){
-          ImageWnd = &RSimCamWnd;
+        else{
+          cout<<"[SetImagesToWindow] Set depth Image fail"<<endl;
+          return false;
         }
+      }
+      else if(pSimCam->m_iCamType == 2){   // for RGB image
+        char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
+                                      pSimCam->g_nImgHeight * 3);
 
-        WndCounter++;
-
-        // set image to window
-        if (pSimCam->m_iCamType == 5){       // for depth image
-          float* pImgbuf = (float*) malloc( pSimCam->g_nImgWidth *
-                                            pSimCam->g_nImgHeight *
-                                            sizeof(float) );
-
-          if(pSimCam->capture(pImgbuf)==true){
-            ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
-                               pSimCam->g_nImgHeight,
-                               GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
-            free(pImgbuf);
-          }
-          else{
-            cout<<"[SetImagesToWindow] Set depth Image fail"<<endl;
-            return false;
-          }
+        if(pSimCam->capture(pImgbuf)==true){
+          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
+                             pSimCam->g_nImgHeight,
+                             GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
+          free(pImgbuf);
         }
-        else if(pSimCam->m_iCamType == 2){   // for RGB image
-          char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
-                                        pSimCam->g_nImgHeight * 3);
-
-          if(pSimCam->capture(pImgbuf)==true){
-            ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
-                               pSimCam->g_nImgHeight,
-                               GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
-            free(pImgbuf);
-          }
-          else{
-            cout<<"[SetImagesToWindow] Set RGB Image fail"<<endl;
-            return false;
-          }
+        else{
+          cout<<"[SetImagesToWindow] Set RGB Image fail"<<endl;
+          return false;
         }
-        else if(pSimCam->m_iCamType == 1){    //to show greyscale image
-          char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
-                                        pSimCam->g_nImgHeight);
-          if(pSimCam->capture(pImgbuf)==true){
-            ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
-                               pSimCam->g_nImgHeight,
-                               GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
-            free(pImgbuf);
-          }
-          else{
-            cout<<"[SetImagesToWindow] Set Gray Image fail"<<endl;
-            return false;
-          }
+      }
+      else if(pSimCam->m_iCamType == 1){    //to show greyscale image
+        char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
+                                      pSimCam->g_nImgHeight);
+        if(pSimCam->capture(pImgbuf)==true){
+          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
+                             pSimCam->g_nImgHeight,
+                             GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+          free(pImgbuf);
+        }
+        else{
+          cout<<"[SetImagesToWindow] Set Gray Image fail"<<endl;
+          return false;
         }
       }
     }
-    return true;
+  }
+  return true;
 }
 
 ////////////////////
@@ -289,9 +258,9 @@ void LocalSim::LeftKey(){
   //            string sMainRobotName = m_pMainRobot->GetRobotName();
   //            string sName = "RCamera@" + sMainRobotName;
   //            Eigen::Vector6d dPose;
-  //            m_PhyMGAgent.GetEntity6Pose(sName, dPose);
+  //            m_PhysEngine.GetEntity6Pose(sName, dPose);
   //            dPose(0,0) = dPose(0,0) + 1;
-  //            m_PhyMGAgent.SetEntity6Pose(sName, dPose);
+  //            m_PhysEngine.SetEntity6Pose(sName, dPose);
 }
 
 void LocalSim::RightKey(){
@@ -387,65 +356,16 @@ int main( int argc, char** argv )
   std::string sPoseFile  = cl.follow("None",1,"-p");
   std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
 
-  //Start our SceneGraph interface
-  pangolin::CreateGlutWindowAndBind(sLocalSimName,640,480);
-  SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
-  glClearColor(0, 0, 0, 1);
-  glewInit();
-  SceneGraph::GLSceneGraph  glGraph;
+
 
   // Initialize a LocalSim.
-  LocalSim mLocalSim( glGraph, sLocalSimName, sRobotURDF,
+  LocalSim mLocalSim(sLocalSimName, sRobotURDF,
                      sWorldURDF, sServerOption, sPoseFile);
-  mLocalSim.InitReset();
 
-  //---------------------------------------------------------------------------
-  // <Pangolin boilerplate>
-  const SceneGraph::AxisAlignedBoundingBox bbox =
-      glGraph.ObjectAndChildrenBounds();
-  const Eigen::Vector3d center = bbox.Center();
-  const double size = bbox.Size().norm();
-  const double far = 2*size;
-  const double near = far / 1E3;
-
-  // Define Camera Render Object (for view / scene browsing)
-  pangolin::OpenGlRenderState stacks3d(
-        pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
-        pangolin::ModelViewLookAt(center(0), center(1) + size,
-                                  center(2) - size/4,
-                                  center(0), center(1), center(2),
-                                  pangolin::AxisNegZ) );
-
-  // We define a new view which will reside within the container.
-  pangolin::View view3d;
-
-  // We set the views location on screen and add a handler which will
-  // let user input update the model_view matrix (stacks3d) and feed through
-  // to our scenegraph
-  view3d.SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
-  view3d.SetHandler( new SceneGraph::HandlerSceneGraph( glGraph, stacks3d) );
-  view3d.SetDrawFunction( SceneGraph::ActivateDrawFunctor( glGraph, stacks3d) );
-
-  // window for display image capture from simcam
-  SceneGraph::ImageView LSimCamImage(true,true);
-  LSimCamImage.SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
-
-  // window for display image capture from simcam
-  SceneGraph::ImageView RSimCamImage(true,true);
-  RSimCamImage.SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
-
-
-  // Add our views as children to the base container.
-  pangolin::DisplayBase().AddDisplay( view3d );
-  pangolin::DisplayBase().AddDisplay( LSimCamImage );
-  pangolin::DisplayBase().AddDisplay( RSimCamImage );
-
-  //----------------------------------------------------------------------------
-  // Register a keyboard hook to trigger the reset method
-  pangolin::RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
-                            boost::bind( &LocalSim::InitReset, &mLocalSim ) );
-
-  // Simple asdw control
+  //////KEYBOARD COMMANDS
+//  pangolin::RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
+//                                      boost::bind( &LocalSim::InitReset,
+//                                                   &mLocalSim ) );
   pangolin::RegisterKeyPressCallback(
         'a', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
   pangolin::RegisterKeyPressCallback(
@@ -466,36 +386,14 @@ int main( int argc, char** argv )
   pangolin::RegisterKeyPressCallback(
         'W', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
 
-  pangolin::RegisterKeyPressCallback(
-        ' ', boost::bind( &LocalSim::StepForward, &mLocalSim ) );
-
-  //----------------------------------------------------------------------------
-  // wait for robot to connect
-  //    if(sServerOption== "WithoutStateKeeper")
-  //    {
-  //        while(mLocalSim.m_NetworkManager.m_SubscribeNum == 0)
-  //        {
-  //            cout<<"["<<sLocalSimName<<"] wait for RPG Device to register"<<endl;
-  //            sleep(1);
-  //        }
-  //    }
+//  pangolin::RegisterKeyPressCallback(
+//        ' ', boost::bind( &LocalSim::StepForward, &mLocalSim ) );
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
   {
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    view3d.Activate(stacks3d);
-
-//    // 1. Read the Camera pose for the update
-//    if (!sLocalSimName.empty())
-//    {
-//      mLocalSim.ApplyCameraPose(mLocalSim.m_SimpPoseController.ReadNextPose());
-//    }
-
     // 2. Update physics and scene
-    mLocalSim.m_PhyMGAgent.DebugDrawWorld();
-    mLocalSim.m_PhyMGAgent.StepSimulation();
-    mLocalSim.m_Render.UpdateScene();
+    mLocalSim.m_Scene.UpdateScene();
 
     // 3. Update SimDevices
     mLocalSim.m_SimDeviceManager.UpdateAllDevices();
@@ -503,8 +401,11 @@ int main( int argc, char** argv )
     // 4. Update the Network
     mLocalSim.m_NetworkManager.UpdateNetWork();
 
+
+
     // 5. Show the image in the current window
-    mLocalSim.SetImagesToWindow(LSimCamImage,RSimCamImage);
+    mLocalSim.SetImagesToWindow(*mLocalSim.m_Scene.m_Render.LSimCamImage,
+                                *mLocalSim.m_Scene.m_Render.RSimCamImage);
 
     // 6. Refresh screen
     pangolin::FinishGlutFrame();

@@ -4,49 +4,35 @@
 /// INITIALIZE the RobotsManager
 ////////////////////////////////////////////////////////////////////////
 
-void RobotsManager::Init(string sProxyName, string sServerName, PhysicsEngine& rPhysWrapper, Render& rRender)
-{
-  m_PhysWrapper = rPhysWrapper;
-  m_Render     = rRender;
+void RobotsManager::Init(string sProxyName, string sServerName,
+                         ModelGraphBuilder& Scene){
+  m_Scene = Scene;
   m_sProxyName = sProxyName;
-
-  if(sServerName == "WithoutStateKeeper" || sServerName =="WithoutNetwork")
-  {
+  if(sServerName == "WithoutStateKeeper" || sServerName =="WithoutNetwork"){
     m_bStateKeeperOn = false;
   }
-  else
-  {
+  else{
     m_bStateKeeperOn = true;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-// Add the robot with a URDF file. The first robot added into the proxy will be
-// considered the main robot (i.e. the robot that the user will control).
-
-bool RobotsManager::AddRobot(XMLDocument& doc, string sProxyName)
-{
+bool RobotsManager::BuildRobot(XMLDocument& doc, string sProxyName){
   SimRobot* pSimRobot = new SimRobot;
-  string sRobotName;
-  if( pSimRobot->Init(sProxyName, m_bStateKeeperOn, m_PhysWrapper, m_Render,doc) != true)
-  {
+
+  // Construct the robot from the URDF
+  if( pSimRobot->Init(sProxyName, m_bStateKeeperOn, doc) != true){
     cout<<"[RobotsManager] FatalError! Cannot init Robot!!"<<endl;
     return false;
   }
-  else
-  {
-    // save this robot's name
-    sRobotName = pSimRobot->GetRobotName();
 
-    // check if we should save name of this robot as save main robot name
-    if(m_mSimRobotsList.size()==0)
-    {
-      m_sMainRobotName = sRobotName;
-    }
-    m_mSimRobotsList.insert(pair<string, SimRobot*>(sRobotName, pSimRobot));
+  // check if we should save name of this robot as save main robot name
+  if(m_mSimRobotsList.size()==0){
+    m_sMainRobotName = pSimRobot->GetRobotName();
   }
-
+  m_mSimRobotsList.insert(pair<string, SimRobot*>(pSimRobot->GetRobotName(),
+                                                  pSimRobot));
   return true;
 }
 
@@ -135,10 +121,10 @@ void RobotsManager::ApplyWorldFullState()
             origin.x31(), origin.x32(), origin.x33();
 
         // apply in bullet engine
-        m_PhysWrapper.SetEntityOrigin(sBodyName ,eOrigin);
-        m_PhysWrapper.SetEntityBasis(sBodyName ,mBasis);
-        m_PhysWrapper.SetEntityLinearvelocity(sBodyName, eLinearVelocity);
-        m_PhysWrapper.SetEntityAngularvelocity(sBodyName, eAngularVelocity);
+        m_Scene.m_Phys.SetEntityOrigin(sBodyName ,eOrigin);
+        m_Scene.m_Phys.SetEntityBasis(sBodyName ,mBasis);
+        m_Scene.m_Phys.SetEntityLinearvelocity(sBodyName, eLinearVelocity);
+        m_Scene.m_Phys.SetEntityAngularvelocity(sBodyName, eAngularVelocity);
       }
     }
   }

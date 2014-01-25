@@ -55,8 +55,7 @@ bool URDF_Parser::ParseWorld(const char* filename,
 ////////////////////////////////////////////////////////////
 
 bool URDF_Parser::ParseRobot(XMLDocument* doc,
-                             ModelNode& m_RobotModel,
-                             Eigen::Vector6d& InitPose,
+                             RobotModel& m_RobotModel,
                              string sProxyName){
 
   cout<<"[ParseRobot] Start Parsing Robot"<<endl;
@@ -64,6 +63,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
   string sRobotName(GetAttribute(pParent, "name"));
   sRobotName = sRobotName+"@"+sProxyName;
   string sRobotType(GetAttribute(pParent, "type"));
+  m_RobotModel.SetName(sRobotName);
   XMLElement *pElement = pParent->FirstChildElement();
 
   if(!sRobotType.compare("RaycastVehicle")){
@@ -192,61 +192,64 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
   }
 
   //////////////////////////////////////////
+
   else if(!sRobotType.compare("Compound"))
   {
-    //This was used as a mapping scheme, but I'm going to try and get rid of it.
-    std::map<string, Shape*> m_mBodys; // map to all body with key (name)
-
-    // read high level parent (root parent)
+    // Need to do something with m_mModelNodes; right now, nothing happens.
+    // Which is silly.
     while (pElement){
       const char* sRootContent = pElement->Name();
 
-      // build body base (this is the body that most joint connect to)
+      //////////////////////////////////////////
+      // THE BODY BASE
+      //////////////////////////////////////////
 
       if(strcmp(sRootContent,"bodybase")==0){
         string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
         int iMass =::atoi( pElement->Attribute("mass"));
         vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
-        InitPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
         vector<double> vDimesion= GenNumFromChar(pElement->Attribute("dimesion"));
-        int iScale =::atoi( pElement->Attribute("scale"));
-
         const char* sType = pElement->Attribute("type");
         if(strcmp(sType, "Box") ==0){
           BoxShape* pBox =new BoxShape(sBodyName, vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1, vPose);
           m_RobotModel.SetBase( pBox ); // main body
           cout<<"[Parse Robot] Build Bodybase: "<<sBodyName<<" success."<<endl;
-          m_mBodys.insert(std::pair<std::string,Shape*>(sBodyName, pBox));
+          m_mModelNodes[pBox->GetName()] = pBox;
         }
       }
 
-      // build body
+      //////////////////////////////////////////
+      // ALL OF OUR BODIES (SHAPES)
+      //////////////////////////////////////////
+
+      // Build shapes connected to the body base.
       if(strcmp(sRootContent,"body")==0)
       {
         string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
         cout<<"Try to build body "<<sBodyName<<endl;
-
-        string sMeshdir(pElement->Attribute("dir"));
         int iMass =::atoi( pElement->Attribute("mass"));
         vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
         vector<double> vDimesion =
             GenNumFromChar(pElement->Attribute("dimesion"));
-        int iScale =::atoi( pElement->Attribute("scale"));
-
         const char* sType = pElement->Attribute("type");
         if(strcmp(sType, "Box") ==0){
-          BoxShape* pBox =new BoxShape(sBodyName,vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1,vPose);
-          m_mBodys.insert(std::pair<std::string,Shape*>(sBodyName, pBox));
-          cout<<"[RobotParser] Finish building body "<<sBodyName<<endl;
+          BoxShape* pBox =new BoxShape(sBodyName,vDimesion[0],vDimesion[1],
+                                       vDimesion[2],iMass, 1,vPose);
+          m_mModelNodes[pBox->GetName()] = pBox;
         }
         else if(strcmp(sType,"Cylinder")==0){
-          CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimesion[0], vDimesion[1],iMass,1, vPose);
-          m_mBodys.insert(std::pair<std::string, Shape*>(sBodyName, pCylinder));
-          cout<<"[RobotParser] Finish building body "<<sBodyName<<endl;
+          CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimesion[0],
+                                                      vDimesion[1],iMass,1,
+                                                      vPose);
+          m_mModelNodes[pCylinder->GetName()] = pCylinder;
         }
+        cout<<"[RobotParser] Finish building body "<<sBodyName<<endl;
       }
 
-      // create sim device
+      //////////////////////////////////////////
+      // ALL OF OUR SENSORS
+      //////////////////////////////////////////
+
       if(strcmp(sRootContent,"Sensor")==0){
         string sType( pElement->Attribute("Type"));
         if(sType == "Camera"){
@@ -263,12 +266,11 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
             string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
             vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
             int iMass = 1;
-            // string sMeshdir(pElement->Attribute("Dir"));
 
             // create body for simcam
             vPose[1] = vPose[1]+2; vPose[2] = vPose[2] -3.2;
             BoxShape* pBox =new BoxShape(sSensorName,0.1,0.1,0.1,iMass,1,vPose);
-            m_mBodys.insert(std::pair<std::string,Shape*>(sSensorName, pBox));
+            m_mModelNodes[pBox->GetName()] = pBox;
 
             // create joint for SimCam
             string sJointName = "SimCamJoint"+sCameraName; // e.g. SimCamJointLCam@robot1@proxy
@@ -277,58 +279,49 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
             vPivot<<vPose[0],vPose[1]+2,vPose[2]-3.2;
             vAxis<<1,1,1;
             HingeTwoPivot* pHinge =
-                new HingeTwoPivot(sJointName, m_mBodys.find(sParentName)->second,
-                                  m_mBodys.find(sSensorName)->second,
+                new HingeTwoPivot(sJointName,
+                                  dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+                                  dynamic_cast<Shape*>(m_mModelNodes.find(sSensorName)->second),
                                   vPivot, Eigen::Vector3d::Identity(),
                                   vAxis, Eigen::Vector3d::Identity());
-            cout<<"[ParseRobot] Init Single Camera Physic Success."<<endl;
+            m_mModelNodes[pHinge->GetName()] = pHinge;
+            cout<<"[ParseRobot] Init Single Camera Physics Success."<<endl;
           }
 
           /// RGB-Depth Camera
-          if(strcmp(sMode, "RGBD")==0 )
-          {
+          if(strcmp(sMode, "RGBD")==0 ){
             cout<<"[ParseRobot] Try to init "<<sMode<<endl;
-            string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-            string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
+            string sCameraName=
+                GetAttribute( pElement, "Name")+"@"+sRobotName;
+            string sParentName=
+                GetAttribute( pElement, "Parent")+"@"+sRobotName;
             vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
             int iMass = 1;
             double BodyDistance = 0.5;
-            // string sMeshdir(pElement->Attribute("Dir"));
 
-            /// create bodys
-            // 1.3 create body to connect RGB Cam and Depth Cam
+            // TODO: Why are we assigning poses here?
+
+            /// CREATE CAMERA BODIES
+
+            // 1.3 create body to connect RGBD Cameras
             vector<double> vCameraPose;
             vCameraPose.push_back(0);vCameraPose.push_back(-2.1);vCameraPose.push_back(0);
             vCameraPose.push_back(0);vCameraPose.push_back(0);vCameraPose.push_back(0);
-
             BoxShape* pBox = new BoxShape(sCameraName,BodyDistance,0.1,0.1,iMass, 1, vCameraPose);
-            m_mBodys.insert(std::pair<std::string,Shape*>(sCameraName,pBox));
-            cout<<"test1"<<endl;
+            m_mModelNodes[pBox->GetName()] = pBox;
 
-            /// create joints
-            Eigen::Vector3d vPivot;
-            Eigen::Vector3d vAxis;
-            // 2.3 create joint for SimCam and parent
-            string sJointName = "SimCamJoint"+sCameraName;
-            vPivot<< 0, 0, 0;
-            vAxis<<0,-1,0;
-            cout<<"before hinge joint."<<endl;
-
-            if(m_mBodys.find(sParentName) !=m_mBodys.end())
-            {
-              cout<<"find "<<sParentName<<endl;
-            }
-            else
-            {
-              cout<<"Cannot find"<<sParentName<<endl;
-            }
-
-            HingeTwoPivot* pRGBDHinge =
-                new HingeTwoPivot(sJointName, m_mBodys.find(sParentName)->second,
-                                  pBox, vPivot, Eigen::Vector3d::Identity(),
-                                  vAxis, Eigen::Vector3d::Identity());
-
-            cout<<"test2"<<endl;
+            // 1.2 create body for Depth Cam
+            string sDepthBodyName = "Depth"+sCameraName;
+            vector<double> vDepthCameraPose;
+            vDepthCameraPose.push_back(vPose[0]+BodyDistance+0.1);
+            vDepthCameraPose.push_back(vPose[1] + 2);
+            vDepthCameraPose.push_back(vPose[2]);
+            vDepthCameraPose.push_back(0);
+            vDepthCameraPose.push_back(0);
+            vDepthCameraPose.push_back(0);
+            BoxShape* pDepthBox = new BoxShape(sDepthBodyName, 0.1, 0.1, 0.1,
+                                               iMass, 1, vDepthCameraPose);
+            m_mModelNodes[pDepthBox->GetName()] = pDepthBox;
 
             // 1.1 create body for RGB Cam
             string sRGBBodyName = "RGB"+sCameraName;
@@ -340,8 +333,24 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
             vRGBCameraPose.push_back(0);
             vRGBCameraPose.push_back(0);
 
-            BoxShape* pRGBbox =new BoxShape(sRGBBodyName, 0.1,0.1,0.1, iMass, 1, vRGBCameraPose);
-            m_mBodys.insert(std::pair<std::string,Shape*>(sRGBBodyName,pRGBbox));
+            BoxShape* pRGBbox =new BoxShape(sRGBBodyName, 0.1, 0.1, 0.1,
+                                            iMass, 1, vRGBCameraPose);
+            m_mModelNodes[pRGBbox->GetName()] = pRGBbox;
+
+            /// create joints
+            Eigen::Vector3d vPivot;
+            Eigen::Vector3d vAxis;
+            string sJointName = "SimCamJoint"+sCameraName;
+            vPivot<< 0, 0, 0;
+            vAxis<<0,-1,0;
+            cout<<"before hinge joint."<<endl;
+            HingeTwoPivot* pRGBDHinge =
+                new HingeTwoPivot(sJointName,
+                                  dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+                                  dynamic_cast<Shape*>(pBox),
+                                  vPivot, Eigen::Vector3d::Identity(),
+                                  vAxis, Eigen::Vector3d::Identity());
+            m_mModelNodes[pRGBDHinge->GetName()] = pRGBDHinge;
 
             // 2.1 create joint for RGB body and RGBDCamBody
             string sRGBJointName = "SimCamJoint"+sRGBBodyName;
@@ -349,27 +358,11 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
             vAxis<< 1,0,0;
             HingeTwoPivot* pRGBHinge =
                 new HingeTwoPivot(sRGBJointName,
-                                  m_mBodys.find(sCameraName)->second,
-                                  m_mBodys.find(sRGBBodyName)->second,
+                                  dynamic_cast<Shape*>(m_mModelNodes.find(sCameraName)->second),
+                                  dynamic_cast<Shape*>(m_mModelNodes.find(sRGBBodyName)->second),
                                   vPivot, Eigen::Vector3d::Identity(),
                                   vAxis, Eigen::Vector3d::Identity());
-            //HingeJoint* pRGBHinge = new HingeJoint( sRGBJointName, pBody,
-            //pRGBBody, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],
-            //vAxis[2], 100, 100, -M_PI, M_PI );
-
-            // 1.2 create body for Depth Cam
-            string sDepthBodyName = "Depth"+sCameraName;
-            vector<double> vDepthCameraPose;
-            vDepthCameraPose.push_back(vPose[0]+BodyDistance+0.1);
-            vDepthCameraPose.push_back(vPose[1] + 2);
-            vDepthCameraPose.push_back(vPose[2]);
-            vDepthCameraPose.push_back(0);
-            vDepthCameraPose.push_back(0);
-            vDepthCameraPose.push_back(0);
-
-            BoxShape* pDepthBox =new BoxShape(sDepthBodyName, 0.1,0.1,0.1,iMass,1,vPose);
-
-            m_mBodys.insert(std::pair<std::string,Shape*>(sDepthBodyName,pDepthBox));
+            m_mModelNodes[pRGBHinge->GetName()] = pRGBHinge;
 
             // 2.2 create joint for Depth body and RGBDCamBody
             string sDepthJointName = "SimCamJoint"+sDepthBodyName;
@@ -379,50 +372,50 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
                 new HingeTwoPivot( sDepthJointName, pBox, pDepthBox,
                                    vPivot, Eigen::Vector3d::Identity(),
                                    vAxis, Eigen::Vector3d::Identity());
+            m_mModelNodes[pDepthHinge->GetName()] = pDepthHinge;
 
-            for( std::map<string, Shape*>::iterator it = m_mBodys.begin();it!=m_mBodys.end();it++)
-            {
+
+            for( std::map<string, ModelNode*>::iterator it = m_mModelNodes.begin();
+                 it!=m_mModelNodes.end();it++){
               cout<<"find camera body "<<it->first<<endl;
             }
-
             cout<<"[ParseRobot] Init RGBD Camera Physic Success."<<endl;
           }
           cout<<"[ParseRobot] init Camera Physic Success."<<endl;
         }
 
-        /// RGB-Depth Camera
-        if(sType=="GPS")
-        {
-          string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-          string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-          int iMass = 1;
-          // string sMeshdir(pElement->Attribute("Dir"));
+        //        if(sType=="GPS")
+        //        {
+        //          string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+        //          string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+        //          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+        //          int iMass = 1;
+        //          // string sMeshdir(pElement->Attribute("Dir"));
 
-          // create body for it
-          BoxShape* pBox =new BoxShape(sBodyName, 0.1,0.1,0.1,iMass, 1, vPose);
-          m_mBodys.insert(std::pair<std::string, Shape*>(sBodyName,pBox));
+        //          // create body for it
+        //          BoxShape* pBox =new BoxShape(sBodyName, 0.1,0.1,0.1,iMass, 1, vPose);
+        //          m_mModelNodes.insert(std::pair<std::string, Shape*>(sBodyName,pBox));
 
-          // create joint for SimGPS
-          string sJointName = "GPSJoint"+sBodyName;
-          Eigen::Vector3d vPivot;
-          Eigen::Vector3d vAxis;
-          vPivot<<vPose[0],vPose[1],vPose[2];
-          vAxis<<1,0,0;
-          //HingeJoint* pHinge = new HingeJoint( sJointName, m_mBodys.find(sParentName)->second, m_mBodys.find(sBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],100,100,0,M_PI );
-        }
+        //          // create joint for SimGPS
+        //          string sJointName = "GPSJoint"+sBodyName;
+        //          Eigen::Vector3d vPivot;
+        //          Eigen::Vector3d vAxis;
+        //          vPivot<<vPose[0],vPose[1],vPose[2];
+        //          vAxis<<1,0,0;
+        //          //HingeJoint* pHinge = new HingeJoint( sJointName, m_mModelNodes.find(sParentName)->second, m_mModelNodes.find(sBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],100,100,0,M_PI );
+        //        }
 
       }
 
-      // construct parent, (joint)
-      if(strcmp(sRootContent,"joint")==0)
-      {
+      //////////////////////////////////////////
+      // ALL OF OUR JOINTS (CONSTRAINTS)
+      //////////////////////////////////////////
+
+      if(strcmp(sRootContent,"joint")==0){
         cout<<"[Parse Robot] try to build joint"<<endl;
         string sJointName= GetAttribute( pElement, "name")+"@"+sRobotName; // get joint name. e.g. BLAxleJoint@robot1@proxy
         string sJointType(pElement->Attribute("type"));
-
-        if(sJointType == "HingeJoint")
-        {
+        if(sJointType == "HingeJoint"){
           cout<<"[Parse Robot] try to build Hinge joint."<<endl;
           string sParentName;
           string sChildName;
@@ -435,45 +428,35 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
 
           // Construct joint based on children information. This information may include links, origin, axis.etc
           XMLElement *pChild=pElement->FirstChildElement();
-          while(pChild)
-          {
+          while(pChild){
             const char * sName = pChild->Name();
             // get parent body of joint
-            if(strcmp(sName, "parent")==0)
-            {
+            if(strcmp(sName, "parent")==0){
               sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
             }
 
             // get child body of joint
-            if(strcmp(sName, "child")==0)
-            {
+            if(strcmp(sName, "child")==0){
               sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
             }
-            if(strcmp(sName, "pivot")==0)
-            {
+            if(strcmp(sName, "pivot")==0){
               vPivot=GenNumFromChar( pChild->Attribute("setting"));
             }
-            if(strcmp(sName, "axis")==0)
-            {
+            if(strcmp(sName, "axis")==0){
               vAxis=GenNumFromChar( pChild->Attribute("setting"));
             }
-            if(strcmp(sName,"upperlimit")==0)
-            {
+            if(strcmp(sName,"upperlimit")==0){
               dUpperLimit = ::atof(sName);
             }
-            if(strcmp(sName,"lowerlimit")==0)
-            {
+            if(strcmp(sName,"lowerlimit")==0){
               dLowerLimit = ::atof(sName);
             }
-            if(strcmp(sName,"damping")==0)
-            {
+            if(strcmp(sName,"damping")==0){
               dDamping = ::atof(sName);
             }
-            if(strcmp(sName,"stiffness")==0)
-            {
+            if(strcmp(sName,"stiffness")==0){
               dStiffness = ::atof(sName);
             }
-
             // read next child (joint)
             pChild=pChild->NextSiblingElement();
           }
@@ -482,17 +465,17 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           Eigen::Vector3d axis;
           axis<<vAxis[0], vAxis[1], vAxis[2];
           HingeTwoPivot* pHinge =
-              new HingeTwoPivot( sJointName, m_mBodys.find(sParentName)->second,
-                                 m_mBodys.find(sChildName)->second,
+              new HingeTwoPivot( sJointName,
+                                 dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+                                 dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
                                  pivot, Eigen::Vector3d::Identity(),
                                  axis, Eigen::Vector3d::Identity());
-
+          m_mModelNodes[pHinge->GetName()] = pHinge;
           cout<<"Build Hinge joint "<<sJointName<<" success"<<endl;
         }
         else if(sJointType=="Hinge2Joint")
         {
           cout<<"[Parse Robot] try to build Hinge2 joint."<<endl;
-
           string sParentName;
           string sChildName;
           vector<double> vAnchor;
@@ -515,40 +498,32 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           XMLElement *pChild=pElement->FirstChildElement();
 
           // Construct joint based on children information. This information may include links, origin, axis.etc
-          while(pChild)
-          {
+          while(pChild){
             const char * sName = pChild->Name();
-
             // get parent link of joint
-            if(strcmp(sName, "parent")==0)
-            {
+            if(strcmp(sName, "parent")==0){
               sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
             }
             // get child link of joint
-            if(strcmp(sName, "child")==0)
-            {
+            if(strcmp(sName, "child")==0){
               sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
             }
-            if(strcmp(sName, "anchor")==0)
-            {
+            if(strcmp(sName, "anchor")==0){
               vAnchor = GenNumFromChar( pChild->Attribute("setting"));
               Anchor<<vAnchor[0],vAnchor[1],vAnchor[2];
             }
-            if(strcmp(sName, "axis")==0)
-            {
+            if(strcmp(sName, "axis")==0){
               vAxis1 = GenNumFromChar( pChild->Attribute("axis1"));
               vAxis2 = GenNumFromChar( pChild->Attribute("axis2"));
 
               Axis1<<vAxis1[0],vAxis1[1],vAxis1[2];
               Axis2<<vAxis2[0],vAxis2[1],vAxis2[2];
             }
-            if(strcmp(sName, "limit")==0)
-            {
+            if(strcmp(sName, "limit")==0){
               vLowerLinearLimit = GenNumFromChar( pChild->Attribute("lowerlinear"));
               vUpperLinearLimit = GenNumFromChar( pChild->Attribute("upperlinear"));
               vLowerAngleLimit = GenNumFromChar( pChild->Attribute("lowerangle"));
               vUpperAngleLimit = GenNumFromChar( pChild->Attribute("upperangle"));
-
               LowerAngleLimit<<vLowerAngleLimit[0],vLowerAngleLimit[1],vLowerAngleLimit[2];
               UpperAngleLimit<<vUpperAngleLimit[0],vUpperAngleLimit[1],vUpperAngleLimit[2];
               LowerLinearLimit<<vLowerLinearLimit[0],vLowerLinearLimit[1],vLowerLinearLimit[2];
@@ -559,32 +534,28 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
           }
 
           cout<<"before build joint"<<endl;
-          if(m_mBodys.find(sParentName) !=m_mBodys.end())
-          {
+          if(m_mModelNodes.find(sParentName) !=m_mModelNodes.end()){
             cout<<"find "<<sParentName<<endl;
           }
-          else
-          {
+          else{
             cout<<"Cannot find"<<sParentName<<endl;
           }
-
-          for(std::map<string, Shape*>::iterator it =m_mBodys.begin(); it!=m_mBodys.end(); it++ )
-          {
+          for(std::map<string, ModelNode*>::iterator it =m_mModelNodes.begin();
+              it!=m_mModelNodes.end(); it++ ){
             cout<<"find "<<it->first<<endl;
           }
-
-
           Hinge2* pHinge2 = new Hinge2( sJointName,
-                                        m_mBodys.find(sParentName)->second,
-                                        m_mBodys.find(sChildName)->second,
+                                        dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+                                        dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
                                         Anchor, Axis1, Axis2);
-  //        pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
+          //TODO:
+          //pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
           //LowerAngleLimit, UpperAngleLimit);
-
-          std::cout<<"[ParseRobot] Creating a Hinge2Joint between "<<sParentName<<" and "<<sChildName<<std::endl;
+          m_mModelNodes[pHinge2->GetName()] = pHinge2;
+          std::cout<<"[ParseRobot] Creating a Hinge2Joint between "<<
+                     sParentName<<" and "<<sChildName<<std::endl;
         }
       }
-
       // read next parent element
       pElement=pElement->NextSiblingElement();
     }
@@ -593,7 +564,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
     std::cerr<<"[] I have no idea what I'm doing"<<std::endl;
     return false;
   }
-
+  m_RobotModel.SetParts(GetModelNodes());
   cout<<"[ParseRobot] Finish"<<endl;
   return true;
 }
@@ -727,8 +698,6 @@ bool URDF_Parser::ParseDevices(
     // read next parent element
     pElement=pElement->NextSiblingElement();
   }
-
-  return true;
 }
 
 
@@ -767,3 +736,19 @@ bool URDF_Parser::ParseWorldForInitialPoses(
 
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////////
+/// HELPER FUNCTIONS
+////////////////////////////////////////////////////////////////////////////
+
+std::vector<ModelNode*> URDF_Parser::GetModelNodes(){
+  std::vector<ModelNode*> Nodes;
+  for( std::map<string, ModelNode*>::iterator it = m_mModelNodes.begin();
+       it!=m_mModelNodes.end();it++){
+    Nodes.push_back(it->second);
+  }
+  return Nodes;
+}
+
+
+

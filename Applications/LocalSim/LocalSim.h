@@ -43,27 +43,25 @@ public:
   std::string                 m_sRobotURDFFile;
   std::string                 m_sWorldURDFFile;
 
-  SceneGraph::GLLight         m_light;
-  SceneGraph::GLBox           m_ground;
-  SceneGraph::GLGrid          m_grid;
-  SceneGraph::GLSceneGraph&   m_rSceneGraph;
-  SceneGraph::GLMesh          m_Map;                 // mesh for the world.
+//  SceneGraph::GLLight         m_light;
+//  SceneGraph::GLBox           m_ground;
+//  SceneGraph::GLGrid          m_grid;
+//  SceneGraph::GLSceneGraph&   m_rSceneGraph;
+//  SceneGraph::GLMesh          m_Map;                 // mesh for the world.
 
-  Render                      m_Render;
+  ModelGraphBuilder           m_Scene;
   SimRobot*                   m_pMainRobot;            // user's robot. will be delete in final version of robot LocalSim (as we are not going to key control main robot in LocalSim)
   WorldManager                m_WorldManager;
   SimDeviceManager            m_SimDeviceManager;
   RobotsManager               m_RobotManager;
   NetworkManager              m_NetworkManager;
-  PhysicsEngine               m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
   PoseController              m_SimpPoseController;
   hal::node                   m_Node;
   URDF_Parser                 m_Parser;
 
   /// Constructor
   LocalSim(
-      SceneGraph::GLSceneGraph& glGraph,
-      const std::string& sLocalSimName,
+      const string &sLocalSimName,
       const std::string& sRobotURDF,
       const std::string& sWorldURDF,
       const std::string& sServerName,

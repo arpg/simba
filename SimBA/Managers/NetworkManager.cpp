@@ -160,8 +160,8 @@ bool NetworkManager::RegisterRobotProxyWithStateKeeper()
     Eigen::Vector6d ePose;
     ePose<<mInitRobotState.x(), mInitRobotState.y(), mInitRobotState.z(),mInitRobotState.p(), mInitRobotState.q(), mInitRobotState.r();
 
-    m_pRobotsManager->GetMainRobot()->InitPoseOfBodyBaseWRTWorld(ePose);
-    m_pRobotsManager->GetMainRobot()->AddRobotInModelGraph();
+/*    m_pRobotsManager->GetMainRobot()->InitPoseOfBodyBaseWRTWorld(ePose);
+    m_pRobotsManager->GetMainRobot()->AddRobotInModelGraph();*/
 
     cout<<"[NetworkManager/registerRobotProxyWithStateKeeper] Robot register success! Get init robot state as x: "<<ePose[0]<<" y: "<<ePose[1]<<" z: "<<ePose[2]<<" p: "<<ePose[3]
        <<" q: "<<ePose[4]<<" r: "<<ePose[5]<<". in Time step: "<<m_iTimeStep<<endl;
@@ -180,9 +180,9 @@ bool NetworkManager::RegisterRobotProxyWithStateKeeper()
       doc.Parse(urdf.xml().c_str());
 
       // create previous robot
-      m_pRobotsManager->AddRobot(doc,sLastName);
-      m_pRobotsManager->GetRobot(sFullName)->InitPoseOfBodyBaseInURDF();
-      m_pRobotsManager->GetRobot(sFullName)->AddRobotInModelGraph();
+      m_pRobotsManager->BuildRobot(doc,sLastName);
+//      m_pRobotsManager->GetRobot(sFullName)->InitPoseOfBodyBaseInURDF();
+//      m_pRobotsManager->GetRobot(sFullName)->AddRobotInModelGraph();
       cout<<"[NetworkManager/register] init previous player "<<sFullName<<". Last Name "<<sLastName<<" Success!"<<endl;
     }
     return true;
@@ -214,9 +214,9 @@ void NetworkManager::AddRobotByURDF(RobotProxyAddNewRobotReqMsg& mRequest, Robot
       mRequest.mutable_init_pose()->p(),mRequest.mutable_init_pose()->q(),mRequest.mutable_init_pose()->r();
 
   // add new robot in proxy
-  m_pRobotsManager->AddRobot(doc, sProxyNameOfNewRobot);
+  m_pRobotsManager->BuildRobot(doc, sProxyNameOfNewRobot);
   m_pRobotsManager->GetRobot(sNewAddRobotName)->InitPoseOfBodyBaseWRTWorld(ePose);
-  m_pRobotsManager->GetRobot(sNewAddRobotName)->AddRobotInModelGraph();
+//  m_pRobotsManager->GetRobot(sNewAddRobotName)->AddRobotInModelGraph();
 
   cout<<"[NetworkManager/AddRobotByURDF] Add new robot "<<mRequest.robot_name() <<" success. "<<endl;
 }
@@ -256,13 +256,13 @@ bool NetworkManager::PublishRobotFullStateToStateKeeper()
   {
     string sBodyName = vAllBodyFullName[i];
     // prepare pose info
-    Eigen::Vector3d eOrigin = m_pRobotsManager->m_PhysWrapper.GetEntityOrigin(sBodyName);
-    Eigen::Matrix3d eBasis = m_pRobotsManager->m_PhysWrapper.GetEntityBasis(sBodyName);
+    Eigen::Vector3d eOrigin = m_pRobotsManager->m_Scene.m_Phys.GetEntityOrigin(sBodyName);
+    Eigen::Matrix3d eBasis = m_pRobotsManager->m_Scene.m_Phys.GetEntityBasis(sBodyName);
 
 
     // prepare veloicty info
-    Eigen::Vector3d eLinearV = m_pRobotsManager->m_PhysWrapper.GetEntityLinearVelocity(sBodyName);
-    Eigen::Vector3d eAngularV = m_pRobotsManager->m_PhysWrapper.GetEntityAngularVelocity(sBodyName);
+    Eigen::Vector3d eLinearV = m_pRobotsManager->m_Scene.m_Phys.GetEntityLinearVelocity(sBodyName);
+    Eigen::Vector3d eAngularV = m_pRobotsManager->m_Scene.m_Phys.GetEntityAngularVelocity(sBodyName);
 
 
     // set pose infor
