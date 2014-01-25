@@ -139,6 +139,7 @@ public:
         pEntity->m_pShape = pShape;
         pEntity->m_pMotionState = pMotionState;
         m_mShapes[pCylinder->GetName()] = pEntity;
+//        m_mShapes.insert(std::pair<string, boost::shared_ptr<Entity> >(pCylinder->GetName(), pEntity));
       }
     }
 
@@ -222,6 +223,9 @@ public:
       else if(dynamic_cast<Hinge2*>( pNodeCon ) != NULL) {
         Hinge2* pCon = (Hinge2*) pNodeCon;
         boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        for(std::map<string, boost::shared_ptr<Entity> > ::iterator it =m_mShapes.begin(); it!=m_mShapes.end(); it++ ){
+          std::cout<<it->first<<std::endl;
+        }
         boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
         btVector3 btAnchor(pCon->m_Anchor[0], pCon->m_Anchor[1],
                            pCon->m_Anchor[2]);
@@ -279,6 +283,7 @@ public:
   ///////////////////////////////////////////////////////////////////
 
   void PrintAllEntityName(){
+    cout<<"size of entity is "<<m_mShapes.size()<<endl;
     std::map<string, boost::shared_ptr<Entity> >::iterator iter = m_mShapes.begin();
     for(iter = m_mShapes.begin();iter!=m_mShapes.end(); iter++){
       string sFullName = iter->first;
@@ -366,6 +371,7 @@ public:
   ///////////////////////////////////////////////////////////////////
   Entity getEntity(string name)
   {
+    PrintAllEntityName();
     if(m_mShapes.find(name) !=m_mShapes.end())
     {
       Entity e =*m_mShapes.find(name)->second;

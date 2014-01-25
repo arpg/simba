@@ -380,6 +380,11 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
                                    vPivot, Eigen::Vector3d::Identity(),
                                    vAxis, Eigen::Vector3d::Identity());
 
+            for( std::map<string, Shape*>::iterator it = m_mBodys.begin();it!=m_mBodys.end();it++)
+            {
+              cout<<"find camera body "<<it->first<<endl;
+            }
+
             cout<<"[ParseRobot] Init RGBD Camera Physic Success."<<endl;
           }
           cout<<"[ParseRobot] init Camera Physic Success."<<endl;
