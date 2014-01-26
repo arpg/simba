@@ -112,7 +112,7 @@ public:
   void UpdateScene(){
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     m_Phys.DebugDrawWorld();
-    m_Phys.StepSimulation();
+//    m_Phys.StepSimulation();
     m_Render.UpdateScene();
   }
 

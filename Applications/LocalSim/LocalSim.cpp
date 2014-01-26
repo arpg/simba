@@ -76,34 +76,34 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
 // register these objects with the simulator.
 void LocalSim::InitReset()
 {
-    SceneGraph::GLLight         m_light;
-    SceneGraph::GLBox           m_ground;
-    SceneGraph::GLGrid          m_grid;
-    SceneGraph::GLMesh          m_Map;                 // mesh for the world.
+    SceneGraph::GLLight*        m_light = new SceneGraph::GLLight();
+    SceneGraph::GLBox*          m_ground = new SceneGraph::GLBox();
+    SceneGraph::GLGrid*         m_grid = new SceneGraph::GLGrid();
+    SceneGraph::GLMesh*         m_Map = new SceneGraph::GLMesh();                 // mesh for the world.
 
   m_Scene.m_Render.glGraph.Clear();
 
-//  m_light.SetPosition( m_WorldManager.vLightPose[0],
-//                       m_WorldManager.vLightPose[1],
-//                       m_WorldManager.vLightPose[2]);
-//  m_Scene.m_Render.glGraph.AddChild( &m_light );
+  m_light->SetPosition( m_WorldManager.vLightPose[0],
+                       m_WorldManager.vLightPose[1],
+                       m_WorldManager.vLightPose[2]);
+  m_Scene.m_Render.glGraph.AddChild( m_light );
 
   // init world without mesh
   if (m_WorldManager.m_sMesh =="NONE")
   {
     cout<<"[RobotRroxy] Try init empty world."<<endl;
-    m_grid.SetNumLines(20);
-    m_grid.SetLineSpacing(1);
-//    m_Scene.m_Render.glGraph.AddChild(&m_grid);
+    m_grid->SetNumLines(20);
+    m_grid->SetLineSpacing(1);
+    m_Scene.m_Render.glGraph.AddChild(m_grid);
 
-//    double dThickness = 1;
-//    m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
-//    m_ground.SetExtent( 200,200, dThickness );
-//    m_Scene.m_Render.glGraph.AddChild( &m_ground );
+    double dThickness = 1;
+    m_ground->SetPose( 0,0, dThickness/2.0,0,0,0 );
+    m_ground->SetExtent( 200,200, dThickness );
+    m_Scene.m_Render.glGraph.AddChild( m_ground );
 
-//    BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1, m_WorldManager.vWorldPose);
-//    m_Scene.m_Phys.RegisterObject(pGround);
-//    m_Scene.m_Phys.SetFriction("Ground", 888);
+    BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1, m_WorldManager.vWorldPose);
+    m_Scene.m_Phys.RegisterObject(pGround);
+    m_Scene.m_Phys.SetFriction("Ground", 888);
   }
   // init world with mesh
   // maybe dangerous to always reload meshes?
@@ -113,13 +113,13 @@ void LocalSim::InitReset()
     {
       cout<<"[RobotRroxy] Try init word with mesh: "
          <<m_WorldManager.m_sMesh<<endl;
-      m_Map.Init(m_WorldManager.m_sMesh);
-      m_Map.SetPerceptable(true);
-      m_Map.SetScale(m_WorldManager.iScale);
-      m_Map.SetPosition(m_WorldManager.vWorldPose[0],
+      m_Map->Init(m_WorldManager.m_sMesh);
+      m_Map->SetPerceptable(true);
+      m_Map->SetScale(m_WorldManager.iScale);
+      m_Map->SetPosition(m_WorldManager.vWorldPose[0],
                         m_WorldManager.vWorldPose[1],
                         m_WorldManager.vWorldPose[2]);
-      m_Scene.m_Render.glGraph.AddChild( &m_Map );
+      m_Scene.m_Render.glGraph.AddChild( m_Map );
     } catch (std::exception e) {
       printf( "Cannot load world map\n");
       exit(-1);
@@ -320,6 +320,13 @@ void LocalSim::ReverseKey(){
       GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
 }
 
+// ---- Step Forward
+void LocalSim::StepForward( void )
+{
+    m_Scene.m_Phys.StepSimulation();
+    m_Scene.m_Render.UpdateScene();
+}
+
 
 ///////////////////////////////////////////////////////////////////
 /////
@@ -385,8 +392,8 @@ int main( int argc, char** argv )
   pangolin::RegisterKeyPressCallback(
         'W', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
 
-//  pangolin::RegisterKeyPressCallback(
-//        ' ', boost::bind( &LocalSim::StepForward, &mLocalSim ) );
+  pangolin::RegisterKeyPressCallback(
+        ' ', boost::bind( &LocalSim::StepForward, &mLocalSim ) );
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
