@@ -15,15 +15,13 @@ class Render
 {
 public:
 
-  Render(){
-  }
-
   void Init(std::string sLocalSimName){
     //Start our SceneGraph interface
     pangolin::CreateGlutWindowAndBind(sLocalSimName,640,480);
     SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
     glClearColor(0, 0, 0, 1);
     glewInit();
+
     const SceneGraph::AxisAlignedBoundingBox bbox =
         glGraph.ObjectAndChildrenBounds();
     const Eigen::Vector3d center = bbox.Center();

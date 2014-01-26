@@ -14,19 +14,15 @@ using namespace CVarUtils;
 /// is a SIM.
 ////////////////////////////////////////////////////////////////////////
 
-LocalSim::LocalSim(
-    const std::string& sLocalSimName,      //< Input: name of robot LocalSim
+LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of robot LocalSim
     const std::string& sRobotURDF,      //< Input: location of meshes, maps etc
     const std::string& sWorldURDF,
     const std::string& sServerName,
-    const std::string& sPoseFileName
-    )
-  : m_sLocalSimName(sLocalSimName), m_sWorldURDFFile(sWorldURDF),
-    m_sRobotURDFFile(sRobotURDF){
-
-  // This is used to interface with the user's main function.
-  m_Node.init(sLocalSimName);
-
+    const std::string& sPoseFileName)
+  : m_sLocalSimName(sLocalSimName),
+    m_sWorldURDFFile(sWorldURDF),
+    m_sRobotURDFFile(sRobotURDF)
+{
   // 1. Parse world.xml file.
   if( m_Parser.ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true){
     cout<<"[LocalSim] Cannot parse "<< m_sWorldURDFFile<<
@@ -70,8 +66,6 @@ LocalSim::LocalSim(
     cout<<"[LocalSim] Init Robot LocalSim without Network."<<endl;
   }
 
-  cout<<"[LocalSim] Init LocalSim Success!"<<endl;
-
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -80,56 +74,61 @@ LocalSim::LocalSim(
 
 // InitReset will populate SceneGraph with objects, and
 // register these objects with the simulator.
-//void LocalSim::InitReset()
-//{
-//  m_rSceneGraph.Clear();
+void LocalSim::InitReset()
+{
+    SceneGraph::GLLight         m_light;
+    SceneGraph::GLBox           m_ground;
+    SceneGraph::GLGrid          m_grid;
+    SceneGraph::GLMesh          m_Map;                 // mesh for the world.
+
+  m_Scene.m_Render.glGraph.Clear();
 
 //  m_light.SetPosition( m_WorldManager.vLightPose[0],
 //                       m_WorldManager.vLightPose[1],
 //                       m_WorldManager.vLightPose[2]);
-//  m_rSceneGraph.AddChild( &m_light );
+//  m_Scene.m_Render.glGraph.AddChild( &m_light );
 
-//  // init world without mesh
-//  if (m_WorldManager.m_sMesh =="NONE")
-//  {
-//    cout<<"[RobotRroxy] Try init empty world."<<endl;
-//    m_grid.SetNumLines(20);
-//    m_grid.SetLineSpacing(1);
-//    m_rSceneGraph.AddChild(&m_grid);
+  // init world without mesh
+  if (m_WorldManager.m_sMesh =="NONE")
+  {
+    cout<<"[RobotRroxy] Try init empty world."<<endl;
+    m_grid.SetNumLines(20);
+    m_grid.SetLineSpacing(1);
+//    m_Scene.m_Render.glGraph.AddChild(&m_grid);
 
 //    double dThickness = 1;
 //    m_ground.SetPose( 0,0, dThickness/2.0,0,0,0 );
 //    m_ground.SetExtent( 200,200, dThickness );
-//    m_rSceneGraph.AddChild( &m_ground );
+//    m_Scene.m_Render.glGraph.AddChild( &m_ground );
 
 //    BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1, m_WorldManager.vWorldPose);
-//    m_PhysEngine.RegisterObject(pGround);
-//    m_PhysEngine.SetFriction("Ground", 888);
-//  }
-//  // init world with mesh
-//  // maybe dangerous to always reload meshes?
-//  /// maybe we should separate Init from Reset?
-//  else {
-//    try
-//    {
-//      cout<<"[RobotRroxy] Try init word with mesh: "
-//         <<m_WorldManager.m_sMesh<<endl;
-//      m_Map.Init(m_WorldManager.m_sMesh);
-//      m_Map.SetPerceptable(true);
-//      m_Map.SetScale(m_WorldManager.iScale);
-//      m_Map.SetPosition(m_WorldManager.vWorldPose[0],
-//                        m_WorldManager.vWorldPose[1],
-//                        m_WorldManager.vWorldPose[2]);
-//      m_rSceneGraph.AddChild( &m_Map );
-//    } catch (std::exception e) {
-//      printf( "Cannot load world map\n");
-//      exit(-1);
-//    }
-//  }
+//    m_Scene.m_Phys.RegisterObject(pGround);
+//    m_Scene.m_Phys.SetFriction("Ground", 888);
+  }
+  // init world with mesh
+  // maybe dangerous to always reload meshes?
+  /// maybe we should separate Init from Reset?
+  else {
+    try
+    {
+      cout<<"[RobotRroxy] Try init word with mesh: "
+         <<m_WorldManager.m_sMesh<<endl;
+      m_Map.Init(m_WorldManager.m_sMesh);
+      m_Map.SetPerceptable(true);
+      m_Map.SetScale(m_WorldManager.iScale);
+      m_Map.SetPosition(m_WorldManager.vWorldPose[0],
+                        m_WorldManager.vWorldPose[1],
+                        m_WorldManager.vWorldPose[2]);
+      m_Scene.m_Render.glGraph.AddChild( &m_Map );
+    } catch (std::exception e) {
+      printf( "Cannot load world map\n");
+      exit(-1);
+    }
+  }
 
-//  cout<<"Init World Success"<<endl;
-//  m_Render.AddToScene( &m_rSceneGraph );
-//}
+  m_Scene.m_Render.AddToScene();
+  cout<<"Init World Success"<<endl;
+}
 
 //////////////////////////////////////////////////////////////////
 // Apply the camera's pose directly to the SimCamera
@@ -349,6 +348,7 @@ int main( int argc, char** argv )
                " 'WithoutStateKeeper', or 'WithoutNetwork'"<<std::endl;
 
   }
+
   GetPot cl( argc, argv );
   std::string sLocalSimName = cl.follow( "SimWorld", "-n" );
   std::string sRobotURDF = cl.follow("", "-r");
@@ -356,11 +356,10 @@ int main( int argc, char** argv )
   std::string sPoseFile  = cl.follow("None",1,"-p");
   std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
 
-
-
   // Initialize a LocalSim.
   LocalSim mLocalSim(sLocalSimName, sRobotURDF,
                      sWorldURDF, sServerOption, sPoseFile);
+  mLocalSim.InitReset();
 
   //////KEYBOARD COMMANDS
 //  pangolin::RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
@@ -400,8 +399,6 @@ int main( int argc, char** argv )
 
     // 4. Update the Network
     mLocalSim.m_NetworkManager.UpdateNetWork();
-
-
 
     // 5. Show the image in the current window
     mLocalSim.SetImagesToWindow(*mLocalSim.m_Scene.m_Render.LSimCamImage,

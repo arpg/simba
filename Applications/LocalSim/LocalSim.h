@@ -43,12 +43,6 @@ public:
   std::string                 m_sRobotURDFFile;
   std::string                 m_sWorldURDFFile;
 
-//  SceneGraph::GLLight         m_light;
-//  SceneGraph::GLBox           m_ground;
-//  SceneGraph::GLGrid          m_grid;
-//  SceneGraph::GLSceneGraph&   m_rSceneGraph;
-//  SceneGraph::GLMesh          m_Map;                 // mesh for the world.
-
   ModelGraphBuilder           m_Scene;
   SimRobot*                   m_pMainRobot;            // user's robot. will be delete in final version of robot LocalSim (as we are not going to key control main robot in LocalSim)
   WorldManager                m_WorldManager;
