@@ -11,7 +11,7 @@
 #include <ModelGraph/Constraint.h>
 #include <ModelGraph/RaycastVehicle.h>
 
-class Render
+class RenderEngine
 {
 public:
 
@@ -23,7 +23,7 @@ public:
     glewInit();
 
     const SceneGraph::AxisAlignedBoundingBox bbox =
-        glGraph.ObjectAndChildrenBounds();
+        m_glGraph.ObjectAndChildrenBounds();
     const Eigen::Vector3d center = bbox.Center();
     const double size = bbox.Size().norm();
     const double far = 2*size;
@@ -36,30 +36,30 @@ public:
                                     center(2) - size/4,
                                     center(0), center(1), center(2),
                                     pangolin::AxisNegZ) );
-    stacks3d = stacks;
+    m_stacks3d = stacks;
 
     // We define a new view which will reside within the container.
 
     // We set the views location on screen and add a handler which will
     // let user input update the model_view matrix (stacks3d) and feed through
     // to our scenegraph
-    view3d.SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
-    view3d.SetHandler( new SceneGraph::HandlerSceneGraph( glGraph, stacks3d) );
-    view3d.SetDrawFunction( SceneGraph::ActivateDrawFunctor( glGraph, stacks3d) );
+    m_view3d.SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
+    m_view3d.SetHandler( new SceneGraph::HandlerSceneGraph( m_glGraph, m_stacks3d) );
+    m_view3d.SetDrawFunction( SceneGraph::ActivateDrawFunctor( m_glGraph, m_stacks3d) );
 
     // window for display image capture from simcam
-    LSimCamImage = new SceneGraph::ImageView(true,true);
-    LSimCamImage->SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
+    m_LSimCamImage = new SceneGraph::ImageView(true,true);
+    m_LSimCamImage->SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
 
     // window for display image capture from simcam
-    RSimCamImage = new SceneGraph::ImageView(true,true);
-    RSimCamImage->SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
+    m_RSimCamImage = new SceneGraph::ImageView(true,true);
+    m_RSimCamImage->SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
 
 
     // Add our views as children to the base container.
-    pangolin::DisplayBase().AddDisplay( view3d );
-    pangolin::DisplayBase().AddDisplay( *LSimCamImage );
-    pangolin::DisplayBase().AddDisplay( *RSimCamImage );
+    pangolin::DisplayBase().AddDisplay( m_view3d );
+    pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
+    pangolin::DisplayBase().AddDisplay( *m_RSimCamImage );
   }
 
 
@@ -111,12 +111,12 @@ public:
     std::map<ModelNode*, SceneGraph::GLObject* >::iterator it;
     for(it = m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
       SceneGraph::GLObject* p = it->second;
-      glGraph.AddChild( p );
+      m_glGraph.AddChild( p );
     }
   }
 
   void UpdateScene( void ){
-    view3d.Activate(stacks3d);
+    m_view3d.Activate(m_stacks3d);
     std::map<ModelNode*, SceneGraph::GLObject*>::iterator it;
     for(it=m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
       ModelNode* mn = it->first;
@@ -126,11 +126,11 @@ public:
   }
 
   std::map<ModelNode*, SceneGraph::GLObject*> m_mSceneEntities;
-  SceneGraph::GLSceneGraph glGraph;
-  SceneGraph::ImageView* LSimCamImage;
-  SceneGraph::ImageView* RSimCamImage;
-  pangolin::View view3d;
-  pangolin::OpenGlRenderState stacks3d;
+  SceneGraph::GLSceneGraph                    m_glGraph;
+  SceneGraph::ImageView*                      m_LSimCamImage;
+  SceneGraph::ImageView*                      m_RSimCamImage;
+  pangolin::View                              m_view3d;
+  pangolin::OpenGlRenderState                 m_stacks3d;
 
 
 };

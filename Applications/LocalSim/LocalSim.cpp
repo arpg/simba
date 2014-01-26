@@ -15,14 +15,15 @@ using namespace CVarUtils;
 ////////////////////////////////////////////////////////////////////////
 
 LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of robot LocalSim
-    const std::string& sRobotURDF,      //< Input: location of meshes, maps etc
-    const std::string& sWorldURDF,
-    const std::string& sServerName,
-    const std::string& sPoseFileName)
-  : m_sLocalSimName(sLocalSimName),
-    m_sWorldURDFFile(sWorldURDF),
-    m_sRobotURDFFile(sRobotURDF)
+                   const std::string& sRobotURDF,      //< Input: location of meshes, maps etc
+                   const std::string& sWorldURDF,
+                   const std::string& sServerName,
+                   const std::string& sPoseFileName)
 {
+  m_sLocalSimName  = sLocalSimName;
+  m_sWorldURDFFile = sWorldURDF;
+  m_sRobotURDFFile = sRobotURDF;
+
   // 1. Parse world.xml file.
   if( m_Parser.ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true){
     cout<<"[LocalSim] Cannot parse "<< m_sWorldURDFFile<<
@@ -50,7 +51,7 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
 
   // This has to be fixed up (there are a lot of references that shouldn't be
   // there), but we'll run with it for now.
-  m_SimDeviceManager.Init(m_Scene.m_Phys, m_Scene.m_Render.glGraph,
+  m_SimDeviceManager.Init(m_Scene.m_Phys, m_Scene.m_Render.m_glGraph,
                           RobotURDF, m_sLocalSimName);
   m_SimpPoseController.Init(sPoseFileName);
 
@@ -76,17 +77,17 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
 // register these objects with the simulator.
 void LocalSim::InitReset()
 {
-    SceneGraph::GLLight*        m_light = new SceneGraph::GLLight();
-    SceneGraph::GLBox*          m_ground = new SceneGraph::GLBox();
-    SceneGraph::GLGrid*         m_grid = new SceneGraph::GLGrid();
-    SceneGraph::GLMesh*         m_Map = new SceneGraph::GLMesh();                 // mesh for the world.
+  SceneGraph::GLLight*        m_light = new SceneGraph::GLLight();
+  SceneGraph::GLBox*          m_ground = new SceneGraph::GLBox();
+  SceneGraph::GLGrid*         m_grid = new SceneGraph::GLGrid();
+  SceneGraph::GLMesh*         m_Map = new SceneGraph::GLMesh();                 // mesh for the world.
 
-  m_Scene.m_Render.glGraph.Clear();
+  m_Scene.m_Render.m_glGraph.Clear();
 
   m_light->SetPosition( m_WorldManager.vLightPose[0],
-                       m_WorldManager.vLightPose[1],
-                       m_WorldManager.vLightPose[2]);
-  m_Scene.m_Render.glGraph.AddChild( m_light );
+      m_WorldManager.vLightPose[1],
+      m_WorldManager.vLightPose[2]);
+  m_Scene.m_Render.m_glGraph.AddChild( m_light );
 
   // init world without mesh
   if (m_WorldManager.m_sMesh =="NONE")
@@ -94,12 +95,12 @@ void LocalSim::InitReset()
     cout<<"[RobotRroxy] Try init empty world."<<endl;
     m_grid->SetNumLines(20);
     m_grid->SetLineSpacing(1);
-    m_Scene.m_Render.glGraph.AddChild(m_grid);
+    m_Scene.m_Render.m_glGraph.AddChild(m_grid);
 
     double dThickness = 1;
     m_ground->SetPose( 0,0, dThickness/2.0,0,0,0 );
     m_ground->SetExtent( 200,200, dThickness );
-    m_Scene.m_Render.glGraph.AddChild( m_ground );
+    m_Scene.m_Render.m_glGraph.AddChild( m_ground );
 
     BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1, m_WorldManager.vWorldPose);
     m_Scene.m_Phys.RegisterObject(pGround);
@@ -117,9 +118,9 @@ void LocalSim::InitReset()
       m_Map->SetPerceptable(true);
       m_Map->SetScale(m_WorldManager.iScale);
       m_Map->SetPosition(m_WorldManager.vWorldPose[0],
-                        m_WorldManager.vWorldPose[1],
-                        m_WorldManager.vWorldPose[2]);
-      m_Scene.m_Render.glGraph.AddChild( m_Map );
+          m_WorldManager.vWorldPose[1],
+          m_WorldManager.vWorldPose[2]);
+      m_Scene.m_Render.m_glGraph.AddChild( m_Map );
     } catch (std::exception e) {
       printf( "Cannot load world map\n");
       exit(-1);
@@ -323,8 +324,8 @@ void LocalSim::ReverseKey(){
 // ---- Step Forward
 void LocalSim::StepForward( void )
 {
-    m_Scene.m_Phys.StepSimulation();
-    m_Scene.m_Render.UpdateScene();
+  m_Scene.m_Phys.StepSimulation();
+  m_Scene.m_Render.UpdateScene();
 }
 
 
@@ -336,8 +337,6 @@ void LocalSim::StepForward( void )
 ///// 3. Renders the objects in the Sim.
 /////
 ///////////////////////////////////////////////////////////////////
-
-
 int main( int argc, char** argv )
 {
   // parse command line arguments
@@ -369,9 +368,9 @@ int main( int argc, char** argv )
   mLocalSim.InitReset();
 
   //////KEYBOARD COMMANDS
-//  pangolin::RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
-//                                      boost::bind( &LocalSim::InitReset,
-//                                                   &mLocalSim ) );
+  //  pangolin::RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
+  //                                      boost::bind( &LocalSim::InitReset,
+  //                                                   &mLocalSim ) );
   pangolin::RegisterKeyPressCallback(
         'a', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
   pangolin::RegisterKeyPressCallback(
@@ -399,7 +398,7 @@ int main( int argc, char** argv )
   while( !pangolin::ShouldQuit() )
   {
     // 2. Update physics and scene
-    mLocalSim.m_Scene.UpdateScene();
+    mLocalSim.m_Scene.UpdateScene(true);
 
     // 3. Update SimDevices
     mLocalSim.m_SimDeviceManager.UpdateAllDevices();
@@ -408,8 +407,8 @@ int main( int argc, char** argv )
     mLocalSim.m_NetworkManager.UpdateNetWork();
 
     // 5. Show the image in the current window
-    mLocalSim.SetImagesToWindow(*mLocalSim.m_Scene.m_Render.LSimCamImage,
-                                *mLocalSim.m_Scene.m_Render.RSimCamImage);
+    mLocalSim.SetImagesToWindow(*mLocalSim.m_Scene.m_Render.m_LSimCamImage,
+                                *mLocalSim.m_Scene.m_Render.m_RSimCamImage);
 
     // 6. Refresh screen
     pangolin::FinishGlutFrame();
@@ -419,3 +418,4 @@ int main( int argc, char** argv )
   return 0;
 
 }
+

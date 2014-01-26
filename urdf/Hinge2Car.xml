@@ -54,7 +54,15 @@
     </joint>
 
     
-    <Sensor Name="RCamera" Type="Camera" Driver="Kinect" Mode="RGBD" Resolution="VGA" FPS="30" Parent="Stick" Pose="0,-2,0,0,0,0" Location="Local" />
-
-    
+    <!--<Sensor Name="LCamera"
+            Type="Camera"
+            Driver="Node2Cam"
+            Size="512*384"
+            Mode="RGBD"
+            FPS="30"
+            Align="true"
+            Parent="Stick"
+            Pose="0,0,5,0,0,0"
+            Location="@Proxy1"
+            Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml"/>-->
 </robot>

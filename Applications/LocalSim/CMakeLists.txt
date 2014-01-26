@@ -17,8 +17,7 @@ include_directories( ${Pangolin_INCLUDE_DIRS}
   ${Calibu_INCLUDE_DIRS}
   ${SimBA_INCLUDE_DIRS} )
 
-add_executable( LocalSim LocalSim.cpp
-                           LocalSim.h )
+add_executable( LocalSim LocalSim.cpp LocalSim.h )
 
 target_link_libraries( LocalSim
                        ${SceneGraph_LIBRARIES}

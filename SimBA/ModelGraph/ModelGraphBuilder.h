@@ -83,7 +83,7 @@ public:
         ChildWorldPose = _T2Cart(
               part->GetPoseMatrix() * part->m_vChildren[ii]->GetPoseMatrix());
         part->SetPose(ChildWorldPose);
-//        RenderGraph(m_Render, *(part.m_vChildren[ii]));
+        //        RenderGraph(m_Render, *(part.m_vChildren[ii]));
       }
     }
   }
@@ -109,15 +109,21 @@ public:
     }
   }
 
-  void UpdateScene(){
+  void UpdateScene(bool bDebug = false){
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    m_Phys.DebugDrawWorld();
-//    m_Phys.StepSimulation();
+    if(bDebug == false)
+    {
+      m_Phys.StepSimulation();
+    }
+    else
+    {
+      m_Phys.DebugDrawWorld();
+    }
     m_Render.UpdateScene();
   }
 
   PhysicsEngine m_Phys;
-  Render m_Render;
+  RenderEngine m_Render;
 
 };
 
