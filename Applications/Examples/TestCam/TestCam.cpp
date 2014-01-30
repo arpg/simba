@@ -26,8 +26,7 @@ int main( int argc, char* argv[] )
     hal::Camera camera(GenURIFromURDF(sCameraName, sRobotURDF));
 
     // Capture first image
-    std::shared_ptr<pb::ImageArray> imgs =
-        pb::ImageArray::Create();
+    std::shared_ptr<pb::ImageArray> imgs = pb::ImageArray::Create();
 
     // N cameras, each w*h in dimension, greyscale
     const size_t N = camera.NumChannels();
@@ -70,7 +69,7 @@ int main( int argc, char* argv[] )
         glColor3f(1,1,1);
 
         if(go) {
-            if( !camera.Capture( *imgs.get()) ) {
+            if( !camera.Capture( *imgs) ) {
                 run = false;
             }
 
