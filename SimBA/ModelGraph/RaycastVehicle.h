@@ -9,18 +9,17 @@ class RaycastVehicle : public ModelNode
 {
 public:
 
-  RaycastVehicle(std::string sName, double* dParameters, Eigen::Vector6d dPose){
+  RaycastVehicle(std::string sName, vector<double> dParameters, Eigen::Vector6d dPose){
     m_dParameters = dParameters;
     m_dPose = dPose;
     m_sName = sName;
   }
 
-  double* GetParameters(){
+  vector<double> GetParameters(){
     return m_dParameters;
   }
 
-  double* m_dParameters;
-
+  vector<double> m_dParameters;
 };
 
 

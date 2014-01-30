@@ -44,7 +44,7 @@
 
   <!--Sensors  -->
 
-  <Sensor Name="LCamera"
+<!--  <Sensor Name="LCamera"
           Type="Camera"
           Driver="Node2Cam"
           Size="512*384"
@@ -54,12 +54,12 @@
           Parent="Stick"
           Pose="0,-2,0,0,0,0"
           Location="@Proxy1"
-          Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml"/>
+          Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml"/>-->
 
 
   <!-- Lu: Must include this sensor if you use RobotProxy!
        RobotProxy needs this sensor to get the robot's pose information. -->	
-  <Sensor Name="ChassisVicon" Type="Vicon" Body="Chassis"/>
-  <Controller Name="MController" Mode="SimpleController"/>
+<!--  <Sensor Name="ChassisVicon" Type="Vicon" Body="Chassis"/>
+  <Controller Name="MController" Mode="SimpleController"/>-->
 
 </robot>

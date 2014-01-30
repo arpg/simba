@@ -77,6 +77,7 @@ public:
   void RenderGraph(RobotModel* m_RobotModel){
     for(unsigned int ii=0; ii<m_RobotModel->m_vParts.size(); ii++){
       ModelNode* part = m_RobotModel->m_vParts.at(ii);
+      cout<<"Now render "<<part->GetName()<<endl;
       m_Render.AddNode(part);
       Eigen::Vector6d ChildWorldPose;
       for (unsigned int ii = 0; ii < part->NumChildren(); ii++ ) {

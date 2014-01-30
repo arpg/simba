@@ -21,7 +21,7 @@ class bullet_vehicle{
 public:
 
   //constructor
-  bullet_vehicle(double* parameters,
+  bullet_vehicle(std::vector<double> parameters,
                  Eigen::Matrix4d dPose,
                  btDynamicsWorld* m_pDynamicsWorld){
 

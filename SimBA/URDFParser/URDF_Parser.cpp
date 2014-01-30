@@ -68,73 +68,76 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
 
   if(!sRobotType.compare("RaycastVehicle")){
     cout<<"[URDF_Parser] Try to build RaycastVehicle"<<endl;
-    std::vector<double> parameters;
-    parameters.resize(29);
+
+    std::vector<double> vParameters;
+    vParameters.resize(29);
     std::vector<double> position;
     std::vector<double> rotation;
-    while(pElement){
+
+    while(pElement)
+    {
       string sAttrName = pElement->Name();
 
-
       // Car paramters
-      if(!sAttrName.compare("param")){
+      if(!sAttrName.compare("param"))
+      {
         std::string param = pElement->Attribute("name");
         if(!param.compare("control delay")){
-          parameters[6] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[6] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("stiffness")){
-          parameters[12] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[12] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("susp conn height")){
-          parameters[11] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[11] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("max susp force")){
-          parameters[13] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[13] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("damp factor")){
-          parameters[16] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[16] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("exp damp factor")){
-          parameters[17] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[17] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("roll influence")){
-          parameters[18] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[18] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("steering coeff")){
-          parameters[19] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[19] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("max steering")){
-          parameters[20] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[20] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("max steering rate")){
-          parameters[21] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[21] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("accel offset")){
-          parameters[22] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[22] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("steering offset")){
-          parameters[23] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[23] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("stall torque coeff")){
-          parameters[24] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[24] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("torque speed slope")){
-          parameters[25] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[25] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("susp rest length")){
-          parameters[15] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[15] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("max susp travel")){
-          parameters[14] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[14] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("Magic B")){
-          parameters[26] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[26] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("Magic C")){
-          parameters[27] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[27] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!param.compare("Magic E")){
-          parameters[28] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[28] = GenNumFromChar(pElement->Attribute("value")).front();
         }
       }
 
@@ -142,16 +145,16 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       else if(!sAttrName.compare("body")){
         std::string body = pElement->Attribute("name");
         if(!body.compare("length")){
-          parameters[0] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[0] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!body.compare("width")){
-          parameters[1] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[1] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!body.compare("height")){
-          parameters[2] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[2] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!body.compare("mass")){
-          parameters[7] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[7] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!body.compare("position")){
           position = GenNumFromChar(pElement->Attribute("value"));
@@ -166,29 +169,36 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       else if(!sAttrName.compare("wheel")){
         std::string wheel = pElement->Attribute("name");
         if(!wheel.compare("radius")){
-          parameters[8] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[8] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!wheel.compare("width")){
-          parameters[9] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[9] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!wheel.compare("dyn friction")){
-          parameters[3] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[3] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!wheel.compare("slip coeff")){
-          parameters[5] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[5] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!wheel.compare("traction friction")){
-          parameters[10] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[10] = GenNumFromChar(pElement->Attribute("value")).front();
         }
         if(!wheel.compare("side friction")){
-          parameters[4] = GenNumFromChar(pElement->Attribute("value")).front();
+          vParameters[4] = GenNumFromChar(pElement->Attribute("value")).front();
         }
       }
+
+      pElement=pElement->NextSiblingElement();
     }
 
-    /// Build the car here.
-    //    m_RobotModel.SetBase();
+    Eigen::Vector6d dPose;
+    dPose<<0,0,0,0,0,1.5707;
+    RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,vParameters,dPose);
 
+    /// Build the car here.
+    m_mModelNodes[sRobotName] = pRaycastVehicle;
+
+    cout<<"[URDF Parser] Parse Car "<<sRobotName<<" Success."<<endl;
   }
 
   //////////////////////////////////////////
@@ -234,20 +244,20 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
         const char* sType = pElement->Attribute("type");
         if(strcmp(sType, "Box") ==0){
           BoxShape* pBox =new BoxShape(sBodyName,vDimesion[0],vDimesion[1],
-                                       vDimesion[2],iMass, 1,vPose);
+              vDimesion[2],iMass, 1,vPose);
           m_mModelNodes[pBox->GetName()] = pBox;
         }
         else if(strcmp(sType,"Cylinder")==0){
           CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimesion[0],
-                                                      vDimesion[1],iMass,1,
-                                                      vPose);
+              vDimesion[1],iMass,1,
+              vPose);
           m_mModelNodes[pCylinder->GetName()] = pCylinder;
         }
         cout<<"[RobotParser] Finish building body "<<sBodyName<<endl;
       }
 
       //////////////////////////////////////////
-      // ALL OF OUR SENSORS
+      // ALL OF OUR SENSORS BODIES
       //////////////////////////////////////////
 
       if(strcmp(sRootContent,"Sensor")==0){
@@ -564,6 +574,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
     std::cerr<<"[] I have no idea what I'm doing"<<std::endl;
     return false;
   }
+
   m_RobotModel.SetParts(GetModelNodes());
   cout<<"[ParseRobot] Finish"<<endl;
   return true;
