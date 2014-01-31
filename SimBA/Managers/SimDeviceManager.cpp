@@ -4,8 +4,9 @@
 /// CONSTRUCTOR
 ////////////////////////////////////////////////////////////////////////
 
-SimDeviceManager::SimDeviceManager(){
-
+SimDeviceManager::SimDeviceManager(SceneGraph::GLSceneGraph&  rSceneGraph)
+  :m_rSceneGraph(rSceneGraph)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -13,9 +14,9 @@ SimDeviceManager::SimDeviceManager(){
 ////////////////////////////////////////////////////////////////////////
 bool SimDeviceManager::InitFromXML(
     PhysicsEngine& rPhysWrapper,
-    GLSceneGraph& rSceneGraph,
     tinyxml2::XMLDocument& doc,
-    string sProxyName, string sPoseFile="NONE")
+    string sProxyName,
+    string sPoseFile="NONE")
 {
    m_SimpPoseController.Init(sPoseFile);
 
@@ -25,7 +26,7 @@ bool SimDeviceManager::InitFromXML(
 
     m_PhysWrapper = rPhysWrapper;
 
-    InitDevices(rSceneGraph);
+    InitAllDevices();
     cout<<"[SimDeviceManager] Init all Devices success!"<<endl;
     return true;
   }
@@ -36,13 +37,13 @@ bool SimDeviceManager::InitFromXML(
 }
 
 ////////////////////////////////////////////////////////////////////////
-void SimDeviceManager::InitDevices(SceneGraph::GLSceneGraph&  rSceneGraph){
+void SimDeviceManager::InitAllDevices(){
   for(unsigned int i = 0; i!= m_vSimDevices.size(); i++){
     SimDeviceInfo Device = m_vSimDevices[i];
     string sDeviceType = Device.m_sDeviceType;
 
     if(sDeviceType == "Camera"){
-      InitCamDevice(Device, Device.m_vModel[0], rSceneGraph);
+      InitCamDevice(Device, Device.m_vModel[0]);
     }
 
     if(sDeviceType == "GPS"){
@@ -61,10 +62,28 @@ void SimDeviceManager::InitDevices(SceneGraph::GLSceneGraph&  rSceneGraph){
   cout<<"[SimDeviceManager] Init all devices success. "<<endl;
 }
 
+
+////////////////////////////////////////////////////////////////////////
+void SimDeviceManager::InitDeviceByName(string sDeviceName)
+{
+  SimDeviceInfo Device = GetDeviceInfo(sDeviceName);
+  string sDeviceType = Device.m_sDeviceType;
+
+  if(sDeviceType == "Camera"){
+    InitCamDevice(Device, Device.m_vModel[0]);
+  }
+
+  if(sDeviceType == "GPS"){
+  }
+
+  if(sDeviceType == "Vicon"){
+    InitViconDevice(Device);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////
 
-void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel,
-                                     SceneGraph::GLSceneGraph&  rSceneGraph)
+void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel)
 {
   string sCameraName = Device.m_sDeviceName;
   int iFPS = Device.m_iFPS;
@@ -83,17 +102,17 @@ void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel,
     if(sSensorName == "Gray" + sCameraName)           //---------- init gray Cam
     {
       cout<<"[SimDeviceManager] try to init Gray camera, name is "<<sCameraName<<endl;
-      pSimCam->init(initPose, sSensorName, eSimCamLuminance, iFPS, sCameraModel, rSceneGraph, m_PhysWrapper );
+      pSimCam->init(initPose, sSensorName, eSimCamLuminance, iFPS, sCameraModel, m_rSceneGraph, m_PhysWrapper );
     }
     else if(sSensorName == "RGB" + sCameraName)       //---------- init RGB Cam
     {
       cout<<"[SimDeviceManager] try to init RGB camera, name is "<<sSensorName<<endl;
-      pSimCam->init(initPose, sSensorName, eSimCamRGB,  iFPS, sCameraModel, rSceneGraph, m_PhysWrapper );
+      pSimCam->init(initPose, sSensorName, eSimCamRGB,  iFPS, sCameraModel, m_rSceneGraph, m_PhysWrapper );
     }
     else if(sSensorName == "Depth" + sCameraName)     //---------- init Depth Cam
     {
       cout<<"[SimDeviceManager] try to init Depth camera, name is "<<sSensorName<<endl;
-      pSimCam->init(initPose,sSensorName,eSimCamLuminance|eSimCamDepth, iFPS, sCameraModel, rSceneGraph, m_PhysWrapper );
+      pSimCam->init(initPose,sSensorName,eSimCamLuminance|eSimCamDepth, iFPS, sCameraModel, m_rSceneGraph, m_PhysWrapper );
     }
 
     m_SimCamList.insert(pair<string,SimCam*>(sSensorName,pSimCam));
@@ -168,6 +187,23 @@ void SimDeviceManager::UpdateAllDevices()
   }
 
 }
+
+
+SimDeviceInfo SimDeviceManager::GetDeviceInfo(string sDeviceName)
+{
+  for(unsigned int i=0;i!=m_vSimDevices.size(); i++)
+  {
+    SimDeviceInfo& Device = m_vSimDevices[i];
+    if(sDeviceName == Device.m_sDeviceName )
+    {
+      return m_vSimDevices[i];
+    }
+  }
+
+  cout<<"[SimDeviceManager] Fatal Error, Cannot get device info with name "<<sDeviceName<<endl;
+  exit(-1);
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 /// GET POINTERS TO EVERY DEVICE

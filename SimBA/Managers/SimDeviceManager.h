@@ -15,6 +15,7 @@ public:
   PhysicsEngine                      m_PhysWrapper;
   URDF_Parser                        m_Parser;
   vector<SimDeviceInfo>              m_vSimDevices;
+  SceneGraph::GLSceneGraph&          m_rSceneGraph;
 
   /// <DeviceName, SimGPS*>
   map<string, SimGPS*>               m_SimGPSList;
@@ -27,19 +28,20 @@ public:
   PoseController                     m_SimpPoseController;
 
   /// Constructor
-  SimDeviceManager();
+  SimDeviceManager(SceneGraph::GLSceneGraph& rSceneGraph);
 
   /// Initializers
-  bool InitFromXML(PhysicsEngine& rPhysWrapper, GLSceneGraph& rSceneGraph,
-            tinyxml2::XMLDocument& doc, string sProxyName, string sPoseFile);
-  void InitDevices(SceneGraph::GLSceneGraph&  rSceneGraph);
-  void InitCamDevice(SimDeviceInfo& Device, string sCameraModel,
-                     SceneGraph::GLSceneGraph&  rSceneGraph);
+  bool InitFromXML(PhysicsEngine& rPhysWrapper, XMLDocument& doc, string sProxyName, string sPoseFile);
+  void InitAllDevices();
+  void InitDeviceByName(string sDeviceName);
+  void InitCamDevice(SimDeviceInfo& Device, string sCameraModel);
   void InitViconDevice(SimDeviceInfo& Device);
   void InitController(SimDeviceInfo& Device);
 
   /// Update devices
   void UpdateAllDevices();
+
+  SimDeviceInfo GetDeviceInfo(string sDeviceName);
 
   /// Get pointers to all devices
   SimpleController* GetSimpleController(string name);

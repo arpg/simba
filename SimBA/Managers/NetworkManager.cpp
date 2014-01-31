@@ -4,10 +4,9 @@
 ////////////////////////////////////////////////////////////////////////
 /// INITIALIZE NODE NETWORK AND ALL DEVICES
 ////////////////////////////////////////////////////////////////////////
-
-bool NetworkManager::InitNetwork(string sProxyName, RobotsManager* pRobotsManager, string sServerName,
-                                 int verbocity){
-
+// The following try to init Node for Network Manager
+bool NetworkManager::Init( string sProxyName, string sServerName, int verbocity)
+{
   // 1, check if we need to init Node for RobotProxy
   m_sServerName = sServerName;
   if(m_sServerName == "WithoutNetwork")
@@ -16,46 +15,60 @@ bool NetworkManager::InitNetwork(string sProxyName, RobotsManager* pRobotsManage
   }
 
   // 2. init node of Robot Proxy and provide relative rpc method for Robot code
-  m_sLocalSimName = sProxyName;
-  m_verbocity = verbocity;
-  m_SubscribeNum = 0;
-  m_pRobotsManager = pRobotsManager;
+  m_sLocalSimName  = sProxyName;
+  m_verbocity      = verbocity;
+  m_SubscribeNum   = 0;
 
   m_Node.set_verbocity(m_verbocity ); // make some noise on errors
-  m_Node.init(m_sLocalSimName);
-  cout<<"[NetworkManager] Init Proxy Node '"<<m_sLocalSimName<<"' success!"<<endl;
+  if( m_Node.init(m_sLocalSimName)== true)
+  {
+    cout<<"[NetworkManager] Init Proxy Node '"<<m_sLocalSimName<<"' success!"<<endl;
+    return true;
+  }
+  else
+  {
+    cout<<"[NetworkManager] Init Proxy Node '"<<m_sLocalSimName<<"' Fail !"<<endl;
+    return false;
+  }
+}
 
-  // 3. check if we need to connect to StateKeeper. If yes, we need to
+
+////////////////////////////////////////////////////////////////////////
+// The following is only used when we need to sync robot state with statekeeper.
+bool NetworkManager::PubRobotIfNeeded(RobotsManager* pRobotsManager)
+{
+  // check if we need to connect to StateKeeper. If yes, we need to
   // advertise Robot State and provide rpc methods for StateKeeper.
+
   if(m_sServerName != "WithoutStateKeeper")
   {
+    m_pRobotsManager = pRobotsManager;
+
     m_Node.advertise("RobotState");
 
     bool bStatus = RegisterRobotProxyWithStateKeeper();
     if(bStatus == false)
     {
-      cout<<"[NetworkManager] Cannot register RobotProxy '"<<m_sLocalSimName<<"' in "<<sServerName<<". Please make sure "<<m_sServerName<<" is running!"<<endl;
+      cout<<"[NetworkManager] Cannot register RobotProxy '"<<m_sLocalSimName<<"' in "<<m_sServerName<<". Please make sure "<<m_sServerName<<" is running!"<<endl;
       return false;
     }
     m_Node.provide_rpc("AddRobotByURDF",&_AddRobotByURDF, this);
     m_Node.provide_rpc("DeleteRobot",&_DeleteRobot, this);
   }
 
-  cout<<"[NetworkManager] init network "<<m_sLocalSimName<<" success. "<<endl;
+  cout<<"[NetworkManager] Init Robot Network "<<m_sLocalSimName<<" for statekeeper success."<<endl;
   return true;
 }
 
 
 ////////////////////////////////////////////////////////////////////////
-
 // Initializes all devices attached to the robot into Node. Notice that
 // devices that need to subscribe to the robot (e.g. controllers) are not
 // initialized here, but are rather initialized in RobotProxy.
 // Notice that if we run in 'with StateKeeper' mode, we need to call this function after
 // the main robot has gotten its initial pose from StateKeeper, and been built
 // into the ModelGraph.
-
-void NetworkManager::CheckIfInitDevices(SimDeviceManager* pSimDeviceManager)
+void NetworkManager::PubRegisterDevicesIfNeeded(SimDeviceManager* pSimDeviceManager)
 {
   // 1. check if we need to init device in node.
   if(m_sServerName=="WithoutNetwork")
@@ -108,16 +121,15 @@ void NetworkManager::CheckIfInitDevices(SimDeviceManager* pSimDeviceManager)
   }
 }
 
+
 ////////////////////////////////////////////////////////////////////////
 /// REGISTER AND DELETE ROBOTS/DEVICES FROM THE NETWORK
 /// Used in StateKeeper and RobotProxy
 ////////////////////////////////////////////////////////////////////////
-
 // Register Robot Proxy in StateKeeper.
 // 1. subscribe to WorldState Topc.
 // 2. Send Robot's URDF file to StateKeeper.
 // 3. Receive init pose for Robot.
-
 bool NetworkManager::RegisterRobotProxyWithStateKeeper()
 {
   // 1. Subscribe to StateKeeper World state topic
@@ -198,7 +210,6 @@ bool NetworkManager::RegisterRobotProxyWithStateKeeper()
 ////////////////////////////////////////////////////////////////////////
 
 /// add or delete robot in Network Manager
-
 void NetworkManager::AddRobotByURDF(RobotProxyAddNewRobotReqMsg& mRequest, RobotProxyAddNewRobotRepMsg& mReply)
 {
   // set reply message for StateKeeper
@@ -370,14 +381,38 @@ void NetworkManager::RegisterCamDevice(RegisterNode2CamReqMsg& mRequest,Register
   m_SubscribeNum = m_SubscribeNum +1;
 }
 
+// Return FALSE if device is invalid. Otherwise return device name.
+string NetworkManager::CheckURI(string sURI)
+{
+  // Find device in device manager
+  string sDeviceName;
+
+  // check if device is valid
+
+  // return device name if it is valid
+}
+
 void NetworkManager::RegisterCamDeviceByURI(RegisterNode2CamReqMsg& mRequest,RegisterNode2CamRepMsg & mReply)
 {
   cout<<"[NetworkManager] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
-  //  mRequest
 
-  mReply.set_time_step(m_iTimeStep);
-  mReply.set_regsiter_flag(1);
-  m_SubscribeNum = m_SubscribeNum +1;
+  string sDeviceName = CheckURI(mRequest.uri());
+  if(sDeviceName!="FALSE")
+  {
+    // Init Device.
+    m_pSimDeviceManager->InitDeviceByName(sDeviceName);
+
+    mReply.set_time_step(m_iTimeStep);
+    mReply.set_regsiter_flag(1);
+    m_SubscribeNum = m_SubscribeNum +1;
+    cout<<"HAL reuqest for use "<<sDeviceName<<". Device Ready!"<<endl;
+  }
+  else
+  {
+    mReply.set_time_step(m_iTimeStep);
+    mReply.set_regsiter_flag(0);
+    cout<<"HAL reuqest for use "<<sDeviceName<<". Device Invalid!"<<endl;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -402,7 +437,6 @@ void NetworkManager::RegisterControllerDevice(RegisterControllerReqMsg& mRequest
 
 bool NetworkManager::UpdateNetWork()
 {
-
   if(m_sServerName == "WithoutNetwork")
   {
     return true;
@@ -440,22 +474,23 @@ bool NetworkManager::UpdateNetWork()
     SimDeviceInfo Device = m_pSimDeviceManager->m_vSimDevices[i];
     string sDeviceType = Device.m_sDeviceType;
     string sDeviceName = Device.m_sDeviceName;
+    bool bDeviceOn = Device.m_bDeviceOn;
 
-    if( sDeviceType == "Camera")                      // update Camera info
+    if( sDeviceType == "Camera" && bDeviceOn == true)                      // update Camera info
     {
       if( PublishSimCamBySensor(sDeviceName) == false)
       {
         return false;
       }
     }
-    else if(sDeviceType == "GPS")                     // update GPS info
+    else if(sDeviceType == "GPS" && bDeviceOn == true)                     // update GPS info
     {
       if(PublishGPS(sDeviceName) == false )
       {
         return false;
       }
     }
-    else if(sDeviceType == "Controller")
+    else if(sDeviceType == "Controller" && bDeviceOn == true)
     {
       if(ReceiveControlInfo(sDeviceName) == false)  // update controller info
       {
@@ -539,7 +574,6 @@ bool NetworkManager::ReceiveCarControllerInfo()
 
 // publish SimCam by sensor. e.g. one simcam may have RGB and Depth sensor that provide us images.
 // here we will publish image from all these sensor.
-
 bool NetworkManager::PublishSimCamBySensor(string sCamName)
 {
   Node2CamMsg NodeCamMsg;

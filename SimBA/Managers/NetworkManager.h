@@ -22,11 +22,13 @@ public:
 
   /// INITIALIZE NODE NETWORK AND ALL DEVICES
   //-----------------------------------------------------
-  bool InitNetwork(string sProxyName,
-                   RobotsManager* pRobotsManager,  string sServerName,
+  bool Init(string sProxyName,
+                   string sServerName,
                    int verbocity=0);
 
-  void CheckIfInitDevices(SimDeviceManager* pSimDeviceManager);
+  bool PubRobotIfNeeded(RobotsManager* pRobotsManager);
+
+  void PubRegisterDevicesIfNeeded(SimDeviceManager* pSimDeviceManager);
 
   /// REGISTER AND DELETE ROBOTS FROM THE NETWORK
   //-----------------------------------------------------
@@ -50,6 +52,8 @@ public:
 
   void RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
                                 RegisterControllerRepMsg & mReply);
+
+  string CheckURI(string sURI);
 
   /// UPDATE AND PUBLISH INFO
   //-----------------------------------------------------

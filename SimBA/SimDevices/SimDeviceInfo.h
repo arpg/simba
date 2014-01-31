@@ -11,16 +11,22 @@ using namespace std;
 class SimDeviceInfo
 {
 public:
-    string           m_sDeviceName;    // device name
-    string           m_sDeviceType;    // name for device type
-    string           m_sDeviceMode;
-    string           m_sBodyName;
-    string           m_sRobotName;
-    Eigen::Vector6d  m_vPose;          // init pose of camera
-    int              m_iFPS;
-    vector<string>   m_vSensorList;  // name for sensor of the device
-    vector<string>   m_vModel;       // path of model.xml file for the sensor
+  SimDeviceInfo()
+  {
+    m_bDeviceOn = false;
+  }
 
+
+  string           m_sDeviceName;    // device name
+  string           m_sDeviceType;    // name for device type
+  string           m_sDeviceMode;
+  string           m_sBodyName;
+  string           m_sRobotName;
+  Eigen::Vector6d  m_vPose;          // init pose of camera
+  int              m_iFPS;
+  vector<string>   m_vSensorList;    // name for sensor of the device
+  vector<string>   m_vModel;         // path of model.xml file for the sensor
+  bool             m_bDeviceOn;      // Mark if device is on or not. By default it is off
 };
 
 
