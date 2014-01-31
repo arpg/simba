@@ -10,23 +10,27 @@ class bullet_cube: public bullet_shape{
 
 public:
   //constructor
-  bullet_cube(double x_length, double y_length, double z_length, double dMass,
-             double dRestitution, Eigen::Matrix4d dPose){
+  bullet_cube(ModelNode* mnBox){
+    BoxShape* pBox = (BoxShape*) mnBox;
+    double x_length = pBox->m_dBounds[0];
+    double y_length = pBox->m_dBounds[1];
+    double z_length = pBox->m_dBounds[2];
+    double dMass = pBox->GetMass();
+    double dRestitution = pBox->GetRestitution();
+    Eigen::Matrix4d dPose;
+    dPose = pBox->GetPoseMatrix();
+
     btVector3 bounds = btVector3(x_length*.5, y_length*.5, z_length*.5);
     bulletShape = new btBoxShape(bounds);
-
-    bulletMotionState = new btDefaultMotionState(btTransform::getIdentity());
+    bulletMotionState = new NodeMotionState( *mnBox );
     bool isDynamic = ( dMass != 0.f );
     btVector3 localInertia( 0, 0, 0 );
     if( isDynamic ){
         bulletShape->calculateLocalInertia( dMass, localInertia );
     }
-
     btRigidBody::btRigidBodyConstructionInfo  cInfo(dMass, bulletMotionState,
                                                     bulletShape, localInertia);
     bulletBody = new btRigidBody(cInfo);
-//    double dContactProcessingThreshold = 0.1;
-//    bulletBody->setContactProcessingThreshold( dContactProcessingThreshold );
     bulletBody->setRestitution( dRestitution );
     SetPose(dPose);
   }

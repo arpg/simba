@@ -7,8 +7,14 @@
 /// Bullet Shapes.
 /////////////////////////////////////////
 
+// Our ModelNode Objects
+#include <ModelGraph/Shape.h>
+#include <ModelGraph/RaycastVehicle.h>
+
+// Our Eigen Helpers
 #include <ModelGraph/EigenHelpers.h>
 
+#include <ModelGraph/PhysicsEngineHelpers.h>
 
 class bullet_shape{
 public:
@@ -53,7 +59,7 @@ public:
     return bulletBody;
   }
 
-  btDefaultMotionState* getBulletMotionStatePtr(){
+  NodeMotionState* getBulletMotionStatePtr(){
     return bulletMotionState;
   }
 
@@ -61,7 +67,7 @@ public:
 protected:
   btCollisionShape* bulletShape;
   btRigidBody* bulletBody;
-  btDefaultMotionState* bulletMotionState;
+  NodeMotionState* bulletMotionState;
 
 };
 

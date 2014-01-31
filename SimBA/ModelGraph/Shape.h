@@ -105,6 +105,27 @@ public:
   double m_dHeight;
 };
 
+////////////////////
+
+class SphereShape : public Shape
+{
+public:
+  SphereShape(std::string sName, double dRadius,
+                double dMass, double dRestitution,
+                std::vector<double> dPose):
+    m_dRadius(dRadius){
+    SetName(sName);
+    SetMass(dMass);
+    SetRestitution(dRestitution);
+    SetPose(dPose);
+    SetScale(1);
+  }
+
+  double m_dRadius;
+};
+
+
+
 
 #endif // SHAPE_H
 

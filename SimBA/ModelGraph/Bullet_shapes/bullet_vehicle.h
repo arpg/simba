@@ -7,6 +7,8 @@
 #include <bullet/LinearMath/btAlignedAllocator.h>
 #include "bullet/BulletDynamics/Vehicle/btRaycastVehicle.h"
 
+#include "ModelGraph/Bullet_shapes/bullet_shape.h"
+
 /////////////////////////////////////////
 /// \brief The bullet_vehicle class
 /// A great tutorial on this construction is found at the below link:
@@ -21,9 +23,12 @@ class bullet_vehicle{
 public:
 
   //constructor
-  bullet_vehicle(std::vector<double> parameters,
-                 Eigen::Matrix4d dPose,
-                 btDynamicsWorld* m_pDynamicsWorld){
+  bullet_vehicle(ModelNode* mnVehicle, btDynamicsWorld* m_pDynamicsWorld){
+    RaycastVehicle* pVehicle = (RaycastVehicle*) mnVehicle;
+
+    std::vector<double> parameters = pVehicle->GetParameters();
+    Eigen::Matrix4d dPose;
+    dPose = pVehicle->GetPoseMatrix();
 
     ///////
     //Create our Collision Objects
@@ -39,7 +44,7 @@ public:
     if (isDynamic){
       bulletShape->calculateLocalInertia(parameters[Mass],localInertia);
     }
-    bulletMotionState = new btDefaultMotionState(startTransform);
+    bulletMotionState = new NodeMotionState(*mnVehicle);
     btRigidBody::btRigidBodyConstructionInfo cInfo(parameters[Mass],
                                                    bulletMotionState,
                                                    bulletShape,
@@ -137,7 +142,7 @@ public:
     return bulletBody;
   }
 
-  btDefaultMotionState* getBulletMotionStatePtr(){
+  NodeMotionState* getBulletMotionStatePtr(){
     return bulletMotionState;
   }
 
@@ -150,7 +155,7 @@ private:
   //A compound shape to hold all of our collision shapes.
   btCollisionShape* bulletShape;
   btRigidBody* bulletBody;
-  btDefaultMotionState* bulletMotionState;
+  NodeMotionState* bulletMotionState;
   btRaycastVehicle* bulletVehicle;
 
 

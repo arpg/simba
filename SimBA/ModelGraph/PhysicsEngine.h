@@ -3,6 +3,14 @@
 
 #include "PhysicsEngineHelpers.h"
 
+//All of our Bullet Objects
+//bullet_shape holds the header files Shapes.h and RaycastVehicle.h
+#include <ModelGraph/Bullet_shapes/bullet_shape.h>
+#include <ModelGraph/Bullet_shapes/bullet_cube.h>
+#include <ModelGraph/Bullet_shapes/bullet_cylinder.h>
+#include <ModelGraph/Bullet_shapes/bullet_sphere.h>
+#include <ModelGraph/Bullet_shapes/bullet_vehicle.h>
+
 //////////////////////////////////////////////////////////
 ///
 /// PhysicsEngine class
@@ -78,10 +86,7 @@ public:
      *ADDING A RAYCAST VEHICLE
      **********************************************************************/
     if(dynamic_cast<RaycastVehicle*>(pItem)!=NULL){
-      RaycastVehicle* pVehicle = (RaycastVehicle*) pItem;
-      bullet_vehicle btRayVehicle(pVehicle->GetParameters(),
-                                  pVehicle->GetPoseMatrix(),
-                                  m_pDynamicsWorld.get());
+      bullet_vehicle btRayVehicle( pItem, m_pDynamicsWorld.get());
       CollisionShapePtr pShape( btRayVehicle.getBulletShapePtr() );
       MotionStatePtr pMotionState( btRayVehicle.getBulletMotionStatePtr() );
       RigidBodyPtr body( btRayVehicle.getBulletBodyPtr() );
@@ -92,7 +97,7 @@ public:
       pEntity->m_pMotionState = pMotionState;
       pEntity->m_pVehicle = vehicle;
       int id = m_mRayVehicles.size();
-      m_mRayVehicles[pVehicle->GetName()] = pEntity;
+      m_mRayVehicles[pItem->GetName()] = pEntity;
     }
 
     /*********************************************************************
@@ -103,11 +108,7 @@ public:
 
       //Box
       if (dynamic_cast<BoxShape*>( pNodeShape ) != NULL) {
-        BoxShape* pBox = (BoxShape*) pNodeShape;
-        bullet_cube btBox(pBox->m_dBounds[0], pBox->m_dBounds[1],
-                          pBox->m_dBounds[2],
-                          pBox->GetMass(), pBox->GetRestitution(),
-                          pBox->GetPoseMatrix());
+        bullet_cube btBox(pItem);
         CollisionShapePtr pShape( btBox.getBulletShapePtr() );
         MotionStatePtr pMotionState( btBox.getBulletMotionStatePtr() );
         RigidBodyPtr body( btBox.getBulletBodyPtr() );
@@ -118,17 +119,12 @@ public:
         pEntity->m_pRigidBody = body;
         pEntity->m_pShape = pShape;
         pEntity->m_pMotionState = pMotionState;
-        m_mShapes[pBox->GetName()] = pEntity;
-        PrintAllShapes();
+        m_mShapes[pItem->GetName()] = pEntity;
       }
 
       //Cylinder
       else if (dynamic_cast<CylinderShape*>( pNodeShape ) != NULL) {
-        CylinderShape* pCylinder = (CylinderShape*) pNodeShape;
-        bullet_cylinder btCylinder(pCylinder->m_dRadius, pCylinder->m_dHeight,
-                                   pCylinder->GetMass(),
-                                   pCylinder->GetRestitution(),
-                                   pCylinder->GetPoseMatrix());
+        bullet_cylinder btCylinder(pItem);
         CollisionShapePtr pShape( btCylinder.getBulletShapePtr() );
         MotionStatePtr pMotionState( btCylinder.getBulletMotionStatePtr() );
         RigidBodyPtr body( btCylinder.getBulletBodyPtr() );
@@ -139,8 +135,7 @@ public:
         pEntity->m_pRigidBody = body;
         pEntity->m_pShape = pShape;
         pEntity->m_pMotionState = pMotionState;
-        m_mShapes[pCylinder->GetName()] = pEntity;
-        PrintAllShapes();
+        m_mShapes[pItem->GetName()] = pEntity;
       }
     }
 

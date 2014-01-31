@@ -4,22 +4,17 @@
 #include <math.h>
 #include <boost/shared_ptr.hpp>
 
-// Our ModelNode Objects
-#include <ModelGraph/Shape.h>
-#include <ModelGraph/Constraint.h>
-#include <ModelGraph/RaycastVehicle.h>
-
 // Bullet libraries
 #include <bullet/LinearMath/btIDebugDraw.h>
 #include <bullet/LinearMath/btAlignedAllocator.h>
 #include <bullet/btBulletDynamicsCommon.h>
 
-//All of our Bullet Objects
-#include <ModelGraph/Bullet_shapes/bullet_shape.h>
-#include <ModelGraph/Bullet_shapes/bullet_cube.h>
-#include <ModelGraph/Bullet_shapes/bullet_cylinder.h>
-#include <ModelGraph/Bullet_shapes/bullet_sphere.h>
-#include <ModelGraph/Bullet_shapes/bullet_vehicle.h>
+//Our constraints
+#include <ModelGraph/Constraint.h>
+
+//SceneGraphMotionState (for tracking our shapes)
+#include <SceneGraph/SceneGraph.h>
+#include <pangolin/pangolin.h>
 
 enum Compounds{
   VEHICLE = 0
@@ -31,52 +26,40 @@ enum Compounds{
 ///
 //////////////////////////////////////////////////////////
 
-
 class NodeMotionState : public btMotionState {
 public:
-  NodeMotionState(ModelNode& obj, Eigen::Vector6d& wp)
+  NodeMotionState(ModelNode& obj)
     : object(obj){
-    m_WorldPose = _Cart2T(wp);
-  }
-
-  NodeMotionState(ModelNode& obj, Eigen::Matrix4d& wp)
-    : object(obj), m_WorldPose(wp){
   }
 
   virtual void getWorldTransform(btTransform &worldTrans) const {
-    worldTrans = toBullet( m_WorldPose);
+    worldTrans = toBullet(object.GetPoseMatrix());
   }
 
   virtual void setWorldTransform(const btTransform &worldTrans) {
-    if (dynamic_cast<Shape*>(&object))
-    {
+    // I think this just gives our wheels the illusion of spinning....
+    // Will find out soonish.
+    if (dynamic_cast<Shape*>(&object)){
       Shape* pShape = (Shape*) &object;
-      if (dynamic_cast<CylinderShape*>(pShape))
-      {
+      if (dynamic_cast<CylinderShape*>(pShape)){
         Eigen::Vector6d temp;
         temp << 0, 0, 0, M_PI / 2, 0, 0;
         Eigen::Matrix4d rot;
         rot = toEigen(worldTrans);
         rot = rot*_Cart2T(temp);
-        m_WorldPose = rot;
-        object.SetPose(m_WorldPose);
+        object.SetPose(rot);
       }
-      else
-      {
-        m_WorldPose = toEigen(worldTrans);
-        object.SetPose(m_WorldPose);
+      else{
+        object.SetPose(toEigen(worldTrans));
       }
     }
-    else
-    {
-      m_WorldPose = toEigen(worldTrans);
-      object.SetPose(m_WorldPose);
+    else{
+      object.SetPose(toEigen(worldTrans));
     }
   }
 
-
   ModelNode& object;
-  Eigen::Matrix4d m_WorldPose;
+
 };
 
 //////////////////////////////////////////////////////////
@@ -91,9 +74,7 @@ public:
 
 class DebugDraw : public btIDebugDraw
 {
-
   int m_debugMode;
-
 public:
 
   virtual void drawLine(const btVector3& from, const btVector3& to,
@@ -232,7 +213,7 @@ public:
 
 typedef  boost::shared_ptr<btCollisionShape>            CollisionShapePtr;
 typedef  boost::shared_ptr<btRigidBody>                 RigidBodyPtr;
-typedef  boost::shared_ptr<btMotionState>               MotionStatePtr;
+typedef  boost::shared_ptr<NodeMotionState>             MotionStatePtr;
 typedef  boost::shared_ptr<btRaycastVehicle>            VehiclePtr;
 
 ///////////////////////////////////////////////////////

@@ -10,16 +10,22 @@ class bullet_cylinder : public bullet_shape{
 
 public:
   //constructor
-  bullet_cylinder(double dRadius, double dHeight, double dMass, double dRestitution,
-                  Eigen::Matrix4d dPose){
+  bullet_cylinder(ModelNode* mnCylinder){
+    CylinderShape* pCylinder = (CylinderShape*) mnCylinder;
+    double dRadius = pCylinder->m_dRadius;
+    double dHeight = pCylinder->m_dHeight;
+    double dMass = pCylinder->GetMass();
+    double dRestitution = pCylinder->GetRestitution();
+    Eigen::Matrix4d dPose;
+    dPose = pCylinder->GetPoseMatrix();
+
     bulletShape = new btCylinderShapeZ(btVector3(dRadius, dRadius, dHeight/2));
-    bulletMotionState = new btDefaultMotionState(btTransform::getIdentity());
+    bulletMotionState = new NodeMotionState( *mnCylinder );
     bool isDynamic = ( dMass != 0.f );
     btVector3 localInertia( 0, 0, 0 );
     if( isDynamic ){
         bulletShape->calculateLocalInertia( dMass, localInertia );
     }
-
     btRigidBody::btRigidBodyConstructionInfo  cInfo(dMass, bulletMotionState,
                                                     bulletShape, localInertia);
     bulletBody = new btRigidBody(cInfo);

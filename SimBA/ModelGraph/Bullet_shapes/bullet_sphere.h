@@ -9,17 +9,21 @@ class bullet_sphere : public bullet_shape{
 
 public:
   //constructor
-  bullet_sphere(double dRadius, double dMass, double dRestitution,
-                Eigen::Matrix4d dPose){
-    bulletShape = new btSphereShape(dRadius);
+  bullet_sphere(ModelNode* mnSphere){
+    SphereShape* pSphere = (SphereShape*) mnSphere;
+    double dRadius = pSphere->m_dRadius;
+    double dMass = pSphere->GetMass();
+    double dRestitution = pSphere->GetRestitution();
+    Eigen::Matrix4d dPose;
+    dPose = pSphere->GetPoseMatrix();
 
-    bulletMotionState = new btDefaultMotionState(btTransform::getIdentity());
+    bulletShape = new btSphereShape(dRadius);
+    bulletMotionState = new NodeMotionState(*mnSphere);
     bool isDynamic = ( dMass != 0.f );
     btVector3 localInertia( 0, 0, 0 );
     if( isDynamic ){
         bulletShape->calculateLocalInertia( dMass, localInertia );
     }
-
     btRigidBody::btRigidBodyConstructionInfo  cInfo(dMass, bulletMotionState,
                                                     bulletShape, localInertia);
     bulletBody = new btRigidBody(cInfo);
