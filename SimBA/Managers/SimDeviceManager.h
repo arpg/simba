@@ -12,9 +12,9 @@ class SimDeviceManager
 {
 
 public:
-  PhysicsEngine                  m_rPhysWrapper;
-  URDF_Parser                     m_Parser;
-  vector<SimDeviceInfo>           m_SimDevices;
+  PhysicsEngine                      m_PhysWrapper;
+  URDF_Parser                        m_Parser;
+  vector<SimDeviceInfo>              m_vSimDevices;
 
   /// <DeviceName, SimGPS*>
   map<string, SimGPS*>               m_SimGPSList;
@@ -29,7 +29,7 @@ public:
   SimDeviceManager();
 
   /// Initializers
-  bool Init(PhysicsEngine& rPhysWrapper, GLSceneGraph& rSceneGraph,
+  bool InitFromURDF(PhysicsEngine& rPhysWrapper, GLSceneGraph& rSceneGraph,
             tinyxml2::XMLDocument& doc, string sProxyName);
   void InitDevices(SceneGraph::GLSceneGraph&  rSceneGraph);
   void InitCamDevice(SimDeviceInfo& Device, string sCameraModel,
@@ -45,7 +45,6 @@ public:
   SimCam* GetSimCam(string name);
   SimGPS* GetSimGPS(string name);
   SimVicon* GetSimVecon(string name);
-
 };
 
 #endif // SIMDEVICEMANAGER_H

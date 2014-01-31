@@ -34,7 +34,7 @@ public:
   URDF_Parser();
 
   // Parses the world for the mesh and conditions.
-  bool ParseWorld(const char* filename, WorldManager& mWorldManager);
+  bool ParseWorld(XMLDocument& doc, WorldManager& mWorldManager);
 
   // ParseRobot really parses each of the robot parts, and then generates a set
   // of commands that the PhysicsEngine can use to create bullet objects.
@@ -48,15 +48,19 @@ public:
 
   void ParseSensorShape(string sRobotName, XMLElement *pElement );
 
+  bool ParseCommandLineForPickSensor(string sCommandLine);
+
+  vector<string> GetScemeFromString(string sCommandLine);
+
   // ParseDevices uses the information given in the Robot.xml file to create the
   // sensor views that we see later in the Sim.
   bool ParseDevices(XMLDocument& doc,
-                    vector<SimDeviceInfo>& m_vSimDeviceInfo,
+                    vector<SimDeviceInfo>& rvSimDeviceInfo,
                     string sProxyName);
 
   // This method is used in StateKeeper to initialize the position of every
   // object in the RobotProxy.
-  bool ParseWorldForInitialPoses(const char* filename,
+  bool ParseWorldForInitRobotPose(const char* filename,
                                  vector<Eigen::Vector6d>& vRobotInitPose);
 
   std::vector<ModelNode*> GetModelNodes();

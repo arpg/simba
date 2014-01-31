@@ -40,26 +40,21 @@ public:
   ///////////////////////////////////////////////////////////////////
   //member variables
   std::string                 m_sLocalSimName;
-  std::string                 m_sRobotURDFFile;
-  std::string                 m_sWorldURDFFile;
-
   ModelGraphBuilder           m_Scene;
-  SimRobot*                   m_pMainRobot;            // user's robot. will be delete in final version of robot LocalSim (as we are not going to key control main robot in LocalSim)
+  SimRobot*                   m_pMainRobot;         // user's robot. will be delete in final version of robot LocalSim (as we are not going to key control main robot in LocalSim)
   WorldManager                m_WorldManager;
   SimDeviceManager            m_SimDeviceManager;
   RobotsManager               m_RobotManager;
   NetworkManager              m_NetworkManager;
   PoseController              m_SimpPoseController;
-  hal::node                   m_Node;
   URDF_Parser                 m_Parser;
 
   /// Constructor
-  LocalSim(
-      const string &sLocalSimName,
-      const std::string& sRobotURDF,
-      const std::string& sWorldURDF,
-      const std::string& sServerName,
-      const std::string& sPoseFileName);
+  LocalSim( const string &sLocalSimName,
+            const std::string& sRobotURDF,
+            const std::string& sWorldURDF,
+            const std::string& sServerName,
+            const std::string& sPoseFileName);
 
   ///Functions
   void InitReset();

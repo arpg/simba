@@ -10,16 +10,9 @@ URDF_Parser::URDF_Parser(){
 ////////////////////////////////////////////////////////////
 /// PARSE WORLD.XML IN ROBOTPROXY
 ////////////////////////////////////////////////////////////
-
-bool URDF_Parser::ParseWorld(const char* filename,
-                             WorldManager& mWorldManager){
-  XMLDocument doc;
-  if(doc.LoadFile(filename) !=0){
-    printf("Cannot open %s\n", filename);
-    return false;
-  }
-
-  XMLElement *pParent=doc.RootElement();
+bool URDF_Parser::ParseWorld(XMLDocument& pDoc, WorldManager& mWorldManager)
+{
+  XMLElement *pParent=pDoc.RootElement();
   XMLElement *pElement=pParent->FirstChildElement();
 
   // read high level parent (root parent)
@@ -53,18 +46,15 @@ bool URDF_Parser::ParseWorld(const char* filename,
 /// The name of any robot body is: BodyName@RobotName@ProxyName
 /// The name of any robot joint is: JointName@RobotName@ProxyName
 ////////////////////////////////////////////////////////////
-
-bool URDF_Parser::ParseRobot(XMLDocument* doc,
-                             RobotModel& m_RobotModel,
+bool URDF_Parser::ParseRobot(XMLDocument* pDoc,
+                             RobotModel& rRobotModel,
                              string sProxyName){
-
   cout<<"[ParseRobot] Start Parsing Robot"<<endl;
-  XMLElement *pParent=doc->RootElement();
+  XMLElement *pParent=pDoc->RootElement();
   string sRobotName(GetAttribute(pParent, "name"));
   sRobotName = sRobotName+"@"+sProxyName;
-  m_RobotModel.SetName(sRobotName);
+  rRobotModel.SetName(sRobotName);
   XMLElement *pElement = pParent->FirstChildElement();
-
 
   // Need to do something with m_mModelNodes; right now, nothing happens.
   // Which is silly.
@@ -82,7 +72,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
       const char* sType = pElement->Attribute("type");
       if(strcmp(sType, "Box") ==0){
         BoxShape* pBox =new BoxShape(sBodyName, vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1, vPose);
-        m_RobotModel.SetBase( pBox ); // main body
+        rRobotModel.SetBase( pBox ); // main body
         cout<<"[Parse Robot] Build Bodybase: "<<sBodyName<<" success."<<endl;
         m_mModelNodes[pBox->GetName()] = pBox;
       }
@@ -113,12 +103,57 @@ bool URDF_Parser::ParseRobot(XMLDocument* doc,
     pElement=pElement->NextSiblingElement();
   }
 
-  m_RobotModel.SetParts(GetModelNodes());
+  rRobotModel.SetParts(GetModelNodes());
   return true;
 }
 
 
+////////////////////////////////////////////////////////////
+/// Read command line and try to init sensor based on command line
+/// The input command line looks like:
+/// Openni:[Name="LCamera", rgb=1, depth=1]//  Openni:[Name="RCamera", rgb=1]//
+////////////////////////////////////////////////////////////
+bool URDF_Parser::ParseCommandLineForPickSensor(string sCommandLine)
+{
+  // get scheme:
 
+
+}
+
+// get sceme for init device
+vector<string> URDF_Parser::GetScemeFromString(string sCommandLine)
+{
+  vector<string> vSceme;
+
+  // get sceme by looking for "//"
+  while (sCommandLine.size()!=0)
+  {
+    string sSceme = sCommandLine.substr(0, sCommandLine.find_first_of("//")+1) ;
+    if(sSceme.find("//")!=string::npos)
+    {
+      cout<<"[GetScemeFromString] Get Sceme: "<<sSceme<<endl;
+      vSceme.push_back(sSceme);
+    }
+    else
+    {
+      if(sCommandLine.size()==0)
+      {
+        return vSceme;
+      }
+      else
+      {
+        cout<<"[GetScemeFromString] Fatal Error! Invalid command line string "<<sCommandLine<<endl;
+        exit(-1);
+      }
+    }
+  }
+}
+
+// init deveice with sceme vector
+
+////////////////////////////////////////////////////////////
+/// Parse Shape (Body)
+////////////////////////////////////////////////////////////
 void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
 {
   const char* sRootContent = pElement->Name();
@@ -148,6 +183,10 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
 
 }
 
+
+////////////////////////////////////////////////////////////
+/// Parse Joint
+////////////////////////////////////////////////////////////
 void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
 {
   const char* sRootContent = pElement->Name();
@@ -449,9 +488,10 @@ void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
 
 }
 
-//////////////////////////////////////////
-// ALL OF OUR SENSORS BODIES
-//////////////////////////////////////////
+
+////////////////////////////////////////////////////////////
+/// Parse SENSORS BODIES. Automaticlly Create Body for Sensor
+////////////////////////////////////////////////////////////
 void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
 {
   const char* sRootContent = pElement->Name();
@@ -616,17 +656,15 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
 }
 
 
-
 ////////////////////////////////////////////////////////////
 /// PARSE ROBOT.XML FOR DEVICES AND BUILD INTO ROBOTPROXY
 /// Extract all devices and build vSimDeviceInfo.
 ////////////////////////////////////////////////////////////
-
-bool URDF_Parser::ParseDevices(
-    XMLDocument& doc, vector<SimDeviceInfo>&  m_vSimDeviceInfo,
-    string sProxyName)
+bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
+                                vector<SimDeviceInfo>& rvSimDeviceInfo,
+                                string sProxyName)
 {
-  XMLElement *pParent=doc.RootElement();
+  XMLElement *pParent=rDoc.RootElement();
   XMLElement *pElement=pParent->FirstChildElement();
   string sRobotName(GetAttribute(pParent,"name"));
   sRobotName = sRobotName+"@"+sProxyName;          // e.g. robo
@@ -663,7 +701,7 @@ bool URDF_Parser::ParseDevices(
           Device.m_vSensorList.push_back(sSensorName);
           Device.m_vModel.push_back(sModel);
           Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
-          m_vSimDeviceInfo.push_back(Device);
+          rvSimDeviceInfo.push_back(Device);
 
           cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCam "<<sSensorName<<") success. Device Name is "<<sCameraName<<"."<<endl;
         }
@@ -687,7 +725,7 @@ bool URDF_Parser::ParseDevices(
           Device.m_vModel.push_back(sModel);
           Device.m_vModel.push_back(sModel);
           Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
-          m_vSimDeviceInfo.push_back(Device);
+          rvSimDeviceInfo.push_back(Device);
 
           cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCam "<<sMode<<") success." <<endl;
         }
@@ -710,7 +748,7 @@ bool URDF_Parser::ParseDevices(
         Device.m_sDeviceName = sViconName;
         Device.m_sDeviceType = sType;
         Device.m_sBodyName = sBodyName;
-        m_vSimDeviceInfo.push_back(Device);
+        rvSimDeviceInfo.push_back(Device);
         cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<" success."<<endl;
       }
     }
@@ -730,7 +768,7 @@ bool URDF_Parser::ParseDevices(
         Device.m_sDeviceType = sType;
         Device.m_sDeviceMode = sMode;
         Device.m_sRobotName = sRobotName;
-        m_vSimDeviceInfo.push_back(Device);
+        rvSimDeviceInfo.push_back(Device);
         cout<<"[Proxy/ParseDevice] Add controller device "<<sControllerName<<" success."<<endl;
       }
 
@@ -744,19 +782,20 @@ bool URDF_Parser::ParseDevices(
     // read next parent element
     pElement=pElement->NextSiblingElement();
   }
+
+  return true;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////
 /// PARSE WORLD.XML FOR STATEKEEPER
 ////////////////////////////////////////////////////////////////////////////
-
-bool URDF_Parser::ParseWorldForInitialPoses(
+bool URDF_Parser::ParseWorldForInitRobotPose(
     const char* filename,
-    vector<Eigen::Vector6d>& vRobotInitPose){
+    vector<Eigen::Vector6d>& rvRobotInitPose){
 
   // make sure the vector is empty
-  vRobotInitPose.clear();
+  rvRobotInitPose.clear();
 
   // open xml document
   XMLDocument doc;
@@ -775,13 +814,15 @@ bool URDF_Parser::ParseWorldForInitialPoses(
       vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
       Eigen::Vector6d ePose;
       ePose<<vPose[0], vPose[1], vPose[2], vPose[3], vPose[4], vPose[5];
-      vRobotInitPose.push_back(ePose);
+      rvRobotInitPose.push_back(ePose);
     }
     pElement=pElement->NextSiblingElement();
   }
 
   return true;
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////
 /// HELPER FUNCTIONS

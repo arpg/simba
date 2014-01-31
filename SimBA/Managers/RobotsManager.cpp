@@ -4,21 +4,29 @@
 /// INITIALIZE the RobotsManager
 ////////////////////////////////////////////////////////////////////////
 
-void RobotsManager::Init(string sProxyName, string sServerName,
-                         ModelGraphBuilder& Scene){
-  m_Scene = Scene;
+bool RobotsManager::Init(string sProxyName,
+                         string sServerName,
+                         ModelGraphBuilder& Scene,
+                         XMLDocument& rDoc
+                         )
+{
+  m_Scene      = Scene;
   m_sProxyName = sProxyName;
   if(sServerName == "WithoutStateKeeper" || sServerName =="WithoutNetwork"){
     m_bStateKeeperOn = false;
   }
-  else{
+  else
+  {
     m_bStateKeeperOn = true;
   }
+
+  return InitFromXML(sProxyName, rDoc);
 }
 
-////////////////////////////////////////////////////////////////////////
 
-bool RobotsManager::BuildRobot(XMLDocument& doc, string sProxyName){
+bool RobotsManager::InitFromXML( string sProxyName, XMLDocument& doc)
+{
+  // Now Build Robot By XML file
   SimRobot* pSimRobot = new SimRobot;
 
   // Construct the robot from the URDF
@@ -191,8 +199,9 @@ void RobotsManager::GenPoseAxis(Eigen::Vector6d &Pose, Eigen::Vector6d &AxisX, E
 
 ////////////////////////////////////////////////////////////////////////
 
-/// Get the pointer of the main robot
-
+/// Get the pointer of the main robot. Notice that if Simba runs with StateKeeper
+/// There will be more than one robot in Simba. The main robot is the robot that
+/// we can control.
 SimRobot* RobotsManager::GetMainRobot()
 {
   string sRobotName = m_sMainRobotName;

@@ -98,6 +98,7 @@ public:
     m_Parser.ParseRobot(m_pRobotURDF->GetDocument(), m_RobotModel,
                         m_sProxyName);
     m_sRobotName = m_RobotModel.GetName();
+
 //    // If we run in 'without Network mode', we need to init robot pose ourselves. or this pose will be read from server.
 //    // and we need to build the ModelGraph manaully once we get the pose from statekeeper
 //    if(bStateKeeperOn == false){
@@ -105,6 +106,7 @@ public:
 //      RobotInitPoseInWorld<<0,0,-2,0,0,1.57;
 //      InitPoseOfBodyBaseWRTWorld(RobotInitPoseInWorld);
 //    }
+
     cout<<"[SimRobot] Build robot "<<m_sRobotName<<" success."<<endl;
     return true;
   }

@@ -34,7 +34,7 @@ void StateKeeper::InitRobotPose()
 {
   // the is the initial pose of all robot that want to add into StateKeeper.
   URDF_Parser mParser;
-  mParser.ParseWorldForInitialPoses(m_sWorldURDFFileName.c_str(), m_vInitialPose);
+  mParser.ParseWorldForInitRobotPose(m_sWorldURDFFileName.c_str(), m_vInitialPose);
 }
 
 

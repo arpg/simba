@@ -27,11 +27,11 @@ public:
   WorldFullStateMsg                 m_WorldFullState;  // world state (pose, velocity) message. inlude the state of bodies.
   ModelGraphBuilder                 m_Scene;
   string                            m_sProxyName;
-  string                            m_sMainRobotName;
+  string                            m_sMainRobotName;  // Name of Main Robot. This is actually the robot we can contorl
   bool                              m_bStateKeeperOn;
 
-  void Init(string sProxyName, string sServerName, ModelGraphBuilder &Scene);
-  bool BuildRobot(XMLDocument& doc, string sProxyName);
+  bool Init(string sProxyName, string sServerName, ModelGraphBuilder &Scene, XMLDocument& doc);
+  bool InitFromXML( string sProxyName,XMLDocument& doc);
   void DeleteRobot(string sRobotName);
   void UpdateWorldFullState(WorldFullStateMsg worldfullstate);
   void ApplyWorldFullStateOnAllPlayers();

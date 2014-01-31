@@ -37,7 +37,8 @@ inline vector<double> GenNumFromChar(const char* numbers){
 // ------------------------------------------------------------
 inline bool GetXMLdoc(string sFileName, XMLDocument& doc){
   if(doc.LoadFile(sFileName.c_str()) !=0){
-    printf("Fatal Error! Cannot open %s\n", sFileName.c_str());
+    printf("Fatal Error! Cannot open %s. Please check if file is valid! \n", sFileName.c_str());
+    exit(-1);
     return false;
   }
   return true;

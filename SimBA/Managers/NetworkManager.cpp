@@ -5,8 +5,7 @@
 /// INITIALIZE NODE NETWORK AND ALL DEVICES
 ////////////////////////////////////////////////////////////////////////
 
-bool NetworkManager::initNetwork(string sProxyName, SimDeviceManager* pSimDeviceManager,
-                                 RobotsManager* pRobotsManager,  string sServerName,
+bool NetworkManager::initNetwork(string sProxyName, RobotsManager* pRobotsManager,  string sServerName,
                                  int verbocity){
 
   // 1, check if we need to init Node for RobotProxy
@@ -17,16 +16,14 @@ bool NetworkManager::initNetwork(string sProxyName, SimDeviceManager* pSimDevice
   }
 
   // 2. init node of Robot Proxy and provide relative rpc method for Robot code
-  m_sProxyName = sProxyName;
+  m_sLocalSimName = sProxyName;
   m_verbocity = verbocity;
   m_SubscribeNum = 0;
-  m_pSimDeviceManager = pSimDeviceManager;
   m_pRobotsManager = pRobotsManager;
 
   m_Node.set_verbocity(m_verbocity ); // make some noise on errors
-  m_Node.init(m_sProxyName);
-  cout<<"[NetworkManager] Init Proxy Node '"<<m_sProxyName<<"' success!"<<endl;
-
+  m_Node.init(m_sLocalSimName);
+  cout<<"[NetworkManager] Init Proxy Node '"<<m_sLocalSimName<<"' success!"<<endl;
 
   // 3. check if we need to connect to StateKeeper. If yes, we need to
   // advertise Robot State and provide rpc methods for StateKeeper.
@@ -37,14 +34,14 @@ bool NetworkManager::initNetwork(string sProxyName, SimDeviceManager* pSimDevice
     bool bStatus = RegisterRobotProxyWithStateKeeper();
     if(bStatus == false)
     {
-      cout<<"[NetworkManager] Cannot register RobotProxy '"<<m_sProxyName<<"' in "<<sServerName<<". Please make sure "<<m_sServerName<<" is running!"<<endl;
+      cout<<"[NetworkManager] Cannot register RobotProxy '"<<m_sLocalSimName<<"' in "<<sServerName<<". Please make sure "<<m_sServerName<<" is running!"<<endl;
       return false;
     }
     m_Node.provide_rpc("AddRobotByURDF",&_AddRobotByURDF, this);
     m_Node.provide_rpc("DeleteRobot",&_DeleteRobot, this);
   }
 
-  cout<<"[NetworkManager] init network "<<m_sProxyName<<" success. "<<endl;
+  cout<<"[NetworkManager] init network "<<m_sLocalSimName<<" success. "<<endl;
   return true;
 }
 
@@ -58,53 +55,57 @@ bool NetworkManager::initNetwork(string sProxyName, SimDeviceManager* pSimDevice
 // the main robot has gotten its initial pose from StateKeeper, and been built
 // into the ModelGraph.
 
-bool NetworkManager::initDevices()
+void NetworkManager::CheckIfInitDevices(SimDeviceManager* pSimDeviceManager)
 {
   // 1. check if we need to init device in node.
   if(m_sServerName=="WithoutNetwork")
   {
-    return true;
+    cout<<"[LocalSim] Init Robot LocalSim without Network."<<endl;
   }
-
-  // 2. init SamCam
-  if(m_pSimDeviceManager->m_SimCamList.size()!=0)
+  else
   {
-    cout<<"[NetworkManager] Try to init "<<m_pSimDeviceManager->m_SimCamList.size()<<" NodeCam."<<endl;
+    m_pSimDeviceManager = pSimDeviceManager;
 
-    // provide rpc method for camera to register
-    m_Node.provide_rpc("RegsiterCamDevice",&_RegisterCamDevice,this);
-
-    for(unsigned int i = 0; i!= m_pSimDeviceManager->m_SimDevices.size();i++)
+    // 2. init SamCam
+    if(m_pSimDeviceManager->m_SimCamList.size()!=0)
     {
-      SimDeviceInfo Device = m_pSimDeviceManager->m_SimDevices[i];
-      string sServiceName = GetFirstName(Device.m_sDeviceName);
+      cout<<"[NetworkManager/CheckIfInitDevices] Try to init "<<m_pSimDeviceManager->m_SimCamList.size()<<" NodeCam."<<endl;
 
-      if(m_Node.advertise(sServiceName)==true)
+      // provide rpc method for camera to register
+      m_Node.provide_rpc("RegsiterCamDevice",&_RegisterCamDevice,this);
+
+      for(unsigned int i = 0; i!= m_pSimDeviceManager->m_vSimDevices.size();i++)
       {
-        cout<<"[NetworkManager] advertise "<<sServiceName<<" Success."<<endl;
-      }
-      else
-      {
-        cout<<"[NetworkManager] advertise "<<sServiceName<<" Fail."<<endl;
-        return false;
+        SimDeviceInfo Device = m_pSimDeviceManager->m_vSimDevices[i];
+        string sServiceName = GetFirstName(Device.m_sDeviceName);
+
+        if(m_Node.advertise(sServiceName)==true)
+        {
+          cout<<"[NetworkManager/CheckIfInitDevices] advertise "<<sServiceName<<" Success."<<endl;
+        }
+        else
+        {
+          cout<<"[NetworkManager/CheckIfInitDevices] advertise "<<sServiceName<<" Fail."<<endl;
+          cout<<"[NetworkManager/CheckIfInitDevices] Cannot init Nextwrok"<<endl;
+          exit(-1);
+        }
       }
     }
-  }
 
-  // 3. init SimGPS
-  if(m_pSimDeviceManager->m_SimGPSList.size()!=0)
-  {
-    map<string, SimGPS*>::iterator iter;
-    for(iter = m_pSimDeviceManager->m_SimGPSList.begin();iter!= m_pSimDeviceManager->m_SimGPSList.end();iter++)
+    // 3. init SimGPS
+    if(m_pSimDeviceManager->m_SimGPSList.size()!=0)
     {
-      m_Node.advertise(iter->first);
-      cout<<"[NetworkManager] advertise "<<iter->first<<endl;
+      map<string, SimGPS*>::iterator iter;
+      for(iter = m_pSimDeviceManager->m_SimGPSList.begin();iter!= m_pSimDeviceManager->m_SimGPSList.end();iter++)
+      {
+        m_Node.advertise(iter->first);
+        cout<<"[NetworkManager/CheckIfInitDevices] advertise "<<iter->first<<endl;
+      }
     }
+
+    // more device need to be init here
+
   }
-
-  // more device need to be init here
-
-  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -136,7 +137,7 @@ bool NetworkManager::RegisterRobotProxyWithStateKeeper()
   // 2.2 set request msg
   RegisterRobotProxyReqMsg mRequest;
   string sRobotName = pSimRobot->GetRobotName();
-  mRequest.set_proxy_name(m_sProxyName);
+  mRequest.set_proxy_name(m_sLocalSimName);
   mRequest.mutable_urdf()->set_robot_name(sRobotName);
   mRequest.mutable_urdf()->set_xml(printer.CStr());
 
@@ -160,7 +161,7 @@ bool NetworkManager::RegisterRobotProxyWithStateKeeper()
     Eigen::Vector6d ePose;
     ePose<<mInitRobotState.x(), mInitRobotState.y(), mInitRobotState.z(),mInitRobotState.p(), mInitRobotState.q(), mInitRobotState.r();
 
-/*    m_pRobotsManager->GetMainRobot()->InitPoseOfBodyBaseWRTWorld(ePose);
+    /*    m_pRobotsManager->GetMainRobot()->InitPoseOfBodyBaseWRTWorld(ePose);
     m_pRobotsManager->GetMainRobot()->AddRobotInModelGraph();*/
 
     cout<<"[NetworkManager/registerRobotProxyWithStateKeeper] Robot register success! Get init robot state as x: "<<ePose[0]<<" y: "<<ePose[1]<<" z: "<<ePose[2]<<" p: "<<ePose[3]
@@ -180,9 +181,9 @@ bool NetworkManager::RegisterRobotProxyWithStateKeeper()
       doc.Parse(urdf.xml().c_str());
 
       // create previous robot
-      m_pRobotsManager->BuildRobot(doc,sLastName);
-//      m_pRobotsManager->GetRobot(sFullName)->InitPoseOfBodyBaseInURDF();
-//      m_pRobotsManager->GetRobot(sFullName)->AddRobotInModelGraph();
+      m_pRobotsManager->InitFromXML(sLastName, doc);
+      //      m_pRobotsManager->GetRobot(sFullName)->InitPoseOfBodyBaseInURDF();
+      //      m_pRobotsManager->GetRobot(sFullName)->AddRobotInModelGraph();
       cout<<"[NetworkManager/register] init previous player "<<sFullName<<". Last Name "<<sLastName<<" Success!"<<endl;
     }
     return true;
@@ -214,9 +215,9 @@ void NetworkManager::AddRobotByURDF(RobotProxyAddNewRobotReqMsg& mRequest, Robot
       mRequest.mutable_init_pose()->p(),mRequest.mutable_init_pose()->q(),mRequest.mutable_init_pose()->r();
 
   // add new robot in proxy
-  m_pRobotsManager->BuildRobot(doc, sProxyNameOfNewRobot);
+  m_pRobotsManager->InitFromXML(sProxyNameOfNewRobot, doc);
   m_pRobotsManager->GetRobot(sNewAddRobotName)->InitPoseOfBodyBaseWRTWorld(ePose);
-//  m_pRobotsManager->GetRobot(sNewAddRobotName)->AddRobotInModelGraph();
+  //  m_pRobotsManager->GetRobot(sNewAddRobotName)->AddRobotInModelGraph();
 
   cout<<"[NetworkManager/AddRobotByURDF] Add new robot "<<mRequest.robot_name() <<" success. "<<endl;
 }
@@ -301,7 +302,7 @@ bool NetworkManager::PublishRobotFullStateToStateKeeper()
     {
       if(m_verbocity!=0)
       {
-        cout<< "[NetworkManager] Publish " <<m_sProxyName<<" State to Statekeeper success. Publish Timestep is "<<m_iTimeStep<<endl;
+        cout<< "[NetworkManager] Publish " <<m_sLocalSimName<<" State to Statekeeper success. Publish Timestep is "<<m_iTimeStep<<endl;
       }
       return true;
     }
@@ -360,10 +361,19 @@ bool NetworkManager::ReceiveWorldFullStateFromStateKeeper( )
 /// REGISTER AND DELETE DEVICES FROM THE SIMULATION
 /// Code for hal device and RobotProxy.
 ////////////////////////////////////////////////////////////////////////
-
 void NetworkManager::RegisterCamDevice(RegisterNode2CamReqMsg& mRequest,RegisterNode2CamRepMsg & mReply)
 {
   cout<<"[NetworkManager] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
+
+  mReply.set_time_step(m_iTimeStep);
+  mReply.set_regsiter_flag(1);
+  m_SubscribeNum = m_SubscribeNum +1;
+}
+
+void NetworkManager::RegisterCamDeviceByURI(RegisterNode2CamReqMsg& mRequest,RegisterNode2CamRepMsg & mReply)
+{
+  cout<<"[NetworkManager] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
+  //  mRequest
 
   mReply.set_time_step(m_iTimeStep);
   mReply.set_regsiter_flag(1);
@@ -379,7 +389,7 @@ void NetworkManager::RegisterControllerDevice(RegisterControllerReqMsg& mRequest
   m_SubscribeNum = m_SubscribeNum +1;
 
   // robot proxy subscribe to this controller device for command
-  string sServiceName = mRequest.controller_name()+"-for-"+m_sProxyName; // service name, e.g. mController-for-Proxy1.
+  string sServiceName = mRequest.controller_name()+"-for-"+m_sLocalSimName; // service name, e.g. mController-for-Proxy1.
   if( m_Node.subscribe(sServiceName)==false )
   {
     cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! Cannot subscribe to "<<sServiceName<<". Please make sure service is running."<<endl;
@@ -425,9 +435,9 @@ bool NetworkManager::UpdateNetWork()
   }
 
   // 1. Publish and receive all Device Info (to robot)
-  for(unsigned int i=0;i!= m_pSimDeviceManager->m_SimDevices.size();i++)
+  for(unsigned int i=0;i!= m_pSimDeviceManager->m_vSimDevices.size();i++)
   {
-    SimDeviceInfo Device = m_pSimDeviceManager->m_SimDevices[i];
+    SimDeviceInfo Device = m_pSimDeviceManager->m_vSimDevices[i];
     string sDeviceType = Device.m_sDeviceType;
     string sDeviceName = Device.m_sDeviceName;
 
@@ -537,9 +547,9 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
   int image_size = 0;
 
   // save image to NodeCamMsg data struct
-  for(unsigned int i = 0; i!= m_pSimDeviceManager->m_SimDevices.size(); i++)
+  for(unsigned int i = 0; i!= m_pSimDeviceManager->m_vSimDevices.size(); i++)
   {
-    SimDeviceInfo Device = m_pSimDeviceManager->m_SimDevices[i];
+    SimDeviceInfo Device = m_pSimDeviceManager->m_vSimDevices[i];
     string sDeviceName = Device.m_sDeviceName;
 
     if(sDeviceName == sCamName)
@@ -555,7 +565,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
         // set NodeCamMsg info
         Node2CamImageMsg *pImage = NodeCamMsg.add_image();
 
-        // ------------------------------------------------------------------------------ for show gray scale image
+        // ------------------------------------------------ for gray scale image
         if(pSimCam->m_iCamType == 1)
         {
           char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth * pSimCam->g_nImgHeight);
@@ -569,7 +579,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
           }
           free(pImgbuf);
         }
-        // ------------------------------------------------------------------------------ for show RGB image
+        // ------------------------------------------------------- for RGB image
         else if(pSimCam->m_iCamType == 2)
         {
           char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth * pSimCam->g_nImgHeight *3);
@@ -583,7 +593,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
           }
           free(pImgbuf);
         }
-        // ------------------------------------------------------------------------------ for depth image
+        // ----------------------------------------------------- for depth image
         else if(pSimCam->m_iCamType == 5)
         {
           float* pImgbuf = (float*) malloc( pSimCam->g_nImgWidth * pSimCam->g_nImgHeight * sizeof(float) );
@@ -607,7 +617,6 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
 
   NodeCamMsg.set_size(image_size);
 
-
   // publish
   sCamName = GetFirstName(sCamName);
 
@@ -615,13 +624,13 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
 
   if( bStatus==false)
   {
-    cout<<"["<<m_sProxyName<<"/NodeCam] ERROR: publishing images fail.."<<endl;
+    cout<<"["<<m_sLocalSimName<<"/NodeCam] ERROR: publishing images fail.."<<endl;
     return false;
   }
 
   if(m_verbocity!=0)
   {
-    cout<<"["<<m_sProxyName<<"/NodeCam] Publsih NodeCam image success." <<endl;
+    cout<<"["<<m_sLocalSimName<<"/NodeCam] Publsih NodeCam image success." <<endl;
   }
 
   return true;

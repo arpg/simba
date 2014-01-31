@@ -22,10 +22,11 @@ public:
 
   /// INITIALIZE NODE NETWORK AND ALL DEVICES
   //-----------------------------------------------------
-  bool initNetwork(string sProxyName, SimDeviceManager* pSimDeviceManager,
+  bool initNetwork(string sProxyName,
                    RobotsManager* pRobotsManager,  string sServerName,
                    int verbocity=0);
-  bool initDevices();
+
+  void CheckIfInitDevices(SimDeviceManager* pSimDeviceManager);
 
   /// REGISTER AND DELETE ROBOTS FROM THE NETWORK
   //-----------------------------------------------------
@@ -43,6 +44,10 @@ public:
   /// Used in HAL and RobotProxy
   void RegisterCamDevice(RegisterNode2CamReqMsg& mRequest,
                          RegisterNode2CamRepMsg & mReply);
+
+  void RegisterCamDeviceByURI(RegisterNode2CamReqMsg& mRequest,
+                              RegisterNode2CamRepMsg & mReply);
+
   void RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
                                 RegisterControllerRepMsg & mReply);
 
@@ -105,7 +110,7 @@ public:
 
 private:
   hal::node                                    m_Node;
-  std::string                                  m_sProxyName;
+  std::string                                  m_sLocalSimName;
   string                                       m_sServerName;
   int                                          m_verbocity;
   int                                          m_iTimeStep;

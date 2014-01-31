@@ -1,6 +1,6 @@
 <robot name="Robot">
 
- <Car name="Car" type="RaycastVehicle">
+<Car name="Car" type="RaycastVehicle">
      <!--Set the parameters for the car.  -->
      <param name="control delay"      value="0"/>
      <param name="stiffness"          value="120"/>
@@ -44,7 +44,6 @@
      <param name="Magic C"          value="1.65"/>
      <param name="Magic E"          value="-5"/>
  </Car>
-
 
 <!--Sensors  -->
 <body name="Stick" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,-3,0,0,0"  dimesion="0.1,0.1,2" scale="25" type="Box"/>

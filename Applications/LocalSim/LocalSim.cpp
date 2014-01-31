@@ -15,57 +15,44 @@ using namespace CVarUtils;
 ////////////////////////////////////////////////////////////////////////
 
 LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of robot LocalSim
-                   const std::string& sRobotURDF,      //< Input: location of meshes, maps etc
-                   const std::string& sWorldURDF,
+                   const std::string& sRobotURDFPath,      //< Input: location of meshes, maps etc
+                   const std::string& sWorldURDFPath,
                    const std::string& sServerName,
-                   const std::string& sPoseFileName)
+                   const std::string& sPoseFileName):
+  m_sLocalSimName (sLocalSimName)
 {
-  m_sLocalSimName  = sLocalSimName;
-  m_sWorldURDFFile = sWorldURDF;
-  m_sRobotURDFFile = sRobotURDF;
+  // 2. Read Robot.xml file.
+  XMLDocument RobotURDF, WorldURDF;
+  GetXMLdoc(sRobotURDFPath, RobotURDF);
+  GetXMLdoc(sWorldURDFPath, WorldURDF);
 
   // 1. Parse world.xml file.
-  if( m_Parser.ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true){
-    cout<<"[LocalSim] Cannot parse "<< m_sWorldURDFFile<<
-          ". Please check if the file exist and the syntax is valid."<<endl;
+  if( m_Parser.ParseWorld(WorldURDF, m_WorldManager) != true){
+    cout<<"[LocalSim] Parse World Fail."<<endl;
     exit(-1);
   }
 
-  // 2. Read Robot.xml file.
-  XMLDocument RobotURDF;
-  GetXMLdoc(sRobotURDF, RobotURDF);
-
   // 4. Init User's Robot and add it to RobotManager
-  m_RobotManager.Init(m_sLocalSimName, sServerName, m_Scene);
-  m_RobotManager.BuildRobot(RobotURDF, m_sLocalSimName);
+  if(m_RobotManager.Init(m_sLocalSimName, sServerName, m_Scene, RobotURDF) == true)
+  {
+    cout<<"[LocalSim] Init Robot Success."<<endl;
+  }
   m_pMainRobot = m_RobotManager.GetMainRobot();
+
   // Add the robot to the Model Graph Scene
-  m_Scene.Init(ModelGraphBuilder::All, m_pMainRobot->GetRobotModel(),
-               sLocalSimName);
+  m_Scene.Init(ModelGraphBuilder::All,m_pMainRobot->GetRobotModel(),sLocalSimName);
 
   // 5. Initialize the Network
-  m_NetworkManager.initNetwork(m_sLocalSimName, &m_SimDeviceManager,
-                               &m_RobotManager,  sServerName);
+  m_NetworkManager.initNetwork(m_sLocalSimName,  &m_RobotManager, sServerName);
 
   // 6. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
-
-  // This has to be fixed up (there are a lot of references that shouldn't be
-  // there), but we'll run with it for now.
-  m_SimDeviceManager.Init(m_Scene.m_Phys, m_Scene.m_Render.m_glGraph,
+  m_SimDeviceManager.InitFromURDF(m_Scene.m_Phys,m_Scene.m_Render.m_glGraph,
                           RobotURDF, m_sLocalSimName);
+
   m_SimpPoseController.Init(sPoseFileName);
 
   // 7, if run in with network mode, LocalSim network will publish sim device
-  if(sServerName !="WithoutNetwork"){
-    if(m_NetworkManager.initDevices()!=true){
-      cout<<"[LocalSim] Cannot init Nextwrok"<<endl;
-      exit(-1);
-    }
-  }
-  else
-  {
-    cout<<"[LocalSim] Init Robot LocalSim without Network."<<endl;
-  }
+  m_NetworkManager.CheckIfInitDevices(&m_SimDeviceManager);
 
 }
 
@@ -161,8 +148,8 @@ void LocalSim::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
 bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::ImageView& RSimCamWnd ){
   int WndCounter = 0;
 
-  for(unsigned int i =0 ; i!= m_SimDeviceManager.m_SimDevices.size(); i++){
-    SimDeviceInfo Device = m_SimDeviceManager.m_SimDevices[i];
+  for(unsigned int i =0 ; i!= m_SimDeviceManager.m_vSimDevices.size(); i++){
+    SimDeviceInfo Device = m_SimDeviceManager.m_vSimDevices[i];
 
     for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
 
