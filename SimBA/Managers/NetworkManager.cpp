@@ -5,7 +5,7 @@
 /// INITIALIZE NODE NETWORK AND ALL DEVICES
 ////////////////////////////////////////////////////////////////////////
 
-bool NetworkManager::initNetwork(string sProxyName, RobotsManager* pRobotsManager,  string sServerName,
+bool NetworkManager::InitNetwork(string sProxyName, RobotsManager* pRobotsManager, string sServerName,
                                  int verbocity){
 
   // 1, check if we need to init Node for RobotProxy

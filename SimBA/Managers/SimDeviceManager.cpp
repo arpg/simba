@@ -11,12 +11,14 @@ SimDeviceManager::SimDeviceManager(){
 ////////////////////////////////////////////////////////////////////////
 /// INITIALIZERS
 ////////////////////////////////////////////////////////////////////////
-bool SimDeviceManager::InitFromURDF(
+bool SimDeviceManager::InitFromXML(
     PhysicsEngine& rPhysWrapper,
     GLSceneGraph& rSceneGraph,
     tinyxml2::XMLDocument& doc,
-    string sProxyName)
+    string sProxyName, string sPoseFile="NONE")
 {
+   m_SimpPoseController.Init(sPoseFile);
+
   if( m_Parser.ParseDevices(doc, m_vSimDevices, sProxyName) == true)
   {
     cout<<"[SimDeviceManager] Parse all Devices succes!"<<endl;

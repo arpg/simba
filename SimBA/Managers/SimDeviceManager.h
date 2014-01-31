@@ -24,13 +24,14 @@ public:
   map<string, SimLaser3D*>           m_SimLaser3DList;
   map<string, SimpleController*>     m_SimpleControllerList;
   map<string, CarController*>        m_CarControllerList;
+  PoseController                     m_SimpPoseController;
 
   /// Constructor
   SimDeviceManager();
 
   /// Initializers
-  bool InitFromURDF(PhysicsEngine& rPhysWrapper, GLSceneGraph& rSceneGraph,
-            tinyxml2::XMLDocument& doc, string sProxyName);
+  bool InitFromXML(PhysicsEngine& rPhysWrapper, GLSceneGraph& rSceneGraph,
+            tinyxml2::XMLDocument& doc, string sProxyName, string sPoseFile);
   void InitDevices(SceneGraph::GLSceneGraph&  rSceneGraph);
   void InitCamDevice(SimDeviceInfo& Device, string sCameraModel,
                      SceneGraph::GLSceneGraph&  rSceneGraph);

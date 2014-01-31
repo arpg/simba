@@ -17,6 +17,7 @@
 #include <SimDevices/Sensor/SimOdometry.h>
 
 // controllers
+#include <SimDevices/Controller/PoseController.h>
 #include <SimDevices/Controller/PIDController.h>
 #include <SimDevices/Controller/SimpleController.h>
 #include <SimDevices/Controller/CarController.h>

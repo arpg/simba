@@ -46,7 +46,6 @@ public:
   SimDeviceManager            m_SimDeviceManager;
   RobotsManager               m_RobotManager;
   NetworkManager              m_NetworkManager;
-  PoseController              m_SimpPoseController;
   URDF_Parser                 m_Parser;
 
   /// Constructor

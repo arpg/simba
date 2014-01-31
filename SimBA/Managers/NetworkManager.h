@@ -22,7 +22,7 @@ public:
 
   /// INITIALIZE NODE NETWORK AND ALL DEVICES
   //-----------------------------------------------------
-  bool initNetwork(string sProxyName,
+  bool InitNetwork(string sProxyName,
                    RobotsManager* pRobotsManager,  string sServerName,
                    int verbocity=0);
 

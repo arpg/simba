@@ -21,39 +21,51 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
                    const std::string& sPoseFileName):
   m_sLocalSimName (sLocalSimName)
 {
-  // 2. Read Robot.xml file.
+  // 1. Read Robot.xml file.
   XMLDocument RobotURDF, WorldURDF;
   GetXMLdoc(sRobotURDFPath, RobotURDF);
   GetXMLdoc(sWorldURDFPath, WorldURDF);
 
-  // 1. Parse world.xml file.
-  if( m_Parser.ParseWorld(WorldURDF, m_WorldManager) != true){
+  // 2. Parse world.xml file.
+  if( m_Parser.ParseWorld(WorldURDF, m_WorldManager) == false){
     cout<<"[LocalSim] Parse World Fail."<<endl;
     exit(-1);
   }
 
-  // 4. Init User's Robot and add it to RobotManager
-  if(m_RobotManager.Init(m_sLocalSimName, sServerName, m_Scene, RobotURDF) == true)
+  // 3. Init User's Robot and add it to RobotManager
+  if(m_RobotManager.Init(
+       m_sLocalSimName, sServerName, m_Scene, RobotURDF) == false)
   {
-    cout<<"[LocalSim] Init Robot Success."<<endl;
+    cout<<"[LocalSim] Init Robot Fail."<<endl;
+    exit(-1);
   }
+
   m_pMainRobot = m_RobotManager.GetMainRobot();
 
-  // Add the robot to the Model Graph Scene
+  // 4. Add the robot to the Model Graph Scene
   m_Scene.Init(ModelGraphBuilder::All,m_pMainRobot->GetRobotModel(),sLocalSimName);
 
-  // 5. Initialize the Network
-  m_NetworkManager.initNetwork(m_sLocalSimName,  &m_RobotManager, sServerName);
+  // 5. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
+  if( m_SimDeviceManager.InitFromXML(
+        m_Scene.m_Phys,m_Scene.m_Render.m_glGraph,
+        RobotURDF,m_sLocalSimName, sPoseFileName) == false)
+  {
+    cout<<"[LocalSim] Init SimDevice Fail."<<endl;
+    exit(-1);
+  }
 
-  // 6. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
-  m_SimDeviceManager.InitFromURDF(m_Scene.m_Phys,m_Scene.m_Render.m_glGraph,
-                          RobotURDF, m_sLocalSimName);
-
-  m_SimpPoseController.Init(sPoseFileName);
+  // 6. Initialize the Network
+  if(m_NetworkManager.InitNetwork(
+       m_sLocalSimName, &m_RobotManager, sServerName) ==false)
+  {
+    cout<<"[LocalSim] Init Network Fail."<<endl;
+    exit(-1);
+  }
 
   // 7, if run in with network mode, LocalSim network will publish sim device
   m_NetworkManager.CheckIfInitDevices(&m_SimDeviceManager);
 
+  cout<<"[LocalSim] Init Local Sim Success!"<<endl;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -115,7 +127,7 @@ void LocalSim::InitReset()
   }
 
   m_Scene.m_Render.AddToScene();
-  cout<<"Init World Success"<<endl;
+  cout<<"[LocalSim/InitReset] Init World Success"<<endl;
 }
 
 //////////////////////////////////////////////////////////////////
