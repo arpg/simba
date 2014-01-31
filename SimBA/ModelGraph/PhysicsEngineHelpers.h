@@ -37,25 +37,7 @@ public:
   }
 
   virtual void setWorldTransform(const btTransform &worldTrans) {
-    // I think this just gives our wheels the illusion of spinning....
-    // Will find out soonish.
-    if (dynamic_cast<Shape*>(&object)){
-      Shape* pShape = (Shape*) &object;
-      if (dynamic_cast<CylinderShape*>(pShape)){
-        Eigen::Vector6d temp;
-        temp << 0, 0, 0, M_PI / 2, 0, 0;
-        Eigen::Matrix4d rot;
-        rot = toEigen(worldTrans);
-        rot = rot*_Cart2T(temp);
-        object.SetPose(rot);
-      }
-      else{
-        object.SetPose(toEigen(worldTrans));
-      }
-    }
-    else{
       object.SetPose(toEigen(worldTrans));
-    }
   }
 
   ModelNode& object;
