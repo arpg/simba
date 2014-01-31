@@ -40,6 +40,14 @@ public:
   // of commands that the PhysicsEngine can use to create bullet objects.
   bool ParseRobot(XMLDocument* doc, RobotModel &m_RobotModel, string sProxyName);
 
+  void ParseShape(string sRobotName, XMLElement *pElement);
+
+  void ParseJoint(string sRobotName, XMLElement *pElement);
+
+  void ParseRaycastCar(string sRobotName, XMLElement *pElement);
+
+  void ParseSensorShape(string sRobotName, XMLElement *pElement );
+
   // ParseDevices uses the information given in the Robot.xml file to create the
   // sensor views that we see later in the Sim.
   bool ParseDevices(XMLDocument& doc,

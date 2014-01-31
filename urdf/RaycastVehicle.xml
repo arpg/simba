@@ -1,65 +1,69 @@
-<robot name="Robot" type="RaycastVehicle">
-<!--Set the parameters for the car.  -->
-  <param name="control delay"      value="0"/>
-  <param name="stiffness"          value="120"/>
-  <param name="susp conn height"   value="-.8"/>
-  <param name="max susp force"     value="5812.4"/>
-  <param name="damp factor"        value="10"/>
-  <param name="exp damp factor"    value="0"/>
-  <param name="roll influence"     value="0"/>
-  <param name="steering coeff"     value="-1.5"/>
-  <param name="max steering"       value="20"/>
-  <param name="max steering rate"  value="13"/>
-  <param name="accel offset"       value="0"/>
-  <param name="steering offset"    value="0"/>
-  <param name="stall torque coeff" value=".13"/>
-  <param name="torque speed slope" value="1.2685"/>
+<robot name="Robot">
 
-<!--Body shape variables  -->
-  <body name="length"      value="2.7"/>
-  <body name="width"       value="2"/>
-  <body name="height"      value="1"/>
-  <body name="mass"        value="5"/>
-  <body name="base height" value=".5"/>
-  <body name="restitution" value="0"/>
-  <body name="position"    value="0,0,0,0,0,1.5707"/>
-  <body name="rotation"    value="1,0,0,0,1,0,0,0,1"/>
+ <Car name="Car" type="RaycastVehicle">
+     <!--Set the parameters for the car.  -->
+     <param name="control delay"      value="0"/>
+     <param name="stiffness"          value="120"/>
+     <param name="susp conn height"   value="-.8"/>
+     <param name="max susp force"     value="5812.4"/>
+     <param name="damp factor"        value="10"/>
+     <param name="exp damp factor"    value="0"/>
+     <param name="roll influence"     value="0"/>
+     <param name="steering coeff"     value="-1.5"/>
+     <param name="max steering"       value="20"/>
+     <param name="max steering rate"  value="13"/>
+     <param name="accel offset"       value="0"/>
+     <param name="steering offset"    value="0"/>
+     <param name="stall torque coeff" value=".13"/>
+     <param name="torque speed slope" value="1.2685"/>
 
-  <!--Wheel shape variables   -->
-  <wheel name="radius"            value="0"/>
-  <wheel name="width"             value="0"/>
-  <!-- <wheel name="mass"              value="0"/> -->
-  <!-- <wheel name="restitution"       value="0"/> -->
-  <wheel name="dyn friction"      value="0"/>
-  <wheel name="slip coeff"        value="0"/>
-  <wheel name="traction friction" value="0"/>
-  <wheel name="side friction"     value="0"/>
+     <!--Body shape variables  -->
+     <body name="length"      value="2.7"/>
+     <body name="width"       value="2"/>
+     <body name="height"      value="1"/>
+     <body name="mass"        value="5"/>
+     <body name="base height" value=".5"/>
+     <body name="restitution" value="0"/>
+     <body name="position"    value="0,0,0,0,0,1.5707"/>
+     <body name="rotation"    value="1,0,0,0,1,0,0,0,1"/>
 
-  <!--Parameters dependent on other parts  -->
-  <param name="susp rest length" value=".045"/>
-  <param name="max susp travel"  value=".045"/>
-  <param name="Magic B"          value="5"/>
-  <param name="Magic C"          value="1.65"/>
-  <param name="Magic E"          value="-5"/>
+     <!--Wheel shape variables   -->
+     <wheel name="radius"            value="0"/>
+     <wheel name="width"             value="0"/>
+     <!-- <wheel name="mass"              value="0"/> -->
+     <!-- <wheel name="restitution"       value="0"/> -->
+     <wheel name="dyn friction"      value="0"/>
+     <wheel name="slip coeff"        value="0"/>
+     <wheel name="traction friction" value="0"/>
+     <wheel name="side friction"     value="0"/>
 
-  <!--Sensors  -->
+     <!--Parameters dependent on other parts  -->
+     <param name="susp rest length" value=".045"/>
+     <param name="max susp travel"  value=".045"/>
+     <param name="Magic B"          value="5"/>
+     <param name="Magic C"          value="1.65"/>
+     <param name="Magic E"          value="-5"/>
+ </Car>
 
-<!--  <Sensor Name="LCamera"
-          Type="Camera"
-          Driver="Node2Cam"
-          Size="512*384"
-          Mode="RGBD"
-          FPS="30"
-          Align="true"
-          Parent="Stick"
-          Pose="0,-2,0,0,0,0"
-          Location="@Proxy1"
-          Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml"/>-->
 
+<!--Sensors  -->
+<body name="Stick" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,-3,0,0,0"  dimesion="0.1,0.1,2" scale="25" type="Box"/>
+
+<Sensor Name="LCamera"
+  Type="Camera"
+  Driver="Node2Cam"
+  Size="512*384"
+  Mode="RGBD"
+  FPS="30"
+  Align="true"
+  Parent="Stick"
+  Pose="0,-2,0,0,0,0"
+  Location="@Proxy1"
+  Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml"/>
 
   <!-- Lu: Must include this sensor if you use RobotProxy!
-       RobotProxy needs this sensor to get the robot's pose information. -->	
-<!--  <Sensor Name="ChassisVicon" Type="Vicon" Body="Chassis"/>
+  RobotProxy needs this sensor to get the robot's pose information. -->
+  <!--  <Sensor Name="ChassisVicon" Type="Vicon" Body="Chassis"/>
   <Controller Name="MController" Mode="SimpleController"/>-->
 
 </robot>
