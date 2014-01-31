@@ -44,11 +44,11 @@ public:
   /// REGISTER AND DELETE DEVICES FROM THE SIMULATION
   //-----------------------------------------------------
   /// Used in HAL and RobotProxy
-  void RegisterCamDevice(RegisterNode2CamReqMsg& mRequest,
-                         RegisterNode2CamRepMsg & mReply);
+  void RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
+                         RegisterNodeCamRepMsg & mReply);
 
-  void RegisterCamDeviceByURI(RegisterNode2CamReqMsg& mRequest,
-                              RegisterNode2CamRepMsg & mReply);
+  void RegisterCamDeviceByURI(RegisterNodeCamReqMsg& mRequest,
+                              RegisterNodeCamRepMsg & mReply);
 
   void RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
                                 RegisterControllerRepMsg & mReply);
@@ -90,8 +90,8 @@ public:
   /// Once we register a cam device, we can use the recv and publish method.
 
   static void _RegisterCamDevice(
-      RegisterNode2CamReqMsg& mRequest,
-      RegisterNode2CamRepMsg& mReply,
+      RegisterNodeCamReqMsg& mRequest,
+      RegisterNodeCamRepMsg& mReply,
       void* pUserData){
     ((NetworkManager*)pUserData)->RegisterCamDevice(mRequest, mReply);
   }

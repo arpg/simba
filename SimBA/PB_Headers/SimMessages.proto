@@ -185,15 +185,15 @@ message GPSMsg
 
 
 // ------  For Node Cam -------
-message Node2CamMsg
+message NodeCamMsg
 {
-    repeated Node2CamImageMsg      image           =1;
+    repeated NodeCamImageMsg      image           =1;
     required int32         time_step               =2;
     optional int32         size                    =3;
 }
 
 
-message Node2CamImageMsg
+message NodeCamImageMsg
 {
     optional bytes          image                 = 1;
     optional int32          image_type            = 2;
@@ -201,13 +201,12 @@ message Node2CamImageMsg
     optional int32          image_width           = 4;
 }
 
-message RegisterNode2CamReqMsg
+message RegisterNodeCamReqMsg
 {
-    optional bytes          device_name            =1;
-    optional string         uri                    =2;
+    optional string         uri                    =1;
 }
 
-message RegisterNode2CamRepMsg
+message RegisterNodeCamRepMsg
 {
     optional int32          time_step              = 1;
     optional int32          regsiter_flag          = 2;

@@ -372,7 +372,7 @@ bool NetworkManager::ReceiveWorldFullStateFromStateKeeper( )
 /// REGISTER AND DELETE DEVICES FROM THE SIMULATION
 /// Code for hal device and RobotProxy.
 ////////////////////////////////////////////////////////////////////////
-void NetworkManager::RegisterCamDevice(RegisterNode2CamReqMsg& mRequest,RegisterNode2CamRepMsg & mReply)
+void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,RegisterNodeCamRepMsg & mReply)
 {
   cout<<"[NetworkManager] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
 
@@ -392,7 +392,7 @@ string NetworkManager::CheckURI(string sURI)
   // return device name if it is valid
 }
 
-void NetworkManager::RegisterCamDeviceByURI(RegisterNode2CamReqMsg& mRequest,RegisterNode2CamRepMsg & mReply)
+void NetworkManager::RegisterCamDeviceByURI(RegisterNodeCamReqMsg& mRequest,RegisterNodeCamRepMsg & mReply)
 {
   cout<<"[NetworkManager] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
 
@@ -576,8 +576,8 @@ bool NetworkManager::ReceiveCarControllerInfo()
 // here we will publish image from all these sensor.
 bool NetworkManager::PublishSimCamBySensor(string sCamName)
 {
-  Node2CamMsg NodeCamMsg;
-  NodeCamMsg.set_time_step(m_iTimeStep);
+  NodeCamMsg mNodeCamMsg;
+  mNodeCamMsg.set_time_step(m_iTimeStep);
   int image_size = 0;
 
   // save image to NodeCamMsg data struct
@@ -597,7 +597,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
         SimCam* pSimCam= m_pSimDeviceManager->GetSimCam(sSensorName);
 
         // set NodeCamMsg info
-        Node2CamImageMsg *pImage = NodeCamMsg.add_image();
+        NodeCamImageMsg *pImage = mNodeCamMsg.add_image();
 
         // ------------------------------------------------ for gray scale image
         if(pSimCam->m_iCamType == 1)
@@ -649,12 +649,12 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
     }
   }
 
-  NodeCamMsg.set_size(image_size);
+  mNodeCamMsg.set_size(image_size);
 
   // publish
   sCamName = GetFirstName(sCamName);
 
-  bool bStatus=m_Node.publish(sCamName,NodeCamMsg);
+  bool bStatus=m_Node.publish(sCamName,mNodeCamMsg);
 
   if( bStatus==false)
   {
