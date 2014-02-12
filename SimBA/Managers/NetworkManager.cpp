@@ -54,9 +54,9 @@ bool NetworkManager::PubRobotIfNeeded(RobotsManager* pRobotsManager)
     }
     m_Node.provide_rpc("AddRobotByURDF",&_AddRobotByURDF, this);
     m_Node.provide_rpc("DeleteRobot",&_DeleteRobot, this);
+    cout<<"[NetworkManager] Init Robot Network "<<m_sLocalSimName<<" for statekeeper success."<<endl;
   }
 
-  cout<<"[NetworkManager] Init Robot Network "<<m_sLocalSimName<<" for statekeeper success."<<endl;
   return true;
 }
 
@@ -82,7 +82,7 @@ void NetworkManager::PubRegisterDevicesIfNeeded(SimDeviceManager* pSimDeviceMana
     // 2. init SamCam
     if(m_pSimDeviceManager->m_SimCamList.size()!=0)
     {
-      cout<<"[NetworkManager/CheckIfInitDevices] Try to init "<<m_pSimDeviceManager->m_SimCamList.size()<<" NodeCam."<<endl;
+      cout<<"[NetworkManager/PubRegisterDevicesIfNeeded] Try to init "<<m_pSimDeviceManager->m_SimCamList.size()<<" NodeCam."<<endl;
 
       // provide rpc method for camera to register
       m_Node.provide_rpc("RegsiterCamDevice",&_RegisterCamDevice,this);
@@ -94,12 +94,12 @@ void NetworkManager::PubRegisterDevicesIfNeeded(SimDeviceManager* pSimDeviceMana
 
         if(m_Node.advertise(sServiceName)==true)
         {
-          cout<<"[NetworkManager/CheckIfInitDevices] advertise "<<sServiceName<<" Success."<<endl;
+          cout<<"[NetworkManager/PubRegisterDevicesIfNeeded] advertise register "<<sServiceName<<" Success."<<endl;
         }
         else
         {
-          cout<<"[NetworkManager/CheckIfInitDevices] advertise "<<sServiceName<<" Fail."<<endl;
-          cout<<"[NetworkManager/CheckIfInitDevices] Cannot init Nextwrok"<<endl;
+          cout<<"[NetworkManager/PubRegisterDevicesIfNeeded] advertise register "<<sServiceName<<" Fail."<<endl;
+          cout<<"[NetworkManager/PubRegisterDevicesIfNeeded] Cannot init Nextwrok"<<endl;
           exit(-1);
         }
       }
@@ -381,15 +381,17 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,RegisterN
   m_SubscribeNum = m_SubscribeNum +1;
 }
 
-// Return FALSE if device is invalid. Otherwise return device name.
+// Return 'FALSE' if device is invalid. Otherwise return device name.
 string NetworkManager::CheckURI(string sURI)
 {
   // Find device in device manager
-  string sDeviceName;
+  string sDeviceName = sURI;
 
   // check if device is valid
 
   // return device name if it is valid
+
+  return sDeviceName;
 }
 
 void NetworkManager::RegisterCamDeviceByURI(RegisterNodeCamReqMsg& mRequest,RegisterNodeCamRepMsg & mReply)
