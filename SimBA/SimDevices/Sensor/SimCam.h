@@ -11,14 +11,14 @@ class SimCam
 {
     public:
        // Global Variables
-       unsigned int                   g_nImgWidth;
-       unsigned int                   g_nImgHeight;
-       unsigned int                   g_nChannel;
+       unsigned int                   m_nImgWidth;
+       unsigned int                   m_nImgHeight;
+       unsigned int                   m_nChannels;
        SceneGraph::GLSimCam           m_Camera;     // reference camera we use
        int                            m_iCamType;
        int                            m_iFPS;
        string                         m_sDeviceName; // mesh of parent that camera attach to
-       PhysicsEngine                 m_rPhysWrapper;
+       PhysicsEngine                  m_rPhysWrapper;
        vector<string>                 m_vCameraModel;
        calibu::CameraRig              m_CameraRig;
 
@@ -40,14 +40,14 @@ class SimCam
 
            // get some camera parameters
            Eigen::Matrix3d K = theCam.K();
-           g_nImgWidth       = theCam.Width();
-           g_nImgHeight      = theCam.Height();
+           m_nImgWidth       = theCam.Width();
+           m_nImgHeight      = theCam.Height();
 
            // initialize cameras
            m_iCamType = CameraType;
-           m_Camera.Init(&glGraph, Sophus::SE3d::exp( vInitPose ).matrix(), K, g_nImgWidth, g_nImgHeight, m_iCamType );
+           m_Camera.Init(&glGraph, Sophus::SE3d::exp( vInitPose ).matrix(), K, m_nImgWidth, m_nImgHeight, m_iCamType );
 
-           cout<<"[SimCam] init sim cam success. Type is "<<CameraType<<". Width is:"<<g_nImgWidth <<", "<<" Height is: "<<g_nImgHeight<<endl;
+           cout<<"[SimCam] init sim cam success. Type is "<<CameraType<<". Width is:"<<m_nImgWidth <<", "<<" Height is: "<<m_nImgHeight<<endl;
            return true;
        }
 
@@ -57,11 +57,11 @@ class SimCam
            // if it is a RGBD camera
            if(CamType==5)
            {
-               g_nChannel = 2;
+               m_nChannels = 2;
            }
            else
            {
-               g_nChannel =1;
+               m_nChannels =1;
            }
        }
 

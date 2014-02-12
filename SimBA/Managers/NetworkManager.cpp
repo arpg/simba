@@ -403,9 +403,14 @@ void NetworkManager::RegisterCamDeviceByURI(RegisterNodeCamReqMsg& mRequest,Regi
   {
     // Init Device.
     m_pSimDeviceManager->InitDeviceByName(sDeviceName);
+    SimCam* pCam = m_pSimDeviceManager->GetSimCam(sDeviceName);
 
     mReply.set_time_step(m_iTimeStep);
     mReply.set_regsiter_flag(1);
+    mReply.set_channels(pCam->m_nChannels);
+    mReply.set_width(pCam->m_nImgWidth);
+    mReply.set_height(pCam->m_nImgHeight);
+
     m_SubscribeNum = m_SubscribeNum +1;
     cout<<"HAL reuqest for use "<<sDeviceName<<". Device Ready!"<<endl;
   }
@@ -604,10 +609,10 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
         // ------------------------------------------------ for gray scale image
         if(pSimCam->m_iCamType == 1)
         {
-          char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth * pSimCam->g_nImgHeight);
+          char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth * pSimCam->m_nImgHeight);
           if(pSimCam->capture(pImgbuf)==true)
           {
-            pImage->set_image(pImgbuf, pSimCam->g_nImgWidth * pSimCam->g_nImgHeight);
+            pImage->set_image(pImgbuf, pSimCam->m_nImgWidth * pSimCam->m_nImgHeight);
           }
           else
           {
@@ -618,10 +623,10 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
         // ------------------------------------------------------- for RGB image
         else if(pSimCam->m_iCamType == 2)
         {
-          char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth * pSimCam->g_nImgHeight *3);
+          char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth * pSimCam->m_nImgHeight *3);
           if(pSimCam->capture(pImgbuf)==true)
           {
-            pImage->set_image(pImgbuf,pSimCam->g_nImgWidth * pSimCam->g_nImgHeight*3);
+            pImage->set_image(pImgbuf,pSimCam->m_nImgWidth * pSimCam->m_nImgHeight*3);
           }
           else
           {
@@ -632,10 +637,10 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
         // ----------------------------------------------------- for depth image
         else if(pSimCam->m_iCamType == 5)
         {
-          float* pImgbuf = (float*) malloc( pSimCam->g_nImgWidth * pSimCam->g_nImgHeight * sizeof(float) );
+          float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth * pSimCam->m_nImgHeight * sizeof(float) );
           if(pSimCam->capture(pImgbuf)==true)
           {
-            pImage->set_image(pImgbuf, pSimCam->g_nImgWidth * pSimCam->g_nImgHeight * sizeof(float));
+            pImage->set_image(pImgbuf, pSimCam->m_nImgWidth * pSimCam->m_nImgHeight * sizeof(float));
           }
           else
           {
@@ -645,8 +650,8 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
         }
 
         pImage->set_image_type(pSimCam->m_iCamType);
-        pImage->set_image_height(pSimCam->g_nImgHeight);
-        pImage->set_image_width(pSimCam->g_nImgWidth);
+        pImage->set_image_height(pSimCam->m_nImgHeight);
+        pImage->set_image_width(pSimCam->m_nImgWidth);
       }
     }
   }

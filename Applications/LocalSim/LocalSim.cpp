@@ -187,13 +187,13 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
 
       // set image to window
       if (pSimCam->m_iCamType == 5){       // for depth image
-        float* pImgbuf = (float*) malloc( pSimCam->g_nImgWidth *
-                                          pSimCam->g_nImgHeight *
+        float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
+                                          pSimCam->m_nImgHeight *
                                           sizeof(float) );
 
         if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
-                             pSimCam->g_nImgHeight,
+          ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
+                             pSimCam->m_nImgHeight,
                              GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
           free(pImgbuf);
         }
@@ -203,12 +203,12 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
         }
       }
       else if(pSimCam->m_iCamType == 2){   // for RGB image
-        char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
-                                      pSimCam->g_nImgHeight * 3);
+        char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
+                                      pSimCam->m_nImgHeight * 3);
 
         if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
-                             pSimCam->g_nImgHeight,
+          ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
+                             pSimCam->m_nImgHeight,
                              GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
           free(pImgbuf);
         }
@@ -218,11 +218,11 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
         }
       }
       else if(pSimCam->m_iCamType == 1){    //to show greyscale image
-        char* pImgbuf= (char*)malloc (pSimCam->g_nImgWidth *
-                                      pSimCam->g_nImgHeight);
+        char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
+                                      pSimCam->m_nImgHeight);
         if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->g_nImgWidth,
-                             pSimCam->g_nImgHeight,
+          ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
+                             pSimCam->m_nImgHeight,
                              GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
           free(pImgbuf);
         }
