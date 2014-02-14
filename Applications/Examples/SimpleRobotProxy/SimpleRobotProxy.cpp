@@ -13,7 +13,7 @@
 #include <CVars/CVar.h>                       // for glconsole
 
 #include <URDFParser/URDFParser.h>            // for parse URDF file
-#include <World/WorldManager.h>               // for manage world information
+#include <World/SimWorld.h>               // for manage world information
 #include <Robots/RobotsManager.h>             // for manage all robots
 #include <Robots/SimRobot.h>                  // for user's robot
 #include <ModelGraph/PhyModelGraphAgent.h>    // for communicate between Physic Engine and ModelNode Graph
@@ -50,7 +50,7 @@ class RobotProxy
 
         Render                      m_Render;
         SimRobot*                   m_SimRobot;            // user's robot.
-        WorldManager                m_WorldManager;
+        SimWorld                m_WorldManager;
         RobotsManager               m_RobotManager;
         PhyModelGraphAgent          m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
 

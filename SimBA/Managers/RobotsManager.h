@@ -12,7 +12,7 @@
 #include <NodeMessages.pb.h>
 #include <SimRobots/SimRobot.h>
 // to communicate between
-//the physics engine and the ModelGraph
+// the physics engine and the ModelGraph
 #include <ModelGraph/ModelGraphBuilder.h>
 #include <tinyxml2.h>
 
@@ -30,8 +30,9 @@ public:
   string                            m_sMainRobotName;  // Name of Main Robot. This is actually the robot we can contorl
   bool                              m_bStateKeeperOn;
 
-  bool Init(string sProxyName, string sServerName, ModelGraphBuilder &Scene, XMLDocument& doc);
-  bool InitFromXML( string sProxyName,XMLDocument& doc);
+  bool Init(string& sProxyName, ModelGraphBuilder& Scene,
+            SimRobot& mSimRobot, const string &sServerName);
+  bool ImportSimRobot( SimRobot& mSimRobot );
   void DeleteRobot(string sRobotName);
   void UpdateWorldFullState(WorldFullStateMsg worldfullstate);
   void ApplyWorldFullStateOnAllPlayers();

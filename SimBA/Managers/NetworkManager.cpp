@@ -193,9 +193,13 @@ bool NetworkManager::RegisterRobotProxyWithStateKeeper()
       doc.Parse(urdf.xml().c_str());
 
       // create previous robot
-      m_pRobotsManager->InitFromXML(sLastName, doc);
-      //      m_pRobotsManager->GetRobot(sFullName)->InitPoseOfBodyBaseInURDF();
-      //      m_pRobotsManager->GetRobot(sFullName)->AddRobotInModelGraph();
+      URDF_Parser* parse = new URDF_Parser();
+      SimRobot* robot = new SimRobot();
+      parse->ParseRobot(doc, *robot, sLastName);
+      m_pRobotsManager->ImportSimRobot(*robot);
+
+      // TODO: How to add this back into the scene...
+
       cout<<"[NetworkManager/register] init previous player "<<sFullName<<". Last Name "<<sLastName<<" Success!"<<endl;
     }
     return true;
@@ -226,7 +230,13 @@ void NetworkManager::AddRobotByURDF(RobotProxyAddNewRobotReqMsg& mRequest, Robot
       mRequest.mutable_init_pose()->p(),mRequest.mutable_init_pose()->q(),mRequest.mutable_init_pose()->r();
 
   // add new robot in proxy
-  m_pRobotsManager->InitFromXML(sProxyNameOfNewRobot, doc);
+  URDF_Parser* parse = new URDF_Parser();
+  SimRobot* robot = new SimRobot();
+  parse->ParseRobot(doc, *robot, sProxyNameOfNewRobot);
+  m_pRobotsManager->ImportSimRobot(*robot);
+
+  // TODO: I don't think this is correct... we may have to change the naming
+  // schematic.
   m_pRobotsManager->GetRobot(sNewAddRobotName)->InitPoseOfBodyBaseWRTWorld(ePose);
   //  m_pRobotsManager->GetRobot(sNewAddRobotName)->AddRobotInModelGraph();
 

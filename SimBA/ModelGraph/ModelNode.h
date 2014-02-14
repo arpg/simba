@@ -160,50 +160,7 @@ public:
 
 };
 
-/*********************************************
-  *
-  * ROBOT MODEL
-  * RobotModel is an amalgamation of ModelNodes (Shapes, Constraints, and
-  * RaycastVehicles) that make up a Robot. It has a unique name for the sum of
-  * its parts, and also a 'Base' ModelNode that gives us a part from which to
-  * measure a relative frame.
-  *
-  *********************************************/
 
-
-class RobotModel{
-public:
-
-  RobotModel(){
-
-  }
-
-  RobotModel(std::vector<ModelNode*> vParts, std::string sName){
-    m_vParts = vParts;
-    m_sName = sName;
-  }
-
-  void SetName(std::string sName){
-    m_sName = sName;
-  }
-
-  void SetBase(ModelNode* Base){
-    m_Base = Base;
-  }
-
-  void SetParts(std::vector<ModelNode*> vParts){
-    m_vParts = vParts;
-  }
-
-  std::string GetName(){
-    return m_sName;
-  }
-
-  std::vector<ModelNode*> m_vParts;
-  std::string m_sName;
-  ModelNode* m_Base;
-
-};
 
 
 

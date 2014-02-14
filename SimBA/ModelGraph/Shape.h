@@ -63,7 +63,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////
 ///
-/// ALL OF OUR SHAPES
+/// ALL OF OUR PHYSICAL SHAPES
 ///
 ///////////////////////////////////////////////////////////////////////
 
@@ -124,8 +124,62 @@ public:
   double m_dRadius;
 };
 
+/////////////////////
+
+class PlaneShape : public Shape
+{
+public:
+  PlaneShape(std::string sName, std::vector<double> normal,
+             std::vector<double> dPose){
+    m_dNormal = normal;
+    SetName(sName);
+    SetMass(0);
+    SetRestitution(0);
+    SetPose(dPose);
+    SetScale(1);
+  }
+
+  std::vector<double> m_dNormal;
+};
+
+//////////////////////
+
+class MeshShape : public Shape
+{
+public:
+  MeshShape(std::string sName, std::string file_dir, std::vector<double> dPose){
+    File_Dir = file_dir;
+    SetName(sName);
+    SetMass(0);
+    SetRestitution(0);
+    SetPose(dPose);
+    SetScale(1);
+  }
+
+  std::string GetFileDir(){
+    return File_Dir;
+  }
+
+  std::string File_Dir;
+};
 
 
+///////////////////////////////////////////////////////////////////////
+///
+/// ALL OF OUR NON-COLLIDING SHAPES
+/// These do not get implemented into Bullet Physics, but are still
+/// important. Lights fall under this category.
+///
+///////////////////////////////////////////////////////////////////////
+
+class LightShape : public Shape
+{
+public:
+  LightShape(std::string sName, std::vector<double> position){
+    SetName(sName);
+    SetPosition(position[0], position[1], position[2]);
+  }
+};
 
 #endif // SHAPE_H
 

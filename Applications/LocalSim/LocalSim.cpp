@@ -22,47 +22,35 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   m_sLocalSimName (sLocalSimName),
   m_SimDeviceManager(m_Scene.m_Render.m_glGraph)
 {
-  // 1. Read Robot.xml file.
+  // 1. Read URDF files.
   XMLDocument RobotURDF, WorldURDF;
   GetXMLdoc(sRobotURDFPath, RobotURDF);
   GetXMLdoc(sWorldURDFPath, WorldURDF);
 
   // 2. Parse world.xml file.
-  if( m_Parser.ParseWorld(WorldURDF, m_WorldManager) == false){
-    cout<<"[LocalSim] Parse World Fail."<<endl;
-    exit(-1);
-  }
+  m_Parser.ParseWorld(WorldURDF, m_SimWorld);
+  m_Parser.ParseRobot(RobotURDF, m_SimRobot, sServerName);
 
   // 3. Init User's Robot and add it to RobotManager
-  if(m_RobotManager.Init(
-       m_sLocalSimName, sServerName, m_Scene, RobotURDF) == false)
-  {
-    cout<<"[LocalSim] Init Robot Fail."<<endl;
-    exit(-1);
-  }
+  m_RobotManager.Init(m_sLocalSimName, m_Scene, m_SimRobot, sServerName);
 
-  m_pMainRobot = m_RobotManager.GetMainRobot();
-
-  // 4. Add the robot to the Model Graph Scene
-  m_Scene.Init(ModelGraphBuilder::All,m_pMainRobot->GetRobotModel(),sLocalSimName);
+  // 4. Add the world and robot to the Model Graph Scene
+  m_Scene.Init(ModelGraphBuilder::All, m_SimWorld, m_SimRobot,sLocalSimName);
 
   // 5. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
   if( m_SimDeviceManager.InitFromXML(
-        m_Scene.m_Phys, RobotURDF,m_sLocalSimName, sPoseFileName) == false)
-  {
+        m_Scene.m_Phys, RobotURDF,m_sLocalSimName, sPoseFileName) == false){
     cout<<"[LocalSim] Init SimDevice Fail."<<endl;
     exit(-1);
   }
 
   // 6. Initialize the Network
-  if(m_NetworkManager.Init( m_sLocalSimName, sServerName) ==false)
-  {
+  if(m_NetworkManager.Init( m_sLocalSimName, sServerName) ==false){
     cout<<"[LocalSim] Init Network Fail."<<endl;
     exit(-1);
   }
 
-  if(m_NetworkManager.PubRobotIfNeeded(&m_RobotManager) == false)
-  {
+  if(m_NetworkManager.PubRobotIfNeeded(&m_RobotManager) == false){
     cout<<"[LocalSim] Init Robot Network Fail."<<endl;
     exit(-1);
   }
@@ -77,65 +65,6 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
 /// FUNCTIONS
 ////////////////////////////////////////////////////////////////////////
 
-// InitReset will populate SceneGraph with objects, and
-// register these objects with the simulator.
-void LocalSim::InitReset()
-{
-  SceneGraph::GLLight*        m_light = new SceneGraph::GLLight();
-  SceneGraph::GLBox*          m_ground = new SceneGraph::GLBox();
-  SceneGraph::GLGrid*         m_grid = new SceneGraph::GLGrid();
-  SceneGraph::GLMesh*         m_Map = new SceneGraph::GLMesh();                 // mesh for the world.
-
-  m_Scene.m_Render.m_glGraph.Clear();
-
-  m_light->SetPosition( m_WorldManager.vLightPose[0],
-      m_WorldManager.vLightPose[1],
-      m_WorldManager.vLightPose[2]);
-  m_Scene.m_Render.m_glGraph.AddChild( m_light );
-
-  // init world without mesh
-  if (m_WorldManager.m_sMesh =="NONE")
-  {
-    cout<<"[RobotRroxy] Try init empty world."<<endl;
-    m_grid->SetNumLines(20);
-    m_grid->SetLineSpacing(1);
-    m_Scene.m_Render.m_glGraph.AddChild(m_grid);
-
-    double dThickness = 1;
-    m_ground->SetPose( 0,0, dThickness/2.0,0,0,0 );
-    m_ground->SetExtent( 200,200, dThickness );
-    m_Scene.m_Render.m_glGraph.AddChild( m_ground );
-
-    BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1, m_WorldManager.vWorldPose);
-    m_Scene.m_Phys.RegisterObject(pGround);
-    m_Scene.m_Phys.SetFriction("Ground", 888);
-  }
-  // init world with mesh
-  // maybe dangerous to always reload meshes?
-  /// maybe we should separate Init from Reset?
-  else {
-    try
-    {
-      cout<<"[RobotRroxy] Try init word with mesh: "
-         <<m_WorldManager.m_sMesh<<endl;
-      m_Map->Init(m_WorldManager.m_sMesh);
-      m_Map->SetPerceptable(true);
-      m_Map->SetScale(m_WorldManager.iScale);
-      m_Map->SetPosition(m_WorldManager.vWorldPose[0],
-          m_WorldManager.vWorldPose[1],
-          m_WorldManager.vWorldPose[2]);
-      m_Scene.m_Render.m_glGraph.AddChild( m_Map );
-    } catch (std::exception e) {
-      printf( "Cannot load world map\n");
-      exit(-1);
-    }
-  }
-
-  m_Scene.m_Render.AddToScene();
-  cout<<"[LocalSim/InitReset] Init World Success"<<endl;
-}
-
-//////////////////////////////////////////////////////////////////
 // Apply the camera's pose directly to the SimCamera
 void LocalSim::ApplyCameraPose(Eigen::Vector6d dPose){
   Eigen::Vector6d InvalidPose;
@@ -143,7 +72,7 @@ void LocalSim::ApplyCameraPose(Eigen::Vector6d dPose){
   if(dPose == InvalidPose){
   }
   else{
-    string sMainRobotName = m_pMainRobot->GetRobotName();
+    string sMainRobotName = m_SimRobot.GetRobotName();
 
     // update RGB camera pose
     string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
@@ -236,95 +165,6 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
   return true;
 }
 
-////////////////////
-/// INPUT KEYS
-////////////////////
-
-void LocalSim::LeftKey(){
-  string sMainRobotName = m_pMainRobot->GetRobotName();
-
-  // update RGB camera pose
-  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-
-  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
-  dPoseRGB(5,0) = dPoseRGB(5,0) - 0.1;
-  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
-
-  // update Depth camera pose
-  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-
-  Eigen::Vector6d dPoseDepth =
-      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
-  dPoseDepth(5,0) = dPoseDepth(5,0) - 0.1;
-  m_SimDeviceManager.
-      GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
-
-  //            string sMainRobotName = m_pMainRobot->GetRobotName();
-  //            string sName = "RCamera@" + sMainRobotName;
-  //            Eigen::Vector6d dPose;
-  //            m_PhysEngine.GetEntity6Pose(sName, dPose);
-  //            dPose(0,0) = dPose(0,0) + 1;
-  //            m_PhysEngine.SetEntity6Pose(sName, dPose);
-}
-
-void LocalSim::RightKey(){
-  string sMainRobotName = m_pMainRobot->GetRobotName();
-
-  // update RGB camera pose
-  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-
-  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
-  dPoseRGB(5,0) = dPoseRGB(5,0) + 0.1;
-  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
-
-  // update Depth camera pose
-  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-
-  Eigen::Vector6d dPoseDepth =
-      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
-  dPoseDepth(5,0) = dPoseDepth(5,0) + 0.1;
-  m_SimDeviceManager.
-      GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
-}
-
-void LocalSim::ForwardKey(){
-  //  you should update the pose of the rig and then the poses of the cameras would always be relative to the rig
-  string sMainRobotName = m_pMainRobot->GetRobotName();
-
-  // update RGB camera pose
-  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-
-  Eigen::Vector6d dPoseRGB = _T2Cart( m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
-  dPoseRGB(1,0) = dPoseRGB(1,0) + 1;
-  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
-
-  // update Depth camera pose
-  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-
-  Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
-  dPoseDepth(1,0) = dPoseDepth(1,0) + 1;
-  m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
-}
-
-void LocalSim::ReverseKey(){
-  string sMainRobotName = m_pMainRobot->GetRobotName();
-
-  // update RGB camera pose
-  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-
-  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
-  dPoseRGB(1,0) = dPoseRGB(1,0) - 1;
-  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
-
-  // update Depth camera pose
-  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-
-  Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
-  dPoseDepth(1,0) = dPoseDepth(1,0) - 1;
-  m_SimDeviceManager.
-      GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
-}
-
 // ---- Step Forward
 void LocalSim::StepForward( void )
 {
@@ -369,31 +209,30 @@ int main( int argc, char** argv )
   // Initialize a LocalSim.
   LocalSim mLocalSim(sLocalSimName, sRobotURDF,
                      sWorldURDF, sServerOption, sPoseFile);
-  mLocalSim.InitReset();
 
   //////KEYBOARD COMMANDS
   //  pangolin::RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
   //                                      boost::bind( &LocalSim::InitReset,
   //                                                   &mLocalSim ) );
-  pangolin::RegisterKeyPressCallback(
-        'a', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
-  pangolin::RegisterKeyPressCallback(
-        'A', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
+//  pangolin::RegisterKeyPressCallback(
+//        'a', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
+//  pangolin::RegisterKeyPressCallback(
+//        'A', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
 
-  pangolin::RegisterKeyPressCallback(
-        's', boost::bind( &LocalSim::ReverseKey, &mLocalSim ) );
-  pangolin::RegisterKeyPressCallback(
-        'S', boost::bind( &LocalSim::ReverseKey, &mLocalSim ) );
+//  pangolin::RegisterKeyPressCallback(
+//        's', boost::bind( &LocalSim::ReverseKey, &mLocalSim ) );
+//  pangolin::RegisterKeyPressCallback(
+//        'S', boost::bind( &LocalSim::ReverseKey, &mLocalSim ) );
 
-  pangolin::RegisterKeyPressCallback(
-        'd', boost::bind( &LocalSim::RightKey, &mLocalSim ) );
-  pangolin::RegisterKeyPressCallback(
-        'D', boost::bind( &LocalSim::RightKey, &mLocalSim ) );
+//  pangolin::RegisterKeyPressCallback(
+//        'd', boost::bind( &LocalSim::RightKey, &mLocalSim ) );
+//  pangolin::RegisterKeyPressCallback(
+//        'D', boost::bind( &LocalSim::RightKey, &mLocalSim ) );
 
-  pangolin::RegisterKeyPressCallback(
-        'w', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
-  pangolin::RegisterKeyPressCallback(
-        'W', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
+//  pangolin::RegisterKeyPressCallback(
+//        'w', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
+//  pangolin::RegisterKeyPressCallback(
+//        'W', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
 
   pangolin::RegisterKeyPressCallback(
         ' ', boost::bind( &LocalSim::StepForward, &mLocalSim ) );

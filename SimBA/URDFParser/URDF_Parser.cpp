@@ -10,7 +10,7 @@ URDF_Parser::URDF_Parser(){
 ////////////////////////////////////////////////////////////
 /// PARSE WORLD.XML IN ROBOTPROXY
 ////////////////////////////////////////////////////////////
-bool URDF_Parser::ParseWorld(XMLDocument& pDoc, WorldManager& mWorldManager)
+bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
 {
   XMLElement *pParent=pDoc.RootElement();
   XMLElement *pElement=pParent->FirstChildElement();
@@ -20,22 +20,32 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, WorldManager& mWorldManager)
     const char* sRootContent = pElement->Name();
     if(strcmp(sRootContent,"base")==0){
       string sMesh(pElement->Attribute("mesh"));
-      mWorldManager.m_sMesh = sMesh;
-      mWorldManager.iScale =::atoi( pElement->Attribute("scale"));
-      mWorldManager.iMass =::atoi( pElement->Attribute("mass"));
-      mWorldManager.vWorldPose =
+      mSimWorld.m_sMesh = sMesh;
+      mSimWorld.m_vWorldPose =
           GenNumFromChar(pElement->Attribute("worldpose"));
-      mWorldManager.vRobotPose=
+      mSimWorld.m_vRobotPose=
           GenNumFromChar(pElement->Attribute("robotpose"));
-      mWorldManager.vLightPose=
+      std::vector<double> vLightPose =
           GenNumFromChar(pElement->Attribute("lightpose"));
-    }
+      LightShape* pLight = new LightShape("Light", vLightPose);
+      m_mWorldNodes[pLight->GetName()] = pLight;
 
+      // init world without mesh
+      if (mSimWorld.m_sMesh =="NONE"){
+        BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1,
+                                         mSimWorld.m_vWorldPose);
+        m_mWorldNodes[pGround->GetName()] = pGround;
+      }
+      else {
+        MeshShape* pMesh = new MeshShape("Map", mSimWorld.m_sMesh,
+                                         mSimWorld.m_vWorldPose);
+        m_mWorldNodes[pMesh->GetName()] = pMesh;
+      }
+    }
     pElement=pElement->NextSiblingElement();
   }
-
-  mWorldManager.PrintAll();
-
+  mSimWorld.PrintAll();
+  mSimWorld.m_WorldNodes = GetModelNodes(m_mWorldNodes);
   return true;
 }
 
@@ -46,14 +56,16 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, WorldManager& mWorldManager)
 /// The name of any robot body is: BodyName@RobotName@ProxyName
 /// The name of any robot joint is: JointName@RobotName@ProxyName
 ////////////////////////////////////////////////////////////
-bool URDF_Parser::ParseRobot(XMLDocument* pDoc,
-                             RobotModel& rRobotModel,
+bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
+                             SimRobot& rSimRobot,
                              string sProxyName){
   cout<<"[ParseRobot] Start Parsing Robot"<<endl;
-  XMLElement *pParent=pDoc->RootElement();
+  XMLElement *pParent=pDoc.RootElement();
   string sRobotName(GetAttribute(pParent, "name"));
   sRobotName = sRobotName+"@"+sProxyName;
-  rRobotModel.SetName(sRobotName);
+  rSimRobot.SetName(sRobotName);
+  rSimRobot.SetRobotURDF(pDoc.ToDocument());
+  rSimRobot.SetProxyName(sProxyName);
   XMLElement *pElement = pParent->FirstChildElement();
 
   // Need to do something with m_mModelNodes; right now, nothing happens.
@@ -72,7 +84,7 @@ bool URDF_Parser::ParseRobot(XMLDocument* pDoc,
       const char* sType = pElement->Attribute("type");
       if(strcmp(sType, "Box") ==0){
         BoxShape* pBox =new BoxShape(sBodyName, vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1, vPose);
-        rRobotModel.SetBase( pBox ); // main body
+        rSimRobot.SetBase( pBox ); // main body
         cout<<"[Parse Robot] Build Bodybase: "<<sBodyName<<" success."<<endl;
         m_mModelNodes[pBox->GetName()] = pBox;
       }
@@ -103,7 +115,19 @@ bool URDF_Parser::ParseRobot(XMLDocument* pDoc,
     pElement=pElement->NextSiblingElement();
   }
 
-  rRobotModel.SetParts(GetModelNodes());
+  rSimRobot.SetParts(GetModelNodes(m_mModelNodes));
+
+  // If we run in 'without Network mode', we need to init robot pose ourselves.
+  // or this pose will be read from server.
+  // We need to build the ModelGraph manaully once we get the
+  // pose from the statekeeper.
+
+  if(rSimRobot.GetStateKeeperStatus() == false){
+    Eigen::Vector6d RobotInitPoseInWorld;
+    RobotInitPoseInWorld<<0,0,-2,0,0,1.57;
+    rSimRobot.InitPoseOfBodyBaseWRTWorld(RobotInitPoseInWorld);
+  }
+
   return true;
 }
 
@@ -482,7 +506,7 @@ void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
     /// Build the car here.
     m_mModelNodes[sRobotName] = pRaycastVehicle;
 
-    cout<<"[URDF Parser] Parse Car "<<sRobotName<<" Success."<<endl;
+    cout<<"[URDF Parser] Parse Vehicle "<<sRobotName<<" Success."<<endl;
     cout<<"torque speed slope is "<<vParameters[25] <<endl;
   }
 
@@ -490,7 +514,7 @@ void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
 
 
 ////////////////////////////////////////////////////////////
-/// Parse SENSORS BODIES. Automaticlly Create Body for Sensor
+/// Parse SENSORS BODIES. Automatically Create Body for Sensor
 ////////////////////////////////////////////////////////////
 void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
 {
@@ -828,10 +852,10 @@ bool URDF_Parser::ParseWorldForInitRobotPose(
 /// HELPER FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////
 
-std::vector<ModelNode*> URDF_Parser::GetModelNodes(){
+std::vector<ModelNode*> URDF_Parser::GetModelNodes(std::map<std::string, ModelNode*> mNodes){
   std::vector<ModelNode*> Nodes;
-  for( std::map<string, ModelNode*>::iterator it = m_mModelNodes.begin();
-       it!=m_mModelNodes.end();it++){
+  for( std::map<string, ModelNode*>::iterator it = mNodes.begin();
+       it!=mNodes.end();it++){
     Nodes.push_back(it->second);
   }
   return Nodes;

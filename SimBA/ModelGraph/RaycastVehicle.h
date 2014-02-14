@@ -2,6 +2,7 @@
 #define RAYCASTVEHICLE_H
 
 #include <ModelGraph/ModelNode.h>
+#include <ModelGraph/VehicleEnums.h>
 
 // It's a simple class, but enough to hold the info we need.
 
@@ -20,6 +21,7 @@ public:
   }
 
   vector<double> m_dParameters;
+
 };
 
 

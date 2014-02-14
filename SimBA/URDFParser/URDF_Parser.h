@@ -8,7 +8,8 @@
 #include <ModelGraph/Constraint.h>
 #include <ModelGraph/RaycastVehicle.h>
 #include <SimDevices/SimDeviceInfo.h>
-#include <Managers/WorldManager.h>
+#include <SimRobots/SimRobot.h>
+#include <SimRobots/SimWorld.h>
 
 /////////////////////////////////
 /// URDF PARSER
@@ -34,11 +35,11 @@ public:
   URDF_Parser();
 
   // Parses the world for the mesh and conditions.
-  bool ParseWorld(XMLDocument& doc, WorldManager& mWorldManager);
+  bool ParseWorld(XMLDocument& doc, SimWorld& mSimWorld);
 
   // ParseRobot really parses each of the robot parts, and then generates a set
   // of commands that the PhysicsEngine can use to create bullet objects.
-  bool ParseRobot(XMLDocument* doc, RobotModel &m_RobotModel, string sProxyName);
+  bool ParseRobot(XMLDocument &doc, SimRobot &m_SimRobot, string sProxyName);
 
   void ParseShape(string sRobotName, XMLElement *pElement);
 
@@ -63,11 +64,13 @@ public:
   bool ParseWorldForInitRobotPose(const char* filename,
                                  vector<Eigen::Vector6d>& vRobotInitPose);
 
-  std::vector<ModelNode*> GetModelNodes();
+  std::vector<ModelNode*> GetModelNodes(
+      std::map<std::string, ModelNode*> mNodes);
 
   ////////////////////////////////////////
 
   std::map<std::string, ModelNode*> m_mModelNodes;
+  std::map<std::string, ModelNode*> m_mWorldNodes;
 
 };
 

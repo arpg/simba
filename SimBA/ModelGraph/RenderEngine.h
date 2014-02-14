@@ -101,6 +101,33 @@ public:
         new_cylinder->SetPose(pbShape->GetPose());
         m_mSceneEntities[pNode] = new_cylinder;
       }
+
+      //Plane
+      else if (dynamic_cast<PlaneShape*>(pShape) != NULL){
+        PlaneShape* pbShape = (PlaneShape *) pShape;
+        SceneGraph::GLGrid* new_plane = new SceneGraph::GLGrid();
+        new_plane->SetNumLines(20);
+        new_plane->SetLineSpacing(1);
+        m_mSceneEntities[pNode] = new_plane;
+      }
+
+      //Light
+      else if (dynamic_cast<LightShape*>(pShape) != NULL){
+        LightShape* pbShape = (LightShape *) pShape;
+        SceneGraph::GLLight* new_light = new SceneGraph::GLLight();
+        new_light->SetPosition(pbShape->GetPositon());
+        m_mSceneEntities[pNode] = new_light;
+      }
+
+      //Mesh
+      else if (dynamic_cast<MeshShape*>(pShape) != NULL){
+        MeshShape* pbShape = (MeshShape *) pShape;
+        SceneGraph::GLMesh* new_mesh =
+            new SceneGraph::GLMesh(pbShape->GetFileDir());
+        new_mesh->SetPose(pbShape->GetPose());
+        m_mSceneEntities[pNode] = new_mesh;
+      }
+
     }
   }
 

@@ -81,7 +81,7 @@
             Parent="Stick"
             Pose="0,0,5,0,0,0"
             Location="@Proxy1"
-            Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml"/>
+            Model="/home/bminortx/Code/SimBA/SimBA/SimDevices/Sensor/cameras.xml"/>
 
     <Sensor Name="ChassisVicon" Type="Vicon" Body="Chassis"/> <!-- Must include this sensor if use robot proxy! robot proxy need this sensor to get robot's pose (chassis's pose) information -->
     <Controller Name="MController" Mode="SimpleController"/>

@@ -41,7 +41,6 @@ include_directories( ${USER_INC} )
 list(APPEND MANAGERS_HDRS
   Managers/SimDeviceManager.h
   Managers/RobotsManager.h
-  Managers/WorldManager.h
   Managers/NetworkManager.h
 )
 
@@ -57,12 +56,14 @@ list(APPEND MODELGRAPH_HDRS
   ModelGraph/ModelNode.h
   ModelGraph/RenderEngine.h
   ModelGraph/EigenHelpers.h
-  ModelGraph/Bullet_shapes/bullet_cube
-  ModelGraph/Bullet_shapes/bullet_cylinder
-  ModelGraph/Bullet_shapes/bullet_heightmap
-  ModelGraph/Bullet_shapes/bullet_shape
-  ModelGraph/Bullet_shapes/bullet_sphere
-  ModelGraph/Bullet_shapes/bullet_vehicle
+  ModelGraph/Bullet_shapes/bullet_cube.h
+  ModelGraph/Bullet_shapes/bullet_cylinder.h
+  ModelGraph/Bullet_shapes/bullet_heightmap.h
+  ModelGraph/Bullet_shapes/bullet_shape.h
+  ModelGraph/Bullet_shapes/bullet_sphere.h
+  ModelGraph/Bullet_shapes/bullet_vehicle.h
+  ModelGraph/Bullet_shapes/bullet_plane.h
+  ModelGraph/VehicleEnums.h
 )
 
 list(APPEND NETWORK_HDRS
@@ -96,8 +97,8 @@ list(APPEND SIMDEVICES_SENSOR_HDRS
 )
 
 list(APPEND SIMROBOTS_HDRS
-  SimRobots/MobileModel.h
   SimRobots/SimRobot.h
+  SimRobots/SimWorld.h
 )
 
 list(APPEND URDFPARSER_HDRS
@@ -138,12 +139,9 @@ list(APPEND SIMROBOTS_SRCS)
 list(APPEND URDFPARSER_SRCS
   URDFParser/URDF_Parser.cpp
 )
-list(APPEND PHYSMODEL_SRCS
-  URDFParser/URDF_Parser.cpp
-)
 list(APPEND UTILS_SRCS)
 
-list(APPEND SIMBA_SRCS ${MANAGERS_SRCS} ${URDFPARSER_SRCS} ${PHYSMODEL_SRCS})
+list(APPEND SIMBA_SRCS ${MANAGERS_SRCS} ${URDFPARSER_SRCS})
 
 ##################
 # CREATE THE SIMBA LIBRARY

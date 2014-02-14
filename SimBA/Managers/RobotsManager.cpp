@@ -4,43 +4,28 @@
 /// INITIALIZE the RobotsManager
 ////////////////////////////////////////////////////////////////////////
 
-bool RobotsManager::Init(string sProxyName,
-                         string sServerName,
-                         ModelGraphBuilder& Scene,
-                         XMLDocument& rDoc
-                         )
-{
+bool RobotsManager::Init(string& sProxyName, ModelGraphBuilder& Scene,
+                         SimRobot& mSimRobot, const string& sServerName){
   m_Scene      = Scene;
   m_sProxyName = sProxyName;
   if(sServerName == "WithoutStateKeeper" || sServerName =="WithoutNetwork"){
     m_bStateKeeperOn = false;
   }
-  else
-  {
+  else{
     m_bStateKeeperOn = true;
   }
-
-  return InitFromXML(sProxyName, rDoc);
+  return ImportSimRobot(mSimRobot);
 }
 
 
-bool RobotsManager::InitFromXML( string sProxyName, XMLDocument& doc)
-{
-  // Now Build Robot By XML file
-  SimRobot* pSimRobot = new SimRobot;
-
-  // Construct the robot from the URDF
-  if( pSimRobot->Init(sProxyName, m_bStateKeeperOn, doc) != true){
-    cout<<"[RobotsManager] FatalError! Cannot init Robot!!"<<endl;
-    return false;
-  }
+bool RobotsManager::ImportSimRobot( SimRobot& mSimRobot ){
 
   // check if we should save name of this robot as save main robot name
   if(m_mSimRobotsList.size()==0){
-    m_sMainRobotName = pSimRobot->GetRobotName();
+    m_sMainRobotName = mSimRobot.GetRobotName();
   }
-  m_mSimRobotsList.insert(pair<string, SimRobot*>(pSimRobot->GetRobotName(),
-                                                  pSimRobot));
+  m_mSimRobotsList.insert(pair<string, SimRobot*>(mSimRobot.GetRobotName(),
+                                                  &mSimRobot));
   return true;
 }
 

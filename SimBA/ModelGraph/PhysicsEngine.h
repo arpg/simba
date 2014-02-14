@@ -10,6 +10,7 @@
 #include <ModelGraph/Bullet_shapes/bullet_cylinder.h>
 #include <ModelGraph/Bullet_shapes/bullet_sphere.h>
 #include <ModelGraph/Bullet_shapes/bullet_vehicle.h>
+#include <ModelGraph/Bullet_shapes/bullet_plane.h>
 
 //////////////////////////////////////////////////////////
 ///
@@ -137,6 +138,30 @@ public:
         pEntity->m_pMotionState = pMotionState;
         m_mShapes[pItem->GetName()] = pEntity;
       }
+
+      //Plane
+      else if (dynamic_cast<PlaneShape*>( pNodeShape ) != NULL) {
+        bullet_plane btPlane(pItem);
+        CollisionShapePtr pShape( btPlane.getBulletShapePtr() );
+        MotionStatePtr pMotionState( btPlane.getBulletMotionStatePtr() );
+        RigidBodyPtr body( btPlane.getBulletBodyPtr() );
+        m_pDynamicsWorld->addRigidBody( body.get() );
+
+        //Save the object; easier deconstruction this way.
+        boost::shared_ptr<Entity> pEntity( new Entity );
+        pEntity->m_pRigidBody = body;
+        pEntity->m_pShape = pShape;
+        pEntity->m_pMotionState = pMotionState;
+        m_mShapes[pItem->GetName()] = pEntity;
+      }
+
+      //Mesh
+      else if (dynamic_cast<MeshShape*>( pNodeShape ) != NULL){
+        /// TODO:
+        /// Write a bullet_mesh class.
+        /// import through this framework.
+      }
+
     }
 
 
@@ -356,6 +381,10 @@ public:
     else
     {
       cout<<"[PhysicsEngine] Fatal Error! Cannot get entity '"<<name<<"'. Exit!"<<endl;
+      vector<string> Names = GetAllEntityName();
+      for(int ii = 0; ii<Names.size(); ii++){
+        cout<<Names.at(ii)<<endl;
+      }
       Entity e =*m_mShapes.find(name)->second;
       return e;
     }
