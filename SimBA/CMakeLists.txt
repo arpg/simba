@@ -13,7 +13,7 @@ find_package( SceneGraph 0.1 REQUIRED )
 find_package( HAL 0.1 QUIET)
 find_package( Calibu 0.1 REQUIRED )
 find_package( Protobuf REQUIRED )
-find_package( NODE REQUIRED )
+find_package( Node REQUIRED )
 find_package( Eigen3 REQUIRED )
 find_package( TinyXML2 REQUIRED )
 
@@ -24,7 +24,7 @@ set(USER_INC ${BULLET_INCLUDE_DIR}
   ${SceneGraph_INCLUDE_DIRS}
   ${HAL_INCLUDE_DIRS}
   ${Calibu_INCLUDE_DIRS}
-  ${NODE_INCLUDE_DIRS}
+  ${Node_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${TinyXML2_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -157,7 +157,7 @@ target_link_libraries( ${PROJECT_NAME}
   ${Pangolin_LIBRARIES}
   ${SceneGraph_LIBRARIES}
   ${Calibu_LIBRARIES}
-  ${NODE_LIBRARIES}
+  ${Node_LIBRARIES}
   ${TinyXML2_LIBRARIES}
   ${EIGEN3_LIBRARIES}
   SimMessages
