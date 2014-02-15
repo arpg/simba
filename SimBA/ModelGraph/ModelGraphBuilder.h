@@ -90,7 +90,6 @@ public:
   void RenderWorldGraph(SimWorld m_SimWorld){
     for(unsigned int ii=0; ii<m_SimWorld.m_WorldNodes.size(); ii++){
       ModelNode* part = m_SimWorld.m_WorldNodes.at(ii);
-      cout<<"Now render "<<part->GetName()<<endl;
       m_Render.AddNode(part);
       Eigen::Vector6d ChildWorldPose;
       for (unsigned int ii = 0; ii < part->NumChildren(); ii++ ) {
@@ -104,7 +103,6 @@ public:
   void RenderRobotGraph(SimRobot m_SimRobot){
     for(unsigned int ii=0; ii<m_SimRobot.GetParts().size(); ii++){
       ModelNode* part = m_SimRobot.GetParts().at(ii);
-      cout<<"Now render "<<part->GetName()<<endl;
       m_Render.AddNode(part);
       Eigen::Vector6d ChildWorldPose;
       for (unsigned int ii = 0; ii < part->NumChildren(); ii++ ) {

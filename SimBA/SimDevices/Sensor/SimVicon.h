@@ -3,7 +3,7 @@
 
 
 #include <SimDevices/SimDevices.h>
-#include <ModelGraph/PhysicsEngine.h>.h>
+#include <ModelGraph/PhysicsEngine.h>
 
 // return x,y,z,p,q,r of body A.
 class SimVicon

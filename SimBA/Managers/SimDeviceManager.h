@@ -21,14 +21,14 @@ public:
   map<string, SimpleController*>     m_SimpleControllerList;
   map<string, CarController*>        m_CarControllerList;
   PoseController                     m_SimpPoseController;
-  ModelGraphBuilder                  m_ModelGraph;
+  ModelGraphBuilder*                 m_ModelGraph;
 
   /// Constructor
-  SimDeviceManager();
+  SimDeviceManager(ModelGraphBuilder* Scene);
 
   /// Initializers
   void AddDevice(SimDeviceInfo devInfo);
-  void InitAllDevices(ModelGraphBuilder Scene);
+  void InitAllDevices();
   void InitDeviceByName(string sDeviceName);
   void InitCamDevice(SimDeviceInfo& Device, string sCameraModel);
   void InitViconDevice(SimDeviceInfo& Device);

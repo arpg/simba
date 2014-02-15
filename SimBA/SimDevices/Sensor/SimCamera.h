@@ -15,7 +15,7 @@ class SimCamera
        unsigned int                   m_nImgHeight;
        unsigned int                   m_nChannels;
        SceneGraph::GLSimCam           m_Camera;     // reference camera we use
-       ModelGraphBuilder              m_ModelGraph;
+       ModelGraphBuilder*             m_ModelGraph;
        int                            m_iCamType;
        int                            m_iFPS;
        string                         m_sDeviceName; // mesh of parent that camera attach to
@@ -29,7 +29,7 @@ class SimCamera
                  int                 CameraType,
                  int                 FPS,
                  string              sCameraModel,
-                 ModelGraphBuilder   ModelGraph){
+                 ModelGraphBuilder*  ModelGraph){
            m_sDeviceName = sDeviceName;
            m_ModelGraph = ModelGraph;
            m_iFPS = FPS;
@@ -45,7 +45,7 @@ class SimCamera
 
            // initialize cameras
            m_iCamType = CameraType;
-           m_Camera.Init(&m_ModelGraph.m_Render.m_glGraph,
+           m_Camera.Init(&m_ModelGraph->m_Render.m_glGraph,
                          Sophus::SE3d::exp( vInitPose ).matrix(),
                          K, m_nImgWidth, m_nImgHeight, m_iCamType );
 
@@ -146,7 +146,7 @@ class SimCamera
        // get current camera pose from bullet
        Eigen::Vector6d GetCameraPoseByBody()
        {
-          return m_ModelGraph.m_Phys.GetEntity6Pose( m_sDeviceName );
+          return m_ModelGraph->m_Phys.GetEntity6Pose( m_sDeviceName );
        }
 
        // ------------------------------------------------------------------------------------------------------------------

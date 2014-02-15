@@ -4,7 +4,8 @@
 /// CONSTRUCTOR
 ////////////////////////////////////////////////////////////////////////
 
-SimDeviceManager::SimDeviceManager(){
+SimDeviceManager::SimDeviceManager(ModelGraphBuilder *Scene){
+  m_ModelGraph = Scene;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -16,8 +17,7 @@ void SimDeviceManager::AddDevice(SimDeviceInfo devInfo){
 }
 
 ////////////////////////////////////////////////////////////////////////
-void SimDeviceManager::InitAllDevices(ModelGraphBuilder Scene){
-  m_ModelGraph = Scene;
+void SimDeviceManager::InitAllDevices(){
   for(unsigned int i = 0; i!= m_vSimDevices.size(); i++){
     SimDeviceInfo Device = m_vSimDevices[i];
     string sDeviceType = Device.m_sDeviceType;
@@ -111,7 +111,7 @@ void SimDeviceManager::InitViconDevice(SimDeviceInfo& Device)
   string sDeviceName = Device.m_sDeviceName;
   string sBodyName = Device.m_sBodyName;
   SimVicon* pSimVicon = new SimVicon;
-  pSimVicon->init(sDeviceName, sBodyName, m_ModelGraph.m_Phys );
+  pSimVicon->init(sDeviceName, sBodyName, m_ModelGraph->m_Phys );
   m_SimViconList.insert(pair<string, SimVicon*>(sDeviceName,pSimVicon));
 }
 
@@ -127,7 +127,7 @@ void SimDeviceManager::InitController(SimDeviceInfo& Device)
   {
     SimpleController* pSimpleController = new SimpleController;
     pSimpleController->init(sDeviceName, sRobotName,
-                            sDeviceName, m_ModelGraph.m_Phys );
+                            sDeviceName, m_ModelGraph->m_Phys );
     m_SimpleControllerList.insert(pair<string,
                                   SimpleController*>(sDeviceName,
                                                      pSimpleController));

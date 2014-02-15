@@ -59,7 +59,7 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
 bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
                              SimRobot& rSimRobot,
                              string sProxyName){
-  cout<<"[ParseRobot] Start Parsing Robot"<<endl;
+  cout<<"[ParseRobot] Starting to parse robot"<<endl;
   XMLElement *pParent=pDoc.RootElement();
   string sRobotName(GetAttribute(pParent, "name"));
   sRobotName = sRobotName+"@"+sProxyName;
@@ -85,7 +85,7 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
       if(strcmp(sType, "Box") ==0){
         BoxShape* pBox =new BoxShape(sBodyName, vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1, vPose);
         rSimRobot.SetBase( pBox ); // main body
-        cout<<"[Parse Robot] Build Bodybase: "<<sBodyName<<" success."<<endl;
+        cout<<"[ParseRobot] Successfully built bodybase: "<<sBodyName<<endl;
         m_mModelNodes[pBox->GetName()] = pBox;
       }
     }
@@ -140,7 +140,8 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
 bool URDF_Parser::ParseCommandLineForPickSensor(string sCommandLine)
 {
   // get scheme:
-
+  cout<<sCommandLine<<endl;
+  return true;
 
 }
 
@@ -185,24 +186,27 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
   if(strcmp(sRootContent,"body")==0)
   {
     string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
-    cout<<"Try to build body "<<sBodyName<<endl;
+    cout<<"[ParseShape] Trying to build "<<sBodyName<<endl;
     int iMass =::atoi( pElement->Attribute("mass"));
     vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
     vector<double> vDimesion =
         GenNumFromChar(pElement->Attribute("dimesion"));
     const char* sType = pElement->Attribute("type");
+
     if(strcmp(sType, "Box") ==0){
       BoxShape* pBox =new BoxShape(sBodyName,vDimesion[0],vDimesion[1],
           vDimesion[2],iMass, 1,vPose);
       m_mModelNodes[pBox->GetName()] = pBox;
     }
+
     else if(strcmp(sType,"Cylinder")==0){
       CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimesion[0],
           vDimesion[1],iMass,1,
           vPose);
       m_mModelNodes[pCylinder->GetName()] = pCylinder;
     }
-    cout<<"[RobotParser] Finish building body "<<sBodyName<<endl;
+
+    cout<<"[ParseShape] Successfully built "<<sBodyName<<endl;
   }
 
 }
@@ -216,12 +220,11 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
   const char* sRootContent = pElement->Name();
 
   if(strcmp(sRootContent,"joint")==0){
-    cout<<"[Parse Robot] try to build joint"<<endl;
     string sJointName= GetAttribute( pElement, "name")+"@"+sRobotName; // get joint name. e.g. BLAxleJoint@robot1@proxy
     string sJointType(pElement->Attribute("type"));
 
     if(sJointType == "HingeJoint"){
-      cout<<"[Parse Robot] try to build Hinge joint."<<endl;
+      cout<<"[ParseJoint] Trying to build Hinge joint."<<endl;
       string sParentName;
       string sChildName;
       vector<double> vPivot;
@@ -276,11 +279,11 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
                              pivot, Eigen::Vector3d::Identity(),
                              axis, Eigen::Vector3d::Identity());
       m_mModelNodes[pHinge->GetName()] = pHinge;
-      cout<<"Build Hinge joint "<<sJointName<<" success"<<endl;
+      cout<<"[ParseJoint] Successfully built "<<sJointName<<endl;
     }
     else if(sJointType=="Hinge2Joint")
     {
-      cout<<"[Parse Robot] try to build Hinge2 joint."<<endl;
+      cout<<"[ParseJoint] Trying to build Hinge2 joint."<<endl;
       string sParentName;
       string sChildName;
       vector<double> vAnchor;
@@ -338,17 +341,6 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
         pChild=pChild->NextSiblingElement();
       }
 
-      cout<<"before build joint"<<endl;
-      if(m_mModelNodes.find(sParentName) !=m_mModelNodes.end()){
-        cout<<"find "<<sParentName<<endl;
-      }
-      else{
-        cout<<"Cannot find"<<sParentName<<endl;
-      }
-      for(std::map<string, ModelNode*>::iterator it =m_mModelNodes.begin();
-          it!=m_mModelNodes.end(); it++ ){
-        cout<<"find "<<it->first<<endl;
-      }
       Hinge2* pHinge2 = new Hinge2( sJointName,
                                     dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
                                     dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
@@ -357,7 +349,7 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
       //pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
       //LowerAngleLimit, UpperAngleLimit);
       m_mModelNodes[pHinge2->GetName()] = pHinge2;
-      std::cout<<"[ParseRobot] Creating a Hinge2Joint between "<<
+      std::cout<<"[ParseJoint] Creating a Hinge2Joint between "<<
                  sParentName<<" and "<<sChildName<<std::endl;
     }
   }
@@ -523,13 +515,13 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
   if(strcmp(sRootContent,"Sensor")==0){
     string sType( pElement->Attribute("Type"));
     if(sType == "Camera"){
-      cout<<"[ParseRobot] Try to Init Camera"<<endl;
+      cout<<"[ParseSensorShape] Trying to init Camera"<<endl;
       const char* sMode = pElement->Attribute("Mode");
 
       /// Single Camera
       if(strcmp(sMode, "RGB")==0 || strcmp(sMode,"Depth")==0 ||
          strcmp(sMode,"Gray")==0){
-        cout<<"[ParseRobot] Try to init "<<sMode<<endl;
+        cout<<"[ParseSensorShape] Camera Type: "<<sMode<<endl;
         string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
         string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
         string sCamMode(sMode);
@@ -555,12 +547,11 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
                               vPivot, Eigen::Vector3d::Identity(),
                               vAxis, Eigen::Vector3d::Identity());
         m_mModelNodes[pHinge->GetName()] = pHinge;
-        cout<<"[ParseRobot] Init Single Camera Physics Success."<<endl;
       }
 
       /// RGB-Depth Camera
       if(strcmp(sMode, "RGBD")==0 ){
-        cout<<"[ParseRobot] Try to init "<<sMode<<endl;
+        cout<<"[ParseSensorShape] Camera Type: "<<sMode<<endl;
         string sCameraName=
             GetAttribute( pElement, "Name")+"@"+sRobotName;
         string sParentName=
@@ -613,7 +604,6 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
         string sJointName = "SimCamJoint"+sCameraName;
         vPivot<< 0, 0, 0;
         vAxis<<0,-1,0;
-        cout<<"before hinge joint."<<endl;
         HingeTwoPivot* pRGBDHinge =
             new HingeTwoPivot(sJointName,
                               dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
@@ -643,15 +633,8 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
                                vPivot, Eigen::Vector3d::Identity(),
                                vAxis, Eigen::Vector3d::Identity());
         m_mModelNodes[pDepthHinge->GetName()] = pDepthHinge;
-
-
-        for( std::map<string, ModelNode*>::iterator it = m_mModelNodes.begin();
-             it!=m_mModelNodes.end();it++){
-          cout<<"find camera body "<<it->first<<endl;
-        }
-        cout<<"[ParseRobot] Init RGBD Camera Physic Success."<<endl;
       }
-      cout<<"[ParseRobot] init Camera Physic Success."<<endl;
+      cout<<"[ParseSensorShape] Successfully init Camera."<<endl;
     }
 
     //        if(sType=="GPS")

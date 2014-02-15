@@ -123,7 +123,7 @@ public:
     {
       bulletVehicle->resetSuspension();
       //synchronize the wheels with the (interpolated) chassis worldtransform
-      for (size_t i=0;i<bulletVehicle->getNumWheels();i++)
+      for (int i=0;i<bulletVehicle->getNumWheels();i++)
       {
         bulletVehicle->updateWheelTransform(i,false);
       }

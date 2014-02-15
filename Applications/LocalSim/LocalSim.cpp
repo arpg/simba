@@ -19,7 +19,7 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
                    const std::string& sWorldURDFPath,
                    const std::string& sServerName,
                    const std::string& sPoseFileName):
-  m_sLocalSimName (sLocalSimName)
+  m_sLocalSimName (sLocalSimName), m_SimDeviceManager(&m_Scene)
 {
   // 1. Read URDF files.
   XMLDocument RobotURDF, WorldURDF;
@@ -38,7 +38,7 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   // 4. Add the world and robot to the Model Graph Scene
   m_Scene.Init(ModelGraphBuilder::All, m_SimWorld, m_SimRobot,sLocalSimName);
 
-  m_SimDeviceManager.InitAllDevices(m_Scene);
+  m_SimDeviceManager.InitAllDevices();
 
   // 6. Initialize the Network
   m_NetworkManager.Init( m_sLocalSimName, sServerName);
@@ -177,7 +177,7 @@ void LocalSim::StepForward( bool debug )
 /////
 ///// MAIN LOOP:
 ///// 1. Parses arguments in xml file
-///// 2. Develops the SceneGraph
+///// 2. Develops the ModelGraph and Physics Engine
 ///// 3. Renders the objects in the Sim.
 /////
 ///////////////////////////////////////////////////////////////////

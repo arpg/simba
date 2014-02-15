@@ -42,7 +42,7 @@ public:
     return 0;
   }
 
-  int SetPose(Eigen::Matrix4d World_pose){
+  void SetPose(Eigen::Matrix4d World_pose){
     // This may not work... may have to cast.
     btTransform bullet_trans = toBullet(World_pose);
     bulletBody->setCenterOfMassTransform(bullet_trans);

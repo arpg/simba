@@ -107,7 +107,7 @@ public:
 
       //Plane
       else if (dynamic_cast<PlaneShape*>(pShape) != NULL){
-        PlaneShape* pbShape = (PlaneShape *) pShape;
+//        PlaneShape* pbShape = (PlaneShape *) pShape;
         SceneGraph::GLGrid* new_plane = new SceneGraph::GLGrid();
         new_plane->SetNumLines(20);
         new_plane->SetLineSpacing(1);

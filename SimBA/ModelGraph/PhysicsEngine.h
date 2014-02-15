@@ -47,13 +47,14 @@ public:
     m_dTimeStep    = dTimeStep;
     m_dGravity     = dGravity;
     m_nMaxSubSteps = nMaxSubSteps;
+
+
     // Physics stuff
     // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
-    btDefaultCollisionConfiguration btCollConfig;
-    m_CollisionConfiguration = &btCollConfig;
-    m_pDispatcher = boost::shared_ptr<btCollisionDispatcher>(
-          new btCollisionDispatcher(m_CollisionConfiguration));
+    m_pDispatcher
+        = boost::shared_ptr<btCollisionDispatcher>(
+          new btCollisionDispatcher(&m_CollisionConfiguration) );
     m_pBroadphase
         = boost::shared_ptr<btDbvtBroadphase>( new btDbvtBroadphase );
     m_pSolver
@@ -63,10 +64,12 @@ public:
           new btDiscreteDynamicsWorld(m_pDispatcher.get(),
                                       m_pBroadphase.get(),
                                       m_pSolver.get(),
-                                      m_CollisionConfiguration)
-          );
-
+                                      &m_CollisionConfiguration
+                                      ) );
     m_pDynamicsWorld->setGravity( btVector3(0,0,m_dGravity) );
+
+
+
     m_pDynamicsWorld->setDebugDrawer( &m_DebugDrawer );
     m_pDynamicsWorld->getDebugDrawer()->
         setDebugMode(btIDebugDraw::DBG_DrawWireframe +
@@ -98,7 +101,6 @@ public:
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
       pEntity->m_pVehicle = vehicle;
-      int id = m_mRayVehicles.size();
       m_mRayVehicles[pItem->GetName()] = pEntity;
     }
 
@@ -114,7 +116,7 @@ public:
         CollisionShapePtr pShape( btBox.getBulletShapePtr() );
         MotionStatePtr pMotionState( btBox.getBulletMotionStatePtr() );
         RigidBodyPtr body( btBox.getBulletBodyPtr() );
-        m_pDynamicsWorld->addRigidBody( body.get() );
+        m_pDynamicsWorld->addCollisionObject( body.get() );
 
         //Save the object; easier deconstruction this way.
         boost::shared_ptr<Entity> pEntity( new Entity );
@@ -130,7 +132,7 @@ public:
         CollisionShapePtr pShape( btCylinder.getBulletShapePtr() );
         MotionStatePtr pMotionState( btCylinder.getBulletMotionStatePtr() );
         RigidBodyPtr body( btCylinder.getBulletBodyPtr() );
-        m_pDynamicsWorld->addRigidBody( body.get() );
+        m_pDynamicsWorld->addCollisionObject( body.get() );
 
         //Save the object; easier deconstruction this way.
         boost::shared_ptr<Entity> pEntity( new Entity );
@@ -146,7 +148,7 @@ public:
         CollisionShapePtr pShape( btPlane.getBulletShapePtr() );
         MotionStatePtr pMotionState( btPlane.getBulletMotionStatePtr() );
         RigidBodyPtr body( btPlane.getBulletBodyPtr() );
-        m_pDynamicsWorld->addRigidBody( body.get() );
+        m_pDynamicsWorld->addCollisionObject( body.get() );
 
         //Save the object; easier deconstruction this way.
         boost::shared_ptr<Entity> pEntity( new Entity );
@@ -278,10 +280,7 @@ public:
 
   ///////////////////////////////////////////////////////////////////
 
-  /// TODO: Fix whatever's up with the m_pDynamicsWorld...\
-  ///
-  ///
-  ///
+  /// TODO: Fix whatever's up with the m_pDynamicsWorld...
 
   void StepSimulation(){
     m_pDynamicsWorld->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
@@ -388,7 +387,7 @@ public:
     {
       cout<<"[PhysicsEngine] Fatal Error! Cannot get entity '"<<name<<"'. Exit!"<<endl;
       vector<string> Names = GetAllEntityName();
-      for(int ii = 0; ii<Names.size(); ii++){
+      for(unsigned int ii = 0; ii<Names.size(); ii++){
         cout<<Names.at(ii)<<endl;
       }
       Entity e =*m_mShapes.find(name)->second;
@@ -784,7 +783,7 @@ public:
 
 private:
 
-  btDefaultCollisionConfiguration*                       m_CollisionConfiguration;
+  btDefaultCollisionConfiguration                        m_CollisionConfiguration;
   boost::shared_ptr<btCollisionDispatcher>               m_pDispatcher;
   boost::shared_ptr<btDbvtBroadphase>                    m_pBroadphase;
   boost::shared_ptr<btSequentialImpulseConstraintSolver> m_pSolver;
