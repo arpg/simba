@@ -34,12 +34,12 @@ void SimDeviceManager::InitAllDevices(){
       InitViconDevice(Device);
     }
 
-    cout<<"get device type "<<sDeviceType<<endl;
+    cout<<"[InitAllDevices] Producing device type "<<sDeviceType<<endl;
     if(sDeviceType == "Controller"){
       InitController(Device);
     }
   }
-  cout<<"[SimDeviceManager] Init all devices success. "<<endl;
+  cout<<"[SimDeviceManager] Successfully init all devices. "<<endl;
 }
 
 
@@ -131,7 +131,7 @@ void SimDeviceManager::InitController(SimDeviceInfo& Device)
     m_SimpleControllerList.insert(pair<string,
                                   SimpleController*>(sDeviceName,
                                                      pSimpleController));
-    cout<<"add "<<sDeviceName<<" success "<<endl;
+    cout<<"[InitController] Successfully init "<<sDeviceName<<endl;
   }
 
   if(sDeviceMode == "CarController")
@@ -175,7 +175,6 @@ void SimDeviceManager::UpdateAllDevices()
   }
 
 }
-
 
 SimDeviceInfo SimDeviceManager::GetDeviceInfo(string sDeviceName)
 {

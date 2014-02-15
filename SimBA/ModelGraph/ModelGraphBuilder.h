@@ -127,12 +127,14 @@ public:
     else if(iBuildType == Rendering){
       RenderWorldGraph(m_WorldModel);
       RenderRobotGraph(m_SimRobot);
+      m_Render.AddToScene();
     }
     else if(iBuildType == All){
       AssociateWorldPhysics(m_WorldModel);
       AssociateRobotPhysics(m_SimRobot);
       RenderWorldGraph(m_WorldModel);
       RenderRobotGraph(m_SimRobot);
+      m_Render.AddToScene();
     }
     else{
       cout<<"[ModelGraphBuilder] Fatal Error! Unknown Build Type!"<<endl;

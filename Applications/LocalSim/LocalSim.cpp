@@ -211,7 +211,7 @@ int main( int argc, char** argv )
                      sWorldURDF, sServerOption, sPoseFile);
 
   // Run as debug?
-  bool debug = false;
+  bool debug = true;
 
   pangolin::RegisterKeyPressCallback(
         ' ', boost::bind( &LocalSim::StepForward, &mLocalSim, &debug ) );

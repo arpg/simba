@@ -117,8 +117,9 @@ public:
       //Light
       else if (dynamic_cast<LightShape*>(pShape) != NULL){
         LightShape* pbShape = (LightShape *) pShape;
-        SceneGraph::GLLight* new_light = new SceneGraph::GLLight();
-        new_light->SetPosition(pbShape->GetPositon());
+        SceneGraph::GLShadowLight* new_light = new SceneGraph::GLShadowLight();
+        new_light->SetPose(pbShape->GetPose());
+        new_light->EnableLight();
         m_mSceneEntities[pNode] = new_light;
       }
 
@@ -134,13 +135,14 @@ public:
     }
   }
 
-  //
   ///////////////////////////////////////
 
 
   void AddToScene(){
     std::map<ModelNode*, SceneGraph::GLObject* >::iterator it;
     for(it = m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
+      ModelNode* node = it->first;
+      cout<<"--)) "<<node->GetName()<<endl;
       SceneGraph::GLObject* p = it->second;
       m_glGraph.AddChild( p );
     }
