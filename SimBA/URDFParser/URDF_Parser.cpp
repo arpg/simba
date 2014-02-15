@@ -102,7 +102,7 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
     ParseRaycastCar(sRobotName, pElement);
 
     //////////////////////////////////////////
-    // ALL OF OUR SENSORS BODIES
+    // ALL OF OUR SENSOR BODIES
     //////////////////////////////////////////
     ParseSensorShape(sRobotName, pElement);
 
@@ -537,12 +537,12 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
         vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
         int iMass = 1;
 
-        // create body for simcam
+        // create body for SimCamera
         vPose[1] = vPose[1]+2; vPose[2] = vPose[2] -3.2;
         BoxShape* pBox =new BoxShape(sSensorName,0.1,0.1,0.1,iMass,1,vPose);
         m_mModelNodes[pBox->GetName()] = pBox;
 
-        // create joint for SimCam
+        // create joint for SimCamera
         string sJointName = "SimCamJoint"+sCameraName; // e.g. SimCamJointLCam@robot1@proxy
         Eigen::Vector3d vPivot;
         Eigen::Vector3d vAxis;
@@ -682,10 +682,9 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
 
 ////////////////////////////////////////////////////////////
 /// PARSE ROBOT.XML FOR DEVICES AND BUILD INTO ROBOTPROXY
-/// Extract all devices and build vSimDeviceInfo.
 ////////////////////////////////////////////////////////////
 bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
-                                vector<SimDeviceInfo>& rvSimDeviceInfo,
+                                SimDeviceManager& m_SimDeviceManager,
                                 string sProxyName)
 {
   XMLElement *pParent=rDoc.RootElement();
@@ -725,9 +724,9 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
           Device.m_vSensorList.push_back(sSensorName);
           Device.m_vModel.push_back(sModel);
           Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
-          rvSimDeviceInfo.push_back(Device);
+          m_SimDeviceManager.AddDevice(Device);
 
-          cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCam "<<sSensorName<<") success. Device Name is "<<sCameraName<<"."<<endl;
+          cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCamera "<<sSensorName<<") success. Device Name is "<<sCameraName<<"."<<endl;
         }
 
         // ---------------------------------------------------------------------------------------- RGB-Depth Camera
@@ -749,9 +748,9 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
           Device.m_vModel.push_back(sModel);
           Device.m_vModel.push_back(sModel);
           Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
-          rvSimDeviceInfo.push_back(Device);
+          m_SimDeviceManager.AddDevice(Device);
 
-          cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCam "<<sMode<<") success." <<endl;
+          cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCamera "<<sMode<<") success." <<endl;
         }
       }
 
@@ -772,7 +771,7 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
         Device.m_sDeviceName = sViconName;
         Device.m_sDeviceType = sType;
         Device.m_sBodyName = sBodyName;
-        rvSimDeviceInfo.push_back(Device);
+        m_SimDeviceManager.AddDevice(Device);
         cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<" success."<<endl;
       }
     }
@@ -792,7 +791,7 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
         Device.m_sDeviceType = sType;
         Device.m_sDeviceMode = sMode;
         Device.m_sRobotName = sRobotName;
-        rvSimDeviceInfo.push_back(Device);
+        m_SimDeviceManager.AddDevice(Device);
         cout<<"[Proxy/ParseDevice] Add controller device "<<sControllerName<<" success."<<endl;
       }
 

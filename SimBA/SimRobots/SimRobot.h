@@ -2,8 +2,8 @@
 #define SIMROBOT_H
 
 //#include <Network/Messages.h>
-#include <SimDevices/Controller/Controller.h>
 #include <URDFParser/TinyXMLTool.h>
+#include <ModelGraph/ModelNode.h>
 #include <Utils/ConvertName.h>
 
 

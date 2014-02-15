@@ -316,7 +316,7 @@ int main( int argc, char** argv )
     RegisterKeyPressCallback( 'W', bind( &RobotProxy::ForwardKey, &mProxy ) );
     RegisterKeyPressCallback( ' ', bind( &RobotProxy::StepForward, &mProxy ) );
 
-    // SimCam control
+    // SimCamera control
     RegisterKeyPressCallback( '8', bind( &RobotProxy::IncreaseCamPitch, &mProxy ) ); // up
     RegisterKeyPressCallback( '5', bind( &RobotProxy::DecreaseCamPitch, &mProxy ) ); // down
     RegisterKeyPressCallback( '4', bind( &RobotProxy::IncreaseCamYaw, &mProxy ) );// letf

@@ -19,17 +19,18 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
                    const std::string& sWorldURDFPath,
                    const std::string& sServerName,
                    const std::string& sPoseFileName):
-  m_sLocalSimName (sLocalSimName),
-  m_SimDeviceManager(m_Scene.m_Render.m_glGraph)
+  m_sLocalSimName (sLocalSimName)
 {
   // 1. Read URDF files.
   XMLDocument RobotURDF, WorldURDF;
   GetXMLdoc(sRobotURDFPath, RobotURDF);
   GetXMLdoc(sWorldURDFPath, WorldURDF);
 
-  // 2. Parse world.xml file.
+  // 2. Parse our world and our robot for objects in the scene.
   m_Parser.ParseWorld(WorldURDF, m_SimWorld);
-  m_Parser.ParseRobot(RobotURDF, m_SimRobot, sServerName);
+  m_Parser.ParseDevices(RobotURDF, m_SimDeviceManager, sLocalSimName);
+  m_Parser.ParseRobot(RobotURDF, m_SimRobot, sLocalSimName);
+
 
   // 3. Init User's Robot and add it to RobotManager
   m_RobotManager.Init(m_sLocalSimName, m_Scene, m_SimRobot, sServerName);
@@ -37,23 +38,12 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   // 4. Add the world and robot to the Model Graph Scene
   m_Scene.Init(ModelGraphBuilder::All, m_SimWorld, m_SimRobot,sLocalSimName);
 
-  // 5. Initialize the Sim Device (SimCam, SimGPS, SimVicon, etc...)
-  if( m_SimDeviceManager.InitFromXML(
-        m_Scene.m_Phys, RobotURDF,m_sLocalSimName, sPoseFileName) == false){
-    cout<<"[LocalSim] Init SimDevice Fail."<<endl;
-    exit(-1);
-  }
+  m_SimDeviceManager.InitAllDevices(m_Scene);
 
   // 6. Initialize the Network
-  if(m_NetworkManager.Init( m_sLocalSimName, sServerName) ==false){
-    cout<<"[LocalSim] Init Network Fail."<<endl;
-    exit(-1);
-  }
+  m_NetworkManager.Init( m_sLocalSimName, sServerName);
 
-  if(m_NetworkManager.PubRobotIfNeeded(&m_RobotManager) == false){
-    cout<<"[LocalSim] Init Robot Network Fail."<<endl;
-    exit(-1);
-  }
+  m_NetworkManager.PubRobotIfNeeded(&m_RobotManager);
 
   // 7, if run in with network mode, LocalSim network will publish sim device
   m_NetworkManager.PubRegisterDevicesIfNeeded(&m_SimDeviceManager);
@@ -84,6 +74,8 @@ void LocalSim::ApplyCameraPose(Eigen::Vector6d dPose){
   }
 }
 
+/////////////
+
 void LocalSim::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
   m_Scene.m_Phys.SetEntity6Pose(sName, dPose);
 }
@@ -100,7 +92,7 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
     for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
 
       string sSimCamName = Device.m_vSensorList[j];
-      SimCam* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
+      SimCamera* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
 
       SceneGraph::ImageView* ImageWnd;
 
@@ -166,10 +158,18 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
 }
 
 // ---- Step Forward
-void LocalSim::StepForward( void )
+void LocalSim::StepForward( bool debug )
 {
-  m_Scene.m_Phys.StepSimulation();
-  m_Scene.m_Render.UpdateScene();
+  m_Scene.UpdateScene(debug);
+  // Update SimDevices
+  m_SimDeviceManager.UpdateAllDevices();
+
+  // Update the Network
+  m_NetworkManager.UpdateNetWork();
+
+  // Show the image in the current window
+  SetImagesToWindow(*m_Scene.m_Render.m_LSimCamImage,
+                    *m_Scene.m_Render.m_RSimCamImage);
 }
 
 
@@ -210,50 +210,19 @@ int main( int argc, char** argv )
   LocalSim mLocalSim(sLocalSimName, sRobotURDF,
                      sWorldURDF, sServerOption, sPoseFile);
 
-  //////KEYBOARD COMMANDS
-  //  pangolin::RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r',
-  //                                      boost::bind( &LocalSim::InitReset,
-  //                                                   &mLocalSim ) );
-//  pangolin::RegisterKeyPressCallback(
-//        'a', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
-//  pangolin::RegisterKeyPressCallback(
-//        'A', boost::bind( &LocalSim::LeftKey, &mLocalSim ) );
-
-//  pangolin::RegisterKeyPressCallback(
-//        's', boost::bind( &LocalSim::ReverseKey, &mLocalSim ) );
-//  pangolin::RegisterKeyPressCallback(
-//        'S', boost::bind( &LocalSim::ReverseKey, &mLocalSim ) );
-
-//  pangolin::RegisterKeyPressCallback(
-//        'd', boost::bind( &LocalSim::RightKey, &mLocalSim ) );
-//  pangolin::RegisterKeyPressCallback(
-//        'D', boost::bind( &LocalSim::RightKey, &mLocalSim ) );
-
-//  pangolin::RegisterKeyPressCallback(
-//        'w', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
-//  pangolin::RegisterKeyPressCallback(
-//        'W', boost::bind( &LocalSim::ForwardKey, &mLocalSim ) );
+  // Run as debug?
+  bool debug = false;
 
   pangolin::RegisterKeyPressCallback(
-        ' ', boost::bind( &LocalSim::StepForward, &mLocalSim ) );
+        ' ', boost::bind( &LocalSim::StepForward, &mLocalSim, &debug ) );
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
-  while( !pangolin::ShouldQuit() )
-  {
-    // 2. Update physics and scene
-    mLocalSim.m_Scene.UpdateScene(true);
+  while( !pangolin::ShouldQuit() ){
 
-    // 3. Update SimDevices
-    mLocalSim.m_SimDeviceManager.UpdateAllDevices();
+    // Update Physics and ModelGraph
+    mLocalSim.StepForward(debug);
 
-    // 4. Update the Network
-    mLocalSim.m_NetworkManager.UpdateNetWork();
-
-    // 5. Show the image in the current window
-    mLocalSim.SetImagesToWindow(*mLocalSim.m_Scene.m_Render.m_LSimCamImage,
-                                *mLocalSim.m_Scene.m_Render.m_RSimCamImage);
-
-    // 6. Refresh screen
+    // Refresh screen
     pangolin::FinishGlutFrame();
     usleep( 1E6 / 60 );
   }

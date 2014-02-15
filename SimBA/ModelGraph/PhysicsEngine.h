@@ -40,9 +40,9 @@ public:
   }
 
   bool Init(
-      double dGravity = 9.8,       //< Input:
-      double dTimeStep = 1.0/60.0, //< Input:
-      double nMaxSubSteps = 1     //< Input: for stepSimulation
+      double dGravity = 9.8,
+      double dTimeStep = 1.0/30.0,
+      double nMaxSubSteps = 10
       ){
     m_dTimeStep    = dTimeStep;
     m_dGravity     = dGravity;
@@ -50,9 +50,10 @@ public:
     // Physics stuff
     // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
-    btCollisionDispatcher* ptr =
-        new btCollisionDispatcher(&m_CollisionConfiguration);
-    m_pDispatcher = boost::shared_ptr<btCollisionDispatcher>(ptr);
+    btDefaultCollisionConfiguration btCollConfig;
+    m_CollisionConfiguration = &btCollConfig;
+    m_pDispatcher = boost::shared_ptr<btCollisionDispatcher>(
+          new btCollisionDispatcher(m_CollisionConfiguration));
     m_pBroadphase
         = boost::shared_ptr<btDbvtBroadphase>( new btDbvtBroadphase );
     m_pSolver
@@ -62,7 +63,7 @@ public:
           new btDiscreteDynamicsWorld(m_pDispatcher.get(),
                                       m_pBroadphase.get(),
                                       m_pSolver.get(),
-                                      &m_CollisionConfiguration)
+                                      m_CollisionConfiguration)
           );
 
     m_pDynamicsWorld->setGravity( btVector3(0,0,m_dGravity) );
@@ -276,6 +277,11 @@ public:
   }
 
   ///////////////////////////////////////////////////////////////////
+
+  /// TODO: Fix whatever's up with the m_pDynamicsWorld...\
+  ///
+  ///
+  ///
 
   void StepSimulation(){
     m_pDynamicsWorld->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
@@ -778,7 +784,7 @@ public:
 
 private:
 
-  btDefaultCollisionConfiguration                        m_CollisionConfiguration;
+  btDefaultCollisionConfiguration*                       m_CollisionConfiguration;
   boost::shared_ptr<btCollisionDispatcher>               m_pDispatcher;
   boost::shared_ptr<btDbvtBroadphase>                    m_pBroadphase;
   boost::shared_ptr<btSequentialImpulseConstraintSolver> m_pSolver;

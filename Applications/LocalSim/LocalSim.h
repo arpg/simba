@@ -59,7 +59,7 @@ public:
   ///Functions
   void ApplyCameraPose(Eigen::Vector6d dPose);
   void ApplyPoseToEntity(string sName, Eigen::Vector6d dPose);
-  void StepForward();
+  void StepForward(bool debug);
   bool SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
                          SceneGraph::ImageView& RSimCamWnd );
 

@@ -1,13 +1,13 @@
-#ifndef SIMCAM_H
-#define SIMCAM_H
+#ifndef SIMCAMERA_H
+#define SIMCAMERA_H
 
 #include <SimDevices/SimDevices.h>
-#include <ModelGraph/PhysicsEngine.h>
+#include <ModelGraph/ModelGraphBuilder.h>
 #include <calibu/cam/CameraXml.h>
 #include <CVars/CVar.h>
 
-// a warpper for SimCam in SceneGraph for robot proxy. See more function of origional version of SimCam in SceneGraph
-class SimCam
+// a warpper for SimCamera in SceneGraph for robot proxy. See more function of origional version of SimCamera in SceneGraph
+class SimCamera
 {
     public:
        // Global Variables
@@ -15,12 +15,13 @@ class SimCam
        unsigned int                   m_nImgHeight;
        unsigned int                   m_nChannels;
        SceneGraph::GLSimCam           m_Camera;     // reference camera we use
+       ModelGraphBuilder              m_ModelGraph;
        int                            m_iCamType;
        int                            m_iFPS;
        string                         m_sDeviceName; // mesh of parent that camera attach to
-       PhysicsEngine                  m_rPhysWrapper;
        vector<string>                 m_vCameraModel;
        calibu::CameraRig              m_CameraRig;
+
 
        // ------------------------------------------------------------------------------------------------------------------
        bool init(Eigen::Vector6d     vInitPose,
@@ -28,13 +29,12 @@ class SimCam
                  int                 CameraType,
                  int                 FPS,
                  string              sCameraModel,
-                 GLSceneGraph&       glGraph,
-                 PhysicsEngine&     mPhysWrapper){
+                 ModelGraphBuilder   ModelGraph){
            m_sDeviceName = sDeviceName;
-           m_rPhysWrapper = mPhysWrapper;
+           m_ModelGraph = ModelGraph;
            m_iFPS = FPS;
 
-           cout<<"[SimCam] camera model file name is "<<sCameraModel<<". Device name is "<<m_sDeviceName<<endl;
+           cout<<"[SimCamera] camera model file name is "<<sCameraModel<<". Device name is "<<m_sDeviceName<<endl;
            m_CameraRig = calibu::ReadXmlRig(sCameraModel);
            calibu::CameraModel theCam = m_CameraRig.cameras[0].camera;
 
@@ -45,9 +45,13 @@ class SimCam
 
            // initialize cameras
            m_iCamType = CameraType;
-           m_Camera.Init(&glGraph, Sophus::SE3d::exp( vInitPose ).matrix(), K, m_nImgWidth, m_nImgHeight, m_iCamType );
+           m_Camera.Init(&m_ModelGraph.m_Render.m_glGraph,
+                         Sophus::SE3d::exp( vInitPose ).matrix(),
+                         K, m_nImgWidth, m_nImgHeight, m_iCamType );
 
-           cout<<"[SimCam] init sim cam success. Type is "<<CameraType<<". Width is:"<<m_nImgWidth <<", "<<" Height is: "<<m_nImgHeight<<endl;
+           cout<<"[SimCamera] init sim cam success. Type is "<<
+                 CameraType<<". Width is:"<<m_nImgWidth <<", "
+              <<" Height is: "<<m_nImgHeight<<endl;
            return true;
        }
 
@@ -77,7 +81,7 @@ class SimCam
                }
                else
                {
-                    cout<<"[SimCam] capture gray fail"<<endl;
+                    cout<<"[SimCamera] capture gray fail"<<endl;
                     return false;
                }
            }
@@ -89,7 +93,7 @@ class SimCam
                }
                else
                {
-                   cout<<"[SimCam] capture rgb fail"<<endl;
+                   cout<<"[SimCamera] capture rgb fail"<<endl;
                    return false;
                }
            }
@@ -142,7 +146,7 @@ class SimCam
        // get current camera pose from bullet
        Eigen::Vector6d GetCameraPoseByBody()
        {
-          return m_rPhysWrapper.GetEntity6Pose( m_sDeviceName );
+          return m_ModelGraph.m_Phys.GetEntity6Pose( m_sDeviceName );
        }
 
        // ------------------------------------------------------------------------------------------------------------------
@@ -183,4 +187,4 @@ class SimCam
 
 
 
-#endif // SIMCAM_H
+#endif // SIMCAMERA_H

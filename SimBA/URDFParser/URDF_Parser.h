@@ -7,7 +7,7 @@
 #include <ModelGraph/Shape.h>
 #include <ModelGraph/Constraint.h>
 #include <ModelGraph/RaycastVehicle.h>
-#include <SimDevices/SimDeviceInfo.h>
+#include <Managers/SimDeviceManager.h>
 #include <SimRobots/SimRobot.h>
 #include <SimRobots/SimWorld.h>
 
@@ -56,7 +56,7 @@ public:
   // ParseDevices uses the information given in the Robot.xml file to create the
   // sensor views that we see later in the Sim.
   bool ParseDevices(XMLDocument& doc,
-                    vector<SimDeviceInfo>& rvSimDeviceInfo,
+                    SimDeviceManager &m_SimDeviceManager,
                     string sProxyName);
 
   // This method is used in StateKeeper to initialize the position of every

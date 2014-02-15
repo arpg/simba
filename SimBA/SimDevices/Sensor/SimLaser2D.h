@@ -5,10 +5,10 @@
 
 /// Vision Sensor
 // ---------------------------------------------------------------------------------------------------------------------------------
-// the following sensors all depends on SimCam.
+// the following sensors all depends on SimCamera.
 class SimLaser2D
 {
-    // the output should be [th,dist]. we can get it from one row of SimCam Depth image.
+    // the output should be [th,dist]. we can get it from one row of SimCamera Depth image.
 
 
 };

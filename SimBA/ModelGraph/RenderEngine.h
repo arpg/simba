@@ -44,21 +44,24 @@ public:
     // We set the views location on screen and add a handler which will
     // let user input update the model_view matrix (stacks3d) and feed through
     // to our scenegraph
-    m_view3d.SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
-    m_view3d.SetHandler( new SceneGraph::HandlerSceneGraph( m_glGraph, m_stacks3d) );
-    m_view3d.SetDrawFunction( SceneGraph::ActivateDrawFunctor( m_glGraph, m_stacks3d) );
+    m_view3d = new SceneGraph::ImageView(true,true);
+    m_view3d->SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
+    m_view3d->SetHandler( new SceneGraph::HandlerSceneGraph(
+                            m_glGraph, m_stacks3d) );
+    m_view3d->SetDrawFunction( SceneGraph::ActivateDrawFunctor(
+                                 m_glGraph, m_stacks3d) );
 
-    // window for display image capture from simcam
+    // window for display image capture from SimCamera
     m_LSimCamImage = new SceneGraph::ImageView(true,true);
     m_LSimCamImage->SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
 
-    // window for display image capture from simcam
+    // window for display image capture from SimCamera
     m_RSimCamImage = new SceneGraph::ImageView(true,true);
     m_RSimCamImage->SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
 
 
     // Add our views as children to the base container.
-    pangolin::DisplayBase().AddDisplay( m_view3d );
+    pangolin::DisplayBase().AddDisplay( *m_view3d );
     pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
     pangolin::DisplayBase().AddDisplay( *m_RSimCamImage );
   }
@@ -143,8 +146,8 @@ public:
     }
   }
 
-  void UpdateScene( void ){
-    m_view3d.Activate(m_stacks3d);
+  void UpdateScene(){
+    m_view3d->Activate(m_stacks3d);
     std::map<ModelNode*, SceneGraph::GLObject*>::iterator it;
     for(it=m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
       ModelNode* mn = it->first;
@@ -157,7 +160,7 @@ public:
   SceneGraph::GLSceneGraph                    m_glGraph;
   SceneGraph::ImageView*                      m_LSimCamImage;
   SceneGraph::ImageView*                      m_RSimCamImage;
-  pangolin::View                              m_view3d;
+  SceneGraph::ImageView*                      m_view3d;
   pangolin::OpenGlRenderState                 m_stacks3d;
 
 

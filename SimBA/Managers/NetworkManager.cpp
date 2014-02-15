@@ -413,7 +413,7 @@ void NetworkManager::RegisterCamDeviceByURI(RegisterNodeCamReqMsg& mRequest,Regi
   {
     // Init Device.
     m_pSimDeviceManager->InitDeviceByName(sDeviceName);
-    SimCam* pCam = m_pSimDeviceManager->GetSimCam(sDeviceName);
+    SimCamera* pCam = m_pSimDeviceManager->GetSimCam(sDeviceName);
 
     mReply.set_time_step(m_iTimeStep);
     mReply.set_regsiter_flag(1);
@@ -589,7 +589,7 @@ bool NetworkManager::ReceiveCarControllerInfo()
 
 ////////////////////////////////////////////////////////////////////////
 
-// publish SimCam by sensor. e.g. one simcam may have RGB and Depth sensor that provide us images.
+// publish SimCamera by sensor. e.g. one SimCamera may have RGB and Depth sensor that provide us images.
 // here we will publish image from all these sensor.
 bool NetworkManager::PublishSimCamBySensor(string sCamName)
 {
@@ -611,7 +611,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName)
 
         // get one camera sensor
         string sSensorName = Device.m_vSensorList[j];
-        SimCam* pSimCam= m_pSimDeviceManager->GetSimCam(sSensorName);
+        SimCamera* pSimCam= m_pSimDeviceManager->GetSimCam(sSensorName);
 
         // set NodeCamMsg info
         NodeCamImageMsg *pImage = mNodeCamMsg.add_image();

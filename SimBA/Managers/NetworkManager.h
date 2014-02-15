@@ -5,6 +5,7 @@
 #include <iostream>
 #include <Node/Node.h>
 #include <Managers/SimDeviceManager.h>
+#include <URDFParser/URDF_Parser.h>
 #include <Managers/RobotsManager.h>
 #include <NodeMessages.pb.h>
 #include <Network/WorldState.h>

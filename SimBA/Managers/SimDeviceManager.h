@@ -3,8 +3,6 @@
 
 #include <SimDevices/SimDeviceInfo.h>
 #include <SimDevices/SimDevices.h>
-#include <ModelGraph/PhysicsEngine.h>
-#include <URDFParser/URDF_Parser.h>
 
 using namespace std;
 
@@ -12,27 +10,25 @@ class SimDeviceManager
 {
 
 public:
-  PhysicsEngine                      m_PhysWrapper;
-  URDF_Parser                        m_Parser;
   vector<SimDeviceInfo>              m_vSimDevices;
-  SceneGraph::GLSceneGraph&          m_rSceneGraph;
 
   /// <DeviceName, SimGPS*>
   map<string, SimGPS*>               m_SimGPSList;
   map<string, SimVicon*>             m_SimViconList;
-  map<string, SimCam*>               m_SimCamList;
+  map<string, SimCamera*>               m_SimCamList;
   map<string, SimLaser2D*>           m_SimLaser2DList;
   map<string, SimLaser3D*>           m_SimLaser3DList;
   map<string, SimpleController*>     m_SimpleControllerList;
   map<string, CarController*>        m_CarControllerList;
   PoseController                     m_SimpPoseController;
+  ModelGraphBuilder                  m_ModelGraph;
 
   /// Constructor
-  SimDeviceManager(SceneGraph::GLSceneGraph& rSceneGraph);
+  SimDeviceManager();
 
   /// Initializers
-  bool InitFromXML(PhysicsEngine& rPhysWrapper, XMLDocument& doc, string sProxyName, string sPoseFile);
-  void InitAllDevices();
+  void AddDevice(SimDeviceInfo devInfo);
+  void InitAllDevices(ModelGraphBuilder Scene);
   void InitDeviceByName(string sDeviceName);
   void InitCamDevice(SimDeviceInfo& Device, string sCameraModel);
   void InitViconDevice(SimDeviceInfo& Device);
@@ -45,7 +41,7 @@ public:
 
   /// Get pointers to all devices
   SimpleController* GetSimpleController(string name);
-  SimCam* GetSimCam(string name);
+  SimCamera* GetSimCam(string name);
   SimGPS* GetSimGPS(string name);
   SimVicon* GetSimVecon(string name);
 };

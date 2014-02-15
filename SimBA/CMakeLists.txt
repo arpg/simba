@@ -91,7 +91,7 @@ list(APPEND SIMDEVICES_SENSOR_HDRS
   SimDevices/Sensor/SimGPS.h
   SimDevices/Sensor/SimLaser3D.h
   SimDevices/Sensor/SimVicon.h
-  SimDevices/Sensor/SimCam.h
+  SimDevices/Sensor/SimCamera.h
   SimDevices/Sensor/SimLaser2D.h
   SimDevices/Sensor/SimOdometry.h
 )

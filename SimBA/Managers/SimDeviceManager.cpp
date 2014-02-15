@@ -4,40 +4,20 @@
 /// CONSTRUCTOR
 ////////////////////////////////////////////////////////////////////////
 
-SimDeviceManager::SimDeviceManager(SceneGraph::GLSceneGraph&  rSceneGraph)
-  :m_rSceneGraph(rSceneGraph)
-{
+SimDeviceManager::SimDeviceManager(){
 }
 
 ////////////////////////////////////////////////////////////////////////
 /// INITIALIZERS
 ////////////////////////////////////////////////////////////////////////
-bool SimDeviceManager::InitFromXML(
-    PhysicsEngine& rPhysWrapper,
-    tinyxml2::XMLDocument& doc,
-    string sProxyName,
-    string sPoseFile="NONE")
-{
-   m_SimpPoseController.Init(sPoseFile);
 
-  if( m_Parser.ParseDevices(doc, m_vSimDevices, sProxyName) == true)
-  {
-    cout<<"[SimDeviceManager] Parse all Devices succes!"<<endl;
-
-    m_PhysWrapper = rPhysWrapper;
-
-    InitAllDevices();
-    cout<<"[SimDeviceManager] Init all Devices success!"<<endl;
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+void SimDeviceManager::AddDevice(SimDeviceInfo devInfo){
+  m_vSimDevices.push_back(devInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////
-void SimDeviceManager::InitAllDevices(){
+void SimDeviceManager::InitAllDevices(ModelGraphBuilder Scene){
+  m_ModelGraph = Scene;
   for(unsigned int i = 0; i!= m_vSimDevices.size(); i++){
     SimDeviceInfo Device = m_vSimDevices[i];
     string sDeviceType = Device.m_sDeviceType;
@@ -96,26 +76,31 @@ void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel)
 
     Eigen::Vector6d initPose = Device.m_vPose;
     // init sim cam
-    cout<<"[SimCam] Camera model use define by RobotURDF is: "<<sCameraModel<<endl;
-    SimCam* pSimCam = new SimCam();
+    cout<<"[SimCamera] Camera model use define by RobotURDF is: "<<sCameraModel<<endl;
+    SimCamera* pSimCam = new SimCamera();
 
     if(sSensorName == "Gray" + sCameraName)           //---------- init gray Cam
     {
       cout<<"[SimDeviceManager] try to init Gray camera, name is "<<sCameraName<<endl;
-      pSimCam->init(initPose, sSensorName, eSimCamLuminance, iFPS, sCameraModel, m_rSceneGraph, m_PhysWrapper );
+      pSimCam->init(initPose, sSensorName, eSimCamLuminance,
+                    iFPS, sCameraModel, m_ModelGraph );
     }
     else if(sSensorName == "RGB" + sCameraName)       //---------- init RGB Cam
     {
       cout<<"[SimDeviceManager] try to init RGB camera, name is "<<sSensorName<<endl;
-      pSimCam->init(initPose, sSensorName, eSimCamRGB,  iFPS, sCameraModel, m_rSceneGraph, m_PhysWrapper );
+      pSimCam->init(initPose, sSensorName, eSimCamRGB,
+                    iFPS, sCameraModel, m_ModelGraph );
     }
     else if(sSensorName == "Depth" + sCameraName)     //---------- init Depth Cam
     {
       cout<<"[SimDeviceManager] try to init Depth camera, name is "<<sSensorName<<endl;
-      pSimCam->init(initPose,sSensorName,eSimCamLuminance|eSimCamDepth, iFPS, sCameraModel, m_rSceneGraph, m_PhysWrapper );
+      pSimCam->init(initPose, sSensorName, eSimCamLuminance | eSimCamDepth,
+                    iFPS, sCameraModel, m_ModelGraph );
     }
 
-    m_SimCamList.insert(pair<string,SimCam*>(sSensorName,pSimCam));
+    // TODO: Depth cam is not quite working... what's this about?
+
+    m_SimCamList.insert(pair<string,SimCamera*>(sSensorName,pSimCam));
   }
 }
 
@@ -126,7 +111,7 @@ void SimDeviceManager::InitViconDevice(SimDeviceInfo& Device)
   string sDeviceName = Device.m_sDeviceName;
   string sBodyName = Device.m_sBodyName;
   SimVicon* pSimVicon = new SimVicon;
-  pSimVicon->init(sDeviceName, sBodyName, m_PhysWrapper );
+  pSimVicon->init(sDeviceName, sBodyName, m_ModelGraph.m_Phys );
   m_SimViconList.insert(pair<string, SimVicon*>(sDeviceName,pSimVicon));
 }
 
@@ -141,8 +126,11 @@ void SimDeviceManager::InitController(SimDeviceInfo& Device)
   if(sDeviceMode == "SimpleController")
   {
     SimpleController* pSimpleController = new SimpleController;
-    pSimpleController->init(sDeviceName, sRobotName, sDeviceName, m_PhysWrapper );
-    m_SimpleControllerList.insert(pair<string, SimpleController*>(sDeviceName, pSimpleController));
+    pSimpleController->init(sDeviceName, sRobotName,
+                            sDeviceName, m_ModelGraph.m_Phys );
+    m_SimpleControllerList.insert(pair<string,
+                                  SimpleController*>(sDeviceName,
+                                                     pSimpleController));
     cout<<"add "<<sDeviceName<<" success "<<endl;
   }
 
@@ -161,7 +149,7 @@ void SimDeviceManager::UpdateAllDevices()
 {
   if(m_SimCamList.size()!=0)
   {
-    map<string, SimCam*>::iterator iter;
+    map<string, SimCamera*>::iterator iter;
     for(iter = m_SimCamList.begin();iter!= m_SimCamList.end();iter++)
     {
       iter->second->Update();
@@ -224,14 +212,14 @@ SimpleController* SimDeviceManager::GetSimpleController(string name)
 
 ////////////////////////////////////////////////////////////////////////
 
-SimCam* SimDeviceManager::GetSimCam(string name)
+SimCamera* SimDeviceManager::GetSimCam(string name)
 {
-  std::map<string, SimCam*>::iterator iter = m_SimCamList.find(name);
+  std::map<string, SimCamera*>::iterator iter = m_SimCamList.find(name);
   if(iter == m_SimCamList.end())
   {
     cout<<"[SimDeviceManager] Fatal error! Cannot get device: "<<name<<". Please make sure your robot urdf file has this device!!"<<endl;
   }
-  SimCam* pSimCam = iter->second;
+  SimCamera* pSimCam = iter->second;
   return pSimCam;
 }
 
