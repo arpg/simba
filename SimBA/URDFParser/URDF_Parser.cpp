@@ -80,10 +80,10 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
       string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
       int iMass =::atoi( pElement->Attribute("mass"));
       vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
-      vector<double> vDimesion= GenNumFromChar(pElement->Attribute("dimesion"));
+      vector<double> vDimension= GenNumFromChar(pElement->Attribute("dimension"));
       const char* sType = pElement->Attribute("type");
       if(strcmp(sType, "Box") ==0){
-        BoxShape* pBox =new BoxShape(sBodyName, vDimesion[0],vDimesion[1],vDimesion[2],iMass, 1, vPose);
+        BoxShape* pBox =new BoxShape(sBodyName, vDimension[0],vDimension[1],vDimension[2],iMass, 1, vPose);
         rSimRobot.SetBase( pBox ); // main body
         cout<<"[ParseRobot] Successfully built bodybase: "<<sBodyName<<endl;
         m_mModelNodes[pBox->GetName()] = pBox;
@@ -116,17 +116,6 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
   }
 
   rSimRobot.SetParts(GetModelNodes(m_mModelNodes));
-
-  // If we run in 'without Network mode', we need to init robot pose ourselves.
-  // or this pose will be read from server.
-  // We need to build the ModelGraph manaully once we get the
-  // pose from the statekeeper.
-
-  if(rSimRobot.GetStateKeeperStatus() == false){
-    Eigen::Vector6d RobotInitPoseInWorld;
-    RobotInitPoseInWorld<<0,0,-2,0,0,1.57;
-    rSimRobot.InitPoseOfBodyBaseWRTWorld(RobotInitPoseInWorld);
-  }
 
   return true;
 }
@@ -189,19 +178,19 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
     cout<<"[ParseShape] Trying to build "<<sBodyName<<endl;
     int iMass =::atoi( pElement->Attribute("mass"));
     vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
-    vector<double> vDimesion =
-        GenNumFromChar(pElement->Attribute("dimesion"));
+    vector<double> vDimension =
+        GenNumFromChar(pElement->Attribute("dimension"));
     const char* sType = pElement->Attribute("type");
 
     if(strcmp(sType, "Box") ==0){
-      BoxShape* pBox =new BoxShape(sBodyName,vDimesion[0],vDimesion[1],
-          vDimesion[2],iMass, 1,vPose);
+      BoxShape* pBox =new BoxShape(sBodyName,vDimension[0],vDimension[1],
+          vDimension[2],iMass, 1,vPose);
       m_mModelNodes[pBox->GetName()] = pBox;
     }
 
     else if(strcmp(sType,"Cylinder")==0){
-      CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimesion[0],
-          vDimesion[1],iMass,1,
+      CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimension[0],
+          vDimension[1],iMass,1,
           vPose);
       m_mModelNodes[pCylinder->GetName()] = pCylinder;
     }
@@ -346,8 +335,8 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
                                     dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
                                     Anchor, Axis1, Axis2);
       //TODO:
-      //pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
-      //LowerAngleLimit, UpperAngleLimit);
+      pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
+                         LowerAngleLimit, UpperAngleLimit);
       m_mModelNodes[pHinge2->GetName()] = pHinge2;
       std::cout<<"[ParseJoint] Creating a Hinge2Joint between "<<
                  sParentName<<" and "<<sChildName<<std::endl;
@@ -498,16 +487,15 @@ void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
     /// Build the car here.
     m_mModelNodes[sRobotName] = pRaycastVehicle;
 
-    cout<<"[URDF Parser] Parse Vehicle "<<sRobotName<<" Success."<<endl;
-    cout<<"torque speed slope is "<<vParameters[25] <<endl;
+    cout<<"[URDF_Parser] Parse Vehicle "<<sRobotName<<" Success."<<endl;
   }
 
 }
 
 
-////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
 /// Parse SENSORS BODIES. Automatically Create Body for Sensor
-////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
 void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
 {
   const char* sRootContent = pElement->Name();
@@ -560,18 +548,16 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
         int iMass = 1;
         double BodyDistance = 0.5;
 
-        // TODO: Why are we assigning poses here?
-
         /// CREATE CAMERA BODIES
 
-        // 1.3 create body to connect RGBD Cameras
+        // Create body to connect RGBD Cameras
         vector<double> vCameraPose;
         vCameraPose.push_back(0);vCameraPose.push_back(-2.1);vCameraPose.push_back(0);
         vCameraPose.push_back(0);vCameraPose.push_back(0);vCameraPose.push_back(0);
         BoxShape* pBox = new BoxShape(sCameraName,BodyDistance,0.1,0.1,iMass, 1, vCameraPose);
         m_mModelNodes[pBox->GetName()] = pBox;
 
-        // 1.2 create body for Depth Cam
+        // Create body for Depth Cam
         string sDepthBodyName = "Depth"+sCameraName;
         vector<double> vDepthCameraPose;
         vDepthCameraPose.push_back(vPose[0]+BodyDistance+0.1);
@@ -584,7 +570,7 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
                                            iMass, 1, vDepthCameraPose);
         m_mModelNodes[pDepthBox->GetName()] = pDepthBox;
 
-        // 1.1 create body for RGB Cam
+        // Create body for RGB Cam
         string sRGBBodyName = "RGB"+sCameraName;
         vector<double> vRGBCameraPose;
         vRGBCameraPose.push_back(vPose[0]-BodyDistance - 0.1);

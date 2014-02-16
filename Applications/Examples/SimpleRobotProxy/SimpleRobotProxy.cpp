@@ -1,9 +1,9 @@
 /*
    RobotProxy, By luma. 2013.03
- */ 
+ */
 
 #include <iostream>
-#include <boost/bind.hpp>         
+#include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>               // for reference counting pointers
 #include <Eigen/Eigen>                        // for vector maths
 #include <pangolin/pangolin.h>                // for open GL state management
@@ -50,11 +50,10 @@ class RobotProxy
 
         Render                      m_Render;
         SimRobot*                   m_SimRobot;            // user's robot.
-        SimWorld                m_WorldManager;
+        SimWorld                    m_WorldManager;
         RobotsManager               m_RobotManager;
         PhyModelGraphAgent          m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
 
-        // TODO TODO
         ///////////////////////////////////////////////////////////////////
         RobotProxy(
                 SceneGraph::GLSceneGraph& glGraph,  //< Input: reference to glGraph

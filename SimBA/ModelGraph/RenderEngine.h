@@ -21,49 +21,6 @@ public:
     SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
     glClearColor(0, 0, 0, 1);
     glewInit();
-
-    const SceneGraph::AxisAlignedBoundingBox bbox =
-        m_glGraph.ObjectAndChildrenBounds();
-    const Eigen::Vector3d center = bbox.Center();
-//    const double size = bbox.Size().norm();
-    const double size = 50;
-    const double far = 2*size;
-    const double near = far / 1E3;
-
-    // Define Camera Render Object (for view / scene browsing)
-    pangolin::OpenGlRenderState stacks(
-          pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
-          pangolin::ModelViewLookAt(center(0), center(1) + size,
-                                    center(2) - size/4,
-                                    center(0), center(1), center(2),
-                                    pangolin::AxisNegZ) );
-    m_stacks3d = stacks;
-
-    // We define a new view which will reside within the container.
-
-    // We set the views location on screen and add a handler which will
-    // let user input update the model_view matrix (stacks3d) and feed through
-    // to our scenegraph
-    m_view3d = new SceneGraph::ImageView(true,true);
-    m_view3d->SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
-    m_view3d->SetHandler( new SceneGraph::HandlerSceneGraph(
-                            m_glGraph, m_stacks3d) );
-    m_view3d->SetDrawFunction( SceneGraph::ActivateDrawFunctor(
-                                 m_glGraph, m_stacks3d) );
-
-    // window for display image capture from SimCamera
-    m_LSimCamImage = new SceneGraph::ImageView(true,true);
-    m_LSimCamImage->SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
-
-    // window for display image capture from SimCamera
-    m_RSimCamImage = new SceneGraph::ImageView(true,true);
-    m_RSimCamImage->SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
-
-
-    // Add our views as children to the base container.
-    pangolin::DisplayBase().AddDisplay( *m_view3d );
-    pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
-    pangolin::DisplayBase().AddDisplay( *m_RSimCamImage );
   }
 
 
@@ -148,11 +105,57 @@ public:
     }
   }
 
+  void CompleteScene(){
+    const SceneGraph::AxisAlignedBoundingBox bbox =
+        m_glGraph.ObjectAndChildrenBounds();
+    const Eigen::Vector3d center = bbox.Center();
+    const double size = bbox.Size().norm();
+    const double far = 2*size;
+    const double near = far / 1E3;
+
+    // Define Camera Render Object (for view / scene browsing)
+    pangolin::OpenGlRenderState stacks(
+          pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
+          pangolin::ModelViewLookAt(center(0), center(1) + size,
+                                    center(2) - size/4,
+                                    center(0), center(1), center(2),
+                                    pangolin::AxisNegZ) );
+    m_stacks3d = stacks;
+
+    // We define a new view which will reside within the container.
+
+    // We set the views location on screen and add a handler which will
+    // let user input update the model_view matrix (stacks3d) and feed through
+    // to our scenegraph
+    m_view3d = new SceneGraph::ImageView(false, true);
+    m_view3d->SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
+    m_view3d->SetHandler( new SceneGraph::HandlerSceneGraph(
+                            m_glGraph, m_stacks3d) );
+    m_view3d->SetDrawFunction( SceneGraph::ActivateDrawFunctor(
+                                 m_glGraph, m_stacks3d) );
+
+    // window for display image capture from SimCamera
+    m_LSimCamImage = new SceneGraph::ImageView(true, true);
+    m_LSimCamImage->SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
+
+    // window for display image capture from SimCamera
+    m_RSimCamImage = new SceneGraph::ImageView(true, true);
+    m_RSimCamImage->SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
+
+
+    // Add our views as children to the base container.
+    pangolin::DisplayBase().AddDisplay( *m_view3d );
+    pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
+    pangolin::DisplayBase().AddDisplay( *m_RSimCamImage );
+
+  }
+
   void UpdateScene(){
-    m_view3d->Activate(m_stacks3d);
     std::map<ModelNode*, SceneGraph::GLObject*>::iterator it;
     for(it=m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
       ModelNode* mn = it->first;
+      cout<<"WOOOOOO"<<endl;
+      cout<<mn->GetPose()<<endl;
       SceneGraph::GLObject* p = it->second;
       p->SetPose( mn->GetPose() );
     }

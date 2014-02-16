@@ -53,8 +53,7 @@ public:
   LocalSim( const string &sLocalSimName,
             const std::string& sRobotURDF,
             const std::string& sWorldURDF,
-            const std::string& sServerName,
-            const std::string& sPoseFileName);
+            const std::string& sServerName);
 
   ///Functions
   void ApplyCameraPose(Eigen::Vector6d dPose);

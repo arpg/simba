@@ -31,7 +31,7 @@ public:
   bool                              m_bStateKeeperOn;
 
   bool Init(string& sProxyName, ModelGraphBuilder& Scene,
-            SimRobot& mSimRobot, const string &sServerName);
+            SimRobot& mSimRobot, const string &sServerOption);
   bool ImportSimRobot( SimRobot& mSimRobot );
   void DeleteRobot(string sRobotName);
   void UpdateWorldFullState(WorldFullStateMsg worldfullstate);

@@ -46,7 +46,7 @@
  </Car>
 
 <!--Sensors  -->
-<body name="Stick" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,-3,0,0,0"  dimesion="0.1,0.1,2" scale="25" type="Box"/>
+<body name="Stick" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,-3,0,0,0"  dimension="0.1,0.1,2" scale="25" type="Box"/>
 
 <Sensor Name="LCamera"
   Type="Camera"
@@ -58,7 +58,7 @@
   Parent="Stick"
   Pose="0,-2,0,0,0,0"
   Location="@Proxy1"
-  Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml"/>
+  Model="/home/bminortx/Code/SimBA/SimBA/SimDevices/Sensor/cameras.xml"/>
 
   <!-- Lu: Must include this sensor if you use RobotProxy!
   RobotProxy needs this sensor to get the robot's pose information. -->

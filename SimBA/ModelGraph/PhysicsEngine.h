@@ -15,7 +15,7 @@
 //////////////////////////////////////////////////////////
 ///
 /// PhysicsEngine class
-/// PhysicsEngine encapsulates all of the Physics engine (in this case, Bullet) into one
+/// PhysicsEngine encapsulates all of the Physics engine (Bullet) into one
 /// class. It initializes the physics environment, and allows for the addition
 /// and deletion of objects. It must also be called to run the physics sim.
 ///
@@ -258,8 +258,10 @@ public:
             new btHinge2Constraint(*Shape_A->m_pRigidBody.get(),
                                    *Shape_B->m_pRigidBody.get(),
                                    btAnchor, btAxis_1, btAxis_2);
-        Hinge->setUpperLimit(pCon->m_steering_angle);
-        Hinge->setLowerLimit(pCon->m_steering_angle);
+        Hinge->setAngularLowerLimit(toBulletVec3(pCon->m_LowerAngLimit));
+        Hinge->setAngularUpperLimit(toBulletVec3(pCon->m_UpperAngLimit));
+        Hinge->setLinearLowerLimit(toBulletVec3(pCon->m_LowerLinLimit));
+        Hinge->setLinearUpperLimit(toBulletVec3(pCon->m_UpperLinLimit));
         Hinge->enableSpring(3, true);
         Hinge->setStiffness(3, pCon->m_stiffness);
         Hinge->setDamping(3, pCon->m_damping);
@@ -280,10 +282,15 @@ public:
 
   ///////////////////////////////////////////////////////////////////
 
-  /// TODO: Fix whatever's up with the m_pDynamicsWorld...
-
   void StepSimulation(){
     m_pDynamicsWorld->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
+    cout<<"Bullet Position: "<<endl;
+    boost::shared_ptr<Entity> pEntity =  m_mShapes.find("Stick@Robot@Ricky")->second;
+    btTransform trans;
+    pEntity->m_pMotionState->getWorldTransform(trans);
+    Eigen::Matrix<double,4,4> j = toEigen(trans);
+    cout<<j<<endl;
+
   }
 
   //////////////////////////////////////////////////////////
@@ -293,7 +300,8 @@ public:
   //////////////////////////////////////////////////////////
 
   void PrintAllShapes(){
-    for(std::map<string, boost::shared_ptr<Entity> > ::iterator it =m_mShapes.begin(); it!=m_mShapes.end(); it++ ){
+    for(std::map<string, boost::shared_ptr<Entity> > ::iterator it =
+        m_mShapes.begin(); it!=m_mShapes.end(); it++ ){
       std::cout<<it->first<<std::endl;
     }
   }
@@ -370,7 +378,7 @@ public:
   //      rChild.m_pMotionState->getWorldTransform(btTwc);
   //      Eigen::Matrix4d Twp = toEigen(btTwp);
   //      Eigen::Matrix4d Twc = toEigen(btTwc);
-  //      return getInverseTransformation(Twp)*Twc; /// find Tinv in mvl or something
+  //      return getInverseTransformation(Twp)*Twc; ///
   //    }
   //    return Eigen::Matrix4d::Identity();
   //  }
@@ -385,7 +393,8 @@ public:
     }
     else
     {
-      cout<<"[PhysicsEngine] Fatal Error! Cannot get entity '"<<name<<"'. Exit!"<<endl;
+      cout<<"[PhysicsEngine] Fatal Error! Cannot get entity '"<<
+            name<<"'. Exit!"<<endl;
       vector<string> Names = GetAllEntityName();
       for(unsigned int ii = 0; ii<Names.size(); ii++){
         cout<<Names.at(ii)<<endl;
@@ -398,7 +407,8 @@ public:
   ///////////////////////////////////////////////////////////////////
   vector<string> GetAllEntityName(){
     vector<string> vNameList;
-    std::map<string, boost::shared_ptr<Entity> >::iterator iter = m_mShapes.begin();
+    std::map<string, boost::shared_ptr<Entity> >::iterator iter =
+        m_mShapes.begin();
     for(iter = m_mShapes.begin();iter!=m_mShapes.end(); iter++){
       string sFullName = iter->first;
       vNameList.push_back(sFullName);
@@ -563,7 +573,9 @@ public:
     btTransform btTran = rB->getCenterOfMassTransform();
 
     btMatrix3x3 btBasis;
-    btBasis.setValue(mBasis(0,0),mBasis(0,1),mBasis(0,2),mBasis(1,0),mBasis(1,1),mBasis(1,2),mBasis(2,0),mBasis(2,1),mBasis(2,2));
+    btBasis.setValue(mBasis(0,0),mBasis(0,1),mBasis(0,2),
+                     mBasis(1,0),mBasis(1,1),mBasis(1,2),
+                     mBasis(2,0),mBasis(2,1),mBasis(2,2));
     btTran.setBasis(btBasis);
 
     rB->setCenterOfMassTransform(btTran);
@@ -616,7 +628,8 @@ public:
 
   ///////////////////////////////////////////////////////////////////
 
-  void SetEntityLinearvelocity(string sBodyFullName, Eigen::Vector3d eLinearVelocity)
+  void SetEntityLinearvelocity(string sBodyFullName,
+                               Eigen::Vector3d eLinearVelocity)
   {
     Entity e = getEntity(sBodyFullName);
     btRigidBody* rB = e.m_pRigidBody.get();
@@ -631,7 +644,8 @@ public:
 
   ///////////////////////////////////////////////////////////////////
 
-  void SetEntityAngularvelocity(string sBodyFullName, Eigen::Vector3d eAngularVelocity)
+  void SetEntityAngularvelocity(string sBodyFullName,
+                                Eigen::Vector3d eAngularVelocity)
   {
     Entity e = getEntity(sBodyFullName);
     btRigidBody* rB = e.m_pRigidBody.get();
@@ -646,7 +660,8 @@ public:
 
   ///////////////////////////////////////////////////////////////////
 
-  void SetEntityRotation(string EntityName, double roll, double pitch, double yaw)
+  void SetEntityRotation(string EntityName, double roll, double pitch,
+                         double yaw)
   {
     Entity e = getEntity(EntityName);
     btRigidBody* rB = e.m_pRigidBody.get();
@@ -663,7 +678,8 @@ public:
 
   ///////////////////////////////////////////////////////////////////
 
-  void GetEntityRotation(string EntityName, double& roll, double& pitch, double& yaw)
+  void GetEntityRotation(string EntityName, double& roll, double& pitch,
+                         double& yaw)
   {
     Entity e = getEntity(EntityName);
     btRigidBody* rB = e.m_pRigidBody.get();
@@ -748,7 +764,8 @@ public:
   /// serialize and deserialize. experimental .. not working now
   // return the serialize char* buffer for rigid body with 'bodyname'
 
-  void SerializeRigidBodyToChar(string sBodyName, const unsigned char*& pData, int& iDataSize)
+  void SerializeRigidBodyToChar(string sBodyName, const unsigned char*& pData,
+                                int& iDataSize)
   {
     Entity e = getEntity(sBodyName);
     btRigidBody* rB = e.m_pRigidBody.get();
@@ -775,8 +792,8 @@ public:
   std::map<string, boost::shared_ptr<Vehicle_Entity> >    m_mRayVehicles;
   std::map<string, boost::shared_ptr<Entity> >            m_mShapes;
   std::map<string, boost::shared_ptr<Compound_Entity> >   m_mCompounds;
-  std::map<string, btHingeConstraint*>                    m_mHinge;  // map of all hinge constraints
-  std::map<string, btHinge2Constraint*>                   m_mHinge2; // map of all hinge 2 constraints
+  std::map<string, btHingeConstraint*>                    m_mHinge;
+  std::map<string, btHinge2Constraint*>                   m_mHinge2;
   std::map<string, btGeneric6DofConstraint*>              m_mSixDOF;
   std::map<string, btPoint2PointConstraint*>              m_mPtoP;
   boost::shared_ptr<btDiscreteDynamicsWorld>              m_pDynamicsWorld;

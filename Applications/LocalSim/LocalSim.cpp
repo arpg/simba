@@ -17,8 +17,7 @@ using namespace CVarUtils;
 LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of robot LocalSim
                    const std::string& sRobotURDFPath,      //< Input: location of meshes, maps etc
                    const std::string& sWorldURDFPath,
-                   const std::string& sServerName,
-                   const std::string& sPoseFileName):
+                   const std::string& sServerOption):
   m_sLocalSimName (sLocalSimName), m_SimDeviceManager(&m_Scene)
 {
   // 1. Read URDF files.
@@ -31,17 +30,16 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   m_Parser.ParseDevices(RobotURDF, m_SimDeviceManager, sLocalSimName);
   m_Parser.ParseRobot(RobotURDF, m_SimRobot, sLocalSimName);
 
-
   // 3. Init User's Robot and add it to RobotManager
-  m_RobotManager.Init(m_sLocalSimName, m_Scene, m_SimRobot, sServerName);
+  m_RobotManager.Init(m_sLocalSimName, m_Scene, m_SimRobot, sServerOption);
 
-  // 4. Add the world and robot to the Model Graph Scene
-  m_Scene.Init(ModelGraphBuilder::All, m_SimWorld, m_SimRobot,sLocalSimName);
+  // 4. Add the world and robot to the ModelGraph
+  m_Scene.Init(m_SimWorld, m_SimRobot,sLocalSimName);
 
   m_SimDeviceManager.InitAllDevices();
 
   // 6. Initialize the Network
-  m_NetworkManager.Init( m_sLocalSimName, sServerName);
+  m_NetworkManager.Init( m_sLocalSimName, sServerOption);
 
   m_NetworkManager.PubRobotIfNeeded(&m_RobotManager);
 
@@ -188,7 +186,7 @@ int main( int argc, char** argv )
     std::cout<<"USAGE: Robot -n <LocalSimName> -r <robot.xml directory>"<<
                "-w <world.xml directory> -s <StateKeeper Option>"<<std::endl;
     std::cout<<"Options:"<<std::endl;
-    std::cout<<"--LocalSimName, -n         ||   Name of this LocalSim."
+    std::cout<<"--LocalSimName, -n      ||   Name of this LocalSim."
             <<std::endl;
     std::cout<<"--Robot.xml, -r         ||   robot.xml's directory"
             <<std::endl;
@@ -203,12 +201,10 @@ int main( int argc, char** argv )
   std::string sLocalSimName = cl.follow( "SimWorld", "-n" );
   std::string sRobotURDF = cl.follow("", "-r");
   std::string sWorldURDF = cl.follow( "", "-w" );
-  std::string sPoseFile  = cl.follow("None",1,"-p");
   std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
 
   // Initialize a LocalSim.
-  LocalSim mLocalSim(sLocalSimName, sRobotURDF,
-                     sWorldURDF, sServerOption, sPoseFile);
+  LocalSim mLocalSim(sLocalSimName, sRobotURDF, sWorldURDF, sServerOption);
 
   // Run as debug?
   bool debug = true;

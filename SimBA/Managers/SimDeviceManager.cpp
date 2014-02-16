@@ -98,8 +98,6 @@ void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel)
                     iFPS, sCameraModel, m_ModelGraph );
     }
 
-    // TODO: Depth cam is not quite working... what's this about?
-
     m_SimCamList.insert(pair<string,SimCamera*>(sSensorName,pSimCam));
   }
 }

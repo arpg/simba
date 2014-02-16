@@ -178,7 +178,6 @@ public:
     m_Axis_2 = Axis_2;
     m_damping = 50;
     m_stiffness = 1;
-    m_steering_angle = 3.14159/6;
 
     // Connect the shapes
     Shape_A->AddChild( this );
@@ -188,10 +187,15 @@ public:
   }
 
 
-  void SetLimits(  double damping, double stiffness, double steering_angle){
+  void SetLimits(  double damping, double stiffness,
+                   Eigen::Vector3d LinLowLimit, Eigen::Vector3d LinUppLimit,
+                   Eigen::Vector3d AngLowLimit, Eigen::Vector3d AngUppLimit){
     m_damping = damping;
     m_stiffness = stiffness;
-    m_steering_angle = steering_angle;
+    m_LowerLinLimit = LinLowLimit;
+    m_UpperLinLimit = LinUppLimit;
+    m_LowerAngLimit = AngLowLimit;
+    m_UpperAngLimit = AngUppLimit;
   }
 
   std::string m_Shape_A;
@@ -201,7 +205,10 @@ public:
   Eigen::Vector3d m_Axis_2;
   double m_damping;
   double m_stiffness;
-  double m_steering_angle;
+  Eigen::Vector3d m_LowerLinLimit;
+  Eigen::Vector3d m_UpperLinLimit;
+  Eigen::Vector3d m_LowerAngLimit;
+  Eigen::Vector3d m_UpperAngLimit;
 
 
 };

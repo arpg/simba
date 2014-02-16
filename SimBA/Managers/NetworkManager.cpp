@@ -235,11 +235,6 @@ void NetworkManager::AddRobotByURDF(RobotProxyAddNewRobotReqMsg& mRequest, Robot
   parse->ParseRobot(doc, *robot, sProxyNameOfNewRobot);
   m_pRobotsManager->ImportSimRobot(*robot);
 
-  // TODO: I don't think this is correct... we may have to change the naming
-  // schematic.
-  m_pRobotsManager->GetRobot(sNewAddRobotName)->InitPoseOfBodyBaseWRTWorld(ePose);
-  //  m_pRobotsManager->GetRobot(sNewAddRobotName)->AddRobotInModelGraph();
-
   cout<<"[NetworkManager/AddRobotByURDF] Add new robot "<<mRequest.robot_name() <<" success. "<<endl;
 }
 

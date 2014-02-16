@@ -26,19 +26,6 @@ public:
     m_bStateKeeperOn = false;
   }
 
-  /////////////////////////////////
-
-  void InitPoseOfBodyBaseWRTWorld(Eigen::Vector6d eRobotInitPoseInWorld){
-    //TODO: Fix this to accept the difference.
-//    eRobotInitPoseInWorld - m_Base->GetPose()
-    m_Base->SetPose(eRobotInitPoseInWorld);
-  }
-
-  // set pose of body base in URDF as initial pose
-  void InitPoseOfBodyBaseInURDF(){
-    m_Base->SetPose(m_eRobotInitPoseInURDF);
-  }
-
   /********************
    * SETTERS
    ********************/
@@ -111,12 +98,6 @@ public:
   }
 
   /*****************************/
-
-  // select between PD or PID control
-  enum InitPoseMethod{
-    FromXML = 1,
-    FromServer = 2
-  };
 
 private:
   string                      m_sRobotName;

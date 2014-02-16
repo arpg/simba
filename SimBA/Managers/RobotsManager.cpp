@@ -5,10 +5,10 @@
 ////////////////////////////////////////////////////////////////////////
 
 bool RobotsManager::Init(string& sProxyName, ModelGraphBuilder& Scene,
-                         SimRobot& mSimRobot, const string& sServerName){
+                         SimRobot& mSimRobot, const string& sServerOption){
   m_Scene      = Scene;
   m_sProxyName = sProxyName;
-  if(sServerName == "WithoutStateKeeper" || sServerName =="WithoutNetwork"){
+  if(sServerOption == "WithoutStateKeeper" || sServerOption =="WithoutNetwork"){
     m_bStateKeeperOn = false;
   }
   else{
@@ -20,10 +20,16 @@ bool RobotsManager::Init(string& sProxyName, ModelGraphBuilder& Scene,
 
 bool RobotsManager::ImportSimRobot( SimRobot& mSimRobot ){
 
+  if(mSimRobot.GetStateKeeperStatus() == true){
+    // TODO: Add pose from StateKeeper
+    // If this is not on, the World pose is automatically known.
+  }
+
   // check if we should save name of this robot as save main robot name
   if(m_mSimRobotsList.size()==0){
     m_sMainRobotName = mSimRobot.GetRobotName();
   }
+
   m_mSimRobotsList.insert(pair<string, SimRobot*>(mSimRobot.GetRobotName(),
                                                   &mSimRobot));
   return true;
