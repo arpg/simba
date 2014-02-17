@@ -207,7 +207,7 @@ int main( int argc, char** argv )
   LocalSim mLocalSim(sLocalSimName, sRobotURDF, sWorldURDF, sServerOption);
 
   // Run as debug?
-  bool debug = true;
+  bool debug = false;
 
   pangolin::RegisterKeyPressCallback(
         ' ', boost::bind( &LocalSim::StepForward, &mLocalSim, &debug ) );
@@ -215,11 +215,16 @@ int main( int argc, char** argv )
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() ){
 
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    // Swap frames and Process Events
+    pangolin::FinishFrame();
+
     // Update Physics and ModelGraph
     mLocalSim.StepForward(debug);
 
     // Refresh screen
-    pangolin::FinishGlutFrame();
+//    pangolin::FinishGlutFrame();
     usleep( 1E6 / 60 );
   }
 

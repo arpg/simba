@@ -22,7 +22,7 @@ public:
     }
   }
 
-  void AssociatePhysicsShapes(SimRobot m_SimRobot){
+  void AssociatePhysicsShapes(SimRobot& m_SimRobot){
     for(unsigned int ii=0; ii<m_SimRobot.GetParts().size(); ii++){
       ModelNode* part = m_SimRobot.GetParts().at(ii);
       if (dynamic_cast<Shape*>(part)){
@@ -33,7 +33,7 @@ public:
     }
   }
 
-  void AssociatePhysicsConstraints(SimRobot m_SimRobot){
+  void AssociatePhysicsConstraints(SimRobot& m_SimRobot){
     for(unsigned int ii=0; ii<m_SimRobot.GetParts().size(); ii++){
       ModelNode* part = m_SimRobot.GetParts().at(ii);
       // Constraints are in their own reference frame, so they
@@ -44,7 +44,7 @@ public:
     }
   }
 
-  void AssociatePhysicsVehicles(SimRobot m_SimRobot){
+  void AssociatePhysicsVehicles(SimRobot& m_SimRobot){
     for(unsigned int ii=0; ii<m_SimRobot.GetParts().size(); ii++){
       ModelNode* part = m_SimRobot.GetParts().at(ii);
       if (dynamic_cast<RaycastVehicle*>(part)){
@@ -55,7 +55,7 @@ public:
     }
   }
 
-  void AssociateRobotPhysics(SimRobot m_SimRobot){
+  void AssociateRobotPhysics(SimRobot& m_SimRobot){
     AssociatePhysicsShapes(m_SimRobot);
     AssociatePhysicsVehicles(m_SimRobot);
     AssociatePhysicsConstraints(m_SimRobot);

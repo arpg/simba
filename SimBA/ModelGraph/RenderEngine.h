@@ -154,8 +154,9 @@ public:
     std::map<ModelNode*, SceneGraph::GLObject*>::iterator it;
     for(it=m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
       ModelNode* mn = it->first;
-      cout<<"WOOOOOO"<<endl;
-      cout<<mn->GetPose()<<endl;
+      cout<<"Our RenderScene Matrix: "<<endl;
+      cout<<mn<<"  "<<mn->GetName()<<endl;
+      cout<<mn->GetPoseMatrix()<<endl;
       SceneGraph::GLObject* p = it->second;
       p->SetPose( mn->GetPose() );
     }

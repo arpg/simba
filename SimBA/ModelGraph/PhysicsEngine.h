@@ -35,12 +35,12 @@ public:
 
   PhysicsEngine(){
     m_dTimeStep = 1.0/30.0;
-    m_dGravity = 9.8;
+    m_dGravity = -9.8;
     m_nMaxSubSteps = 10; // bullet -- for stepSimulation
   }
 
   bool Init(
-      double dGravity = 9.8,
+      double dGravity = -9.8,
       double dTimeStep = 1.0/30.0,
       double nMaxSubSteps = 10
       ){
@@ -116,7 +116,7 @@ public:
         CollisionShapePtr pShape( btBox.getBulletShapePtr() );
         MotionStatePtr pMotionState( btBox.getBulletMotionStatePtr() );
         RigidBodyPtr body( btBox.getBulletBodyPtr() );
-        m_pDynamicsWorld->addCollisionObject( body.get() );
+        m_pDynamicsWorld->addRigidBody( body.get() );
 
         //Save the object; easier deconstruction this way.
         boost::shared_ptr<Entity> pEntity( new Entity );
@@ -132,7 +132,7 @@ public:
         CollisionShapePtr pShape( btCylinder.getBulletShapePtr() );
         MotionStatePtr pMotionState( btCylinder.getBulletMotionStatePtr() );
         RigidBodyPtr body( btCylinder.getBulletBodyPtr() );
-        m_pDynamicsWorld->addCollisionObject( body.get() );
+        m_pDynamicsWorld->addRigidBody( body.get() );
 
         //Save the object; easier deconstruction this way.
         boost::shared_ptr<Entity> pEntity( new Entity );
@@ -148,7 +148,7 @@ public:
         CollisionShapePtr pShape( btPlane.getBulletShapePtr() );
         MotionStatePtr pMotionState( btPlane.getBulletMotionStatePtr() );
         RigidBodyPtr body( btPlane.getBulletBodyPtr() );
-        m_pDynamicsWorld->addCollisionObject( body.get() );
+        m_pDynamicsWorld->addRigidBody( body.get() );
 
         //Save the object; easier deconstruction this way.
         boost::shared_ptr<Entity> pEntity( new Entity );
@@ -284,12 +284,12 @@ public:
 
   void StepSimulation(){
     m_pDynamicsWorld->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
-    cout<<"Bullet Position: "<<endl;
-    boost::shared_ptr<Entity> pEntity =  m_mShapes.find("Stick@Robot@Ricky")->second;
-    btTransform trans;
-    pEntity->m_pMotionState->getWorldTransform(trans);
-    Eigen::Matrix<double,4,4> j = toEigen(trans);
-    cout<<j<<endl;
+//    cout<<"Bullet Position: "<<endl;
+//    boost::shared_ptr<Entity> pEntity =  m_mShapes.find("Stick@Robot@Ricky")->second;
+//    btTransform trans;
+//    pEntity->m_pMotionState->getWorldTransform(trans);
+//    Eigen::Matrix<double,4,4> j = toEigen(trans);
+//    cout<<j<<endl;
 
   }
 

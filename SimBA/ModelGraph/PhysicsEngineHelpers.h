@@ -37,7 +37,11 @@ public:
   }
 
   virtual void setWorldTransform(const btTransform &worldTrans) {
-      object.SetPose(toEigen(worldTrans));
+    cout<<object.GetName()<<endl;
+    cout<<&object<<endl;
+    cout<<"New Pose:"<<endl;
+    cout<<toEigen(worldTrans)<<endl;
+    object.SetPose(toEigen(worldTrans));
   }
 
   ModelNode& object;
