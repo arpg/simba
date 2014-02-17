@@ -9,7 +9,9 @@
 #include <bullet/LinearMath/btAlignedAllocator.h>
 #include <bullet/btBulletDynamicsCommon.h>
 
-//Our constraints
+// Our ModelNode Objects
+#include <ModelGraph/Shape.h>
+#include <ModelGraph/RaycastVehicle.h>
 #include <ModelGraph/Constraint.h>
 
 //SceneGraphMotionState (for tracking our shapes)
@@ -37,10 +39,6 @@ public:
   }
 
   virtual void setWorldTransform(const btTransform &worldTrans) {
-    cout<<object.GetName()<<endl;
-    cout<<&object<<endl;
-    cout<<"New Pose:"<<endl;
-    cout<<toEigen(worldTrans)<<endl;
     object.SetPose(toEigen(worldTrans));
   }
 

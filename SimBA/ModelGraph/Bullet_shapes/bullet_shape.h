@@ -7,10 +7,6 @@
 /// Bullet Shapes.
 /////////////////////////////////////////
 
-// Our ModelNode Objects
-#include <ModelGraph/Shape.h>
-#include <ModelGraph/RaycastVehicle.h>
-
 // Our Eigen Helpers
 #include <ModelGraph/EigenHelpers.h>
 

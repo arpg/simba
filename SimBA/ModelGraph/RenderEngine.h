@@ -99,7 +99,6 @@ public:
     std::map<ModelNode*, SceneGraph::GLObject* >::iterator it;
     for(it = m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
       ModelNode* node = it->first;
-      cout<<"--)) "<<node->GetName()<<endl;
       SceneGraph::GLObject* p = it->second;
       m_glGraph.AddChild( p );
     }
@@ -116,8 +115,8 @@ public:
     // Define Camera Render Object (for view / scene browsing)
     pangolin::OpenGlRenderState stacks(
           pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
-          pangolin::ModelViewLookAt(center(0), center(1) + size,
-                                    center(2) - size/4,
+          pangolin::ModelViewLookAt(center(0), center(1) + 5,
+                                    center(2) - 6,
                                     center(0), center(1), center(2),
                                     pangolin::AxisNegZ) );
     m_stacks3d = stacks;
@@ -154,9 +153,6 @@ public:
     std::map<ModelNode*, SceneGraph::GLObject*>::iterator it;
     for(it=m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
       ModelNode* mn = it->first;
-      cout<<"Our RenderScene Matrix: "<<endl;
-      cout<<mn<<"  "<<mn->GetName()<<endl;
-      cout<<mn->GetPoseMatrix()<<endl;
       SceneGraph::GLObject* p = it->second;
       p->SetPose( mn->GetPose() );
     }

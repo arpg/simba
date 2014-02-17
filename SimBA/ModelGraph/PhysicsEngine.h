@@ -284,13 +284,6 @@ public:
 
   void StepSimulation(){
     m_pDynamicsWorld->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
-//    cout<<"Bullet Position: "<<endl;
-//    boost::shared_ptr<Entity> pEntity =  m_mShapes.find("Stick@Robot@Ricky")->second;
-//    btTransform trans;
-//    pEntity->m_pMotionState->getWorldTransform(trans);
-//    Eigen::Matrix<double,4,4> j = toEigen(trans);
-//    cout<<j<<endl;
-
   }
 
   //////////////////////////////////////////////////////////
@@ -780,6 +773,40 @@ public:
 
     pData = serializer.getBufferPointer();
     iDataSize = serializer.getCurrentBufferSize();
+  }
+
+  //////////////////////////////////////////////////////////
+  ///
+  /// RAYCAST VEHICLE FUNCTIONS
+  ///
+  //////////////////////////////////////////////////////////
+
+  std::vector< Eigen::Matrix4d > GetVehiclePoses( Vehicle_Entity* Vehicle ){
+    std::vector<Eigen::Matrix4d> VehiclePoses;
+    btTransform VehiclePose;
+    VehiclePose.setIdentity();
+    VehiclePose = Vehicle->m_pVehicle->getChassisWorldTransform();
+    VehiclePoses.push_back(toEigen(VehiclePose));
+    for( int i = 0; i<Vehicle->m_pVehicle->getNumWheels(); i++){
+      Vehicle->m_pVehicle->updateWheelTransform(i,false);
+      btTransform WheelPose;
+      WheelPose.setIdentity();
+      WheelPose = Vehicle->m_pVehicle->getWheelTransformWS(i);
+      VehiclePoses.push_back(toEigen(WheelPose));
+    }
+    return VehiclePoses;
+  }
+
+  // Call GetVehicleTransform in RenderEngine whenever there's a RaycastVehicle
+  // to render; since we use five GLObjects for one Bullet object, we have
+  // to perform some trickery.
+
+  std::vector<Eigen::Matrix4d> GetVehicleTransform(std::string sVehicleName){
+    boost::shared_ptr<Vehicle_Entity> boost_Vehicle =
+        m_mRayVehicles.at(sVehicleName);
+    Vehicle_Entity* Vehicle = boost_Vehicle.get();
+    std::vector<Eigen::Matrix4d> Eig_transforms = GetVehiclePoses(Vehicle);
+    return Eig_transforms;
   }
 
   //////////////////////////////////////////////////////////
