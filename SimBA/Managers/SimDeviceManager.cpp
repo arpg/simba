@@ -17,29 +17,43 @@ void SimDeviceManager::AddDevice(SimDeviceInfo devInfo){
 }
 
 ////////////////////////////////////////////////////////////////////////
-void SimDeviceManager::InitAllDevices(){
-  for(unsigned int i = 0; i!= m_vSimDevices.size(); i++){
-    SimDeviceInfo Device = m_vSimDevices[i];
-    string sDeviceType = Device.m_sDeviceType;
+void SimDeviceManager::InitAllDevices(string sServerOption)
+{
+  m_sServerOption = sServerOption;
+  if(m_sServerOption == "WithoutNetwork")
+  {
+    for(unsigned int i = 0; i!= m_vSimDevices.size(); i++)
+    {
+      SimDeviceInfo& rDevice = m_vSimDevices[i];
+      string sDeviceType = rDevice.m_sDeviceType;
+      cout<<"[InitAllDevices] Producing device type "<<sDeviceType<<endl;
 
-    if(sDeviceType == "Camera"){
-      InitCamDevice(Device, Device.m_vModel[0]);
+      if(sDeviceType == "Camera"){
+        InitCamDevice(rDevice, rDevice.m_vModel[0]);
+      }
+
+      if(sDeviceType == "GPS"){
+        // Nothing here yet...
+      }
+
+      if(sDeviceType == "Vicon"){
+        InitViconDevice(rDevice);
+      }
+
+      if(sDeviceType == "Controller"){
+        InitController(rDevice);
+      }
+
+      rDevice.m_bDeviceOn = true;
+      cout<<"[SimDeviceManager] trun device to on"<<endl;
     }
 
-    if(sDeviceType == "GPS"){
-      // Nothing here yet...
-    }
-
-    if(sDeviceType == "Vicon"){
-      InitViconDevice(Device);
-    }
-
-    cout<<"[InitAllDevices] Producing device type "<<sDeviceType<<endl;
-    if(sDeviceType == "Controller"){
-      InitController(Device);
-    }
+    cout<<"[SimDeviceManager] Successfully init all devices. "<<endl;
   }
-  cout<<"[SimDeviceManager] Successfully init all devices. "<<endl;
+  else
+  {
+    cout<<"[SimDeviceManager] Skip. Wait for HAL call for  init devices"<<endl;
+  }
 }
 
 
@@ -67,6 +81,7 @@ void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel)
 {
   string sCameraName = Device.m_sDeviceName;
   int iFPS = Device.m_iFPS;
+
   for(unsigned int j = 0; j!= Device.m_vSensorList.size(); j++)
   {
     string sSensorName = Device.m_vSensorList[j]; // e.g. LCameraRGB. This may be bad
@@ -83,19 +98,19 @@ void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel)
     {
       cout<<"[SimDeviceManager] try to init Gray camera, name is "<<sCameraName<<endl;
       pSimCam->init(initPose, sSensorName, eSimCamLuminance,
-                    iFPS, sCameraModel, m_ModelGraph );
+                    iFPS, sCameraModel, m_ModelGraph, m_ModelGraph->m_Render.m_glGraph );
     }
     else if(sSensorName == "RGB" + sCameraName)       //---------- init RGB Cam
     {
       cout<<"[SimDeviceManager] try to init RGB camera, name is "<<sSensorName<<endl;
       pSimCam->init(initPose, sSensorName, eSimCamRGB,
-                    iFPS, sCameraModel, m_ModelGraph );
+                    iFPS, sCameraModel, m_ModelGraph, m_ModelGraph->m_Render.m_glGraph );
     }
     else if(sSensorName == "Depth" + sCameraName)     //---------- init Depth Cam
     {
       cout<<"[SimDeviceManager] try to init Depth camera, name is "<<sSensorName<<endl;
       pSimCam->init(initPose, sSensorName, eSimCamLuminance | eSimCamDepth,
-                    iFPS, sCameraModel, m_ModelGraph );
+                    iFPS, sCameraModel, m_ModelGraph, m_ModelGraph->m_Render.m_glGraph );
     }
 
     m_SimCamList.insert(pair<string,SimCamera*>(sSensorName,pSimCam));
@@ -110,6 +125,7 @@ void SimDeviceManager::InitViconDevice(SimDeviceInfo& Device)
   string sBodyName = Device.m_sBodyName;
   SimVicon* pSimVicon = new SimVicon;
   pSimVicon->init(sDeviceName, sBodyName, m_ModelGraph->m_Phys );
+  Device.m_bDeviceOn = true;
   m_SimViconList.insert(pair<string, SimVicon*>(sDeviceName,pSimVicon));
 }
 
@@ -126,6 +142,7 @@ void SimDeviceManager::InitController(SimDeviceInfo& Device)
     SimpleController* pSimpleController = new SimpleController;
     pSimpleController->init(sDeviceName, sRobotName,
                             sDeviceName, m_ModelGraph->m_Phys );
+    Device.m_bDeviceOn = true;
     m_SimpleControllerList.insert(pair<string,
                                   SimpleController*>(sDeviceName,
                                                      pSimpleController));
@@ -145,33 +162,56 @@ void SimDeviceManager::InitController(SimDeviceInfo& Device)
 
 void SimDeviceManager::UpdateAllDevices()
 {
-  if(m_SimCamList.size()!=0)
+  if(m_sServerOption == "WithoutNetwork")
   {
-    map<string, SimCamera*>::iterator iter;
-    for(iter = m_SimCamList.begin();iter!= m_SimCamList.end();iter++)
+    for(unsigned int i = 0; i!= m_vSimDevices.size();i++)
     {
-      iter->second->Update();
+      SimDeviceInfo Device = m_vSimDevices[i];
+
+      if(Device.m_bDeviceOn==true)
+      {
+        cout<<"try to update "<<endl;
+        if(Device.m_sDeviceType =="Camera" )
+        {
+          if(m_SimCamList.size()!=0)
+            {
+              map<string, SimCamera*>::iterator iter;
+              for(iter = m_SimCamList.begin();iter!= m_SimCamList.end();iter++)
+              {
+                iter->second->Update();
+              }
+            }
+        }
+        else if(Device.m_sDeviceType == "GPS")
+        {
+          if(m_SimGPSList.size()!=0)
+          {
+            map<string, SimGPS*>::iterator iter;
+            for(iter = m_SimGPSList.begin();iter!= m_SimGPSList.end();iter++)
+            {
+              iter->second->Update();
+            }
+          }
+        }
+        else if(Device.m_sDeviceType == "Vicon")
+        {
+
+          if(m_SimViconList.size()!=0)
+          {
+            map<string, SimVicon*>::iterator iter;
+            for(iter = m_SimViconList.begin();iter!= m_SimViconList.end();iter++)
+            {
+              iter->second->Update();
+            }
+          }
+        }
+      }
+      else
+      {
+        cout<<"skip update device"<<endl;
+      }
     }
   }
-
-  if(m_SimGPSList.size()!=0)
-  {
-    map<string, SimGPS*>::iterator iter;
-    for(iter = m_SimGPSList.begin();iter!= m_SimGPSList.end();iter++)
-    {
-      iter->second->Update();
-    }
-  }
-
-  if(m_SimViconList.size()!=0)
-  {
-    map<string, SimVicon*>::iterator iter;
-    for(iter = m_SimViconList.begin();iter!= m_SimViconList.end();iter++)
-    {
-      iter->second->Update();
-    }
-  }
-
 }
 
 SimDeviceInfo SimDeviceManager::GetDeviceInfo(string sDeviceName)

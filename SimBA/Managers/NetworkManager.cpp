@@ -11,6 +11,7 @@ bool NetworkManager::Init( string sProxyName, string sServerName, int verbocity)
   m_sServerName = sServerName;
   if(m_sServerName == "WithoutNetwork")
   {
+    cout<<"[NetworkManager] Skip Network due to WithoutNetwork Mode"<<endl;
     return true;
   }
 
@@ -40,7 +41,12 @@ bool NetworkManager::PubRobotIfNeeded(RobotsManager* pRobotsManager)
   // check if we need to connect to StateKeeper. If yes, we need to
   // advertise Robot State and provide rpc methods for StateKeeper.
 
-  if(m_sServerName != "WithoutStateKeeper")
+  if(m_sServerName == "WithoutNetwork")
+  {
+    cout<<"[NetworkManager/PubRobotIfNeeded] Skip due to WithoutNetwork mode"<<endl;
+  }
+
+  else if(m_sServerName != "WithoutStateKeeper")
   {
     m_pRobotsManager = pRobotsManager;
 
@@ -73,7 +79,7 @@ void NetworkManager::PubRegisterDevicesIfNeeded(SimDeviceManager* pSimDeviceMana
   // 1. check if we need to init device in node.
   if(m_sServerName=="WithoutNetwork")
   {
-    cout<<"[LocalSim] Init Robot LocalSim without Network."<<endl;
+    cout<<"[NetworkManager/PubRegisterDevicesIfNeeded] Skip! Init Robot LocalSim without Network."<<endl;
   }
   else
   {
@@ -379,11 +385,30 @@ bool NetworkManager::ReceiveWorldFullStateFromStateKeeper( )
 ////////////////////////////////////////////////////////////////////////
 void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,RegisterNodeCamRepMsg & mReply)
 {
-  cout<<"[NetworkManager] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
+  cout<<"[NetworkManager/RegisterCamDevice] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
 
-  mReply.set_time_step(m_iTimeStep);
-  mReply.set_regsiter_flag(1);
-  m_SubscribeNum = m_SubscribeNum +1;
+  string sDeviceName = CheckURI(mRequest.uri());
+  if(sDeviceName!="FALSE")
+  {
+    // Init Device.
+    m_pSimDeviceManager->InitDeviceByName(sDeviceName );
+    SimCamera* pCam = m_pSimDeviceManager->GetSimCam(sDeviceName);
+
+    mReply.set_time_step(m_iTimeStep);
+    mReply.set_regsiter_flag(1);
+    mReply.set_channels(pCam->m_nChannels);
+    mReply.set_width(pCam->m_nImgWidth);
+    mReply.set_height(pCam->m_nImgHeight);
+
+    m_SubscribeNum = m_SubscribeNum +1;
+    cout<<"[NetworkManager/RegisterCamDevice] HAL reuqest for use "<<sDeviceName<<". Device Ready!"<<endl;
+  }
+  else
+  {
+    mReply.set_time_step(m_iTimeStep);
+    mReply.set_regsiter_flag(0);
+    cout<<"[NetworkManager/RegisterCamDevice] HAL reuqest for use "<<sDeviceName<<". Device Invalid!"<<endl;
+  }
 }
 
 // Return 'FALSE' if device is invalid. Otherwise return device name.
@@ -399,33 +424,6 @@ string NetworkManager::CheckURI(string sURI)
   return sDeviceName;
 }
 
-void NetworkManager::RegisterCamDeviceByURI(RegisterNodeCamReqMsg& mRequest,RegisterNodeCamRepMsg & mReply)
-{
-  cout<<"[NetworkManager] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
-
-  string sDeviceName = CheckURI(mRequest.uri());
-  if(sDeviceName!="FALSE")
-  {
-    // Init Device.
-    m_pSimDeviceManager->InitDeviceByName(sDeviceName);
-    SimCamera* pCam = m_pSimDeviceManager->GetSimCam(sDeviceName);
-
-    mReply.set_time_step(m_iTimeStep);
-    mReply.set_regsiter_flag(1);
-    mReply.set_channels(pCam->m_nChannels);
-    mReply.set_width(pCam->m_nImgWidth);
-    mReply.set_height(pCam->m_nImgHeight);
-
-    m_SubscribeNum = m_SubscribeNum +1;
-    cout<<"HAL reuqest for use "<<sDeviceName<<". Device Ready!"<<endl;
-  }
-  else
-  {
-    mReply.set_time_step(m_iTimeStep);
-    mReply.set_regsiter_flag(0);
-    cout<<"HAL reuqest for use "<<sDeviceName<<". Device Invalid!"<<endl;
-  }
-}
 
 ////////////////////////////////////////////////////////////////////////
 

@@ -36,7 +36,7 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   // 4. Add the world and robot to the ModelGraph
   m_Scene.Init(m_SimWorld, m_SimRobot,sLocalSimName);
 
-  m_SimDeviceManager.InitAllDevices();
+  m_SimDeviceManager.InitAllDevices(sServerOption);
 
   // 6. Initialize the Network
   m_NetworkManager.Init( m_sLocalSimName, sServerOption);
@@ -84,70 +84,74 @@ void LocalSim::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
 bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::ImageView& RSimCamWnd ){
   int WndCounter = 0;
 
-  for(unsigned int i =0 ; i!= m_SimDeviceManager.m_vSimDevices.size(); i++){
+  for(unsigned int i =0 ; i!= m_SimDeviceManager.m_vSimDevices.size(); i++)
+  {
     SimDeviceInfo Device = m_SimDeviceManager.m_vSimDevices[i];
 
-    for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
+    if(Device.m_bDeviceOn==true)
+    {
+      for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
 
-      string sSimCamName = Device.m_vSensorList[j];
-      SimCamera* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
+        string sSimCamName = Device.m_vSensorList[j];
+        SimCamera* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
 
-      SceneGraph::ImageView* ImageWnd;
+        SceneGraph::ImageView* ImageWnd;
 
-      // get pointer to window
-      if(WndCounter == 0){
-        ImageWnd = &LSimCamWnd;
-      }
-      else if(WndCounter == 1){
-        ImageWnd = &RSimCamWnd;
-      }
-
-      WndCounter++;
-
-      // set image to window
-      if (pSimCam->m_iCamType == 5){       // for depth image
-        float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
-                                          pSimCam->m_nImgHeight *
-                                          sizeof(float) );
-
-        if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
-                             pSimCam->m_nImgHeight,
-                             GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
-          free(pImgbuf);
+        // get pointer to window
+        if(WndCounter == 0){
+          ImageWnd = &LSimCamWnd;
         }
-        else{
-          cout<<"[SetImagesToWindow] Set depth Image fail"<<endl;
-          return false;
+        else if(WndCounter == 1){
+          ImageWnd = &RSimCamWnd;
         }
-      }
-      else if(pSimCam->m_iCamType == 2){   // for RGB image
-        char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
-                                      pSimCam->m_nImgHeight * 3);
 
-        if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
-                             pSimCam->m_nImgHeight,
-                             GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
-          free(pImgbuf);
+        WndCounter++;
+
+        // set image to window
+        if (pSimCam->m_iCamType == 5){       // for depth image
+          float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
+                                            pSimCam->m_nImgHeight *
+                                            sizeof(float) );
+
+          if(pSimCam->capture(pImgbuf)==true){
+            ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
+                               pSimCam->m_nImgHeight,
+                               GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
+            free(pImgbuf);
+          }
+          else{
+            cout<<"[SetImagesToWindow] Set depth Image fail"<<endl;
+            return false;
+          }
         }
-        else{
-          cout<<"[SetImagesToWindow] Set RGB Image fail"<<endl;
-          return false;
+        else if(pSimCam->m_iCamType == 2){   // for RGB image
+          char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
+                                        pSimCam->m_nImgHeight * 3);
+
+          if(pSimCam->capture(pImgbuf)==true){
+            ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
+                               pSimCam->m_nImgHeight,
+                               GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
+            free(pImgbuf);
+          }
+          else{
+            cout<<"[SetImagesToWindow] Set RGB Image fail"<<endl;
+            return false;
+          }
         }
-      }
-      else if(pSimCam->m_iCamType == 1){    //to show greyscale image
-        char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
-                                      pSimCam->m_nImgHeight);
-        if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
-                             pSimCam->m_nImgHeight,
-                             GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
-          free(pImgbuf);
-        }
-        else{
-          cout<<"[SetImagesToWindow] Set Gray Image fail"<<endl;
-          return false;
+        else if(pSimCam->m_iCamType == 1){    //to show greyscale image
+          char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
+                                        pSimCam->m_nImgHeight);
+          if(pSimCam->capture(pImgbuf)==true){
+            ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
+                               pSimCam->m_nImgHeight,
+                               GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+            free(pImgbuf);
+          }
+          else{
+            cout<<"[SetImagesToWindow] Set Gray Image fail"<<endl;
+            return false;
+          }
         }
       }
     }
@@ -159,6 +163,7 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
 void LocalSim::StepForward( bool debug )
 {
   m_Scene.UpdateScene(debug);
+
   // Update SimDevices
   m_SimDeviceManager.UpdateAllDevices();
 
@@ -213,7 +218,8 @@ int main( int argc, char** argv )
         ' ', boost::bind( &LocalSim::StepForward, &mLocalSim, &debug ) );
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
-  while( !pangolin::ShouldQuit() ){
+  while( !pangolin::ShouldQuit() )
+  {
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 

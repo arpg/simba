@@ -48,9 +48,6 @@ public:
   void RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
                          RegisterNodeCamRepMsg & mReply);
 
-  void RegisterCamDeviceByURI(RegisterNodeCamReqMsg& mRequest,
-                              RegisterNodeCamRepMsg & mReply);
-
   void RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
                                 RegisterControllerRepMsg & mReply);
 

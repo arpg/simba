@@ -15,20 +15,21 @@ public:
   /// <DeviceName, SimGPS*>
   map<string, SimGPS*>               m_SimGPSList;
   map<string, SimVicon*>             m_SimViconList;
-  map<string, SimCamera*>               m_SimCamList;
+  map<string, SimCamera*>            m_SimCamList;
   map<string, SimLaser2D*>           m_SimLaser2DList;
   map<string, SimLaser3D*>           m_SimLaser3DList;
   map<string, SimpleController*>     m_SimpleControllerList;
   map<string, CarController*>        m_CarControllerList;
   PoseController                     m_SimpPoseController;
   ModelGraphBuilder*                 m_ModelGraph;
+  string                             m_sServerOption;
 
   /// Constructor
   SimDeviceManager(ModelGraphBuilder* Scene);
 
   /// Initializers
   void AddDevice(SimDeviceInfo devInfo);
-  void InitAllDevices();
+  void InitAllDevices(string sServerOption);
   void InitDeviceByName(string sDeviceName);
   void InitCamDevice(SimDeviceInfo& Device, string sCameraModel);
   void InitViconDevice(SimDeviceInfo& Device);

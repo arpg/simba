@@ -29,12 +29,14 @@ class SimCamera
                  int                 CameraType,
                  int                 FPS,
                  string              sCameraModel,
-                 ModelGraphBuilder*  ModelGraph){
+                 ModelGraphBuilder*  ModelGraph,
+                 GLSceneGraph&       glGraph){
            m_sDeviceName = sDeviceName;
            m_ModelGraph = ModelGraph;
            m_iFPS = FPS;
 
-           cout<<"[SimCamera] camera model file name is "<<sCameraModel<<". Device name is "<<m_sDeviceName<<endl;
+           cout<<"[SimCamera] camera model file name is "<<sCameraModel<<
+                 ". Device name is "<<m_sDeviceName<<endl;
            m_CameraRig = calibu::ReadXmlRig(sCameraModel);
            calibu::CameraModel theCam = m_CameraRig.cameras[0].camera;
 
@@ -45,7 +47,7 @@ class SimCamera
 
            // initialize cameras
            m_iCamType = CameraType;
-           m_Camera.Init(&m_ModelGraph->m_Render.m_glGraph,
+           m_Camera.Init(&glGraph,
                          Sophus::SE3d::exp( vInitPose ).matrix(),
                          K, m_nImgWidth, m_nImgHeight, m_iCamType );
 
