@@ -18,7 +18,8 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
                    const std::string& sRobotURDFPath,      //< Input: location of meshes, maps etc
                    const std::string& sWorldURDFPath,
                    const std::string& sServerOption):
-  m_sLocalSimName (sLocalSimName), m_SimDeviceManager(&m_Scene)
+  m_sLocalSimName (sLocalSimName),
+  m_SimDeviceManager(&m_Scene)
 {
   // 1. Read URDF files.
   XMLDocument RobotURDF, WorldURDF;

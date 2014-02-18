@@ -15,7 +15,7 @@ class SimCamera
        unsigned int                   m_nImgHeight;
        unsigned int                   m_nChannels;
        SceneGraph::GLSimCam           m_Camera;     // reference camera we use
-       ModelGraphBuilder*             m_ModelGraph;
+       ModelGraphBuilder*             m_pModelGraph;
        int                            m_iCamType;
        int                            m_iFPS;
        string                         m_sDeviceName; // mesh of parent that camera attach to
@@ -29,10 +29,9 @@ class SimCamera
                  int                 CameraType,
                  int                 FPS,
                  string              sCameraModel,
-                 ModelGraphBuilder*  ModelGraph,
-                 GLSceneGraph&       glGraph){
+                 ModelGraphBuilder*  pModelGraph){
            m_sDeviceName = sDeviceName;
-           m_ModelGraph = ModelGraph;
+           m_pModelGraph = pModelGraph;
            m_iFPS = FPS;
 
            cout<<"[SimCamera] camera model file name is "<<sCameraModel<<
@@ -47,7 +46,7 @@ class SimCamera
 
            // initialize cameras
            m_iCamType = CameraType;
-           m_Camera.Init(&glGraph,
+           m_Camera.Init(&pModelGraph->m_Render.m_glGraph,
                          Sophus::SE3d::exp( vInitPose ).matrix(),
                          K, m_nImgWidth, m_nImgHeight, m_iCamType );
 
@@ -148,14 +147,14 @@ class SimCamera
        // get current camera pose from bullet
        Eigen::Vector6d GetCameraPoseByBody()
        {
-          return m_ModelGraph->m_Phys.GetEntity6Pose( m_sDeviceName );
+          return m_pModelGraph->m_Phys.GetEntity6Pose( m_sDeviceName );
        }
 
        // ------------------------------------------------------------------------------------------------------------------
        void Update()
        {
            m_Camera.SetPoseRobot( _Cart2T(GetCameraPoseByBody()) );
-           m_Camera.RenderToTexture();
+//           m_Camera.RenderToTexture();
            m_Camera.DrawCamera();
 
            // simluate frame rate. This is not a clever method because the whole app will sleep because of this line.
