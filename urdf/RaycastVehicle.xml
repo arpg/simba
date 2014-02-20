@@ -24,12 +24,11 @@
      <body name="mass"        value="5"/>
      <body name="base height" value=".5"/>
      <body name="restitution" value="0"/>
-     <body name="position"    value="0,0,0,0,0,1.5707"/>
-     <body name="rotation"    value="1,0,0,0,1,0,0,0,1"/>
+     <body name="pose"    value="0,0,0,0,0,0"/>
 
      <!--Wheel shape variables   -->
-     <wheel name="radius"            value="0"/>
-     <wheel name="width"             value="0"/>
+     <wheel name="radius"            value=".5"/>
+     <wheel name="width"             value=".5"/>
      <!-- <wheel name="mass"              value="0"/> -->
      <!-- <wheel name="restitution"       value="0"/> -->
      <wheel name="dyn friction"      value="0"/>
@@ -46,7 +45,7 @@
  </Car>
 
 <!--Sensors  -->
-<body name="Stick" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,-3,0,0,0"  dimension="0.1,0.1,2" scale="25" type="Box"/>
+<body name="Stick" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,3,0,0,0"  dimension="0.1,0.1,2" scale="25" type="Box"/>
 
 <Sensor Name="LCamera"
   Type="Camera"

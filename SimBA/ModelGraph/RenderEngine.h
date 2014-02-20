@@ -33,9 +33,49 @@ public:
 
     // Add our RaycastVehicle (a myriad of shapes)
     if (dynamic_cast<RaycastVehicle*>(pNode) != NULL){
+      // A RaycastVehicle is made of a cube and four cylinders.
+      // Since a vehicle is one shape in the PhysicsEngine, but five shapes
+      // in the RenderEngine, we must call PhysicsEngine::GetVehicleTransform
+      // anytime we want to update the rendering.
 
-      // TODO: ADD RAYCAST VEHICLE
+      // Get the positions of every part of the car.
 
+      RaycastVehicle* pVehicle = (RaycastVehicle*) pNode;
+      std::vector<double> params = pVehicle->GetParameters();
+
+      // The chassis
+      SceneGraph::GLBox* chassis = new SceneGraph::GLBox();
+      chassis->SetExtent(params[WheelBase], params[Width], params[Height]);
+      chassis->SetPose(pVehicle->GetPose());
+      m_mSceneEntities[pNode] = chassis;
+
+      // FL Wheel
+      SceneGraph::GLCylinder* FLWheel = new SceneGraph::GLCylinder();
+      FLWheel->Init(2*params[WheelRadius], 2*params[WheelRadius],
+                    params[WheelWidth], 10, 10);
+      FLWheel->SetPose(pVehicle->GetWheelPose(0));
+      m_mRaycastWheels[pVehicle->GetName()+"@FLWheel"] = FLWheel;
+
+      // FR Wheel
+      SceneGraph::GLCylinder* FRWheel = new SceneGraph::GLCylinder();
+      FRWheel->Init(2*params[WheelRadius], 2*params[WheelRadius],
+                    params[WheelWidth], 10, 10);
+      FRWheel->SetPose(pVehicle->GetWheelPose(1));
+      m_mRaycastWheels[pVehicle->GetName()+"@FRWheel"] = FRWheel;
+
+      // BL Wheel
+      SceneGraph::GLCylinder* BLWheel = new SceneGraph::GLCylinder();
+      BLWheel->Init(2*params[WheelRadius], 2*params[WheelRadius],
+                    params[WheelWidth], 10, 10);
+      BLWheel->SetPose(pVehicle->GetWheelPose(2));
+      m_mRaycastWheels[pVehicle->GetName()+"@BLWheel"] = BLWheel;
+
+      // BR Wheel
+      SceneGraph::GLCylinder* BRWheel = new SceneGraph::GLCylinder();
+      BRWheel->Init(2*params[WheelRadius], 2*params[WheelRadius],
+                    params[WheelWidth], 10, 10);
+      BRWheel->SetPose(pVehicle->GetWheelPose(3));
+      m_mRaycastWheels[pVehicle->GetName()+"@BRWheel"] = BRWheel;
     }
 
     // Add our Shapes
@@ -96,11 +136,18 @@ public:
 
 
   void AddToScene(){
+
+    // Add shapes
     std::map<ModelNode*, SceneGraph::GLObject* >::iterator it;
     for(it = m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
-      ModelNode* node = it->first;
       SceneGraph::GLObject* p = it->second;
       m_glGraph.AddChild( p );
+    }
+    // If we have them, add wheels
+    std::map<string, SceneGraph::GLObject* >::iterator jj;
+    for(jj = m_mRaycastWheels.begin(); jj != m_mRaycastWheels.end(); jj++) {
+      SceneGraph::GLObject* w = jj->second;
+      m_glGraph.AddChild( w );
     }
   }
 
@@ -118,7 +165,7 @@ public:
           pangolin::ModelViewLookAt(center(0), center(1) + 5,
                                     center(2) - 6,
                                     center(0), center(1), center(2),
-                                    pangolin::AxisNegZ) );
+                                    pangolin::AxisZ) );
     m_stacks3d = stacks;
 
     // We define a new view which will reside within the container.
@@ -141,7 +188,6 @@ public:
     m_RSimCamImage = new SceneGraph::ImageView(true, true);
     m_RSimCamImage->SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
 
-
     // Add our views as children to the base container.
     pangolin::DisplayBase().AddDisplay( *m_view3d );
     pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
@@ -155,10 +201,33 @@ public:
       ModelNode* mn = it->first;
       SceneGraph::GLObject* p = it->second;
       p->SetPose( mn->GetPose() );
+
+      //Update all of our tires.
+      if((dynamic_cast<RaycastVehicle*>(mn) != NULL)){
+        std::map<string, SceneGraph::GLObject*>::iterator jj;
+        RaycastVehicle* pVehicle = (RaycastVehicle*) mn;
+        for(jj=m_mRaycastWheels.begin(); jj != m_mRaycastWheels.end(); jj++) {
+          string name = jj->first;
+          SceneGraph::GLObject* wheel = jj->second;
+          if(name == pVehicle->GetName()+"@FLWheel"){
+            wheel->SetPose(pVehicle->GetWheelPose(0));
+          }
+          else if(name == pVehicle->GetName()+"@FRWheel"){
+            wheel->SetPose(pVehicle->GetWheelPose(1));
+          }
+          else if(name == pVehicle->GetName()+"@BLWheel"){
+            wheel->SetPose(pVehicle->GetWheelPose(2));
+          }
+          else if(name == pVehicle->GetName()+"@BRWheel"){
+            wheel->SetPose(pVehicle->GetWheelPose(3));
+          }
+        }
+      }
     }
   }
 
   std::map<ModelNode*, SceneGraph::GLObject*> m_mSceneEntities;
+  std::map<string, SceneGraph::GLObject*>     m_mRaycastWheels;
   SceneGraph::GLSceneGraph                    m_glGraph;
   SceneGraph::ImageView*                      m_LSimCamImage;
   SceneGraph::ImageView*                      m_RSimCamImage;

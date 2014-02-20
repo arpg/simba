@@ -110,6 +110,7 @@ public:
     {
       btWheelInfo& wheel = bulletVehicle->getWheelInfo(i);
       wheel.m_rollInfluence = parameters[RollInfluence];
+      pVehicle->SetWheelPose(i, _T2Cart(toEigen(wheel.m_worldTransform)));
     }
 
     //reset all parameters
@@ -149,9 +150,6 @@ public:
   btRaycastVehicle* getBulletRaycastVehicle(){
     return bulletVehicle;
   }
-
-
-
 
 private:
   //A compound shape to hold all of our collision shapes.

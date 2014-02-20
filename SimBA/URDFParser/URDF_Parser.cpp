@@ -358,8 +358,7 @@ void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
 
     std::vector<double> vParameters;
     vParameters.resize(29);
-    std::vector<double> position;
-    std::vector<double> rotation;
+    std::vector<double> pose;
 
     XMLElement *pChild=pElement->FirstChildElement();
 
@@ -368,6 +367,9 @@ void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
       string sAttrName = pChild->Name();
 
       // Car paramters
+      // All of these are stored in a vector of doubles. Access them through
+      // their enum specification in ModelGraph/VehicleEnums.h
+
       if(!sAttrName.compare("param"))
       {
         std::string param = pChild->Attribute("name");
@@ -445,11 +447,8 @@ void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
         if(!body.compare("mass")){
           vParameters[7] = GenNumFromChar(pChild->Attribute("value")).front();
         }
-        if(!body.compare("position")){
-          position = GenNumFromChar(pChild->Attribute("value"));
-        }
-        if(!body.compare("rotation")){
-          rotation = GenNumFromChar(pChild->Attribute("value"));
+        if(!body.compare("pose")){
+          pose = GenNumFromChar(pChild->Attribute("value"));
         }
 
       }
@@ -481,8 +480,10 @@ void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
     }
 
     Eigen::Vector6d dPose;
-    dPose<<0,0,0,0,0,1.5707;
-    RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,vParameters,dPose);
+    dPose<<pose[0], pose[1], pose[2], pose[3], pose[4], pose[5];
+    RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,
+                                                         vParameters,
+                                                         dPose);
 
     /// Build the car here.
     m_mModelNodes[sRobotName] = pRaycastVehicle;
