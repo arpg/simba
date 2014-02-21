@@ -162,8 +162,8 @@ public:
     // Define Camera Render Object (for view / scene browsing)
     pangolin::OpenGlRenderState stacks(
           pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
-          pangolin::ModelViewLookAt(center(0), center(1) + 5,
-                                    center(2) - 6,
+          pangolin::ModelViewLookAt(center(0), center(1) + 7,
+                                    center(2) + 6,
                                     center(0), center(1), center(2),
                                     pangolin::AxisZ) );
     m_stacks3d = stacks;
@@ -173,7 +173,7 @@ public:
     // We set the views location on screen and add a handler which will
     // let user input update the model_view matrix (stacks3d) and feed through
     // to our scenegraph
-    m_view3d = new SceneGraph::ImageView(false, true);
+    m_view3d = new pangolin::View(0.0);
     m_view3d->SetBounds( 0.0, 1.0, 0.0, 0.75/*, -640.0f/480.0f*/ );
     m_view3d->SetHandler( new SceneGraph::HandlerSceneGraph(
                             m_glGraph, m_stacks3d) );
@@ -231,7 +231,7 @@ public:
   SceneGraph::GLSceneGraph                    m_glGraph;
   SceneGraph::ImageView*                      m_LSimCamImage;
   SceneGraph::ImageView*                      m_RSimCamImage;
-  SceneGraph::ImageView*                      m_view3d;
+  pangolin::View*                             m_view3d;
   pangolin::OpenGlRenderState                 m_stacks3d;
 
 

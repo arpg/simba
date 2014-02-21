@@ -24,6 +24,7 @@
      <body name="mass"        value="5"/>
      <body name="base height" value=".5"/>
      <body name="restitution" value="0"/>
+     <!-- NB: The pose of the robot is set in World.xml  -->
      <body name="pose"    value="0,0,0,0,0,0"/>
 
      <!--Wheel shape variables   -->
@@ -31,10 +32,10 @@
      <wheel name="width"             value=".5"/>
      <!-- <wheel name="mass"              value="0"/> -->
      <!-- <wheel name="restitution"       value="0"/> -->
-     <wheel name="dyn friction"      value="0"/>
+     <wheel name="dyn friction"      value="0.247"/>
      <wheel name="slip coeff"        value="0"/>
-     <wheel name="traction friction" value="0"/>
-     <wheel name="side friction"     value="0"/>
+     <wheel name="traction friction" value="1000"/>
+     <wheel name="side friction"     value="1.56"/>
 
      <!--Parameters dependent on other parts  -->
      <param name="susp rest length" value=".045"/>
@@ -45,7 +46,13 @@
  </Car>
 
 <!--Sensors  -->
-<body name="Stick" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,3,0,0,0"  dimension="0.1,0.1,2" scale="25" type="Box"/>
+<body name="Stick" 
+  dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  
+  mass="10"
+  pose="0,0,3,0,0,0"
+  dimension="0.1,0.1,2"
+  scale="25"
+  type="Box"/>
 
 <Sensor Name="LCamera"
   Type="Camera"
