@@ -77,16 +77,33 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
     // THE BODY BASE
     //////////////////////////////////////////
     if(strcmp(sRootContent,"bodybase")==0){
-      string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
-      int iMass =::atoi( pElement->Attribute("mass"));
-      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
-      vector<double> vDimension= GenNumFromChar(pElement->Attribute("dimension"));
-      const char* sType = pElement->Attribute("type");
-      if(strcmp(sType, "Box") ==0){
-        BoxShape* pBox =new BoxShape(sBodyName, vDimension[0],vDimension[1],vDimension[2],iMass, 1, vPose);
-        rSimRobot.SetBase( pBox ); // main body
-        cout<<"[ParseRobot] Successfully built bodybase: "<<sBodyName<<endl;
-        m_mModelNodes[pBox->GetName()] = pBox;
+      string sBodyName = GetAttribute( pElement, "name");
+      if(sBodyName == "RaycastVehicle"){
+        // Assign the raycast vehicle as the bodybase.
+        sBodyName = sBodyName+"@"+sRobotName;
+
+        //////////////////////////////////////////
+        // Raycast Car
+        //////////////////////////////////////////
+        RaycastVehicle* pVehicle = ParseRaycastCar(sBodyName, pElement);
+
+        rSimRobot.SetBase(pVehicle);
+        cout<<"[ParseRobot] Successfully built car bodybase: "<<sBodyName<<endl;
+      }
+      else{
+        sBodyName = sBodyName+"@"+sRobotName;
+        int iMass =::atoi( pElement->Attribute("mass"));
+        vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
+        vector<double> vDimension =
+            GenNumFromChar(pElement->Attribute("dimension"));
+        const char* sType = pElement->Attribute("type");
+        if(strcmp(sType, "Box") ==0){
+          BoxShape* pBox =new BoxShape(sBodyName, vDimension[0],vDimension[1],
+                                       vDimension[2],iMass, 1, vPose);
+          rSimRobot.SetBase( pBox );
+          cout<<"[ParseRobot] Successfully built bodybase: "<<sBodyName<<endl;
+          m_mModelNodes[pBox->GetName()] = pBox;
+        }
       }
     }
 
@@ -95,11 +112,6 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
     //////////////////////////////////////////
     // Build shapes connected to the body base.
     ParseShape(sRobotName, pElement);
-
-    //////////////////////////////////////////
-    // Raycast Car
-    //////////////////////////////////////////
-    ParseRaycastCar(sRobotName, pElement);
 
     //////////////////////////////////////////
     // ALL OF OUR SENSOR BODIES
@@ -219,11 +231,10 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
 
   ///// TODO: Fix Joint Parser
 
-
   const char* sRootContent = pElement->Name();
 
   if(strcmp(sRootContent,"joint")==0){
-    string sJointName= GetAttribute( pElement, "name")+"@"+sRobotName; // get joint name. e.g. BLAxleJoint@robot1@proxy
+    string sJointName= GetAttribute( pElement, "name")+"@"+sRobotName;
     string sJointType(pElement->Attribute("type"));
 
     if(sJointType == "HingeJoint"){
@@ -245,7 +256,6 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
         if(strcmp(sName, "parent")==0){
           sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
         }
-
         // get child body of joint
         if(strcmp(sName, "child")==0){
           sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
@@ -348,7 +358,6 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
                                     dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
                                     dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
                                     Anchor, Axis1, Axis2);
-      //TODO:
       pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
                          LowerAngleLimit, UpperAngleLimit);
       m_mModelNodes[pHinge2->GetName()] = pHinge2;
@@ -362,148 +371,146 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
 ////////////////////////////////////////////////////////////
 /// Parse Raycast Car
 ////////////////////////////////////////////////////////////
-void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
+RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
 {
-  const char* sRootContent = pElement->Name();
+  cout<<"[URDF_Parser] Trying to build a RaycastVehicle"<<endl;
 
-  if(strcmp(sRootContent,"Car")==0)
+  std::vector<double> vParameters;
+  vParameters.resize(29);
+  std::vector<double> pose;
+
+  XMLElement *pChild = pElement->FirstChildElement();
+
+  while(pChild)
   {
-    cout<<"[URDF_Parser] Try to build RaycastVehicle"<<endl;
+    string sAttrName = pChild->Name();
 
-    std::vector<double> vParameters;
-    vParameters.resize(29);
-    std::vector<double> pose;
+    // Car paramters
+    // All of these are stored in a vector of doubles. Access them through
+    // their enum specification in ModelGraph/VehicleEnums.h
 
-    XMLElement *pChild=pElement->FirstChildElement();
-
-    while(pChild)
+    if(!sAttrName.compare("param"))
     {
-      string sAttrName = pChild->Name();
-
-      // Car paramters
-      // All of these are stored in a vector of doubles. Access them through
-      // their enum specification in ModelGraph/VehicleEnums.h
-
-      if(!sAttrName.compare("param"))
-      {
-        std::string param = pChild->Attribute("name");
-        if(!param.compare("control delay")){
-          vParameters[6] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("stiffness")){
-          vParameters[12] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("susp conn height")){
-          vParameters[11] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("max susp force")){
-          vParameters[13] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("damp factor")){
-          vParameters[16] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("exp damp factor")){
-          vParameters[17] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("roll influence")){
-          vParameters[18] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("steering coeff")){
-          vParameters[19] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("max steering")){
-          vParameters[20] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("max steering rate")){
-          vParameters[21] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("accel offset")){
-          vParameters[22] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("steering offset")){
-          vParameters[23] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("stall torque coeff")){
-          vParameters[24] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("torque speed slope")){
-          vParameters[25] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("susp rest length")){
-          vParameters[15] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("max susp travel")){
-          vParameters[14] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("Magic B")){
-          vParameters[26] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("Magic C")){
-          vParameters[27] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("Magic E")){
-          vParameters[28] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
+      std::string param = pChild->Attribute("name");
+      if(!param.compare("control delay")){
+        vParameters[6] = GenNumFromChar(pChild->Attribute("value")).front();
       }
-
-      // Vehicle body parameters
-      else if(!sAttrName.compare("body")){
-        std::string body = pChild->Attribute("name");
-        if(!body.compare("length")){
-          vParameters[0] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!body.compare("width")){
-          vParameters[1] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!body.compare("height")){
-          vParameters[2] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!body.compare("mass")){
-          vParameters[7] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!body.compare("pose")){
-          pose = GenNumFromChar(pChild->Attribute("value"));
-        }
-
+      if(!param.compare("stiffness")){
+        vParameters[12] = GenNumFromChar(pChild->Attribute("value")).front();
       }
-
-      // Vehicle wheel parameters
-      else if(!sAttrName.compare("wheel")){
-        std::string wheel = pChild->Attribute("name");
-        if(!wheel.compare("radius")){
-          vParameters[8] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("width")){
-          vParameters[9] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("dyn friction")){
-          vParameters[3] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("slip coeff")){
-          vParameters[5] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("traction friction")){
-          vParameters[10] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("side friction")){
-          vParameters[4] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
+      if(!param.compare("susp conn height")){
+        vParameters[11] = GenNumFromChar(pChild->Attribute("value")).front();
       }
-
-      pChild=pChild->NextSiblingElement();
+      if(!param.compare("max susp force")){
+        vParameters[13] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("damp factor")){
+        vParameters[16] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("exp damp factor")){
+        vParameters[17] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("roll influence")){
+        vParameters[18] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("steering coeff")){
+        vParameters[19] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("max steering")){
+        vParameters[20] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("max steering rate")){
+        vParameters[21] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("accel offset")){
+        vParameters[22] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("steering offset")){
+        vParameters[23] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("stall torque coeff")){
+        vParameters[24] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("torque speed slope")){
+        vParameters[25] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("susp rest length")){
+        vParameters[15] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("max susp travel")){
+        vParameters[14] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("Magic B")){
+        vParameters[26] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("Magic C")){
+        vParameters[27] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("Magic E")){
+        vParameters[28] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
     }
 
-    Eigen::Vector6d dPose;
-    dPose<<pose[0], pose[1], pose[2], pose[3], pose[4], pose[5];
-    RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,
-                                                         vParameters,
-                                                         dPose);
+    // Vehicle body parameters
+    else if(!sAttrName.compare("body")){
+      std::string body = pChild->Attribute("name");
+      if(!body.compare("length")){
+        vParameters[0] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!body.compare("width")){
+        vParameters[1] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!body.compare("height")){
+        vParameters[2] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!body.compare("mass")){
+        vParameters[7] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!body.compare("pose")){
+        pose = GenNumFromChar(pChild->Attribute("value"));
+      }
 
-    /// Build the car here.
-    m_mModelNodes[sRobotName] = pRaycastVehicle;
+    }
 
-    cout<<"[URDF_Parser] Parse Vehicle "<<sRobotName<<" Success."<<endl;
+    // Vehicle wheel parameters
+    else if(!sAttrName.compare("wheel")){
+      std::string wheel = pChild->Attribute("name");
+      if(!wheel.compare("radius")){
+        vParameters[8] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("width")){
+        vParameters[9] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("dyn friction")){
+        vParameters[3] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("slip coeff")){
+        vParameters[5] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("traction friction")){
+        vParameters[10] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("side friction")){
+        vParameters[4] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+    }
+
+    pChild=pChild->NextSiblingElement();
   }
+
+  Eigen::Vector6d dPose;
+  dPose<<pose[0], pose[1], pose[2], pose[3], pose[4], pose[5];
+  RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,
+                                                       vParameters,
+                                                       dPose);
+
+  /// Build the car here.
+  m_mModelNodes[sRobotName] = pRaycastVehicle;
+
+  cout<<"[URDF_Parser] Parse Vehicle "<<sRobotName<<" Success."<<endl;
+
+  return pRaycastVehicle;
+
 
 }
 

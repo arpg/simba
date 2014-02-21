@@ -58,27 +58,28 @@
   void PhysicsEngine::RegisterObject(ModelNode *pItem){
 
     /*********************************************************************
-     *ADDING A RAYCAST VEHICLE
-     **********************************************************************/
-    if(dynamic_cast<RaycastVehicle*>(pItem)!=NULL){
-      bullet_vehicle btRayVehicle( pItem, m_pDynamicsWorld.get());
-      CollisionShapePtr pShape( btRayVehicle.getBulletShapePtr() );
-      MotionStatePtr pMotionState( btRayVehicle.getBulletMotionStatePtr() );
-      RigidBodyPtr body( btRayVehicle.getBulletBodyPtr() );
-      VehiclePtr vehicle( btRayVehicle.getBulletRaycastVehicle() );
-      boost::shared_ptr<Vehicle_Entity> pEntity( new Vehicle_Entity );
-      pEntity->m_pRigidBody = body;
-      pEntity->m_pShape = pShape;
-      pEntity->m_pMotionState = pMotionState;
-      pEntity->m_pVehicle = vehicle;
-      m_mRayVehicles[pItem->GetName()] = pEntity;
-    }
-
-    /*********************************************************************
      *ADDING SHAPES
      **********************************************************************/
-    else if (dynamic_cast<Shape*>(pItem) != NULL) {
+    if (dynamic_cast<Shape*>(pItem) != NULL) {
       Shape* pNodeShape = (Shape*) pItem;
+
+      /************************************
+       *ADDING A RAYCAST VEHICLE
+       ************************************/
+
+      if(dynamic_cast<RaycastVehicle*>(pNodeShape)!=NULL){
+        bullet_vehicle btRayVehicle( pItem, m_pDynamicsWorld.get());
+        CollisionShapePtr pShape( btRayVehicle.getBulletShapePtr() );
+        MotionStatePtr pMotionState( btRayVehicle.getBulletMotionStatePtr() );
+        RigidBodyPtr body( btRayVehicle.getBulletBodyPtr() );
+        VehiclePtr vehicle( btRayVehicle.getBulletRaycastVehicle() );
+        boost::shared_ptr<Vehicle_Entity> pEntity( new Vehicle_Entity );
+        pEntity->m_pRigidBody = body;
+        pEntity->m_pShape = pShape;
+        pEntity->m_pMotionState = pMotionState;
+        pEntity->m_pVehicle = vehicle;
+        m_mRayVehicles[pItem->GetName()] = pEntity;
+      }
 
       //Box
       if (dynamic_cast<BoxShape*>( pNodeShape ) != NULL) {
@@ -147,26 +148,49 @@
       // Point to Point
       if (dynamic_cast<PToPOne*>( pNodeCon ) != NULL) {
         PToPOne* pCon = (PToPOne*) pNodeCon;
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        btRigidBody* RigidShape_A;
+        if(isVehicle(pCon->m_Shape_A)){
+          boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
         btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
                           pCon->m_pivot_in_A[2]);
         btPoint2PointConstraint* PToP =
-            new btPoint2PointConstraint(*Shape_A->m_pRigidBody.get(), pivot_A);
+            new btPoint2PointConstraint(*RigidShape_A, pivot_A);
         m_pDynamicsWorld->addConstraint(PToP);
         m_mPtoP[pCon->GetName()] = PToP;
       }
 
       else if(dynamic_cast<PToPTwo*>( pNodeCon ) != NULL) {
         PToPTwo* pCon = (PToPTwo*) pNodeCon;
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
-        boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        btRigidBody* RigidShape_A;
+        btRigidBody* RigidShape_B;
+        if(isVehicle(pCon->m_Shape_A)){
+          boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        if(isVehicle(pCon->m_Shape_B)){
+          boost::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+          RigidShape_B = Shape_B->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+          RigidShape_B = Shape_B->m_pRigidBody.get();
+        }
         btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
                           pCon->m_pivot_in_A[2]);
         btVector3 pivot_B(pCon->m_pivot_in_B[0], pCon->m_pivot_in_B[1],
                           pCon->m_pivot_in_B[2]);
         btPoint2PointConstraint* PToP =
-            new btPoint2PointConstraint(*Shape_A->m_pRigidBody.get(),
-                                        *Shape_B->m_pRigidBody.get(),
+            new btPoint2PointConstraint(*RigidShape_A, *RigidShape_B,
                                         pivot_A, pivot_B);
         m_pDynamicsWorld->addConstraint(PToP);
         m_mPtoP[pCon->GetName()] = PToP;
@@ -175,13 +199,21 @@
       //Hinge
       else if(dynamic_cast<HingeOnePivot*>( pNodeCon ) != NULL) {
         HingeOnePivot* pCon = (HingeOnePivot*) pNodeCon;
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        btRigidBody* RigidShape_A;
+        if(isVehicle(pCon->m_Shape_A)){
+          boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
         btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
                           pCon->m_pivot_in_A[2]);
         btVector3 axis_A(pCon->m_axis_in_A[0], pCon->m_axis_in_A[1],
                          pCon->m_axis_in_A[2]);
         btHingeConstraint* Hinge =
-            new btHingeConstraint(*Shape_A->m_pRigidBody.get(), pivot_A,
+            new btHingeConstraint(*RigidShape_A, pivot_A,
                                   axis_A, true);
         Hinge->setLimit(pCon->m_low_limit, pCon->m_high_limit, pCon->m_softness,
                         pCon->m_bias, pCon->m_relaxation);
@@ -191,8 +223,24 @@
 
       else if(dynamic_cast<HingeTwoPivot*>( pNodeCon ) != NULL) {
         HingeTwoPivot* pCon = (HingeTwoPivot*) pNodeCon;
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
-        boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        btRigidBody* RigidShape_A;
+        btRigidBody* RigidShape_B;
+        if(isVehicle(pCon->m_Shape_A)){
+          boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        if(isVehicle(pCon->m_Shape_B)){
+          boost::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+          RigidShape_B = Shape_B->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+          RigidShape_B = Shape_B->m_pRigidBody.get();
+        }
         btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
                           pCon->m_pivot_in_A[2]);
         btVector3 axis_A(pCon->m_axis_in_A[0], pCon->m_axis_in_A[1],
@@ -202,8 +250,8 @@
         btVector3 axis_B(pCon->m_axis_in_B[0], pCon->m_axis_in_B[1],
                          pCon->m_axis_in_B[2]);
         btHingeConstraint* Hinge =
-            new btHingeConstraint(*Shape_A->m_pRigidBody.get(),
-                                  *Shape_B->m_pRigidBody.get(),
+            new btHingeConstraint(*RigidShape_A,
+                                  *RigidShape_B,
                                   pivot_A, pivot_B,
                                   axis_A, axis_B,
                                   true);
@@ -216,8 +264,24 @@
       //Hinge2
       else if(dynamic_cast<Hinge2*>( pNodeCon ) != NULL) {
         Hinge2* pCon = (Hinge2*) pNodeCon;
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
-        boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        btRigidBody* RigidShape_A;
+        btRigidBody* RigidShape_B;
+        if(isVehicle(pCon->m_Shape_A)){
+          boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        if(isVehicle(pCon->m_Shape_B)){
+          boost::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+          RigidShape_B = Shape_B->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+          RigidShape_B = Shape_B->m_pRigidBody.get();
+        }
         btVector3 btAnchor(pCon->m_Anchor[0], pCon->m_Anchor[1],
                            pCon->m_Anchor[2]);
         btVector3 btAxis_1(pCon->m_Axis_1[0], pCon->m_Axis_1[1],
@@ -225,8 +289,7 @@
         btVector3 btAxis_2(pCon->m_Axis_2[0], pCon->m_Axis_2[1],
                            pCon->m_Axis_2[2]);
         btHinge2Constraint* Hinge =
-            new btHinge2Constraint(*Shape_A->m_pRigidBody.get(),
-                                   *Shape_B->m_pRigidBody.get(),
+            new btHinge2Constraint(*RigidShape_A, *RigidShape_B,
                                    btAnchor, btAxis_1, btAxis_2);
         Hinge->setAngularLowerLimit(toBulletVec3(pCon->m_LowerAngLimit));
         Hinge->setAngularUpperLimit(toBulletVec3(pCon->m_UpperAngLimit));
@@ -258,13 +321,28 @@
 
       else if(dynamic_cast<SixDOFTwo*>( pNodeCon ) != NULL) {
         SixDOFTwo* pCon = (SixDOFTwo*) pNodeCon;
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
-        boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        btRigidBody* RigidShape_A;
+        btRigidBody* RigidShape_B;
+        if(isVehicle(pCon->m_Shape_A)){
+          boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+          RigidShape_A = Shape_A->m_pRigidBody.get();
+        }
+        if(isVehicle(pCon->m_Shape_B)){
+          boost::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+          RigidShape_B = Shape_B->m_pRigidBody.get();
+        }
+        else{
+          boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+          RigidShape_B = Shape_B->m_pRigidBody.get();
+        }
         btTransform trans_A = toBullet(_Cart2T(pCon->m_Transform_A));
         btTransform trans_B = toBullet(_Cart2T(pCon->m_Transform_B));
         btGeneric6DofConstraint* SixDOF =
-            new btGeneric6DofConstraint(*Shape_A->m_pRigidBody.get(),
-                                        *Shape_B->m_pRigidBody.get(),
+            new btGeneric6DofConstraint(*RigidShape_A, *RigidShape_B,
                                         trans_A, trans_B,
                                         true);
         SixDOF->setLinearLowerLimit(toBulletVec3(pCon->m_LowerLinLimit));
@@ -274,13 +352,19 @@
         m_pDynamicsWorld->addConstraint(SixDOF);
         m_mSixDOF[pCon->GetName()] = SixDOF;
       }
-
-
-
     }
 
     return;
 
+  }
+
+  bool PhysicsEngine::isVehicle(string Shape){
+    bool vehi = false;
+    std::size_t found = Shape.find("RaycastVehicle");
+      if (found!=std::string::npos){
+        vehi = true;
+      }
+      return vehi;
   }
 
   /***********************************************

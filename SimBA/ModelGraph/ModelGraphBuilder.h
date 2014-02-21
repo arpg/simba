@@ -44,20 +44,20 @@ public:
     }
   }
 
-  void AssociatePhysicsVehicles(SimRobot& m_SimRobot){
-    for(unsigned int ii=0; ii<m_SimRobot.GetParts().size(); ii++){
-      ModelNode* part = m_SimRobot.GetParts().at(ii);
-      if (dynamic_cast<RaycastVehicle*>(part)){
-        Eigen::Vector6d newPose = m_PoseRW + part->GetPose();
-        part->SetPose( newPose );
-        m_Phys.RegisterObject( part );
-      }
-    }
-  }
+//  void AssociatePhysicsVehicles(SimRobot& m_SimRobot){
+//    for(unsigned int ii=0; ii<m_SimRobot.GetParts().size(); ii++){
+//      ModelNode* part = m_SimRobot.GetParts().at(ii);
+//      if (dynamic_cast<RaycastVehicle*>(part)){
+//        Eigen::Vector6d newPose = m_PoseRW + part->GetPose();
+//        part->SetPose( newPose );
+//        m_Phys.RegisterObject( part );
+//      }
+//    }
+//  }
 
   void AssociateRobotPhysics(SimRobot& m_SimRobot){
     AssociatePhysicsShapes(m_SimRobot);
-    AssociatePhysicsVehicles(m_SimRobot);
+//    AssociatePhysicsVehicles(m_SimRobot);
     AssociatePhysicsConstraints(m_SimRobot);
   }
 

@@ -1,12 +1,12 @@
 #ifndef RAYCASTVEHICLE_H
 #define RAYCASTVEHICLE_H
 
-#include <ModelGraph/ModelNode.h>
+#include <ModelGraph/Shape.h>
 #include <ModelGraph/VehicleEnums.h>
 
 // It's a simple class, but enough to hold the info we need.
 
-class RaycastVehicle : public ModelNode
+class RaycastVehicle : public Shape
 {
 public:
 

@@ -1,6 +1,6 @@
 <robot name="Robot">
 
-<Car name="Car" type="RaycastVehicle">
+<bodybase name="RaycastVehicle">
      <!--Set the parameters for the car.  -->
      <param name="control delay"      value="0"/>
      <param name="stiffness"          value="120"/>
@@ -23,7 +23,7 @@
      <body name="height"      value="1"/>
      <body name="mass"        value="5"/>
      <body name="base height" value=".5"/>
-     <body name="restitution" value="0"/>
+     <body name="restitution" value="1"/>
      <!-- NB: The pose of the robot is set in World.xml  -->
      <body name="pose"    value="0,0,0,0,0,0"/>
 
@@ -43,7 +43,7 @@
      <param name="Magic B"          value="5"/>
      <param name="Magic C"          value="1.65"/>
      <param name="Magic E"          value="-5"/>
- </Car>
+ </bodybase>
 
 <!--Sensors  -->
 <body name="Stick" 
@@ -53,6 +53,17 @@
   dimension="0.1,0.1,2"
   scale="25"
   type="Box"/>
+
+<joint name="StickJoint" type="HingeJoint">
+  <parent body = "RaycastVehicle"/>
+  <child body = "Stick"/>
+  <pivot setting = "0,1,0"/>
+  <axis setting = "0,1,0"/>
+  <upperlimit setting = "0.01" />
+  <lowerlimit setting = "0" />
+  <damping setting = "1000" />
+  <stiffness setting  = "1000" />
+</joint>
 
 <Sensor Name="LCamera"
   Type="Camera"

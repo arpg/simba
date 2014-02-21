@@ -36,6 +36,7 @@ public:
   /// ADDING OBJECTS TO THE PHYSICS ENGINE
   /// RegisterObject adds shapes, constraints, and vehicles.
   void RegisterObject(ModelNode *pItem);
+  bool isVehicle(string Shape);
 
   /// RUNNING THE SIMULATION
   void DebugDrawWorld();
