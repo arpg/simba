@@ -243,15 +243,15 @@
       else if(dynamic_cast<SixDOFOne*>( pNodeCon ) != NULL) {
         SixDOFOne* pCon = (SixDOFOne*) pNodeCon;
         boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
-        btTransform trans_A = toBullet(pCon->m_Transform_A);
+        btTransform trans_A = toBullet(_Cart2T(pCon->m_Transform_A));
         btGeneric6DofConstraint* SixDOF =
             new btGeneric6DofConstraint(*Shape_A->m_pRigidBody.get(),
                                         trans_A,
                                         true);
-        SixDOF->setLinearLowerLimit(pCon->m_LowerLinLimit);
-        SixDOF->setLinearUpperLimit(pCon->m_UpperLinLimit);
-        SixDOF->setAngularLowerLimit(pCon->m_LowerAngLimit);
-        SixDOF->setAngularUpperLimit(pCon->m_UpperAngLimit);
+        SixDOF->setLinearLowerLimit(toBulletVec3(pCon->m_LowerLinLimit));
+        SixDOF->setLinearUpperLimit(toBulletVec3(pCon->m_UpperLinLimit));
+        SixDOF->setAngularLowerLimit(toBulletVec3(pCon->m_LowerAngLimit));
+        SixDOF->setAngularUpperLimit(toBulletVec3(pCon->m_UpperAngLimit));
         m_pDynamicsWorld->addConstraint(SixDOF);
         m_mSixDOF[pCon->GetName()] = SixDOF;
       }
@@ -260,20 +260,19 @@
         SixDOFTwo* pCon = (SixDOFTwo*) pNodeCon;
         boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
         boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
-        btTransform trans_A = toBullet(pCon->m_Transform_A;
-        btTransform trans_B = toBullet(pCon->m_Transform_B);
+        btTransform trans_A = toBullet(_Cart2T(pCon->m_Transform_A));
+        btTransform trans_B = toBullet(_Cart2T(pCon->m_Transform_B));
         btGeneric6DofConstraint* SixDOF =
             new btGeneric6DofConstraint(*Shape_A->m_pRigidBody.get(),
                                         *Shape_B->m_pRigidBody.get(),
                                         trans_A, trans_B,
                                         true);
-        SixDOF->setLinearLowerLimit(pCon->m_LowerLinLimit);
-        SixDOF->setLinearUpperLimit(pCon->m_UpperLinLimit);
-        SixDOF->setAngularLowerLimit(pCon->m_LowerAngLimit);
-        SixDOF->setAngularUpperLimit(pCon->m_UpperAngLimit);
+        SixDOF->setLinearLowerLimit(toBulletVec3(pCon->m_LowerLinLimit));
+        SixDOF->setLinearUpperLimit(toBulletVec3(pCon->m_UpperLinLimit));
+        SixDOF->setAngularLowerLimit(toBulletVec3(pCon->m_LowerAngLimit));
+        SixDOF->setAngularUpperLimit(toBulletVec3(pCon->m_UpperAngLimit));
         m_pDynamicsWorld->addConstraint(SixDOF);
-        int id = m_SixDOF.size();
-        m_SixDOF.push_back(SixDOF);
+        m_mSixDOF[pCon->GetName()] = SixDOF;
       }
 
 

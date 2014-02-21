@@ -201,7 +201,7 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
 
     else if(strcmp(sType, "Mesh") == 0){
       string file_dir = pElement->Attribute("dir");
-      PlaneShape* pMesh =new MeshShape(sBodyName, file_dir, vPose);
+      MeshShape* pMesh =new MeshShape(sBodyName, file_dir, vPose);
       m_mModelNodes[pMesh->GetName()] = pMesh;
     }
 
