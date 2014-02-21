@@ -168,7 +168,7 @@ public:
 ///
 /// ALL OF OUR NON-COLLIDING SHAPES
 /// These do not get implemented into Bullet Physics, but are still
-/// important. Lights fall under this category.
+/// essential for rendering. Lights fall under this category.
 ///
 ///////////////////////////////////////////////////////////////////////
 

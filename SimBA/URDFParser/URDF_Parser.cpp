@@ -126,36 +126,28 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
 /// The input command line looks like:
 /// Openni:[Name="LCamera", rgb=1, depth=1]//  Openni:[Name="RCamera", rgb=1]//
 ////////////////////////////////////////////////////////////
-bool URDF_Parser::ParseCommandLineForPickSensor(string sCommandLine)
-{
+bool URDF_Parser::ParseCommandLineForPickSensor(string sCommandLine){
   // get scheme:
   cout<<sCommandLine<<endl;
   return true;
-
 }
 
 // get sceme for init device
-vector<string> URDF_Parser::GetScemeFromString(string sCommandLine)
-{
+vector<string> URDF_Parser::GetScemeFromString(string sCommandLine){
   vector<string> vSceme;
 
   // get sceme by looking for "//"
-  while (sCommandLine.size()!=0)
-  {
+  while (sCommandLine.size()!=0){
     string sSceme = sCommandLine.substr(0, sCommandLine.find_first_of("//")+1) ;
-    if(sSceme.find("//")!=string::npos)
-    {
+    if(sSceme.find("//")!=string::npos){
       cout<<"[GetScemeFromString] Get Sceme: "<<sSceme<<endl;
       vSceme.push_back(sSceme);
     }
-    else
-    {
-      if(sCommandLine.size()==0)
-      {
+    else{
+      if(sCommandLine.size()==0){
         return vSceme;
       }
-      else
-      {
+      else{
         cout<<"[GetScemeFromString] Fatal Error! Invalid command line string "<<sCommandLine<<endl;
         exit(-1);
       }
@@ -168,11 +160,12 @@ vector<string> URDF_Parser::GetScemeFromString(string sCommandLine)
 ////////////////////////////////////////////////////////////
 /// Parse Shape (Body)
 ////////////////////////////////////////////////////////////
+
 void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
 {
   const char* sRootContent = pElement->Name();
 
-  if(strcmp(sRootContent,"body")==0)
+  if(strcmp(sRootContent,"body")== 0)
   {
     string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
     cout<<"[ParseShape] Trying to build "<<sBodyName<<endl;
@@ -182,30 +175,51 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
         GenNumFromChar(pElement->Attribute("dimension"));
     const char* sType = pElement->Attribute("type");
 
-    if(strcmp(sType, "Box") ==0){
-      BoxShape* pBox =new BoxShape(sBodyName,vDimension[0],vDimension[1],
-          vDimension[2],iMass, 1,vPose);
+    if(strcmp(sType, "Box") == 0){
+      BoxShape* pBox =new BoxShape(sBodyName, vDimension[0], vDimension[1],
+                                   vDimension[2], iMass, 1, vPose);
       m_mModelNodes[pBox->GetName()] = pBox;
     }
 
-    else if(strcmp(sType,"Cylinder")==0){
-      CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimension[0],
-          vDimension[1],iMass,1,
-          vPose);
+    else if(strcmp(sType,"Cylinder")== 0){
+      CylinderShape* pCylinder =new CylinderShape(sBodyName, vDimension[0],
+                                                  vDimension[1], iMass,1,
+                                                  vPose);
       m_mModelNodes[pCylinder->GetName()] = pCylinder;
+    }
+
+    else if(strcmp(sType, "Sphere") == 0){
+      SphereShape* pSphere =new SphereShape(sBodyName, vDimension[0],
+                                            iMass, 1, vPose);
+      m_mModelNodes[pSphere->GetName()] = pSphere;
+    }
+
+    else if(strcmp(sType, "Plane") == 0){
+      PlaneShape* pPlane =new PlaneShape(sBodyName, vDimension, vPose);
+      m_mModelNodes[pPlane->GetName()] = pPlane;
+    }
+
+    else if(strcmp(sType, "Mesh") == 0){
+      string file_dir = pElement->Attribute("dir");
+      PlaneShape* pMesh =new MeshShape(sBodyName, file_dir, vPose);
+      m_mModelNodes[pMesh->GetName()] = pMesh;
     }
 
     cout<<"[ParseShape] Successfully built "<<sBodyName<<endl;
   }
-
 }
 
 
 ////////////////////////////////////////////////////////////
 /// Parse Joint
 ////////////////////////////////////////////////////////////
+
 void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
 {
+
+  ///// TODO: Fix Joint Parser
+
+
   const char* sRootContent = pElement->Name();
 
   if(strcmp(sRootContent,"joint")==0){
