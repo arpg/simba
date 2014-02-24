@@ -14,6 +14,7 @@ class SimWorld
 public:
 
     vector<double>          m_vWorldPose;
+    vector<double>          m_vWorldNormal;
     vector<double>          m_vRobotPose;
     std::vector<ModelNode*> m_WorldNodes;
     std::string             m_sMesh;

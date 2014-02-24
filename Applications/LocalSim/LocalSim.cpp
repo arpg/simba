@@ -33,8 +33,11 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   // 3. Init User's Robot and add it to RobotManager
   m_RobotManager.Init(m_sLocalSimName, m_Scene, m_SimRobot, sServerOption);
 
+  // Do we want to run in debug mode?
+  bool debug = false;
+
   // 4. Add the world and robot to the ModelGraph
-  m_Scene.Init(m_SimWorld, m_SimRobot,sLocalSimName);
+  m_Scene.Init(m_SimWorld, m_SimRobot,sLocalSimName, debug);
 
   m_SimDeviceManager.InitAllDevices();
 
@@ -156,9 +159,9 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
 }
 
 // ---- Step Forward
-void LocalSim::StepForward( bool debug )
+void LocalSim::StepForward()
 {
-  m_Scene.UpdateScene(debug);
+  m_Scene.UpdateScene();
   // Update SimDevices
   m_SimDeviceManager.UpdateAllDevices();
 
@@ -206,11 +209,9 @@ int main( int argc, char** argv )
   // Initialize a LocalSim.
   LocalSim mLocalSim(sLocalSimName, sRobotURDF, sWorldURDF, sServerOption);
 
-  // Run as debug?
-  bool debug = true;
-
-  pangolin::RegisterKeyPressCallback(
-        ' ', boost::bind( &LocalSim::StepForward, &mLocalSim, &debug ) );
+  pangolin::RegisterKeyPressCallback('s',
+                                     boost::bind( &LocalSim::StepForward,
+                                                  &mLocalSim) );
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() ){
@@ -221,10 +222,8 @@ int main( int argc, char** argv )
     pangolin::FinishFrame();
 
     // Update Physics and ModelGraph
-    mLocalSim.StepForward(debug);
+//    mLocalSim.StepForward();
 
-    // Refresh screen
-//    pangolin::FinishGlutFrame();
     usleep( 1E6 / 60 );
   }
 

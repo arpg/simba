@@ -23,6 +23,8 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
       mSimWorld.m_sMesh = sMesh;
       mSimWorld.m_vWorldPose =
           GenNumFromChar(pElement->Attribute("worldpose"));
+      mSimWorld.m_vWorldNormal =
+          GenNumFromChar(pElement->Attribute("worldnormal"));
       mSimWorld.m_vRobotPose=
           GenNumFromChar(pElement->Attribute("robotpose"));
       std::vector<double> vLightPose =
@@ -32,8 +34,8 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
 
       // init world without mesh
       if (mSimWorld.m_sMesh =="NONE"){
-        BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1,
-                                         mSimWorld.m_vWorldPose);
+        PlaneShape* pGround = new PlaneShape("Ground", mSimWorld.m_vWorldNormal,
+                                             mSimWorld.m_vWorldPose);
         m_mWorldNodes[pGround->GetName()] = pGround;
       }
       else {

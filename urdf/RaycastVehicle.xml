@@ -21,15 +21,15 @@
      <body name="length"      value="2.7"/>
      <body name="width"       value="2"/>
      <body name="height"      value="1"/>
-     <body name="mass"        value="5"/>
+     <body name="mass"        value="2"/>
      <body name="base height" value=".5"/>
-     <body name="restitution" value="1"/>
+     <body name="restitution" value="0"/>
      <!-- NB: The pose of the robot is set in World.xml  -->
      <body name="pose"    value="0,0,0,0,0,0"/>
 
      <!--Wheel shape variables   -->
-     <wheel name="radius"            value=".5"/>
-     <wheel name="width"             value=".5"/>
+     <wheel name="radius"            value=".25"/>
+     <wheel name="width"             value=".25"/>
      <!-- <wheel name="mass"              value="0"/> -->
      <!-- <wheel name="restitution"       value="0"/> -->
      <wheel name="dyn friction"      value="0.247"/>
@@ -39,13 +39,13 @@
 
      <!--Parameters dependent on other parts  -->
      <param name="susp rest length" value=".045"/>
-     <param name="max susp travel"  value=".045"/>
+     <param name="max susp travel"  value=".025"/>
      <param name="Magic B"          value="5"/>
      <param name="Magic C"          value="1.65"/>
      <param name="Magic E"          value="-5"/>
  </bodybase>
 
-<!--Sensors  -->
+<!--Sensors  
 <body name="Stick" 
   dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  
   mass="10"
@@ -73,10 +73,11 @@
   FPS="30"
   Align="true"
   Parent="Stick"
-  Pose="0,-2,0,0,0,0"
+  Pose="0,0,3,0,0,0"
   Location="@Proxy1"
   Model="/home/bminortx/Code/SimBA/SimBA/SimDevices/Sensor/cameras.xml"/>
 
+-->
   <!-- Lu: Must include this sensor if you use RobotProxy!
   RobotProxy needs this sensor to get the robot's pose information. -->
   <!--  <Sensor Name="ChassisVicon" Type="Vicon" Body="Chassis"/>

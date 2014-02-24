@@ -388,14 +388,25 @@
         // The MotionStatePointer holds the ModelNode, which holds the poses.
         Vehicle_Entity* eVehicle = it->second.get();
         NodeMotionState* mMotion = eVehicle->m_pMotionState.get();
+
+        //HOW TO PASS COMMANDS TO THE CAR:
+        //        VehiclePtr pVeh = eVehicle->m_pVehicle;
+        //        pVeh->setSteeringValue(steering_value, 0);
+        //        pVeh->setSteeringValue(steering_value, 1);
+        //        pVeh->applyEngineForce(force, 2);
+        //        pVeh->applyEngineForce(force, 3);
+
         RaycastVehicle* pVehicle = (RaycastVehicle*) &mMotion->object;
         std::vector<Eigen::Matrix4d> VehiclePoses =
             GetVehicleTransform(pVehicle->GetName());
+        Eigen::Vector6d temp;
+        temp << 0, 0, 0, M_PI / 2, 0, 0;
         pVehicle->SetPose(_T2Cart(VehiclePoses.at(0)));
-        pVehicle->SetWheelPose(0, _T2Cart(VehiclePoses.at(1)));
-        pVehicle->SetWheelPose(1, _T2Cart(VehiclePoses.at(2)));
-        pVehicle->SetWheelPose(2, _T2Cart(VehiclePoses.at(3)));
-        pVehicle->SetWheelPose(3, _T2Cart(VehiclePoses.at(4)));
+        pVehicle->SetWheelPose(0, _T2Cart(VehiclePoses.at(1)*_Cart2T(temp)));
+        pVehicle->SetWheelPose(1, _T2Cart(VehiclePoses.at(2)*_Cart2T(temp)));
+        pVehicle->SetWheelPose(2, _T2Cart(VehiclePoses.at(3)*_Cart2T(temp)));
+        pVehicle->SetWheelPose(3, _T2Cart(VehiclePoses.at(4)*_Cart2T(temp)));
+
       }
     }
   }

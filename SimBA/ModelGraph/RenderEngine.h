@@ -45,7 +45,7 @@ public:
 
       // The chassis
       SceneGraph::GLBox* chassis = new SceneGraph::GLBox();
-      chassis->SetExtent(params[WheelBase], params[Width], params[Height]);
+      chassis->SetExtent(params[Width], params[WheelBase], params[Height]);
       chassis->SetPose(pVehicle->GetPose());
       m_mSceneEntities[pNode] = chassis;
 
