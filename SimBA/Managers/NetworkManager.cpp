@@ -437,10 +437,11 @@ void NetworkManager::RegisterControllerDevice(RegisterControllerReqMsg& mRequest
   m_SubscribeNum = m_SubscribeNum +1;
 
   // robot proxy subscribe to this controller device for command
-  string sServiceName = mRequest.controller_name()+"-for-"+m_sLocalSimName; // service name, e.g. mController-for-Proxy1.
-  if( m_Node.subscribe(sServiceName)==false )
+  if( m_Node.subscribe(mRequest.topic())==false )
   {
-    cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! Cannot subscribe to "<<sServiceName<<". Please make sure service is running."<<endl;
+    cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! "
+          "Cannot subscribe to "<<mRequest.topic()
+       <<". Please make sure service is running."<<endl;
   }
 }
 
