@@ -222,7 +222,7 @@ int main( int argc, char** argv )
     pangolin::FinishFrame();
 
     // Update Physics and ModelGraph
-//    mLocalSim.StepForward();
+    mLocalSim.StepForward();
 
     usleep( 1E6 / 60 );
   }
