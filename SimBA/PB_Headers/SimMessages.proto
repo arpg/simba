@@ -157,7 +157,7 @@ message VehicleMsg
 
 message RegisterControllerReqMsg
 {
-    optional bytes          controller_name        =1;
+    optional bytes          topic        	   =1;
 }
 
 message RegisterControllerRepMsg
