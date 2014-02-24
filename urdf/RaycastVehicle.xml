@@ -57,12 +57,13 @@
 <joint name="StickJoint" type="HingeJoint">
   <parent body = "RaycastVehicle"/>
   <child body = "Stick"/>
-  <pivot setting = "0,1,0"/>
+  <pivot setting = "0,0,3"/>
   <axis setting = "0,1,0"/>
   <upperlimit setting = "0.01" />
-  <lowerlimit setting = "0" />
-  <damping setting = "1000" />
-  <stiffness setting  = "1000" />
+  <lowerlimit setting = "-0.01" />
+  <softness setting = ".9" />
+  <bias setting  = ".3" />
+  <relaxation setting = ".5" />
 </joint>
 
 <Sensor Name="LCamera"

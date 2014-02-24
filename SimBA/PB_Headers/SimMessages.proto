@@ -148,11 +148,10 @@ message PoseMsg
 }
 
 
-message HingeControllerMsg
+message VehicleMsg
 {
-    required double          time_step             =1;
-    required double          steering_torque       =2;
-    required double          desired_force         =3;
+    required double          steering_angle        =1;
+    required double          desired_force         =2;
 }
 
 
@@ -163,7 +162,7 @@ message RegisterControllerReqMsg
 
 message RegisterControllerRepMsg
 {
-    optional int32          time_step             = 1;
+    optional bool           success                = 1;
 }
 
 

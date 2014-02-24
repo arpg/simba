@@ -431,8 +431,9 @@ void NetworkManager::RegisterCamDeviceByURI(RegisterNodeCamReqMsg& mRequest,Regi
 
 void NetworkManager::RegisterControllerDevice(RegisterControllerReqMsg& mRequest,RegisterControllerRepMsg & mReply)
 {
-  cout<<"[NetworkManager] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
-  mReply.set_time_step(m_iTimeStep);
+  cout<<"[NetworkManager] NodeVehicle is asking for register in timestep "
+     <<m_iTimeStep<<"."<<endl;
+  mReply.set_success(true);
   m_SubscribeNum = m_SubscribeNum +1;
 
   // robot proxy subscribe to this controller device for command
