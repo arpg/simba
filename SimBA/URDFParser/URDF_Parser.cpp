@@ -34,6 +34,8 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
 
       // init world without mesh
       if (mSimWorld.m_sMesh =="NONE"){
+        // We can't just use a giant box here; the RaycastVehicle won't connect,
+        // and will go straight through.
         PlaneShape* pGround = new PlaneShape("Ground", mSimWorld.m_vWorldNormal,
                                              mSimWorld.m_vWorldPose);
         m_mWorldNodes[pGround->GetName()] = pGround;
@@ -228,17 +230,17 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
 /// Parse Joint
 ////////////////////////////////////////////////////////////
 
-void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
-{
-
-  ///// TODO: Fix Joint Parser
-
+void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
   const char* sRootContent = pElement->Name();
-
   if(strcmp(sRootContent,"joint")==0){
+
+    //Attributes common to all joints
     string sJointName= GetAttribute( pElement, "name")+"@"+sRobotName;
     string sJointType(pElement->Attribute("type"));
 
+    ////////////////
+    // Hinge
+    ////////////////
     if(sJointType == "HingeJoint"){
       cout<<"[ParseJoint] Trying to build Hinge joint."<<endl;
       string sParentName;
@@ -247,8 +249,9 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
       vector<double> vAxis;
       double dUpperLimit = M_PI;
       double dLowerLimit = 0;
-      double dDamping = 1;
-      double dStiffness = 1;
+      double dSoftness = .5;
+      double dBias = .5;
+      double dRelaxation = .5;
 
       // Construct joint based on children information. This information may include links, origin, axis.etc
       XMLElement *pChild=pElement->FirstChildElement();
@@ -274,11 +277,14 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
         if(strcmp(sName,"lowerlimit")==0){
           dLowerLimit = ::atof(sName);
         }
-        if(strcmp(sName,"damping")==0){
-          dDamping = ::atof(sName);
+        if(strcmp(sName,"softness")==0){
+          dSoftness = ::atof(sName);
         }
-        if(strcmp(sName,"stiffness")==0){
-          dStiffness = ::atof(sName);
+        if(strcmp(sName,"bias")==0){
+          dBias = ::atof(sName);
+        }
+        if(strcmp(sName,"relaxation")==0){
+          dRelaxation = ::atof(sName);
         }
         // read next child (joint)
         pChild=pChild->NextSiblingElement();
@@ -287,15 +293,21 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
       pivot<<vPivot[0], vPivot[1], vPivot[2];
       Eigen::Vector3d axis;
       axis<<vAxis[0], vAxis[1], vAxis[2];
-      HingeTwoPivot* pHinge =
-          new HingeTwoPivot( sJointName,
-                             dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                             dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
-                             pivot, Eigen::Vector3d::Identity(),
-                             axis, Eigen::Vector3d::Identity());
+      HingeTwoPivot* pHinge = new HingeTwoPivot(
+            sJointName,
+            dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+            dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
+            pivot, Eigen::Vector3d::Identity(),
+            axis, Eigen::Vector3d::Identity());
+      pHinge->SetLimits(dLowerLimit, dUpperLimit,
+                        dSoftness, dBias, dRelaxation);
       m_mModelNodes[pHinge->GetName()] = pHinge;
       cout<<"[ParseJoint] Successfully built "<<sJointName<<endl;
     }
+
+    ///////////////
+    // Hinge2
+    ///////////////
     else if(sJointType=="Hinge2Joint")
     {
       cout<<"[ParseJoint] Trying to build Hinge2 joint."<<endl;
@@ -356,16 +368,124 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
         pChild=pChild->NextSiblingElement();
       }
 
-      Hinge2* pHinge2 = new Hinge2( sJointName,
-                                    dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                                    dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
+      Hinge2* pHinge2 = new Hinge2(
+            sJointName,
+            dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+            dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
                                     Anchor, Axis1, Axis2);
       pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
                          LowerAngleLimit, UpperAngleLimit);
       m_mModelNodes[pHinge2->GetName()] = pHinge2;
-      std::cout<<"[ParseJoint] Creating a Hinge2Joint between "<<
+      std::cout<<"[ParseJoint] Successfully built Hinge2 between "<<
                  sParentName<<" and "<<sChildName<<std::endl;
     }
+
+    ///////////////
+    // Point to Point (PToP)
+    ///////////////
+    else if(sJointType=="PToPJoint"){
+      string sParentName;
+      string sChildName;
+      vector<double> pivot_in_A;
+      vector<double> pivot_in_B;
+      Eigen::Vector3d eig_pivot_A;
+      Eigen::Vector3d eig_pivot_B;
+      XMLElement *pChild=pElement->FirstChildElement();
+      // Construct joint based on children information. This information may include links, origin, axis.etc
+      while(pChild){
+        const char * sName = pChild->Name();
+        // get parent link of joint
+        if(strcmp(sName, "parent")==0){
+          sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
+        }
+        // get child link of joint
+        if(strcmp(sName, "child")==0){
+          sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
+        }
+        if(strcmp(sName, "pivot in A")==0){
+          pivot_in_A = GenNumFromChar( pChild->Attribute("setting"));
+          eig_pivot_A<<pivot_in_A[0], pivot_in_A[1], pivot_in_A[2];
+        }
+        if(strcmp(sName, "pivot in B")==0){
+          pivot_in_B = GenNumFromChar( pChild->Attribute("axis1"));
+          eig_pivot_B<<pivot_in_B[0], pivot_in_B[1], pivot_in_B[2];
+        }
+
+        pChild=pChild->NextSiblingElement();
+
+      }
+
+      // If there are two shapes, then they are connected
+      // If there is no child, it means the constraint is connected to the World
+      if(sChildName.length()==0){
+        PToPOne* pPToP = new PToPOne(
+              sJointName,
+              dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+              eig_pivot_A);
+        m_mModelNodes[pPToP->GetName()] = pPToP;
+      }
+      else{
+        PToPTwo* pPToP = new PToPTwo(
+              sJointName,
+              dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+              dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
+              eig_pivot_A, eig_pivot_B);
+        m_mModelNodes[pPToP->GetName()] = pPToP;
+      }
+    }
+
+    //////////////////////////
+    // Six Degrees of Freedom
+    //////////////////////////
+//    else if(sJointType=="SixDOFJoint"){
+//      string sParentName;
+//      string sChildName;
+//      vector<double> transform_in_A;
+//      vector<double> transform_in_B;
+//      Eigen::Vector6d eig_transform_A;
+//      Eigen::Vector6d eig_transform_B;
+//      vector<double> vAnchor;
+//      vector<double> vAxis1;
+//      vector<double> vAxis2;
+//      vector<double> vLowerLinearLimit;
+//      vector<double> vUpperLinearLimit;
+//      vector<double> vLowerAngleLimit;
+//      vector<double> vUpperAngleLimit;
+//      Eigen::Vector3d Anchor;
+//      Eigen::Vector3d Axis1;
+//      Eigen::Vector3d Axis2;
+//      Eigen::Vector3d LowerLinearLimit;
+//      Eigen::Vector3d UpperLinearLimit;
+//      Eigen::Vector3d LowerAngleLimit;
+//      Eigen::Vector3d UpperAngleLimit;
+//      XMLElement *pChild=pElement->FirstChildElement();
+//      // Construct joint based on children information. This information may include links, origin, axis.etc
+//      while(pChild){
+//        const char * sName = pChild->Name();
+//        // get parent link of joint
+//        if(strcmp(sName, "parent")==0){
+//          sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
+//        }
+//        // get child link of joint
+//        if(strcmp(sName, "child")==0){
+//          sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
+//        }
+//        if(strcmp(sName, "pivot in A")==0){
+//          pivot_in_A = GenNumFromChar( pChild->Attribute("setting"));
+//          eig_pivot_A<<pivot_in_A[0], pivot_in_A[1], pivot_in_A[2];
+//        }
+//        if(strcmp(sName, "pivot in B")==0){
+//          pivot_in_B = GenNumFromChar( pChild->Attribute("axis1"));
+//          eig_pivot_B = pivot_in_B[0], pivot_in_B[1], pivot_in_B[2];
+//        }
+
+//        pChild=pChild->NextSiblingElement();
+
+//      }
+
+//    }
+
+
   }
 }
 

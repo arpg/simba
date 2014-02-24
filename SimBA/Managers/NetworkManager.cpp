@@ -531,8 +531,8 @@ bool NetworkManager::ReceiveControlInfo(string sDeviceName)
   // wait until we get the lastest world state
 
   int                iUpdateFlag=0;
-  CommandMsg         Command;// current command from robot
-  CommandMsg         TryCommand;
+  PoseMsg            Command;// current command from robot
+  PoseMsg            TryCommand;
 
   while(1)
   {

@@ -215,9 +215,9 @@ public:
 };
 
 
-//////////
+/////////////
 ///// Six DOF
-//////////
+/////////////
 
 // NB: These transforms in the constructors for 6DOF constraints
 // are based off of the reference frame of the parent shape.

@@ -104,10 +104,15 @@ public:
 
       //Plane
       else if (dynamic_cast<PlaneShape*>(pShape) != NULL){
-//        PlaneShape* pbShape = (PlaneShape *) pShape;
+        PlaneShape* pbShape = (PlaneShape *) pShape;
         SceneGraph::GLGrid* new_plane = new SceneGraph::GLGrid();
         new_plane->SetNumLines(20);
         new_plane->SetLineSpacing(1);
+        Eigen::Vector3d eig_norm;
+        eig_norm<<pbShape->m_dNormal[0],
+                  pbShape->m_dNormal[1],
+                  pbShape->m_dNormal[2];
+        new_plane->SetPlane(eig_norm);
         m_mSceneEntities[pNode] = new_plane;
       }
 
@@ -130,6 +135,7 @@ public:
       }
 
     }
+
   }
 
   ///////////////////////////////////////
