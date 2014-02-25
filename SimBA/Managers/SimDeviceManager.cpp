@@ -98,19 +98,19 @@ void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel)
     {
       cout<<"[SimDeviceManager] try to init Gray camera, name is "<<sCameraName<<endl;
       pSimCam->init(initPose, sCameraName, eSimCamLuminance,
-                    iFPS, sCameraModel, m_ModelGraph );
+                    iFPS, sCameraModel, m_pModelGraph );
     }
     else if(sSensorName == "RGB"+sCameraName)       //---------- init RGB Cam
     {
       cout<<"[SimDeviceManager] try to init RGB camera, name is "<<sCameraName<<endl;
       pSimCam->init(initPose, sCameraName, eSimCamRGB,
-                    iFPS, sCameraModel, m_ModelGraph );
+                    iFPS, sCameraModel, m_pModelGraph );
     }
     else if(sSensorName == "Depth"+sCameraName)     //---------- init Depth Cam
     {
       cout<<"[SimDeviceManager] try to init Depth camera, name is "<<sCameraName<<endl;
       pSimCam->init(initPose, sCameraName, eSimCamLuminance | eSimCamDepth,
-                    iFPS, sCameraModel, m_ModelGraph );
+                    iFPS, sCameraModel, m_pModelGraph );
     }
 
     m_SimCamList.insert(pair<string,SimCamera*>(sSensorName,pSimCam));
