@@ -152,9 +152,9 @@ class SimCamera
 
        // ------------------------------------------------------------------------------------------------------------------
        void Update()
-       {
+    {
            m_Camera.SetPoseRobot( _Cart2T(GetCameraPoseByBody()) );
-//           m_Camera.RenderToTexture();
+           m_Camera.RenderToTexture();
            m_Camera.DrawCamera();
 
            // simluate frame rate. This is not a clever method because the whole app will sleep because of this line.

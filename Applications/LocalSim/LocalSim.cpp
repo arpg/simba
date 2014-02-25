@@ -18,14 +18,13 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
                    const std::string& sRobotURDFPath,      //< Input: location of meshes, maps etc
                    const std::string& sWorldURDFPath,
                    const std::string& sServerOption):
-  m_sLocalSimName (sLocalSimName),
-  m_SimDeviceManager(&m_Scene)
+  m_sLocalSimName(sLocalSimName), m_SimDeviceManager(&m_Scene)
 {
   // 1. Read URDF files.
   XMLDocument RobotURDF, WorldURDF;
   GetXMLdoc(sRobotURDFPath, RobotURDF);
   GetXMLdoc(sWorldURDFPath, WorldURDF);
-
+  
   // 2. Parse our world and our robot for objects in the scene.
   m_Parser.ParseWorld(WorldURDF, m_SimWorld);
   m_Parser.ParseDevices(RobotURDF, m_SimDeviceManager, sLocalSimName);
@@ -34,8 +33,11 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   // 3. Init User's Robot and add it to RobotManager
   m_RobotManager.Init(m_sLocalSimName, m_Scene, m_SimRobot, sServerOption);
 
+  // Do we want to run in debug mode?
+  bool debug = false;
+
   // 4. Add the world and robot to the ModelGraph
-  m_Scene.Init(m_SimWorld, m_SimRobot,sLocalSimName);
+  m_Scene.Init(m_SimWorld, m_SimRobot, sLocalSimName, debug);
 
   m_SimDeviceManager.InitAllDevices(sServerOption);
 
@@ -82,7 +84,10 @@ void LocalSim::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
 //////////////////////////////////////////////////////////////////
 // Scan all SimDevices and send the simulated camera images to Pangolin.
 // Right now, we can only support up to two windows.
-bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::ImageView& RSimCamWnd ){
+//////////////////////////////////////////////////////////////////
+
+bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
+                                 SceneGraph::ImageView& RSimCamWnd ){
   int WndCounter = 0;
 
   for(unsigned int i =0 ; i!= m_SimDeviceManager.m_vSimDevices.size(); i++)
@@ -161,9 +166,9 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
 }
 
 // ---- Step Forward
-void LocalSim::StepForward( bool debug )
+void LocalSim::StepForward()
 {
-  m_Scene.UpdateScene(debug);
+  m_Scene.UpdateScene();
 
   // Update SimDevices
   m_SimDeviceManager.UpdateAllDevices();
@@ -212,11 +217,9 @@ int main( int argc, char** argv )
   // Initialize a LocalSim.
   LocalSim mLocalSim(sLocalSimName, sRobotURDF, sWorldURDF, sServerOption);
 
-  // Run as debug?
-  bool debug = true;
-
-  pangolin::RegisterKeyPressCallback(
-        ' ', boost::bind( &LocalSim::StepForward, &mLocalSim, &debug ) );
+  pangolin::RegisterKeyPressCallback('s',
+                                     boost::bind( &LocalSim::StepForward,
+                                                  &mLocalSim) );
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
@@ -228,14 +231,11 @@ int main( int argc, char** argv )
     pangolin::FinishFrame();
 
     // Update Physics and ModelGraph
-    mLocalSim.StepForward(debug);
+    mLocalSim.StepForward();
 
-    // Refresh screen
-//    pangolin::FinishGlutFrame();
     usleep( 1E6 / 60 );
   }
 
   return 0;
 
 }
-

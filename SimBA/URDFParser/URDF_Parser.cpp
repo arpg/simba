@@ -23,6 +23,8 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
       mSimWorld.m_sMesh = sMesh;
       mSimWorld.m_vWorldPose =
           GenNumFromChar(pElement->Attribute("worldpose"));
+      mSimWorld.m_vWorldNormal =
+          GenNumFromChar(pElement->Attribute("worldnormal"));
       mSimWorld.m_vRobotPose=
           GenNumFromChar(pElement->Attribute("robotpose"));
       std::vector<double> vLightPose =
@@ -32,8 +34,10 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
 
       // init world without mesh
       if (mSimWorld.m_sMesh =="NONE"){
-        BoxShape* pGround = new BoxShape("Ground",100, 100, 0.01, 0, 1,
-                                         mSimWorld.m_vWorldPose);
+        // We can't just use a giant box here; the RaycastVehicle won't connect,
+        // and will go straight through.
+        PlaneShape* pGround = new PlaneShape("Ground", mSimWorld.m_vWorldNormal,
+                                             mSimWorld.m_vWorldPose);
         m_mWorldNodes[pGround->GetName()] = pGround;
       }
       else {
@@ -77,16 +81,33 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
     // THE BODY BASE
     //////////////////////////////////////////
     if(strcmp(sRootContent,"bodybase")==0){
-      string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
-      int iMass =::atoi( pElement->Attribute("mass"));
-      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
-      vector<double> vDimension= GenNumFromChar(pElement->Attribute("dimension"));
-      const char* sType = pElement->Attribute("type");
-      if(strcmp(sType, "Box") ==0){
-        BoxShape* pBox =new BoxShape(sBodyName, vDimension[0],vDimension[1],vDimension[2],iMass, 1, vPose);
-        rSimRobot.SetBase( pBox ); // main body
-        cout<<"[ParseRobot] Successfully built bodybase: "<<sBodyName<<endl;
-        m_mModelNodes[pBox->GetName()] = pBox;
+      string sBodyName = GetAttribute( pElement, "name");
+      if(sBodyName == "RaycastVehicle"){
+        // Assign the raycast vehicle as the bodybase.
+        sBodyName = sBodyName+"@"+sRobotName;
+
+        //////////////////////////////////////////
+        // Raycast Car
+        //////////////////////////////////////////
+        RaycastVehicle* pVehicle = ParseRaycastCar(sBodyName, pElement);
+
+        rSimRobot.SetBase(pVehicle);
+        cout<<"[ParseRobot] Successfully built car bodybase: "<<sBodyName<<endl;
+      }
+      else{
+        sBodyName = sBodyName+"@"+sRobotName;
+        int iMass =::atoi( pElement->Attribute("mass"));
+        vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
+        vector<double> vDimension =
+            GenNumFromChar(pElement->Attribute("dimension"));
+        const char* sType = pElement->Attribute("type");
+        if(strcmp(sType, "Box") ==0){
+          BoxShape* pBox =new BoxShape(sBodyName, vDimension[0],vDimension[1],
+                                       vDimension[2],iMass, 1, vPose);
+          rSimRobot.SetBase( pBox );
+          cout<<"[ParseRobot] Successfully built bodybase: "<<sBodyName<<endl;
+          m_mModelNodes[pBox->GetName()] = pBox;
+        }
       }
     }
 
@@ -95,11 +116,6 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
     //////////////////////////////////////////
     // Build shapes connected to the body base.
     ParseShape(sRobotName, pElement);
-
-    //////////////////////////////////////////
-    // Raycast Car
-    //////////////////////////////////////////
-    ParseRaycastCar(sRobotName, pElement);
 
     //////////////////////////////////////////
     // ALL OF OUR SENSOR BODIES
@@ -126,36 +142,28 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
 /// The input command line looks like:
 /// Openni:[Name="LCamera", rgb=1, depth=1]//  Openni:[Name="RCamera", rgb=1]//
 ////////////////////////////////////////////////////////////
-bool URDF_Parser::ParseCommandLineForPickSensor(string sCommandLine)
-{
+bool URDF_Parser::ParseCommandLineForPickSensor(string sCommandLine){
   // get scheme:
   cout<<sCommandLine<<endl;
   return true;
-
 }
 
 // get sceme for init device
-vector<string> URDF_Parser::GetScemeFromString(string sCommandLine)
-{
+vector<string> URDF_Parser::GetScemeFromString(string sCommandLine){
   vector<string> vSceme;
 
   // get sceme by looking for "//"
-  while (sCommandLine.size()!=0)
-  {
+  while (sCommandLine.size()!=0){
     string sSceme = sCommandLine.substr(0, sCommandLine.find_first_of("//")+1) ;
-    if(sSceme.find("//")!=string::npos)
-    {
+    if(sSceme.find("//")!=string::npos){
       cout<<"[GetScemeFromString] Get Sceme: "<<sSceme<<endl;
       vSceme.push_back(sSceme);
     }
-    else
-    {
-      if(sCommandLine.size()==0)
-      {
+    else{
+      if(sCommandLine.size()==0){
         return vSceme;
       }
-      else
-      {
+      else{
         cout<<"[GetScemeFromString] Fatal Error! Invalid command line string "<<sCommandLine<<endl;
         exit(-1);
       }
@@ -168,11 +176,12 @@ vector<string> URDF_Parser::GetScemeFromString(string sCommandLine)
 ////////////////////////////////////////////////////////////
 /// Parse Shape (Body)
 ////////////////////////////////////////////////////////////
+
 void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
 {
   const char* sRootContent = pElement->Name();
 
-  if(strcmp(sRootContent,"body")==0)
+  if(strcmp(sRootContent,"body")== 0)
   {
     string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
     cout<<"[ParseShape] Trying to build "<<sBodyName<<endl;
@@ -182,36 +191,56 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
         GenNumFromChar(pElement->Attribute("dimension"));
     const char* sType = pElement->Attribute("type");
 
-    if(strcmp(sType, "Box") ==0){
-      BoxShape* pBox =new BoxShape(sBodyName,vDimension[0],vDimension[1],
-          vDimension[2],iMass, 1,vPose);
+    if(strcmp(sType, "Box") == 0){
+      BoxShape* pBox =new BoxShape(sBodyName, vDimension[0], vDimension[1],
+                                   vDimension[2], iMass, 1, vPose);
       m_mModelNodes[pBox->GetName()] = pBox;
     }
 
-    else if(strcmp(sType,"Cylinder")==0){
-      CylinderShape* pCylinder =new CylinderShape(sBodyName,vDimension[0],
-          vDimension[1],iMass,1,
-          vPose);
+    else if(strcmp(sType,"Cylinder")== 0){
+      CylinderShape* pCylinder =new CylinderShape(sBodyName, vDimension[0],
+                                                  vDimension[1], iMass,1,
+                                                  vPose);
       m_mModelNodes[pCylinder->GetName()] = pCylinder;
+    }
+
+    else if(strcmp(sType, "Sphere") == 0){
+      SphereShape* pSphere =new SphereShape(sBodyName, vDimension[0],
+                                            iMass, 1, vPose);
+      m_mModelNodes[pSphere->GetName()] = pSphere;
+    }
+
+    else if(strcmp(sType, "Plane") == 0){
+      PlaneShape* pPlane =new PlaneShape(sBodyName, vDimension, vPose);
+      m_mModelNodes[pPlane->GetName()] = pPlane;
+    }
+
+    else if(strcmp(sType, "Mesh") == 0){
+      string file_dir = pElement->Attribute("dir");
+      MeshShape* pMesh =new MeshShape(sBodyName, file_dir, vPose);
+      m_mModelNodes[pMesh->GetName()] = pMesh;
     }
 
     cout<<"[ParseShape] Successfully built "<<sBodyName<<endl;
   }
-
 }
 
 
 ////////////////////////////////////////////////////////////
 /// Parse Joint
 ////////////////////////////////////////////////////////////
-void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
-{
-  const char* sRootContent = pElement->Name();
 
+void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
+  const char* sRootContent = pElement->Name();
   if(strcmp(sRootContent,"joint")==0){
-    string sJointName= GetAttribute( pElement, "name")+"@"+sRobotName; // get joint name. e.g. BLAxleJoint@robot1@proxy
+
+    //Attributes common to all joints
+    string sJointName= GetAttribute( pElement, "name")+"@"+sRobotName;
     string sJointType(pElement->Attribute("type"));
 
+    ////////////////
+    // Hinge
+    ////////////////
     if(sJointType == "HingeJoint"){
       cout<<"[ParseJoint] Trying to build Hinge joint."<<endl;
       string sParentName;
@@ -220,8 +249,9 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
       vector<double> vAxis;
       double dUpperLimit = M_PI;
       double dLowerLimit = 0;
-      double dDamping = 1;
-      double dStiffness = 1;
+      double dSoftness = .5;
+      double dBias = .5;
+      double dRelaxation = .5;
 
       // Construct joint based on children information. This information may include links, origin, axis.etc
       XMLElement *pChild=pElement->FirstChildElement();
@@ -231,7 +261,6 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
         if(strcmp(sName, "parent")==0){
           sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
         }
-
         // get child body of joint
         if(strcmp(sName, "child")==0){
           sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
@@ -248,11 +277,14 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
         if(strcmp(sName,"lowerlimit")==0){
           dLowerLimit = ::atof(sName);
         }
-        if(strcmp(sName,"damping")==0){
-          dDamping = ::atof(sName);
+        if(strcmp(sName,"softness")==0){
+          dSoftness = ::atof(sName);
         }
-        if(strcmp(sName,"stiffness")==0){
-          dStiffness = ::atof(sName);
+        if(strcmp(sName,"bias")==0){
+          dBias = ::atof(sName);
+        }
+        if(strcmp(sName,"relaxation")==0){
+          dRelaxation = ::atof(sName);
         }
         // read next child (joint)
         pChild=pChild->NextSiblingElement();
@@ -261,17 +293,22 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
       pivot<<vPivot[0], vPivot[1], vPivot[2];
       Eigen::Vector3d axis;
       axis<<vAxis[0], vAxis[1], vAxis[2];
-      HingeTwoPivot* pHinge =
-          new HingeTwoPivot( sJointName,
-                             dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                             dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
-                             pivot, Eigen::Vector3d::Identity(),
-                             axis, Eigen::Vector3d::Identity());
+      HingeTwoPivot* pHinge = new HingeTwoPivot(
+            sJointName,
+            dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+            dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
+            pivot, Eigen::Vector3d::Zero(),
+            axis, Eigen::Vector3d::Zero());
+      pHinge->SetLimits(dLowerLimit, dUpperLimit,
+                        dSoftness, dBias, dRelaxation);
       m_mModelNodes[pHinge->GetName()] = pHinge;
       cout<<"[ParseJoint] Successfully built "<<sJointName<<endl;
     }
-    else if(sJointType=="Hinge2Joint")
-    {
+
+    ///////////////
+    // Hinge2
+    ///////////////
+    else if(sJointType=="Hinge2Joint"){
       cout<<"[ParseJoint] Trying to build Hinge2 joint."<<endl;
       string sParentName;
       string sChildName;
@@ -294,7 +331,8 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
       // read detail of a joint
       XMLElement *pChild=pElement->FirstChildElement();
 
-      // Construct joint based on children information. This information may include links, origin, axis.etc
+      // Construct joint based on children information.
+      // This information may include links, origin, axis.etc
       while(pChild){
         const char * sName = pChild->Name();
         // get parent link of joint
@@ -330,17 +368,124 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
         pChild=pChild->NextSiblingElement();
       }
 
-      Hinge2* pHinge2 = new Hinge2( sJointName,
-                                    dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                                    dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
+      Hinge2* pHinge2 = new Hinge2(
+            sJointName,
+            dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+            dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
                                     Anchor, Axis1, Axis2);
-      //TODO:
       pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
                          LowerAngleLimit, UpperAngleLimit);
       m_mModelNodes[pHinge2->GetName()] = pHinge2;
-      std::cout<<"[ParseJoint] Creating a Hinge2Joint between "<<
+      std::cout<<"[ParseJoint] Successfully built Hinge2 between "<<
                  sParentName<<" and "<<sChildName<<std::endl;
     }
+
+    ///////////////
+    // Point to Point (PToP)
+    ///////////////
+    else if(sJointType=="PToPJoint"){
+      string sParentName;
+      string sChildName;
+      vector<double> pivot_in_A;
+      vector<double> pivot_in_B;
+      Eigen::Vector3d eig_pivot_A;
+      Eigen::Vector3d eig_pivot_B;
+      XMLElement *pChild=pElement->FirstChildElement();
+      // Construct joint based on children information. This information may include links, origin, axis.etc
+      while(pChild){
+        const char * sName = pChild->Name();
+        // get parent link of joint
+        if(strcmp(sName, "parent")==0){
+          sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
+        }
+        // get child link of joint
+        if(strcmp(sName, "child")==0){
+          sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
+        }
+        if(strcmp(sName, "pivot in A")==0){
+          pivot_in_A = GenNumFromChar( pChild->Attribute("setting"));
+          eig_pivot_A<<pivot_in_A[0], pivot_in_A[1], pivot_in_A[2];
+        }
+        if(strcmp(sName, "pivot in B")==0){
+          pivot_in_B = GenNumFromChar( pChild->Attribute("axis1"));
+          eig_pivot_B<<pivot_in_B[0], pivot_in_B[1], pivot_in_B[2];
+        }
+
+        pChild=pChild->NextSiblingElement();
+
+      }
+
+      // If there are two shapes, then they are connected
+      // If there is no child, it means the constraint is connected to the World
+      if(sChildName.length()==0){
+        PToPOne* pPToP = new PToPOne(
+              sJointName,
+              dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+              eig_pivot_A);
+        m_mModelNodes[pPToP->GetName()] = pPToP;
+      }
+      else{
+        PToPTwo* pPToP = new PToPTwo(
+              sJointName,
+              dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+              dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
+              eig_pivot_A, eig_pivot_B);
+        m_mModelNodes[pPToP->GetName()] = pPToP;
+      }
+    }
+
+    //////////////////////////
+    // Six Degrees of Freedom
+    //////////////////////////
+//    else if(sJointType=="SixDOFJoint"){
+//      string sParentName;
+//      string sChildName;
+//      vector<double> transform_in_A;
+//      vector<double> transform_in_B;
+//      Eigen::Vector6d eig_transform_A;
+//      Eigen::Vector6d eig_transform_B;
+//      vector<double> vAnchor;
+//      vector<double> vAxis1;
+//      vector<double> vAxis2;
+//      vector<double> vLowerLinearLimit;
+//      vector<double> vUpperLinearLimit;
+//      vector<double> vLowerAngleLimit;
+//      vector<double> vUpperAngleLimit;
+//      Eigen::Vector3d Anchor;
+//      Eigen::Vector3d Axis1;
+//      Eigen::Vector3d Axis2;
+//      Eigen::Vector3d LowerLinearLimit;
+//      Eigen::Vector3d UpperLinearLimit;
+//      Eigen::Vector3d LowerAngleLimit;
+//      Eigen::Vector3d UpperAngleLimit;
+//      XMLElement *pChild=pElement->FirstChildElement();
+//      // Construct joint based on children information. This information may include links, origin, axis.etc
+//      while(pChild){
+//        const char * sName = pChild->Name();
+//        // get parent link of joint
+//        if(strcmp(sName, "parent")==0){
+//          sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
+//        }
+//        // get child link of joint
+//        if(strcmp(sName, "child")==0){
+//          sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
+//        }
+//        if(strcmp(sName, "pivot in A")==0){
+//          pivot_in_A = GenNumFromChar( pChild->Attribute("setting"));
+//          eig_pivot_A<<pivot_in_A[0], pivot_in_A[1], pivot_in_A[2];
+//        }
+//        if(strcmp(sName, "pivot in B")==0){
+//          pivot_in_B = GenNumFromChar( pChild->Attribute("axis1"));
+//          eig_pivot_B = pivot_in_B[0], pivot_in_B[1], pivot_in_B[2];
+//        }
+
+//        pChild=pChild->NextSiblingElement();
+
+//      }
+
+//    }
+
+
   }
 }
 
@@ -348,306 +493,205 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement)
 ////////////////////////////////////////////////////////////
 /// Parse Raycast Car
 ////////////////////////////////////////////////////////////
-void URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
+RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
 {
-  const char* sRootContent = pElement->Name();
+  cout<<"[URDF_Parser] Trying to build a RaycastVehicle"<<endl;
 
-  if(strcmp(sRootContent,"Car")==0)
+  std::vector<double> vParameters;
+  vParameters.resize(29);
+  std::vector<double> pose;
+
+  XMLElement *pChild = pElement->FirstChildElement();
+
+  while(pChild)
   {
-    cout<<"[URDF_Parser] Try to build RaycastVehicle"<<endl;
+    string sAttrName = pChild->Name();
 
-    std::vector<double> vParameters;
-    vParameters.resize(29);
-    std::vector<double> position;
-    std::vector<double> rotation;
+    // Car paramters
+    // All of these are stored in a vector of doubles. Access them through
+    // their enum specification in ModelGraph/VehicleEnums.h
 
-    XMLElement *pChild=pElement->FirstChildElement();
-
-    while(pChild)
+    if(!sAttrName.compare("param"))
     {
-      string sAttrName = pChild->Name();
-
-      // Car paramters
-      if(!sAttrName.compare("param"))
-      {
-        std::string param = pChild->Attribute("name");
-        if(!param.compare("control delay")){
-          vParameters[6] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("stiffness")){
-          vParameters[12] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("susp conn height")){
-          vParameters[11] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("max susp force")){
-          vParameters[13] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("damp factor")){
-          vParameters[16] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("exp damp factor")){
-          vParameters[17] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("roll influence")){
-          vParameters[18] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("steering coeff")){
-          vParameters[19] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("max steering")){
-          vParameters[20] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("max steering rate")){
-          vParameters[21] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("accel offset")){
-          vParameters[22] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("steering offset")){
-          vParameters[23] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("stall torque coeff")){
-          vParameters[24] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("torque speed slope")){
-          vParameters[25] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("susp rest length")){
-          vParameters[15] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("max susp travel")){
-          vParameters[14] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("Magic B")){
-          vParameters[26] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("Magic C")){
-          vParameters[27] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!param.compare("Magic E")){
-          vParameters[28] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
+      std::string param = pChild->Attribute("name");
+      if(!param.compare("control delay")){
+        vParameters[6] = GenNumFromChar(pChild->Attribute("value")).front();
       }
-
-      // Vehicle body parameters
-      else if(!sAttrName.compare("body")){
-        std::string body = pChild->Attribute("name");
-        if(!body.compare("length")){
-          vParameters[0] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!body.compare("width")){
-          vParameters[1] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!body.compare("height")){
-          vParameters[2] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!body.compare("mass")){
-          vParameters[7] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!body.compare("position")){
-          position = GenNumFromChar(pChild->Attribute("value"));
-        }
-        if(!body.compare("rotation")){
-          rotation = GenNumFromChar(pChild->Attribute("value"));
-        }
-
+      if(!param.compare("stiffness")){
+        vParameters[12] = GenNumFromChar(pChild->Attribute("value")).front();
       }
-
-      // Vehicle wheel parameters
-      else if(!sAttrName.compare("wheel")){
-        std::string wheel = pChild->Attribute("name");
-        if(!wheel.compare("radius")){
-          vParameters[8] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("width")){
-          vParameters[9] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("dyn friction")){
-          vParameters[3] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("slip coeff")){
-          vParameters[5] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("traction friction")){
-          vParameters[10] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
-        if(!wheel.compare("side friction")){
-          vParameters[4] = GenNumFromChar(pChild->Attribute("value")).front();
-        }
+      if(!param.compare("susp conn height")){
+        vParameters[11] = GenNumFromChar(pChild->Attribute("value")).front();
       }
-
-      pChild=pChild->NextSiblingElement();
+      if(!param.compare("max susp force")){
+        vParameters[13] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("damp factor")){
+        vParameters[16] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("exp damp factor")){
+        vParameters[17] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("roll influence")){
+        vParameters[18] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("steering coeff")){
+        vParameters[19] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("max steering")){
+        vParameters[20] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("max steering rate")){
+        vParameters[21] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("accel offset")){
+        vParameters[22] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("steering offset")){
+        vParameters[23] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("stall torque coeff")){
+        vParameters[24] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("torque speed slope")){
+        vParameters[25] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("susp rest length")){
+        vParameters[15] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("max susp travel")){
+        vParameters[14] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("Magic B")){
+        vParameters[26] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("Magic C")){
+        vParameters[27] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!param.compare("Magic E")){
+        vParameters[28] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
     }
 
-    Eigen::Vector6d dPose;
-    dPose<<0,0,0,0,0,1.5707;
-    RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,vParameters,dPose);
+    // Vehicle body parameters
+    else if(!sAttrName.compare("body")){
+      std::string body = pChild->Attribute("name");
+      if(!body.compare("length")){
+        vParameters[0] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!body.compare("width")){
+        vParameters[1] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!body.compare("height")){
+        vParameters[2] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!body.compare("mass")){
+        vParameters[7] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!body.compare("pose")){
+        pose = GenNumFromChar(pChild->Attribute("value"));
+      }
 
-    /// Build the car here.
-    m_mModelNodes[sRobotName] = pRaycastVehicle;
+    }
 
-    cout<<"[URDF_Parser] Parse Vehicle "<<sRobotName<<" Success."<<endl;
+    // Vehicle wheel parameters
+    else if(!sAttrName.compare("wheel")){
+      std::string wheel = pChild->Attribute("name");
+      if(!wheel.compare("radius")){
+        vParameters[8] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("width")){
+        vParameters[9] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("dyn friction")){
+        vParameters[3] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("slip coeff")){
+        vParameters[5] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("traction friction")){
+        vParameters[10] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+      if(!wheel.compare("side friction")){
+        vParameters[4] = GenNumFromChar(pChild->Attribute("value")).front();
+      }
+    }
+
+    pChild=pChild->NextSiblingElement();
   }
+
+  Eigen::Vector6d dPose;
+  dPose<<pose[0], pose[1], pose[2], pose[3], pose[4], pose[5];
+  RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,
+                                                       vParameters,
+                                                       dPose);
+
+  /// Build the car here.
+  m_mModelNodes[sRobotName] = pRaycastVehicle;
+
+  cout<<"[URDF_Parser] Parse Vehicle "<<sRobotName<<" Success."<<endl;
+
+  return pRaycastVehicle;
+
 
 }
 
 
 //////////////////////////////////////////////////////////////
-/// Parse SENSORS BODIES. Automatically Create Body for Sensor
+/// Parse SENSOR BODIES. Automatically Create Body for Sensor
 //////////////////////////////////////////////////////////////
 void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
 {
   const char* sRootContent = pElement->Name();
-
   if(strcmp(sRootContent,"Sensor")==0){
-    string sType( pElement->Attribute("Type"));
-    if(sType == "Camera"){
-      cout<<"[ParseSensorShape] Trying to init Camera"<<endl;
-      const char* sMode = pElement->Attribute("Mode");
+    cout<<"[ParseSensorShape] Trying to create a body for a Sensor"<<endl;
+    cout<<"[ParseSensorShape] Sensor Type: "<<pElement->Attribute("Mode")<<endl;
+    string sCameraName = GetAttribute( pElement, "Name")+"@"+sRobotName;
+    string sParentName = GetAttribute( pElement, "Parent")+"@"+sRobotName;
+    vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+    vector<double> dBaseline = GenNumFromChar(pElement->Attribute("Baseline"));
+    vector<double> vMass = GenNumFromChar(pElement->Attribute("Mass"));
+    vector<double> vDimension =
+        GenNumFromChar(pElement->Attribute("Dimension"));
 
-      /// Single Camera
-      if(strcmp(sMode, "RGB")==0 || strcmp(sMode,"Depth")==0 ||
-         strcmp(sMode,"Gray")==0){
-        cout<<"[ParseSensorShape] Camera Type: "<<sMode<<endl;
-        string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-        string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
-        string sCamMode(sMode);
-        string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
-        vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-        int iMass = 1;
+    // CREATE THE PHYSICS BODY
 
-        // create body for SimCamera
-        vPose[1] = vPose[1]+2; vPose[2] = vPose[2] -3.2;
-        BoxShape* pBox =new BoxShape(sSensorName,0.1,0.1,0.1,iMass,1,vPose);
-        m_mModelNodes[pBox->GetName()] = pBox;
+    Shape* parent = dynamic_cast<Shape*>(
+          m_mModelNodes.find(sParentName)->second);
+    Eigen::Vector6d parent_pose = parent->GetPose();
+    vector<double> vDepthCameraPose;
+    vDepthCameraPose.push_back(vPose[0]+parent_pose(0));
+    vDepthCameraPose.push_back(vPose[1]+parent_pose(1));
+    vDepthCameraPose.push_back(vPose[2]+parent_pose(2));
+    vDepthCameraPose.push_back(vPose[3]+parent_pose(3));
+    vDepthCameraPose.push_back(vPose[4]+parent_pose(4));
+    vDepthCameraPose.push_back(vPose[5]+parent_pose(5));
+    BoxShape* pCameraBox = new BoxShape(sCameraName,
+                                        vDimension[0], vDimension[1],
+                                        vDimension[2], vMass[0], 1,
+                                        vDepthCameraPose);
+    m_mModelNodes[pCameraBox->GetName()] = pCameraBox;
+    cout<<pCameraBox->GetName()<<endl;
+    // CREATE THE PHYSICS CONSTRAINT
 
-        // create joint for SimCamera
-        string sJointName = "SimCamJoint"+sCameraName; // e.g. SimCamJointLCam@robot1@proxy
-        Eigen::Vector3d vPivot;
-        Eigen::Vector3d vAxis;
-        vPivot<<vPose[0],vPose[1]+2,vPose[2]-3.2;
-        vAxis<<1,1,1;
-        HingeTwoPivot* pHinge =
-            new HingeTwoPivot(sJointName,
-                              dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                              dynamic_cast<Shape*>(m_mModelNodes.find(sSensorName)->second),
-                              vPivot, Eigen::Vector3d::Identity(),
-                              vAxis, Eigen::Vector3d::Identity());
-        m_mModelNodes[pHinge->GetName()] = pHinge;
-      }
-
-      /// RGB-Depth Camera
-      if(strcmp(sMode, "RGBD")==0 ){
-        cout<<"[ParseSensorShape] Camera Type: "<<sMode<<endl;
-        string sCameraName=
-            GetAttribute( pElement, "Name")+"@"+sRobotName;
-        string sParentName=
-            GetAttribute( pElement, "Parent")+"@"+sRobotName;
-        vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-        int iMass = 1;
-        double BodyDistance = 0.5;
-
-        /// CREATE CAMERA BODIES
-
-        // Create body to connect RGBD Cameras
-        vector<double> vCameraPose;
-        vCameraPose.push_back(0);vCameraPose.push_back(-2.1);vCameraPose.push_back(0);
-        vCameraPose.push_back(0);vCameraPose.push_back(0);vCameraPose.push_back(0);
-        BoxShape* pBox = new BoxShape(sCameraName,BodyDistance,0.1,0.1,iMass, 1, vCameraPose);
-        m_mModelNodes[pBox->GetName()] = pBox;
-
-        // Create body for Depth Cam
-        string sDepthBodyName = "Depth"+sCameraName;
-        vector<double> vDepthCameraPose;
-        vDepthCameraPose.push_back(vPose[0]+BodyDistance+0.1);
-        vDepthCameraPose.push_back(vPose[1] + 2);
-        vDepthCameraPose.push_back(vPose[2]);
-        vDepthCameraPose.push_back(0);
-        vDepthCameraPose.push_back(0);
-        vDepthCameraPose.push_back(0);
-        BoxShape* pDepthBox = new BoxShape(sDepthBodyName, 0.1, 0.1, 0.1,
-                                           iMass, 1, vDepthCameraPose);
-        m_mModelNodes[pDepthBox->GetName()] = pDepthBox;
-
-        // Create body for RGB Cam
-        string sRGBBodyName = "RGB"+sCameraName;
-        vector<double> vRGBCameraPose;
-        vRGBCameraPose.push_back(vPose[0]-BodyDistance - 0.1);
-        vRGBCameraPose.push_back(vPose[1] + 2);
-        vRGBCameraPose.push_back(vPose[2]);
-        vRGBCameraPose.push_back(0);
-        vRGBCameraPose.push_back(0);
-        vRGBCameraPose.push_back(0);
-
-        BoxShape* pRGBbox =new BoxShape(sRGBBodyName, 0.1, 0.1, 0.1,
-                                        iMass, 1, vRGBCameraPose);
-        m_mModelNodes[pRGBbox->GetName()] = pRGBbox;
-
-        /// create joints
-        Eigen::Vector3d vPivot;
-        Eigen::Vector3d vAxis;
-        string sJointName = "SimCamJoint"+sCameraName;
-        vPivot<< 0, 0, 0;
-        vAxis<<0,-1,0;
-        HingeTwoPivot* pRGBDHinge =
-            new HingeTwoPivot(sJointName,
-                              dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                              dynamic_cast<Shape*>(pBox),
-                              vPivot, Eigen::Vector3d::Identity(),
-                              vAxis, Eigen::Vector3d::Identity());
-        m_mModelNodes[pRGBDHinge->GetName()] = pRGBDHinge;
-
-        // 2.1 create joint for RGB body and RGBDCamBody
-        string sRGBJointName = "SimCamJoint"+sRGBBodyName;
-        vPivot<<-0.5, 0, 0;
-        vAxis<< 1,0,0;
-        HingeTwoPivot* pRGBHinge =
-            new HingeTwoPivot(sRGBJointName,
-                              dynamic_cast<Shape*>(m_mModelNodes.find(sCameraName)->second),
-                              dynamic_cast<Shape*>(m_mModelNodes.find(sRGBBodyName)->second),
-                              vPivot, Eigen::Vector3d::Identity(),
-                              vAxis, Eigen::Vector3d::Identity());
-        m_mModelNodes[pRGBHinge->GetName()] = pRGBHinge;
-
-        // 2.2 create joint for Depth body and RGBDCamBody
-        string sDepthJointName = "SimCamJoint"+sDepthBodyName;
-        vPivot<< 0.5, 0, 0;
-        vAxis<<  1, 0, 0;
-        HingeTwoPivot* pDepthHinge =
-            new HingeTwoPivot( sDepthJointName, pBox, pDepthBox,
-                               vPivot, Eigen::Vector3d::Identity(),
-                               vAxis, Eigen::Vector3d::Identity());
-        m_mModelNodes[pDepthHinge->GetName()] = pDepthHinge;
-      }
-      cout<<"[ParseSensorShape] Successfully init Camera."<<endl;
-    }
-
-    //        if(sType=="GPS")
-    //        {
-    //          string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-    //          string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-    //          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-    //          int iMass = 1;
-    //          // string sMeshdir(pElement->Attribute("Dir"));
-
-    //          // create body for it
-    //          BoxShape* pBox =new BoxShape(sBodyName, 0.1,0.1,0.1,iMass, 1, vPose);
-    //          m_mModelNodes.insert(std::pair<std::string, Shape*>(sBodyName,pBox));
-
-    //          // create joint for SimGPS
-    //          string sJointName = "GPSJoint"+sBodyName;
-    //          Eigen::Vector3d vPivot;
-    //          Eigen::Vector3d vAxis;
-    //          vPivot<<vPose[0],vPose[1],vPose[2];
-    //          vAxis<<1,0,0;
-    //          //HingeJoint* pHinge = new HingeJoint( sJointName, m_mModelNodes.find(sParentName)->second, m_mModelNodes.find(sBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],100,100,0,M_PI );
-    //        }
-
+    Eigen::Vector3d vPivot;
+    Eigen::Vector3d vAxis;
+    string sCameraJointName = "SimCamJoint"+sCameraName;
+    vPivot<< -vPose[0], -vPose[1], -vPose[2];
+    vAxis<< 1, 0, 0;
+    HingeTwoPivot* pCameraHinge =
+        new HingeTwoPivot(sCameraJointName,
+                          dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+                          dynamic_cast<Shape*>(m_mModelNodes.find(sCameraName)->second),
+                          Eigen::Vector3d::Zero(), vPivot,
+                          vAxis, vAxis);
+    pCameraHinge->SetLimits(-0.01, 0.01, 1, .1, 1);
+    m_mModelNodes[pCameraHinge->GetName()] = pCameraHinge;
   }
 
-}
+  cout<<"[ParseSensorShape] Successfully init Sensor body."<<endl;
 
+}
 
 ////////////////////////////////////////////////////////////
 /// PARSE ROBOT.XML FOR DEVICES AND BUILD INTO ROBOTPROXY
@@ -702,18 +746,19 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
         if(strcmp(sMode, "RGBD")==0 )
         {
           string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-          string sRGBBodyName = "RGB"+sCameraName;
-          string sDepthBodyName = "Depth"+sCameraName;
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
           vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+          vector<double> vBaseline =
+              GenNumFromChar(pElement->Attribute("Baseline"));
 
-          // 3 save intp device, this device have two sensors
+          // 3 save into device, this device have two sensors
           SimDeviceInfo Device;
           Device.m_sDeviceName = sCameraName;
           Device.m_sDeviceType = sType;
           Device.m_iFPS = iFPS;
-          Device.m_vSensorList.push_back(sRGBBodyName);
-          Device.m_vSensorList.push_back(sDepthBodyName);
+          Device.m_iBaseline = vBaseline[0];
+          Device.m_vSensorList.push_back("RGB"+sCameraName);
+          Device.m_vSensorList.push_back("Depth"+sCameraName);
           Device.m_vModel.push_back(sModel);
           Device.m_vModel.push_back(sModel);
           Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];

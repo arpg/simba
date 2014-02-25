@@ -24,6 +24,7 @@ public:
   string           m_sRobotName;
   Eigen::Vector6d  m_vPose;          // init pose of camera
   int              m_iFPS;
+  int              m_iBaseline;
   vector<string>   m_vSensorList;    // name for sensor of the device
   vector<string>   m_vModel;         // path of model.xml file for the sensor
   bool             m_bDeviceOn;      // Mark if device is on or not. By default it is off

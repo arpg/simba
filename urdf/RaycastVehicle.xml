@@ -1,6 +1,6 @@
 <robot name="Robot">
 
-<Car name="Car" type="RaycastVehicle">
+<bodybase name="RaycastVehicle">
      <!--Set the parameters for the car.  -->
      <param name="control delay"      value="0"/>
      <param name="stiffness"          value="120"/>
@@ -21,33 +21,57 @@
      <body name="length"      value="2.7"/>
      <body name="width"       value="2"/>
      <body name="height"      value="1"/>
-     <body name="mass"        value="5"/>
-     <body name="base height" value=".5"/>
+     <body name="mass"        value="30"/>
+     <body name="base height" value=".8"/>
      <body name="restitution" value="0"/>
-     <body name="position"    value="0,0,0,0,0,1.5707"/>
-     <body name="rotation"    value="1,0,0,0,1,0,0,0,1"/>
+     <!-- NB: The pose of the robot is set in World.xml  -->
+     <body name="pose"    value="0,0,0,0,0,0"/>
 
      <!--Wheel shape variables   -->
-     <wheel name="radius"            value="0"/>
-     <wheel name="width"             value="0"/>
+     <wheel name="radius"            value=".25"/>
+     <wheel name="width"             value=".25"/>
      <!-- <wheel name="mass"              value="0"/> -->
      <!-- <wheel name="restitution"       value="0"/> -->
-     <wheel name="dyn friction"      value="0"/>
+     <wheel name="dyn friction"      value="0.247"/>
      <wheel name="slip coeff"        value="0"/>
-     <wheel name="traction friction" value="0"/>
-     <wheel name="side friction"     value="0"/>
+     <wheel name="traction friction" value="1000"/>
+     <wheel name="side friction"     value="1.56"/>
 
      <!--Parameters dependent on other parts  -->
-     <param name="susp rest length" value=".045"/>
-     <param name="max susp travel"  value=".045"/>
+     <param name="susp rest length" value=".35"/>
+     <param name="max susp travel"  value=".025"/>
      <param name="Magic B"          value="5"/>
      <param name="Magic C"          value="1.65"/>
      <param name="Magic E"          value="-5"/>
- </Car>
+ </bodybase>
 
-<!--Sensors  -->
-<body name="Stick" dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  mass="10"  pose="0,0,-3,0,0,0"  dimension="0.1,0.1,2" scale="25" type="Box"/>
+<!--Sensors
+<body name="Stick"
+  dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"
+  mass="1"
+  pose="0,0,1,0,0,0"
+  dimension="2,0.1,0.1"
+  scale="25"
+  type="Box"/>
 
+<joint name="StickJoint" type="HingeJoint">
+  <parent body = "RaycastVehicle"/>
+  <child body = "Stick"/>
+  <pivot setting = "0,0,1"/>
+  <axis setting = "1,0,0"/>
+  <upperlimit setting = "0.05" />
+  <lowerlimit setting = "-0.05" />
+  <softness setting = "0.9" />
+  <bias setting  = "0.3" />
+  <relaxation setting = "1" />
+</joint>
+-->
+<!-- The poses for this camera are in relation to its parent shape -->
+<!-- This needs to be more descriptive. We need a baseline and specific
+     positions for both cameras in an RGBD setup if we're going to make
+     two separate bodies for them. -->
+<!-- Baseline should be in relation to y-axis; this is why it's longer
+     than the x- or z-dimension -->
 <Sensor Name="LCamera"
   Type="Camera"
   Driver="Node2Cam"
@@ -55,10 +79,14 @@
   Mode="RGBD"
   FPS="30"
   Align="true"
-  Parent="Stick"
-  Pose="0,-2,0,0,0,0"
+  Parent="RaycastVehicle"
+  Mass="0.01"
+  Dimension="0.2, 0.5, 0.2"
+  Pose="0,0,2,0,0,0"
+  Baseline="0.1"
   Location="@Proxy1"
   Model="/home/bminortx/Code/SimBA/SimBA/SimDevices/Sensor/cameras.xml"/>
+
 
   <!-- Lu: Must include this sensor if you use RobotProxy!
   RobotProxy needs this sensor to get the robot's pose information. -->

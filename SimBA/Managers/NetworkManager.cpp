@@ -429,15 +429,17 @@ string NetworkManager::CheckURI(string sURI)
 
 void NetworkManager::RegisterControllerDevice(RegisterControllerReqMsg& mRequest,RegisterControllerRepMsg & mReply)
 {
-  cout<<"[NetworkManager] Node2Cam ask for register in timestep "<<m_iTimeStep<<"."<<endl;
-  mReply.set_time_step(m_iTimeStep);
+  cout<<"[NetworkManager] NodeVehicle is asking for register in timestep "
+     <<m_iTimeStep<<"."<<endl;
+  mReply.set_success(true);
   m_SubscribeNum = m_SubscribeNum +1;
 
   // robot proxy subscribe to this controller device for command
-  string sServiceName = mRequest.controller_name()+"-for-"+m_sLocalSimName; // service name, e.g. mController-for-Proxy1.
-  if( m_Node.subscribe(sServiceName)==false )
+  if( m_Node.subscribe(mRequest.topic())==false )
   {
-    cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! Cannot subscribe to "<<sServiceName<<". Please make sure service is running."<<endl;
+    cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! "
+          "Cannot subscribe to "<<mRequest.topic()
+       <<". Please make sure service is running."<<endl;
   }
 }
 
@@ -529,8 +531,8 @@ bool NetworkManager::ReceiveControlInfo(string sDeviceName)
   // wait until we get the lastest world state
 
   int                iUpdateFlag=0;
-  CommandMsg         Command;// current command from robot
-  CommandMsg         TryCommand;
+  PoseMsg            Command;// current command from robot
+  PoseMsg            TryCommand;
 
   while(1)
   {

@@ -178,6 +178,7 @@ public:
     m_Axis_2 = Axis_2;
     m_damping = 50;
     m_stiffness = 1;
+    m_LowerLinLimit = Eigen::Vector3d::Identity();
 
     // Connect the shapes
     Shape_A->AddChild( this );
@@ -214,69 +215,78 @@ public:
 };
 
 
-//////////
+/////////////
 ///// Six DOF
-//////////
+/////////////
 
-// TODO: Implement these.
+// NB: These transforms in the constructors for 6DOF constraints
+// are based off of the reference frame of the parent shape.
+
+class SixDOFOne : public Constraint{
+public:
 
 
-//int SixDOF_one(double id_A, double* transform_A, double* limits){
-//  boost::shared_ptr<Shape_Entity> Shape_A = m_mShapes.at(id_A);
-//  btQuaternion quat_A(transform_A[3], transform_A[4],
-//      transform_A[5], transform_A[6]);
-//  btVector3 pos_A(transform_A[0], transform_A[1], transform_A[2]);
-//  btTransform trans_A(quat_A, pos_A);
-//  btGeneric6DofConstraint* SixDOF =
-//      new btGeneric6DofConstraint(*Shape_A->m_pRigidBody.get(),
-//                                  trans_A,
-//                                  true);
-//  btVector3 max_lin_limits(limits[0], limits[1],  limits[2]);
-//  btVector3 min_lin_limits(limits[3], limits[4],  limits[5]);
-//  btVector3 max_ang_limits(limits[6], limits[7],  limits[8]);
-//  btVector3 min_ang_limits(limits[9], limits[10], limits[11]);
-//  SixDOF->setLinearLowerLimit(min_lin_limits);
-//  SixDOF->setLinearUpperLimit(max_lin_limits);
-//  SixDOF->setAngularLowerLimit(min_ang_limits);
-//  SixDOF->setAngularUpperLimit(max_ang_limits);
-//  m_pDynamicsWorld->addConstraint(SixDOF);
-//  int id = m_SixDOF.size();
-//  m_SixDOF.push_back(SixDOF);
-//  return id;
-//}
+  SixDOFOne(std::string sName, Shape* Shape_A, Eigen::Vector6d Transform_A){
+    SetName(sName);
+    m_Shape_A = Shape_A->GetName();
+    m_Transform_A = Transform_A;
 
-//int SixDOF_two(double id_A, double id_B,
-//                double* transform_A, double* transform_B,
-//                double* limits){
-//  boost::shared_ptr<Shape_Entity> Shape_A = m_mShapes.at(id_A);
-//  boost::shared_ptr<Shape_Entity> Shape_B = m_mShapes.at(id_B);
-//  btQuaternion quat_A(transform_A[3], transform_A[4],
-//      transform_A[5], transform_A[6]);
-//  btVector3 pos_A(transform_A[0], transform_A[1], transform_A[2]);
-//  btTransform trans_A(quat_A, pos_A);
-//  btQuaternion quat_B(transform_B[3], transform_B[4],
-//      transform_B[5], transform_B[6]);
-//  btVector3 pos_B(transform_B[0], transform_B[1], transform_B[2]);
-//  btTransform trans_B(quat_B, pos_B);
-//  btGeneric6DofConstraint* SixDOF =
-//      new btGeneric6DofConstraint(*Shape_A->m_pRigidBody.get(),
-//                                  *Shape_B->m_pRigidBody.get(),
-//                                  trans_A, trans_B,
-//                                  true);
-//  btVector3 max_lin_limits(limits[0], limits[1],  limits[2]);
-//  btVector3 min_lin_limits(limits[3], limits[4],  limits[5]);
-//  btVector3 max_ang_limits(limits[6], limits[7],  limits[8]);
-//  btVector3 min_ang_limits(limits[9], limits[10], limits[11]);
-//  SixDOF->setLinearLowerLimit(min_lin_limits);
-//  SixDOF->setLinearUpperLimit(max_lin_limits);
-//  SixDOF->setAngularLowerLimit(min_ang_limits);
-//  SixDOF->setAngularUpperLimit(max_ang_limits);
-//  m_pDynamicsWorld->addConstraint(SixDOF);
-//  int id = m_SixDOF.size();
-//  m_SixDOF.push_back(SixDOF);
-//  return id;
-//}
+    // Connect the shapes
+    Shape_A->AddChild( this );
+    this->m_pParent = Shape_A;
+  }
 
+  void SetLimits(Eigen::Vector3d LinLowLimit, Eigen::Vector3d LinUppLimit,
+                 Eigen::Vector3d AngLowLimit, Eigen::Vector3d AngUppLimit){
+    m_LowerLinLimit = LinLowLimit;
+    m_UpperLinLimit = LinUppLimit;
+    m_LowerAngLimit = AngLowLimit;
+    m_UpperAngLimit = AngUppLimit;
+  }
+
+  std::string m_Shape_A;
+  Eigen::Vector6d m_Transform_A;
+  Eigen::Vector3d m_LowerLinLimit;
+  Eigen::Vector3d m_UpperLinLimit;
+  Eigen::Vector3d m_LowerAngLimit;
+  Eigen::Vector3d m_UpperAngLimit;
+
+};
+
+class SixDOFTwo : public Constraint{
+public:
+  SixDOFTwo(std::string sName, Shape* Shape_A, Shape* Shape_B,
+            Eigen::Vector6d Transform_A, Eigen::Vector6d Transform_B){
+    SetName(sName);
+    m_Shape_A = Shape_A->GetName();
+    m_Shape_B = Shape_B->GetName();
+    m_Transform_A = Transform_A;
+    m_Transform_B = Transform_B;
+
+    // Connect the shapes
+    Shape_A->AddChild( this );
+    this->AddChild( Shape_B );
+    this->m_pParent = Shape_A;
+    Shape_B->m_pParent = this;
+  }
+
+  void SetLimits(Eigen::Vector3d LinLowLimit, Eigen::Vector3d LinUppLimit,
+                 Eigen::Vector3d AngLowLimit, Eigen::Vector3d AngUppLimit){
+    m_LowerLinLimit = LinLowLimit;
+    m_UpperLinLimit = LinUppLimit;
+    m_LowerAngLimit = AngLowLimit;
+    m_UpperAngLimit = AngUppLimit;
+  }
+
+  std::string m_Shape_A;
+  std::string m_Shape_B;
+  Eigen::Vector6d m_Transform_A;
+  Eigen::Vector6d m_Transform_B;
+  Eigen::Vector3d m_LowerLinLimit;
+  Eigen::Vector3d m_UpperLinLimit;
+  Eigen::Vector3d m_LowerAngLimit;
+  Eigen::Vector3d m_UpperAngLimit;
+
+};
 
 #endif // CONSTRAINT_H_
-

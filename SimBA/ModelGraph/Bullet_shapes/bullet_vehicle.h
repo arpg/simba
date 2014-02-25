@@ -110,7 +110,12 @@ public:
     {
       btWheelInfo& wheel = bulletVehicle->getWheelInfo(i);
       wheel.m_rollInfluence = parameters[RollInfluence];
+      btTransform wheelTrans = bulletVehicle->getWheelTransformWS(i);
+      pVehicle->SetWheelPose(i, _T2Cart(toEigen(wheelTrans)));
     }
+
+    btTransform chassisTrans = bulletVehicle->getChassisWorldTransform();
+    cout<<toEigen(chassisTrans)<<endl;
 
     //reset all parameters
     bulletBody->setLinearVelocity(btVector3(0,0,0));
@@ -149,9 +154,6 @@ public:
   btRaycastVehicle* getBulletRaycastVehicle(){
     return bulletVehicle;
   }
-
-
-
 
 private:
   //A compound shape to hold all of our collision shapes.

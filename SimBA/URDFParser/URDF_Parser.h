@@ -45,7 +45,7 @@ public:
 
   void ParseJoint(string sRobotName, XMLElement *pElement);
 
-  void ParseRaycastCar(string sRobotName, XMLElement *pElement);
+  RaycastVehicle *ParseRaycastCar(string sRobotName, XMLElement *pElement);
 
   void ParseSensorShape(string sRobotName, XMLElement *pElement );
 

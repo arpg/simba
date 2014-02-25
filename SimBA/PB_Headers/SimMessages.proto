@@ -121,7 +121,7 @@ message WorldFullStateMsg
 message RegisterRobotReqMsg
 {
     required string             name               =1;
-    required CommandMsg         command            =2;
+    required PoseMsg            command            =2;
 }
 
 message RegisterRobotRepMsg
@@ -135,7 +135,7 @@ message RegisterRobotRepMsg
 /////////////////////////// For RPG device /////////////////////////
 
 // ------ For controller
-message CommandMsg
+message PoseMsg
 {
     repeated string               body_name        =1; // allow apply same command to several body
     required double               time_step        =2;
@@ -148,23 +148,21 @@ message CommandMsg
 }
 
 
-message HingeControllerMsg
+message VehicleMsg
 {
-    repeated string          body_name             =1; // allow apply same command to several body
-    required double          time_step             =2;
-    required Vector3Msg      Desire_Angular        =3;
-    required Vector3Msg      Desire_Torque         =4;
+    required double          steering_angle        =1;
+    required double          desired_force         =2;
 }
 
 
 message RegisterControllerReqMsg
 {
-    optional bytes          controller_name        =1;
+    optional bytes          topic        	   =1;
 }
 
 message RegisterControllerRepMsg
 {
-    optional int32          time_step             = 1;
+    optional bool           success                = 1;
 }
 
 

@@ -1,9 +1,25 @@
 <world name="SimWorld">
-<!--    <base mesh="/Users/luma/Code/RobotGroup/simba/media/LostTemple/map-losttemple.pk3" scale="1" mass="0" worldpose="0,0,140" robotpose="0,0,0,0,0,2" lightpose="10,10,-100"/>-->
-    <base mesh="NONE" scale="1" mass="0" worldpose="0,0,0" robotpose="0,0,2,0,0,0" lightpose="10,10,-100"/>
+
+<!-- No Mesh -->
+  <base mesh="NONE"
+	scale="1"
+	mass="0"
+	worldpose="0,0,0"
+	worldnormal="0,0,1"
+	robotpose="0,0,1.4,0,0,0"
+	lightpose="10,10,-100"/>
+
+<!-- Lost Temple Mesh (kind of glitchy)  -->
+
+<!--<base mesh="/Users/luma/Code/RobotGroup/simba/media/LostTemple/map-losttemple.pk3" scale="1" mass="0" worldpose="0,0,140" robotpose="0,0,0,0,0,2" lightpose="10,10,-100"/>-->
+
+<!-- City Block Dataset  -->
+
 <!--<base mesh="/Users/luma/Code/RobotGroup/simba/media/CityBlock/CityBlock.obj" scale="1" mass="0" worldpose="0,0,0" robotpose="0,0,0,0,0,2" lightpose="10,10,-100"/>-->
 <!--<base mesh="/Users/malu/Code/RobotGroup/simba-build/apps/RobotProxy/City.dae" scale="1" mass="0" worldpose="0,0,0" robotpose="0,0,0,0,0,2" lightpose="10,10,-100"/>-->
 
+<!-- What does this do?   -->
+<!-- Possibly for use in StateKeeper?  -->
     <robot pose="15,0,-2,0,0,0"/>
     <robot pose="20,0,-2,0,0,0"/>
     <robot pose="20,9,-2,0,0,0"/>
@@ -11,5 +27,6 @@
     <robot pose="20,5,-2,0,0,0"/>
     <robot pose="20,7,-2,0,0,0"/>
     <robot pose="20,6,-2,0,0,0"/>
+
 </world>
 
