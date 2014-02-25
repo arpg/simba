@@ -191,11 +191,11 @@ public:
 
     // window for display image capture from SimCamera
     m_LSimCamImage = new SceneGraph::ImageView(true, true);
-    m_LSimCamImage->SetBounds( 0.0, 0.5, 0.5, 1.0/*, 512.0f/384.0f*/ );
+    m_LSimCamImage->SetBounds( 0.0, 0.5, 0.75, 1.0/*, 512.0f/384.0f*/ );
 
     // window for display image capture from SimCamera
     m_RSimCamImage = new SceneGraph::ImageView(true, true);
-    m_RSimCamImage->SetBounds( 0.5, 1.0, 0.5, 1.0/*, 512.0f/384.0f */);
+    m_RSimCamImage->SetBounds( 0.5, 1.0, 0.75, 1.0/*, 512.0f/384.0f */);
 
     // Add our views as children to the base container.
     pangolin::DisplayBase().AddDisplay( *m_view3d );

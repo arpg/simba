@@ -45,9 +45,9 @@
      <param name="Magic E"          value="-5"/>
  </bodybase>
 
-<!--Sensors  
-<body name="Stick" 
-  dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  
+<!--Sensors
+<body name="Stick"
+  dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"
   mass="1"
   pose="0,0,1,0,0,0"
   dimension="2,0.1,0.1"

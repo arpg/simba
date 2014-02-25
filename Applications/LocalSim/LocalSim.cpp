@@ -84,7 +84,10 @@ void LocalSim::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
 //////////////////////////////////////////////////////////////////
 // Scan all SimDevices and send the simulated camera images to Pangolin.
 // Right now, we can only support up to two windows.
-bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::ImageView& RSimCamWnd ){
+//////////////////////////////////////////////////////////////////
+
+bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
+                                 SceneGraph::ImageView& RSimCamWnd ){
   int WndCounter = 0;
 
   for(unsigned int i =0 ; i!= m_SimDeviceManager.m_vSimDevices.size(); i++){
@@ -162,6 +165,7 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd, SceneGraph::
 void LocalSim::StepForward()
 {
   m_Scene.UpdateScene();
+
   // Update SimDevices
   m_SimDeviceManager.UpdateAllDevices();
 

@@ -420,7 +420,6 @@
         RaycastVehicle* pVehicle = (RaycastVehicle*) &mMotion->object;
         std::vector<Eigen::Matrix4d> VehiclePoses =
             GetVehicleTransform(pVehicle->GetName());
-        cout<<"Woo"<<endl<<SwitchWheelYaw(_T2Cart(VehiclePoses.at(1)))<<endl;
         pVehicle->SetPose(SwitchYaw(_T2Cart(VehiclePoses.at(0))));
         pVehicle->SetWheelPose(0, SwitchWheelYaw(_T2Cart(VehiclePoses.at(1))));
         pVehicle->SetWheelPose(1, SwitchWheelYaw(_T2Cart(VehiclePoses.at(2))));
