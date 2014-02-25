@@ -21,8 +21,8 @@
      <body name="length"      value="2.7"/>
      <body name="width"       value="2"/>
      <body name="height"      value="1"/>
-     <body name="mass"        value="2"/>
-     <body name="base height" value=".5"/>
+     <body name="mass"        value="30"/>
+     <body name="base height" value=".8"/>
      <body name="restitution" value="0"/>
      <!-- NB: The pose of the robot is set in World.xml  -->
      <body name="pose"    value="0,0,0,0,0,0"/>
@@ -38,7 +38,7 @@
      <wheel name="side friction"     value="1.56"/>
 
      <!--Parameters dependent on other parts  -->
-     <param name="susp rest length" value=".045"/>
+     <param name="susp rest length" value=".35"/>
      <param name="max susp travel"  value=".025"/>
      <param name="Magic B"          value="5"/>
      <param name="Magic C"          value="1.65"/>
@@ -48,21 +48,21 @@
 <!--Sensors  -->
 <body name="Stick" 
   dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  
-  mass="10"
-  pose="0,0,2,0,0,0"
-  dimension="0.1,0.1,2"
+  mass="1"
+  pose="0,0,1,0,0,0"
+  dimension="2,0.1,0.1"
   scale="25"
   type="Box"/>
 
 <joint name="StickJoint" type="HingeJoint">
   <parent body = "RaycastVehicle"/>
   <child body = "Stick"/>
-  <pivot setting = "0,0,2"/>
-  <axis setting = "0,1,0"/>
-  <upperlimit setting = "0.01" />
-  <lowerlimit setting = "0.00" />
-  <softness setting = "1" />
-  <bias setting  = ".1" />
+  <pivot setting = "0,0,1"/>
+  <axis setting = "1,0,0"/>
+  <upperlimit setting = "0.05" />
+  <lowerlimit setting = "-0.05" />
+  <softness setting = "0.9" />
+  <bias setting  = "0.3" />
   <relaxation setting = "1" />
 </joint>
 

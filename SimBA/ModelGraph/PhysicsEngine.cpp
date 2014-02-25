@@ -377,6 +377,27 @@
     m_pDynamicsWorld->debugDrawWorld();
   }
 
+  ///////////
+  /// TODO: Figure out why this is necessary.
+  ///////////
+
+  Eigen::Vector6d SwitchYaw(Eigen::Vector6d bad_yaw){
+    Eigen::Vector6d good_yaw;
+    good_yaw<<bad_yaw(0), bad_yaw(1), bad_yaw(2),
+        bad_yaw(4), bad_yaw(5), bad_yaw(3);
+    return good_yaw;
+  }
+
+  Eigen::Vector6d SwitchWheelYaw(Eigen::Vector6d bad_yaw){
+    Eigen::Vector6d good_yaw;
+    good_yaw<<bad_yaw(0), bad_yaw(1), bad_yaw(2),
+        bad_yaw(4), -bad_yaw(3), bad_yaw(5);
+    Eigen::Vector6d temp;
+    temp<<0,0,0,M_PI/2,0,0;
+    good_yaw = good_yaw+temp;
+    return good_yaw;
+  }
+
   ////////////////////////////////
 
   void PhysicsEngine::StepSimulation(){
@@ -390,22 +411,21 @@
         NodeMotionState* mMotion = eVehicle->m_pMotionState.get();
 
         //HOW TO PASS COMMANDS TO THE CAR:
-//                VehiclePtr pVeh = eVehicle->m_pVehicle;
-//                pVeh->setSteeringValue(M_PI/12, 0);
-//                pVeh->setSteeringValue(M_PI/12, 1);
-//                pVeh->applyEngineForce(5, 2);
-//                pVeh->applyEngineForce(5, 3);
+        VehiclePtr pVeh = eVehicle->m_pVehicle;
+        pVeh->setSteeringValue(M_PI/12, 0);
+        pVeh->setSteeringValue(0, 1);
+        pVeh->applyEngineForce(10, 2);
+        pVeh->applyEngineForce(10, 3);
 
         RaycastVehicle* pVehicle = (RaycastVehicle*) &mMotion->object;
         std::vector<Eigen::Matrix4d> VehiclePoses =
             GetVehicleTransform(pVehicle->GetName());
-        Eigen::Vector6d temp;
-        temp << 0, 0, 0, M_PI/2, 0, 0;
-        pVehicle->SetPose(_T2Cart(VehiclePoses.at(0)));
-        pVehicle->SetWheelPose(0, _T2Cart(VehiclePoses.at(1)*_Cart2T(temp)));
-        pVehicle->SetWheelPose(1, _T2Cart(VehiclePoses.at(2)*_Cart2T(temp)));
-        pVehicle->SetWheelPose(2, _T2Cart(VehiclePoses.at(3)*_Cart2T(temp)));
-        pVehicle->SetWheelPose(3, _T2Cart(VehiclePoses.at(4)*_Cart2T(temp)));
+        cout<<"Woo"<<endl<<SwitchWheelYaw(_T2Cart(VehiclePoses.at(1)))<<endl;
+        pVehicle->SetPose(SwitchYaw(_T2Cart(VehiclePoses.at(0))));
+        pVehicle->SetWheelPose(0, SwitchWheelYaw(_T2Cart(VehiclePoses.at(1))));
+        pVehicle->SetWheelPose(1, SwitchWheelYaw(_T2Cart(VehiclePoses.at(2))));
+        pVehicle->SetWheelPose(2, SwitchWheelYaw(_T2Cart(VehiclePoses.at(3))));
+        pVehicle->SetWheelPose(3, SwitchWheelYaw(_T2Cart(VehiclePoses.at(4))));
 
       }
     }

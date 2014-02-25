@@ -106,16 +106,16 @@ public:
                             parameters[SuspRestLength],parameters[WheelRadius],
                             tuning,bIsFrontWheel);
 
-    Eigen::Vector6d temp;
-    temp << 0, 0, 0, M_PI / 2, 0, 0;
-
     for (int i=0;i<bulletVehicle->getNumWheels();i++)
     {
       btWheelInfo& wheel = bulletVehicle->getWheelInfo(i);
       wheel.m_rollInfluence = parameters[RollInfluence];
-      pVehicle->SetWheelPose(i, _T2Cart(toEigen(wheel.m_worldTransform)*
-                                        _Cart2T(temp)));
+      btTransform wheelTrans = bulletVehicle->getWheelTransformWS(i);
+      pVehicle->SetWheelPose(i, _T2Cart(toEigen(wheelTrans)));
     }
+
+    btTransform chassisTrans = bulletVehicle->getChassisWorldTransform();
+    cout<<toEigen(chassisTrans)<<endl;
 
     //reset all parameters
     bulletBody->setLinearVelocity(btVector3(0,0,0));

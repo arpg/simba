@@ -98,15 +98,8 @@ public:
   }
 
   void UpdateScene(){
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    if(m_debug == false){
-      m_Phys.StepSimulation();
-      m_Render.UpdateScene();
-    }
-    else{
-      m_Phys.StepSimulation();
-      m_Phys.DebugDrawWorld();
-    }
+    m_Phys.StepSimulation();
+    m_Render.UpdateScene();
   }
 
   Eigen::Vector6d m_PoseRW;

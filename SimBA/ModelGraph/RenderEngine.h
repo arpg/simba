@@ -27,6 +27,9 @@ public:
   //////////////////////////////
   //////////////////////////////
 
+
+
+
   // Add to our list of SceneEntities
   // This will be added later in 'AddToScene'
   void AddNode( ModelNode *pNode){
