@@ -79,22 +79,22 @@ void SimDeviceManager::InitCamDevice(SimDeviceInfo& Device, string sCameraModel)
     cout<<"[SimCamera] Camera model use define by RobotURDF is: "<<sCameraModel<<endl;
     SimCamera* pSimCam = new SimCamera();
 
-    if(sSensorName == "Gray" + sCameraName)           //---------- init gray Cam
+    if(sSensorName == "Grey"+sCameraName)           //---------- init gray Cam
     {
       cout<<"[SimDeviceManager] try to init Gray camera, name is "<<sCameraName<<endl;
-      pSimCam->init(initPose, sSensorName, eSimCamLuminance,
+      pSimCam->init(initPose, sCameraName, eSimCamLuminance,
                     iFPS, sCameraModel, m_ModelGraph );
     }
-    else if(sSensorName == "RGB" + sCameraName)       //---------- init RGB Cam
+    else if(sSensorName == "RGB"+sCameraName)       //---------- init RGB Cam
     {
-      cout<<"[SimDeviceManager] try to init RGB camera, name is "<<sSensorName<<endl;
-      pSimCam->init(initPose, sSensorName, eSimCamRGB,
+      cout<<"[SimDeviceManager] try to init RGB camera, name is "<<sCameraName<<endl;
+      pSimCam->init(initPose, sCameraName, eSimCamRGB,
                     iFPS, sCameraModel, m_ModelGraph );
     }
-    else if(sSensorName == "Depth" + sCameraName)     //---------- init Depth Cam
+    else if(sSensorName == "Depth"+sCameraName)     //---------- init Depth Cam
     {
-      cout<<"[SimDeviceManager] try to init Depth camera, name is "<<sSensorName<<endl;
-      pSimCam->init(initPose, sSensorName, eSimCamLuminance | eSimCamDepth,
+      cout<<"[SimDeviceManager] try to init Depth camera, name is "<<sCameraName<<endl;
+      pSimCam->init(initPose, sCameraName, eSimCamLuminance | eSimCamDepth,
                     iFPS, sCameraModel, m_ModelGraph );
     }
 

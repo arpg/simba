@@ -643,173 +643,55 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pEle
 void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
 {
   const char* sRootContent = pElement->Name();
-
   if(strcmp(sRootContent,"Sensor")==0){
-    string sType( pElement->Attribute("Type"));
-    if(sType == "Camera"){
-      cout<<"[ParseSensorShape] Trying to init Camera"<<endl;
-      const char* sMode = pElement->Attribute("Mode");
+    cout<<"[ParseSensorShape] Trying to create a body for a Sensor"<<endl;
+    cout<<"[ParseSensorShape] Sensor Type: "<<pElement->Attribute("Mode")<<endl;
+    string sCameraName = GetAttribute( pElement, "Name")+"@"+sRobotName;
+    string sParentName = GetAttribute( pElement, "Parent")+"@"+sRobotName;
+    vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+    vector<double> dBaseline = GenNumFromChar(pElement->Attribute("Baseline"));
+    vector<double> vMass = GenNumFromChar(pElement->Attribute("Mass"));
+    vector<double> vDimension =
+        GenNumFromChar(pElement->Attribute("Dimension"));
 
-      /// Single Camera
-      if(strcmp(sMode, "RGB")==0 || strcmp(sMode,"Depth")==0 ||
-         strcmp(sMode,"Gray")==0){
-        cout<<"[ParseSensorShape] Camera Type: "<<sMode<<endl;
-        string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-        string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName; // name of body that the sensor attach to. e.g. chassis@robot1@proxy
-        string sCamMode(sMode);
-        string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
-        vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-        int iMass = 1;
+    // CREATE THE PHYSICS BODY
 
-        // create body for SimCamera
-        vPose[1] = vPose[1]+2; vPose[2] = vPose[2] -3.2;
-        BoxShape* pBox =new BoxShape(sSensorName,0.1,0.1,0.1,iMass,1,vPose);
-        m_mModelNodes[pBox->GetName()] = pBox;
+    Shape* parent = dynamic_cast<Shape*>(
+          m_mModelNodes.find(sParentName)->second);
+    Eigen::Vector6d parent_pose = parent->GetPose();
+    vector<double> vDepthCameraPose;
+    vDepthCameraPose.push_back(vPose[0]+parent_pose(0));
+    vDepthCameraPose.push_back(vPose[1]+parent_pose(1));
+    vDepthCameraPose.push_back(vPose[2]+parent_pose(2));
+    vDepthCameraPose.push_back(vPose[3]+parent_pose(3));
+    vDepthCameraPose.push_back(vPose[4]+parent_pose(4));
+    vDepthCameraPose.push_back(vPose[5]+parent_pose(5));
+    BoxShape* pCameraBox = new BoxShape(sCameraName,
+                                        vDimension[0], vDimension[1],
+                                        vDimension[2], vMass[0], 1,
+                                        vDepthCameraPose);
+    m_mModelNodes[pCameraBox->GetName()] = pCameraBox;
+    cout<<pCameraBox->GetName()<<endl;
+    // CREATE THE PHYSICS CONSTRAINT
 
-        // create joint for SimCamera
-        string sJointName = "SimCamJoint"+sCameraName; // e.g. SimCamJointLCam@robot1@proxy
-        Eigen::Vector3d vPivot;
-        Eigen::Vector3d vAxis;
-        vPivot<<vPose[0],vPose[1]+2,vPose[2]-3.2;
-        vAxis<<1,1,1;
-        HingeTwoPivot* pHinge =
-            new HingeTwoPivot(sJointName,
-                              dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                              dynamic_cast<Shape*>(m_mModelNodes.find(sSensorName)->second),
-                              vPivot, Eigen::Vector3d::Zero(),
-                              vAxis, Eigen::Vector3d::Zero());
-        m_mModelNodes[pHinge->GetName()] = pHinge;
-      }
-
-      /// RGB-Depth Camera
-      if(strcmp(sMode, "RGBD")==0 ){
-        cout<<"[ParseSensorShape] Camera Type: "<<sMode<<endl;
-        string sCameraName=
-            GetAttribute( pElement, "Name")+"@"+sRobotName;
-        string sParentName=
-            GetAttribute( pElement, "Parent")+"@"+sRobotName;
-        vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-        int iMass = 1;
-        double BodyDistance = 0.5;
-
-        ////////////////
-        /// CREATE CAMERA BODIES
-        ////////////////
-
-        // Create body to connect RGBD Cameras
-//        Eigen::Vector6d vCameraPose;
-//        vCameraPose<<vPose[0], vPose[1], vPose[2],
-//            vPose[3], vPose[4], vPose[5];
-        Shape* parent = dynamic_cast<Shape*>(
-              m_mModelNodes.find(sParentName)->second);
-        Eigen::Vector6d parent_pose = parent->GetPose();
-//        vCameraPose = vCameraPose + parent_pose;
-//        std::vector<double> CameraPose (6);
-//        CameraPose.push_back(vCameraPose(0));
-//        CameraPose.push_back(vCameraPose(1));
-//        CameraPose.push_back(vCameraPose(2));
-//        CameraPose.push_back(vCameraPose(3));
-//        CameraPose.push_back(vCameraPose(4));
-//        CameraPose.push_back(vCameraPose(5));
-//        BoxShape* pBox = new BoxShape(sCameraName, BodyDistance, 0.1, 0.1,
-//                                      iMass, 1, CameraPose);
-//        m_mModelNodes[pBox->GetName()] = pBox;
-
-        // Create body for Depth Cam
-        string sDepthBodyName = "Depth"+sCameraName;
-        vector<double> vDepthCameraPose;
-        vDepthCameraPose.push_back(vPose[0]-1+parent_pose(0));
-        vDepthCameraPose.push_back(vPose[1]+parent_pose(1));
-        vDepthCameraPose.push_back(vPose[2]+parent_pose(2));
-        vDepthCameraPose.push_back(0+parent_pose(3));
-        vDepthCameraPose.push_back(0+parent_pose(4));
-        vDepthCameraPose.push_back(0+parent_pose(5));
-        BoxShape* pDepthBox = new BoxShape(sDepthBodyName, 0.1, 0.1, 0.1,
-                                           iMass, 1, vDepthCameraPose);
-        m_mModelNodes[pDepthBox->GetName()] = pDepthBox;
-
-        // Create body for RGB Cam
-        string sRGBBodyName = "RGB"+sCameraName;
-        vector<double> vRGBCameraPose;
-        vRGBCameraPose.push_back(vPose[0]+1+parent_pose(0));
-        vRGBCameraPose.push_back(vPose[1]+parent_pose(1));
-        vRGBCameraPose.push_back(vPose[2]+parent_pose(2));
-        vRGBCameraPose.push_back(0+parent_pose(3));
-        vRGBCameraPose.push_back(0+parent_pose(4));
-        vRGBCameraPose.push_back(0+parent_pose(5));
-
-        BoxShape* pRGBbox =new BoxShape(sRGBBodyName, 0.1, 0.1, 0.1,
-                                        iMass, 1, vRGBCameraPose);
-        m_mModelNodes[pRGBbox->GetName()] = pRGBbox;
-
-//        /// create joints
-        Eigen::Vector3d vPivot;
-        Eigen::Vector3d vAxis;
-//        string sJointName = "SimCamJoint"+sCameraName;
-//        vPivot<< 0, 0, 0;
-//        vAxis<<0,-1,0;
-//        HingeTwoPivot* pRGBDHinge =
-//            new HingeTwoPivot(sJointName,
-//                              dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-//                              pBox,
-//                              vPivot, Eigen::Vector3d::Zero(),
-//                              vAxis, Eigen::Vector3d::Zero());
-//        m_mModelNodes[pRGBDHinge->GetName()] = pRGBDHinge;
-
-        // 2.1 create joint for RGB body and RGBDCamBody
-        string sRGBJointName = "SimCamJoint"+sRGBBodyName;
-        vPivot<< 1, 0, 0;
-        vAxis<< 1,0,0;
-        HingeTwoPivot* pRGBHinge =
-            new HingeTwoPivot(sRGBJointName,
-                              dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                              dynamic_cast<Shape*>(m_mModelNodes.find(sRGBBodyName)->second),
-                              vPivot, Eigen::Vector3d::Zero(),
-                              vAxis, Eigen::Vector3d::Zero());
-        pRGBHinge->SetLimits(-0.01, 0.01, 1, .1, 1);
-        m_mModelNodes[pRGBHinge->GetName()] = pRGBHinge;
-
-        // 2.2 create joint for Depth body and RGBDCamBody
-        string sDepthJointName = "SimCamJoint"+sDepthBodyName;
-        vPivot<< -1, 0, 0;
-        vAxis<<  1, 0, 0;
-        HingeTwoPivot* pDepthHinge =
-            new HingeTwoPivot( sDepthJointName,
-                               dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                               dynamic_cast<Shape*>(m_mModelNodes.find(sDepthBodyName)->second),
-                               vPivot, Eigen::Vector3d::Zero(),
-                               vAxis, Eigen::Vector3d::Zero());
-        pDepthHinge->SetLimits(-0.01, 0.01, 1, .1, 1);
-        m_mModelNodes[pDepthHinge->GetName()] = pDepthHinge;
-      }
-      cout<<"[ParseSensorShape] Successfully init Camera."<<endl;
-    }
-
-    //        if(sType=="GPS")
-    //        {
-    //          string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-    //          string sParentName= GetAttribute( pElement, "Parent")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-    //          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-    //          int iMass = 1;
-    //          // string sMeshdir(pElement->Attribute("Dir"));
-
-    //          // create body for it
-    //          BoxShape* pBox =new BoxShape(sBodyName, 0.1,0.1,0.1,iMass, 1, vPose);
-    //          m_mModelNodes.insert(std::pair<std::string, Shape*>(sBodyName,pBox));
-
-    //          // create joint for SimGPS
-    //          string sJointName = "GPSJoint"+sBodyName;
-    //          Eigen::Vector3d vPivot;
-    //          Eigen::Vector3d vAxis;
-    //          vPivot<<vPose[0],vPose[1],vPose[2];
-    //          vAxis<<1,0,0;
-    //          //HingeJoint* pHinge = new HingeJoint( sJointName, m_mModelNodes.find(sParentName)->second, m_mModelNodes.find(sBodyName)->second, vPivot[0], vPivot[1], vPivot[2], vAxis[0],vAxis[1],vAxis[2],100,100,0,M_PI );
-    //        }
-
+    Eigen::Vector3d vPivot;
+    Eigen::Vector3d vAxis;
+    string sCameraJointName = "SimCamJoint"+sCameraName;
+    vPivot<< -vPose[0], -vPose[1], -vPose[2];
+    vAxis<< 1, 0, 0;
+    HingeTwoPivot* pCameraHinge =
+        new HingeTwoPivot(sCameraJointName,
+                          dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
+                          dynamic_cast<Shape*>(m_mModelNodes.find(sCameraName)->second),
+                          Eigen::Vector3d::Zero(), vPivot,
+                          vAxis, vAxis);
+    pCameraHinge->SetLimits(-0.01, 0.01, 1, .1, 1);
+    m_mModelNodes[pCameraHinge->GetName()] = pCameraHinge;
   }
 
-}
+  cout<<"[ParseSensorShape] Successfully init Sensor body."<<endl;
 
+}
 
 ////////////////////////////////////////////////////////////
 /// PARSE ROBOT.XML FOR DEVICES AND BUILD INTO ROBOTPROXY
@@ -864,18 +746,19 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
         if(strcmp(sMode, "RGBD")==0 )
         {
           string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-          string sRGBBodyName = "RGB"+sCameraName;
-          string sDepthBodyName = "Depth"+sCameraName;
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
           vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+          vector<double> vBaseline =
+              GenNumFromChar(pElement->Attribute("Baseline"));
 
-          // 3 save intp device, this device have two sensors
+          // 3 save into device, this device have two sensors
           SimDeviceInfo Device;
           Device.m_sDeviceName = sCameraName;
           Device.m_sDeviceType = sType;
           Device.m_iFPS = iFPS;
-          Device.m_vSensorList.push_back(sRGBBodyName);
-          Device.m_vSensorList.push_back(sDepthBodyName);
+          Device.m_iBaseline = vBaseline[0];
+          Device.m_vSensorList.push_back("RGB"+sCameraName);
+          Device.m_vSensorList.push_back("Depth"+sCameraName);
           Device.m_vModel.push_back(sModel);
           Device.m_vModel.push_back(sModel);
           Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];

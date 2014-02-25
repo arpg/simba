@@ -153,6 +153,8 @@ class SimCamera
        void Update()
        {
            m_Camera.SetPoseRobot( _Cart2T(GetCameraPoseByBody()) );
+           cout<<"camera pose is:"<<endl<<m_ModelGraph->m_Phys.GetEntity6Pose( m_sDeviceName )<<endl;
+
            m_Camera.RenderToTexture();
            m_Camera.DrawCamera();
 

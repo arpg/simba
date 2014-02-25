@@ -412,7 +412,7 @@
 
         //HOW TO PASS COMMANDS TO THE CAR:
         VehiclePtr pVeh = eVehicle->m_pVehicle;
-        pVeh->setSteeringValue(M_PI/12, 0);
+        pVeh->setSteeringValue(0, 0);
         pVeh->setSteeringValue(0, 1);
         pVeh->applyEngineForce(10, 2);
         pVeh->applyEngineForce(10, 3);

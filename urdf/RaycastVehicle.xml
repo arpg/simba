@@ -45,7 +45,7 @@
      <param name="Magic E"          value="-5"/>
  </bodybase>
 
-<!--Sensors  -->
+<!--Sensors  
 <body name="Stick" 
   dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"  
   mass="1"
@@ -65,8 +65,13 @@
   <bias setting  = "0.3" />
   <relaxation setting = "1" />
 </joint>
-
+-->
 <!-- The poses for this camera are in relation to its parent shape -->
+<!-- This needs to be more descriptive. We need a baseline and specific
+     positions for both cameras in an RGBD setup if we're going to make
+     two separate bodies for them. -->
+<!-- Baseline should be in relation to y-axis; this is why it's longer
+     than the x- or z-dimension -->
 <Sensor Name="LCamera"
   Type="Camera"
   Driver="Node2Cam"
@@ -74,10 +79,14 @@
   Mode="RGBD"
   FPS="30"
   Align="true"
-  Parent="Stick"
-  Pose=".2,0,0,0,0,0"
+  Parent="RaycastVehicle"
+  Mass="0.01"
+  Dimension="0.2, 0.5, 0.2"
+  Pose="0,0,2,0,0,0"
+  Baseline="0.1"
   Location="@Proxy1"
   Model="/home/bminortx/Code/SimBA/SimBA/SimDevices/Sensor/cameras.xml"/>
+
 
   <!-- Lu: Must include this sensor if you use RobotProxy!
   RobotProxy needs this sensor to get the robot's pose information. -->
