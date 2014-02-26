@@ -3,6 +3,7 @@
 
 #include <ModelGraph/Shape.h>
 #include <ModelGraph/VehicleEnums.h>
+#include <iostream>
 
 // It's a simple class, but enough to hold the info we need.
 

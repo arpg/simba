@@ -1,14 +1,13 @@
 #ifndef CARCONTROLLER_H
 #define CARCONTROLLER_H
 
-#include "ModelGraph/ModelGraphBuilder.h"
+#include "SimDevices/Controller/Controller.h"]
 
-class CarController
+class CarController: public Controller
 {
 public:
 
   CarController(){
-
   }
 
   void init(string ControllerName, string sRobotName,
@@ -20,7 +19,6 @@ public:
     m_dSteering = 0;
     m_dTorque = 0;
   }
-
 
   //    // -----------------------------------------------------------------------------------------------------------------------
   //    // update command from statekeeper (in 'with statekeeper' mode) or node controller (in 'with Network' mode) or robot proxy (in 'without network' mode)
@@ -132,10 +130,7 @@ public:
 
 
 private:
-  string m_sControllerName;
-  ModelGraphBuilder m_Scene;
-  string m_sProxyName;
-  string m_sRobotName;
+
   double m_dSteering;
   double m_dTorque;
 };

@@ -103,8 +103,9 @@ public:
 
   /////
 
-  // Register controller device in Proxy. This RPC function is called by hal. Once we register a controller,
-  // The proxy will need to subscribe to it and then we can use recv and publish method to sync command between
+  // Register controller device in LoaclSim. This RPC function is called by hal.
+  // Once we register a controller, LocalSim will need to subscribe to it and
+  // then we can use recv and publish method to sync command between
   // controller and proxy.
 
   static void _RegisterControllerDevice(
