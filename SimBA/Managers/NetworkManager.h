@@ -12,10 +12,20 @@
 
 using namespace std;
 
+/*****************************************************
+  * NETWORK MANAGER
+  * NetworkManager manages two connections from LocalSim:
+  *  1. Communicating between the Node system in HAL for controller/sensor
+  *     input and output
+  *  2. Communicating with a StateKeeper, if one is initialized.
+  * If either one of these systems is disconnected, we just skip 'em.
+  ****************************************************/
+
 class NetworkManager
 {
 public:
-  int m_SubscribeNum; // num of clients that subscribe to RobotProxy
+
+  int m_iNodeClients; // num of Node clients that subscribe to LocalSim
 
   ////////////////////
   // FUNCTIONS
@@ -23,28 +33,25 @@ public:
 
   /// INITIALIZE NODE NETWORK AND ALL DEVICES
   //-----------------------------------------------------
-  bool Init(string sProxyName,
-                   string sServerName,
-                   int verbocity=0);
+  bool Init(string sProxyName, string sServerName, int verbocity=0);
 
-  bool PubRobotIfNeeded(RobotsManager* pRobotsManager);
-
-  void PubRegisterDevicesIfNeeded(SimDeviceManager* pSimDeviceManager);
+  bool RegisterRobot(RobotsManager* pRobotsManager);
+  void RegisterDevices(SimDeviceManager* pSimDeviceManager);
 
   /// REGISTER AND DELETE ROBOTS FROM THE NETWORK
   //-----------------------------------------------------
-  /// Used in StateKeeper and RobotProxy
-  bool RegisterRobotProxyWithStateKeeper();
-  void AddRobotByURDF(RobotProxyAddNewRobotReqMsg& mRequest,
-                      RobotProxyAddNewRobotRepMsg& mReply);
-  void DeleteRobot(RobotProxyDeleteRobotReqMsg& mRequest,
-                   RobotProxyDeleteRobotRepMsg& mReply);
-  bool PublishRobotFullStateToStateKeeper();
-  bool ReceiveWorldFullStateFromStateKeeper();
+  /// Used in StateKeeper and LocalSim
+  bool RegisterWithStateKeeper();
+  void AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
+                      LocalSimAddNewRobotRepMsg& mReply);
+  void DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
+                   LocalSimDeleteRobotRepMsg& mReply);
+  bool PublishRobotToStateKeeper();
+  bool ReceiveWorldFromStateKeeper();
 
   /// REGISTER AND DELETE DEVICES FROM THE SIMULATION
   //-----------------------------------------------------
-  /// Used in HAL and RobotProxy
+  /// Used in HAL and LocalSim
   void RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
                          RegisterNodeCamRepMsg & mReply);
 
@@ -68,16 +75,16 @@ public:
   //////////////////////////////////////
 
   // add a new robot by URDF (Called by StateKeeper)
-  static void _AddRobotByURDF(RobotProxyAddNewRobotReqMsg& mRequest,
-                              RobotProxyAddNewRobotRepMsg& mReply,
+  static void _AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
+                              LocalSimAddNewRobotRepMsg& mReply,
                               void* pUserData){
     ((NetworkManager*)pUserData)->AddRobotByURDF(mRequest, mReply);
   }
 
   /////
 
-  static void _DeleteRobot(RobotProxyDeleteRobotReqMsg& mRequest,
-                                           RobotProxyDeleteRobotRepMsg& mReply,
+  static void _DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
+                                           LocalSimDeleteRobotRepMsg& mReply,
                                            void* pUserData){
     ((NetworkManager*)pUserData)->DeleteRobot(mRequest, mReply);
   }

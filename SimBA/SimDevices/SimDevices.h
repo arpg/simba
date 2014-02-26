@@ -1,4 +1,4 @@
-// the following sim device sim data from sim world (e.g. RobotProxy)
+// the following sim device sim data from sim world (e.g. LocalSim)
 
 #include <iostream>
 #include <vector>

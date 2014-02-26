@@ -26,7 +26,7 @@ using namespace SceneGraph;
 using namespace boost;
 
 #define USAGE \
-"USAGE: Robot -n <RobotName> -n <RobotProxyName>\n"\
+"USAGE: Robot -n <RobotName> -n <LocalSimName>\n"\
 "      --URDFFileName, -n           Name of URDF for this Robot.\n"\
 
 class KeyControl
@@ -110,7 +110,7 @@ int main( int argc, char** argv )
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
         // ACT: Send commands to the robot
-//      if (app.PublishCommandToRobotProxy()==true)
+//      if (app.PublishCommandToLocalSim()==true)
 //      {
 
         if( !Cam.Capture(vImages) )

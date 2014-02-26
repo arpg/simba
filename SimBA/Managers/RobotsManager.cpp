@@ -63,7 +63,7 @@ void RobotsManager::DeleteRobot(string sRobotName)
 ////////////////////////////////////////////////////////////////////////
 
 // Update the full world state: include all poses, commands and velocity
-// information of all bodies creating the main robot from each RobotProxy
+// information of all bodies creating the main robot from each LocalSim
 
 void RobotsManager::UpdateWorldFullState(WorldFullStateMsg worldfullstate)
 {
@@ -82,8 +82,8 @@ void RobotsManager::ApplyWorldFullStateOnAllPlayers()
 
 ////////////////////////////////////////////////////////////////////////
 
-// Simply apply the poses of all main robots from all other RobotProxys.
-// DO NOT apply the pose of this RobotProxy's main robot.
+// Simply apply the poses of all main robots from all other LocalSims.
+// DO NOT apply the pose of this LocalSim's main robot.
 
 void RobotsManager::ApplyWorldFullState()
 {

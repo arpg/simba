@@ -1,5 +1,5 @@
 /*
-   RobotProxy, By luma. 2013.03
+   LocalSim, By luma. 2013.03
  */
 
 #include <iostream>
@@ -28,13 +28,13 @@ using namespace boost;
 #define USAGE    \
 "USAGE: Robot -n <ProxyName> -r <robot.xml directory> -w <world.xml directory> -s <StateKeeper Option>\n"\
 "      Options:\n"\
-"      --ProxyName, -n              Name of this RobotProxy.\n"\
+"      --ProxyName, -n              Name of this LocalSim.\n"\
 "      --Robot.xml, -r              Directory where robot.xml is stored.\n"\
 "      --World.xml, -w              Directory where world.xml is store.\n"\
 "      --Statekeeper Option -s      either 'StateKeeperName' or 'WithoutServer'"
 
 
-class RobotProxy
+class LocalSim
 {
     public:
         ///////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ class RobotProxy
         PhyModelGraphAgent          m_PhyMGAgent;          // for one sim proxy, there is one PhyAgent
 
         ///////////////////////////////////////////////////////////////////
-        RobotProxy(
+        LocalSim(
                 SceneGraph::GLSceneGraph& glGraph,  //< Input: reference to glGraph
                 const std::string& sProxyName,      //< Input: name of robot proxy
                 const std::string& sRobotURDF,        //< Input: location of meshes, models, maps etc
@@ -71,7 +71,7 @@ class RobotProxy
         // 1, parse world.xml file
             if( ParseWorld(m_sWorldURDFFile.c_str(), m_WorldManager) != true)
             {
-                cout<<"[RobotProxy] Cannot parse "<< m_sWorldURDFFile<<". Exit."<<endl;
+                cout<<"[LocalSim] Cannot parse "<< m_sWorldURDFFile<<". Exit."<<endl;
                 exit(-1);
             }
 
@@ -79,14 +79,14 @@ class RobotProxy
             XMLDocument RobotURDF;
             if(GetXMLdoc(sRobotURDF, RobotURDF)!= true)
             {
-                cout<<"[RobotProxy] Cannot open "<<sRobotURDF<<endl;
+                cout<<"[LocalSim] Cannot open "<<sRobotURDF<<endl;
                 exit(-1);
             }
 
         // 3, Init Agent between Physic Engine and ModelGraph
             if(m_PhyMGAgent.init()!=true)
             {
-                cout<<"[RobotProxy] Cannot init Physic ModelGraph Agent."<<endl;
+                cout<<"[LocalSim] Cannot init Physic ModelGraph Agent."<<endl;
                 exit(-1);
             }
 
@@ -94,7 +94,7 @@ class RobotProxy
             m_RobotManager.Init(m_PhyMGAgent,m_Render);
             if( m_RobotManager.AddRobot(RobotURDF, m_sProxyName) !=true)
             {
-                cout<<"[RobotProxy] Cannot add new robot to RobotManager."<<endl;
+                cout<<"[LocalSim] Cannot add new robot to RobotManager."<<endl;
                 exit(-1);
             }
 
@@ -265,7 +265,7 @@ int main( int argc, char** argv )
 
     // sinle application context holds everything
     SceneGraph::GLSceneGraph  glGraph;
-    RobotProxy mProxy( glGraph, sProxyName, sRobotURDF, sWorldURDF, sServerOption); // initialize exactly one RobotProxy
+    LocalSim mProxy( glGraph, sProxyName, sRobotURDF, sWorldURDF, sServerOption); // initialize exactly one LocalSim
     mProxy.InitReset(); // this will populate the scene graph with objects and
     // register these objects with the simulator.
 
@@ -299,29 +299,29 @@ int main( int argc, char** argv )
 
     //---------------------------------------------------------------------------------------------
     // register a keyboard hook to trigger the reset method
-    RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r', boost::bind( &RobotProxy::InitReset, &mProxy ) );
+    RegisterKeyPressCallback( pangolin::PANGO_CTRL + 'r', boost::bind( &LocalSim::InitReset, &mProxy ) );
 
     // simple asdw control
-    RegisterKeyPressCallback( 'a', bind( &RobotProxy::LeftKey, &mProxy ) );
-    RegisterKeyPressCallback( 'A', bind( &RobotProxy::LeftKey, &mProxy ) );
+    RegisterKeyPressCallback( 'a', bind( &LocalSim::LeftKey, &mProxy ) );
+    RegisterKeyPressCallback( 'A', bind( &LocalSim::LeftKey, &mProxy ) );
 
-    RegisterKeyPressCallback( 's', bind( &RobotProxy::ReverseKey, &mProxy ) );
-    RegisterKeyPressCallback( 'S', bind( &RobotProxy::ReverseKey, &mProxy ) );
+    RegisterKeyPressCallback( 's', bind( &LocalSim::ReverseKey, &mProxy ) );
+    RegisterKeyPressCallback( 'S', bind( &LocalSim::ReverseKey, &mProxy ) );
 
-    RegisterKeyPressCallback( 'd', bind( &RobotProxy::RightKey, &mProxy ) );
-    RegisterKeyPressCallback( 'D', bind( &RobotProxy::RightKey, &mProxy ) );
+    RegisterKeyPressCallback( 'd', bind( &LocalSim::RightKey, &mProxy ) );
+    RegisterKeyPressCallback( 'D', bind( &LocalSim::RightKey, &mProxy ) );
 
-    RegisterKeyPressCallback( 'w', bind( &RobotProxy::ForwardKey, &mProxy ) );
-    RegisterKeyPressCallback( 'W', bind( &RobotProxy::ForwardKey, &mProxy ) );
-    RegisterKeyPressCallback( ' ', bind( &RobotProxy::StepForward, &mProxy ) );
+    RegisterKeyPressCallback( 'w', bind( &LocalSim::ForwardKey, &mProxy ) );
+    RegisterKeyPressCallback( 'W', bind( &LocalSim::ForwardKey, &mProxy ) );
+    RegisterKeyPressCallback( ' ', bind( &LocalSim::StepForward, &mProxy ) );
 
     // SimCamera control
-    RegisterKeyPressCallback( '8', bind( &RobotProxy::IncreaseCamPitch, &mProxy ) ); // up
-    RegisterKeyPressCallback( '5', bind( &RobotProxy::DecreaseCamPitch, &mProxy ) ); // down
-    RegisterKeyPressCallback( '4', bind( &RobotProxy::IncreaseCamYaw, &mProxy ) );// letf
-    RegisterKeyPressCallback( '6', bind( &RobotProxy::DecreaseCamYaw, &mProxy ) );// right
-    RegisterKeyPressCallback( '1', bind( &RobotProxy::IncreaseCamRoll, &mProxy ) );
-    RegisterKeyPressCallback( '3', bind( &RobotProxy::DecreaseCamRoll, &mProxy ) );
+    RegisterKeyPressCallback( '8', bind( &LocalSim::IncreaseCamPitch, &mProxy ) ); // up
+    RegisterKeyPressCallback( '5', bind( &LocalSim::DecreaseCamPitch, &mProxy ) ); // down
+    RegisterKeyPressCallback( '4', bind( &LocalSim::IncreaseCamYaw, &mProxy ) );// letf
+    RegisterKeyPressCallback( '6', bind( &LocalSim::DecreaseCamYaw, &mProxy ) );// right
+    RegisterKeyPressCallback( '1', bind( &LocalSim::IncreaseCamRoll, &mProxy ) );
+    RegisterKeyPressCallback( '3', bind( &LocalSim::DecreaseCamRoll, &mProxy ) );
 
 
     //---------------------------------------------------------------------------------------------

@@ -115,7 +115,6 @@ public:
     }
 
     btTransform chassisTrans = bulletVehicle->getChassisWorldTransform();
-    cout<<toEigen(chassisTrans)<<endl;
 
     //reset all parameters
     bulletBody->setLinearVelocity(btVector3(0,0,0));

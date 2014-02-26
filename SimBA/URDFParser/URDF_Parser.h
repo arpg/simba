@@ -13,7 +13,7 @@
 
 /////////////////////////////////
 /// URDF PARSER
-/// This file merges the RobotProxyURDFParser and the StateKeeperURDFParser
+/// This file merges the LocalSimURDFParser and the StateKeeperURDFParser
 /// There was no reason that there should have been two files, as far as I can
 /// tell. They parse the same files, after all.
 /// ------------
@@ -60,7 +60,7 @@ public:
                     string sProxyName);
 
   // This method is used in StateKeeper to initialize the position of every
-  // object in the RobotProxy.
+  // object in the LocalSim.
   bool ParseWorldForInitRobotPose(const char* filename,
                                  vector<Eigen::Vector6d>& vRobotInitPose);
 

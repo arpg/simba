@@ -55,13 +55,13 @@ message URDFMsg
 
 
 //-------------------------------------------------------------------------------------------------------
-message RegisterRobotProxyReqMsg
+message RegisterLocalSimReqMsg
 {
     required string             proxy_name         =1;
     optional URDFMsg            urdf               =2; // send proxy's URDf to StateKeeper
 }
 
-message RegisterRobotProxyRepMsg
+message RegisterLocalSimRepMsg
 {
     required string              robot_name         =1;
     required int32               time_step          =2;
@@ -72,26 +72,26 @@ message RegisterRobotProxyRepMsg
 
 
 //-------------------------------------------------------------------------------------------------------
-message RobotProxyAddNewRobotReqMsg                    // for each request, only add one robot
+message LocalSimAddNewRobotReqMsg                    // for each request, only add one robot
 {
     required string             robot_name         =1; // name of robot that want to be added
     required URDFMsg            urdf               =2; // urdf file of new robot
     required Vector6Msg         init_pose          =3; // initial pose of new robot's bodybase
 }
 
-message RobotProxyAddNewRobotRepMsg
+message LocalSimAddNewRobotRepMsg
 {
     optional string             message            =1; // reply success message
 }
 
 
 //-------------------------------------------------------------------------------------------------------
-message RobotProxyDeleteRobotReqMsg                    // for each request, only delete one robot
+message LocalSimDeleteRobotReqMsg                    // for each request, only delete one robot
 {
     required string             robot_name         =1; // name of robot that want to be delete
 }
 
-message RobotProxyDeleteRobotRepMsg
+message LocalSimDeleteRobotRepMsg
 {
     optional string             message            =1; // reply success message
 }
@@ -117,7 +117,7 @@ message WorldFullStateMsg
 
 
 
-///////////////////////// for Robot and RobotProxy /////////////////////
+///////////////////////// for Robot and LocalSim /////////////////////
 message RegisterRobotReqMsg
 {
     required string             name               =1;

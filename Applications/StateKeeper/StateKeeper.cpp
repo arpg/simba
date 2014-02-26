@@ -16,7 +16,7 @@ StateKeeper::StateKeeper(string sStateKeeperName, string sWorldURDFFile)
   m_Node.advertise( "WorldState" );
 
   // set up a remote procedure call
-  m_Node.provide_rpc("RegisterRobotProxy",&_RegisterRobotProxy,this);
+  m_Node.provide_rpc("RegisterLocalSim",&_RegisterLocalSim,this);
 
   // init timestep
   m_iTimeStep=0;
@@ -41,8 +41,8 @@ void StateKeeper::InitRobotPose()
 
 ////////////////////////////////////////////////////////////////////////
 
-void StateKeeper::RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
-                                     RegisterRobotProxyRepMsg& mReply){
+void StateKeeper::RegisterLocalSim(RegisterLocalSimReqMsg& mRequest,
+                                     RegisterLocalSimRepMsg& mReply){
   // 1. Initialize the robot's pose.
   m_eLastJoinRobotInitPose = m_vInitialPose[0];
   m_vInitialPose.erase(m_vInitialPose.begin());
@@ -59,7 +59,7 @@ void StateKeeper::RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
 
   // 2. reply all urdf file that StateKeeper current hold to new joint proxy
   std::map<string, URDFMsg*>::iterator iter;
-  cout<<"[StateKeeper/RegisterRobotProxy] Pakcing "<<m_mURDF.size()<<" URDF files to new join proxy "<<mRequest.proxy_name()<<endl;
+  cout<<"[StateKeeper/RegisterLocalSim] Pakcing "<<m_mURDF.size()<<" URDF files to new join proxy "<<mRequest.proxy_name()<<endl;
   for(iter=m_mURDF.begin();iter!=m_mURDF.end();iter++)
   {
     URDFMsg* pPreviousURDF = iter->second;
@@ -68,7 +68,7 @@ void StateKeeper::RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
     // pReplyURDF->set_robot_name(pPreviousURDF->robot_name()); // it is very strange that this line doesn't work. need to fix this error in the furture.
     pReplyURDF->set_robot_name(iter->first);
     pReplyURDF->set_xml(pPreviousURDF->xml());
-    cout<<"[StateKeeper/RegisterRobotProxy] Prepare previous robot URDF with robot name "<<sRobotName<<", key string name "<<iter->first<<" for "<<mRequest.proxy_name()<<endl;
+    cout<<"[StateKeeper/RegisterLocalSim] Prepare previous robot URDF with robot name "<<sRobotName<<", key string name "<<iter->first<<" for "<<mRequest.proxy_name()<<endl;
   }
 
 
@@ -76,11 +76,11 @@ void StateKeeper::RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
   string sServiceName= mRequest.proxy_name()+"/RobotState";
   if( m_Node.subscribe(sServiceName) == false )
   {
-    cout<<"[StateKeeper/RegisterRobotProxy] Error subscribing to "<<sServiceName<<". Forbid client: "<<mRequest.proxy_name()<<"."<<endl;
+    cout<<"[StateKeeper/RegisterLocalSim] Error subscribing to "<<sServiceName<<". Forbid client: "<<mRequest.proxy_name()<<"."<<endl;
   }
   else
   {
-    cout<<"[StateKeeper/RegisterRobotProxy] subscribe to '"<<sServiceName<<"' success."<<endl;
+    cout<<"[StateKeeper/RegisterLocalSim] subscribe to '"<<sServiceName<<"' success."<<endl;
   }
 
   // 3. send URDF of new client to all other Proxys.
@@ -92,7 +92,7 @@ void StateKeeper::RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
   URDFMsg* newURDF = mRequest.mutable_urdf();
   m_mURDF.insert(pair<string, URDFMsg* >(newURDF->robot_name(), newURDF));
 
-  cout<<"[StateKeeper/RegisterRobotProxy] proxy '"<<mRequest.proxy_name()<<"' join statekeeper success. Save its urdf file with robot name '"
+  cout<<"[StateKeeper/RegisterLocalSim] proxy '"<<mRequest.proxy_name()<<"' join statekeeper success. Save its urdf file with robot name '"
      <<newURDF->robot_name()<<"' success. Now Statekeeper has "<<m_mURDF.size()<<" URDF files."<<endl;
 
 }
@@ -122,7 +122,7 @@ bool StateKeeper::CheckIfNeedToSendProxysURDF()
       string sProxyName = vProxyNames[i];
       if(sProxyName!= GetRobotLastName( m_sLastJoinRobotName))
       {
-        RobotProxyAddNewRobotReqMsg mRequest;
+        LocalSimAddNewRobotReqMsg mRequest;
 
         // 1. set robot name
         mRequest.set_robot_name(pURDF->robot_name());
@@ -141,7 +141,7 @@ bool StateKeeper::CheckIfNeedToSendProxysURDF()
         mRequest.mutable_init_pose()->set_r(m_eLastJoinRobotInitPose[5]);
 
         // 4. call rpc method
-        RobotProxyAddNewRobotRepMsg mReply;
+        LocalSimAddNewRobotRepMsg mReply;
         string sServiceName = vProxyNames[i]+"/AddRobotByURDF";
         if( m_Node.call_rpc(sServiceName, mRequest, mReply) ==false)
         {
@@ -195,9 +195,9 @@ bool StateKeeper::CheckIfNeedToDeleteRobotInAllProxys()
       string sRobotNeedToBeDeleteName = iter->second;
       cout<<"[StateKeeper] Detect robot: "<<sRobotNeedToBeDeleteName<<" need to be delete!"<<endl;
 
-      RobotProxyDeleteRobotReqMsg mRequest;
+      LocalSimDeleteRobotReqMsg mRequest;
       mRequest.set_robot_name(sRobotNeedToBeDeleteName);
-      RobotProxyDeleteRobotRepMsg  mReply;
+      LocalSimDeleteRobotRepMsg  mReply;
 
       // call rpc method of all subscribe client
       for(unsigned int j=0;j!=m_Node.GetSubscribeClientName().size();j++)

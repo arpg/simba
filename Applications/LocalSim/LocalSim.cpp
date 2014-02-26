@@ -24,7 +24,7 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   XMLDocument RobotURDF, WorldURDF;
   GetXMLdoc(sRobotURDFPath, RobotURDF);
   GetXMLdoc(sWorldURDFPath, WorldURDF);
-  
+
   // 2. Parse our world and our robot for objects in the scene.
   m_Parser.ParseWorld(WorldURDF, m_SimWorld);
   m_Parser.ParseDevices(RobotURDF, m_SimDeviceManager, sLocalSimName);
@@ -44,10 +44,10 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   // 6. Initialize the Network
   m_NetworkManager.Init( m_sLocalSimName, sServerOption);
 
-  m_NetworkManager.PubRobotIfNeeded(&m_RobotManager);
+  m_NetworkManager.RegisterRobot(&m_RobotManager);
 
   // 7, if run in with network mode, LocalSim network will publish sim device
-  m_NetworkManager.PubRegisterDevicesIfNeeded(&m_SimDeviceManager);
+  m_NetworkManager.RegisterDevices(&m_SimDeviceManager);
 
   cout<<"[LocalSim] Init Local Sim Success!"<<endl;
 }

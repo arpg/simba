@@ -78,11 +78,9 @@ list(APPEND SIMDEVICES_HDRS
 
 list(APPEND SIMDEVICES_CONTROLLER_HDRS
   SimDevices/Controller/CarController.h
-  SimDevices/Controller/HingeController.h
   SimDevices/Controller/PoseController.h
   SimDevices/Controller/PIDControl.h
   SimDevices/Controller/SimpleAIController.h
-  SimDevices/Controller/Controller.h
   SimDevices/Controller/PIDController.h
   SimDevices/Controller/SimpleController.h
 )

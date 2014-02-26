@@ -21,8 +21,8 @@ public:
 
   ///Functions
   void InitRobotPose();
-  void RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
-                          RegisterRobotProxyRepMsg& mReply);
+  void RegisterLocalSim(RegisterLocalSimReqMsg& mRequest,
+                          RegisterLocalSimRepMsg& mReply);
   bool CheckIfNeedToSendProxysURDF();
   bool CheckIfNeedToDeleteRobotInAllProxys();
   bool ReceiveWorldFullState();
@@ -31,12 +31,12 @@ public:
 
   ////////////////////////////////////////////////////////////////////////
 
-  // Register a RobotProxy with the StateKeeper using its name.
+  // Register a LocalSim with the StateKeeper using its name.
 
-  static void _RegisterRobotProxy(RegisterRobotProxyReqMsg& mRequest,
-                                               RegisterRobotProxyRepMsg& mReply,
+  static void _RegisterLocalSim(RegisterLocalSimReqMsg& mRequest,
+                                               RegisterLocalSimRepMsg& mReply,
                                                void* pUserData){
-    ((StateKeeper*)pUserData)->RegisterRobotProxy(mRequest, mReply);
+    ((StateKeeper*)pUserData)->RegisterLocalSim(mRequest, mReply);
   }
 
   /////////

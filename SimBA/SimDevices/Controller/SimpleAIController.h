@@ -1,4 +1,4 @@
-// provide a simple AI that control Robot in RobotProxy
+// provide a simple AI that control Robot in LocalSim
 
 #ifndef SIMPLEAICONTROLLER_H
 #define SIMPLEAICONTROLLER_H

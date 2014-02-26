@@ -8,7 +8,7 @@ URDF_Parser::URDF_Parser(){
 }
 
 ////////////////////////////////////////////////////////////
-/// PARSE WORLD.XML IN ROBOTPROXY
+/// PARSE WORLD.XML IN LocalSim
 ////////////////////////////////////////////////////////////
 bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
 {
@@ -54,7 +54,7 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
 }
 
 ////////////////////////////////////////////////////////////
-/// PARSE ROBOT.XML FOR ROBOT PARTS AND BUILD INTO ROBOTPROXY
+/// PARSE ROBOT.XML FOR ROBOT PARTS AND BUILD INTO LocalSim
 /// The robot name format: robotname@proxyname. e.g. robot1@proxy1.
 /// All devices will live under this name.
 /// The name of any robot body is: BodyName@RobotName@ProxyName
@@ -694,7 +694,7 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
 }
 
 ////////////////////////////////////////////////////////////
-/// PARSE ROBOT.XML FOR DEVICES AND BUILD INTO ROBOTPROXY
+/// PARSE ROBOT.XML FOR DEVICES AND BUILD INTO LocalSim
 ////////////////////////////////////////////////////////////
 bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
                                 SimDeviceManager& m_SimDeviceManager,
