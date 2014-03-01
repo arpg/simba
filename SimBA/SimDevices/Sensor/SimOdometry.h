@@ -1,7 +1,6 @@
 #ifndef SIMODOMETRY_H
 #define SIMODOMETRY_H
 
-#include <SimDevices/SimDevices.h>
 // return x,y,th in 2D. This sensor measures how many truns (rotation) of the wheel and compute x,y,th.
 class SimOdometry
 {

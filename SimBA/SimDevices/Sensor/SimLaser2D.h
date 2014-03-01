@@ -1,7 +1,6 @@
 #ifndef SIMLASER2D_H
 #define SIMLASER2D_H
 
-#include <SimDevices/SimDevices.h>
 
 /// Vision Sensor
 // ---------------------------------------------------------------------------------------------------------------------------------

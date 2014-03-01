@@ -23,13 +23,13 @@ public:
 
 //            dCommand<<0, 0, 0, 0, 0, -800;
 //            vBodyFullName.push_back("FRWheel@"+sMainRobotName);
-//            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+//            m_SimDevices.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
 //            dCommand<<0, 0, 0, 0, 0, -800;
 //            vBodyFullName.push_back("FLWheel@"+sMainRobotName);
-//            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+//            m_SimDevices.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
-//            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
+//            m_SimDevices.GetSimpleController("MController")->ApplyCommand();
 //        }
 
 //        ///////////////////////////////////////////////////////////////////
@@ -41,13 +41,13 @@ public:
 
 //            dCommand<<0, 0, 0, 0, 0, 800;
 //            vBodyFullName.push_back("FRWheel@"+sMainRobotName);
-//            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+//            m_SimDevices.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
 //            dCommand<<0, 0, 0, 0, 0, 800;
 //            vBodyFullName.push_back("FLWheel@"+sMainRobotName);
-//            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+//            m_SimDevices.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
-//            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
+//            m_SimDevices.GetSimpleController("MController")->ApplyCommand();
 //        }
 
 //        ///////////////////////////////////////////////////////////////////
@@ -59,13 +59,13 @@ public:
 
 //            dCommand<<0, -8000, 0,0,0,0;
 //            vBodyFullName.push_back("BRWheel@"+sMainRobotName);
-//            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+//            m_SimDevices.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
 //            dCommand<<0, 8000, 0,0,0,0;
 //            vBodyFullName.push_back("BLWheel@"+sMainRobotName);
-//            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+//            m_SimDevices.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
-//            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
+//            m_SimDevices.GetSimpleController("MController")->ApplyCommand();
 
 //        }
 
@@ -78,13 +78,13 @@ public:
 
 //            dCommand<<0, 4000, 0,0,0,0;
 //            vBodyFullName.push_back("BRWheel@"+sMainRobotName);
-//            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+//            m_SimDevices.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
 //            dCommand<<0, -4000, 0,0,0,0;
 //            vBodyFullName.push_back("BLWheel@"+sMainRobotName);
-//            m_SimDeviceManager.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
+//            m_SimDevices.GetSimpleController("MController")->UpdateCommand(vBodyFullName,dCommand);
 
-//            m_SimDeviceManager.GetSimpleController("MController")->ApplyCommand();
+//            m_SimDevices.GetSimpleController("MController")->ApplyCommand();
 //        }
 
 /// ==================================================================================================================================

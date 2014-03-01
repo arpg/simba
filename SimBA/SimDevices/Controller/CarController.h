@@ -1,23 +1,22 @@
 #ifndef CARCONTROLLER_H
 #define CARCONTROLLER_H
 
-#include "SimDevices/Controller/Controller.h"]
+#include "SimDevices/Controller/Controller.h"
+#include "PB_Headers/SimMessages.pb.h"
 
 class CarController: public Controller
 {
 public:
 
-  CarController(){
+  CarController(string sDeviceName, string sRobotName, string sProxyName){
+    SetControllerName(sDeviceName);
+    SetRobotName(sRobotName);
+    SetProxyName(sProxyName);
   }
 
-  void init(string ControllerName, string sRobotName,
-            string sProxyName, ModelGraphBuilder Scene){
-    m_sControllerName = ControllerName;
-    m_Scene = Scene;
-    m_sProxyName = sProxyName;
-    m_sRobotName = sRobotName;
-    m_dSteering = 0;
-    m_dTorque = 0;
+  void UpdateCommand(VehicleMsg& Command){
+    m_dSteering = Command.steering_angle();
+    m_dTorque = Command.desired_force();
   }
 
   //    // -----------------------------------------------------------------------------------------------------------------------
@@ -127,9 +126,6 @@ public:
   //    {
 
   //    }
-
-
-private:
 
   double m_dSteering;
   double m_dTorque;

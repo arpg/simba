@@ -14,11 +14,11 @@ using namespace CVarUtils;
 /// is a SIM.
 ////////////////////////////////////////////////////////////////////////
 
-LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of robot LocalSim
-                   const std::string& sRobotURDFPath,      //< Input: location of meshes, maps etc
+LocalSim::LocalSim(const std::string& sLocalSimName,
+                   const std::string& sRobotURDFPath,
                    const std::string& sWorldURDFPath,
                    const std::string& sServerOption):
-  m_sLocalSimName(sLocalSimName), m_SimDeviceManager(&m_Scene)
+  m_sLocalSimName(sLocalSimName), m_SimDevices(&m_Scene)
 {
   // 1. Read URDF files.
   XMLDocument RobotURDF, WorldURDF;
@@ -27,7 +27,7 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
 
   // 2. Parse our world and our robot for objects in the scene.
   m_Parser.ParseWorld(WorldURDF, m_SimWorld);
-  m_Parser.ParseDevices(RobotURDF, m_SimDeviceManager, sLocalSimName);
+  m_Parser.ParseDevices(RobotURDF, m_SimDevices, sLocalSimName);
   m_Parser.ParseRobot(RobotURDF, m_SimRobot, sLocalSimName);
 
   // 3. Init User's Robot and add it to RobotManager
@@ -36,18 +36,20 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
   // Do we want to run in debug mode?
   bool debug = false;
 
-  // 4. Add the world and robot to the ModelGraph
-  m_Scene.Init(m_SimWorld, m_SimRobot, sLocalSimName, debug);
+  // 5. Add the world, robot, and controllers to the ModelGraph
+  m_Scene.Init(m_SimWorld, m_SimRobot, m_SimDevices,
+               sLocalSimName, debug);
 
-  m_SimDeviceManager.InitAllDevices(sServerOption);
+  // 4. We must decide the next actions based off of the Server Option.
+  cout<<" The server option is set to "<<sServerOption<<"."<<endl;
 
-  // 6. Initialize the Network
+  m_SimDevices.InitAllDevices();
+
   m_NetworkManager.Init( m_sLocalSimName, sServerOption);
-
   m_NetworkManager.RegisterRobot(&m_RobotManager);
+  m_NetworkManager.RegisterDevices(&m_SimDevices);
 
-  // 7, if run in with network mode, LocalSim network will publish sim device
-  m_NetworkManager.RegisterDevices(&m_SimDeviceManager);
+  // TODO: What to do with StateKeeper option...?
 
   cout<<"[LocalSim] Init Local Sim Success!"<<endl;
 }
@@ -56,53 +58,22 @@ LocalSim::LocalSim(const std::string& sLocalSimName,      //< Input: name of rob
 /// FUNCTIONS
 ////////////////////////////////////////////////////////////////////////
 
-// Apply the camera's pose directly to the SimCamera
-void LocalSim::ApplyCameraPose(Eigen::Vector6d dPose){
-  Eigen::Vector6d InvalidPose;
-  InvalidPose<<1,88,99,111,00,44;
-  if(dPose == InvalidPose){
-  }
-  else{
-    string sMainRobotName = m_SimRobot.GetRobotName();
-
-    // update RGB camera pose
-    string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
-    m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPose));
-
-    // update Depth camera pose
-    string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
-    m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPose));
-  }
-}
-
-/////////////
-
-void LocalSim::ApplyPoseToEntity(string sName, Eigen::Vector6d dPose){
-  m_Scene.m_Phys.SetEntity6Pose(sName, dPose);
-}
-
-//////////////////////////////////////////////////////////////////
 // Scan all SimDevices and send the simulated camera images to Pangolin.
 // Right now, we can only support up to two windows.
-//////////////////////////////////////////////////////////////////
 
+//TODO: Fairly certain that there's a glitch here. Go through and correct the
+//Image buffers for content.
 bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
                                  SceneGraph::ImageView& RSimCamWnd ){
   int WndCounter = 0;
 
-  for(unsigned int i =0 ; i!= m_SimDeviceManager.m_vSimDevices.size(); i++)
-  {
-    SimDeviceInfo Device = m_SimDeviceManager.m_vSimDevices[i];
-
-    if(Device.m_bDeviceOn==true)
-    {
+  for(unsigned int i =0 ; i!= m_SimDevices.m_vSimDevices.size(); i++){
+    SimDeviceInfo Device = m_SimDevices.m_vSimDevices[i];
+    if(Device.m_bDeviceOn==true){
       for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
-
         string sSimCamName = Device.m_vSensorList[j];
-        SimCamera* pSimCam = m_SimDeviceManager.GetSimCam(sSimCamName);
-
+        SimCamera* pSimCam = m_SimDevices.GetSimCam(sSimCamName);
         SceneGraph::ImageView* ImageWnd;
-
         // get pointer to window
         if(WndCounter == 0){
           ImageWnd = &LSimCamWnd;
@@ -112,13 +83,11 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
         }
 
         WndCounter++;
-
         // set image to window
         if (pSimCam->m_iCamType == 5){       // for depth image
           float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
                                             pSimCam->m_nImgHeight *
                                             sizeof(float) );
-
           if(pSimCam->capture(pImgbuf)==true){
             ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
                                pSimCam->m_nImgHeight,
@@ -133,7 +102,6 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
         else if(pSimCam->m_iCamType == 2){   // for RGB image
           char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
                                         pSimCam->m_nImgHeight * 3);
-
           if(pSimCam->capture(pImgbuf)==true){
             ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
                                pSimCam->m_nImgHeight,
@@ -165,16 +133,21 @@ bool LocalSim::SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
   return true;
 }
 
-// ---- Step Forward
-void LocalSim::StepForward()
-{
+////////////////////////////////
+
+void LocalSim::StepForward(){
+
+  // Update the PhysicsEngine and RenderEngine
+  // Comes after UpdateNetwork due to controller commands
   m_Scene.UpdateScene();
 
   // Update SimDevices
-  m_SimDeviceManager.UpdateAllDevices();
+  m_SimDevices.UpdateAllSensors();
 
   // Update the Network
-  m_NetworkManager.UpdateNetWork();
+  m_NetworkManager.UpdateNetwork();
+
+
 
   // Show the image in the current window
   SetImagesToWindow(*m_Scene.m_Render.m_LSimCamImage,
@@ -222,9 +195,7 @@ int main( int argc, char** argv )
                                                   &mLocalSim) );
 
   // Default hooks for exiting (Esc) and fullscreen (tab).
-  while( !pangolin::ShouldQuit() )
-  {
-
+  while( !pangolin::ShouldQuit() ){
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // Swap frames and Process Events

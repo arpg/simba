@@ -1,8 +1,7 @@
 #ifndef SIMGPS_H
 #define SIMGPS_H
 
-#include <SimDevices/SimDevices.h>
-#include <ModelGraph/PhysicsEngine.h>
+#include <ModelGraph/ModelGraphBuilder.h>
 
 // return x,y,z of a GPS sensor.
 class SimGPS

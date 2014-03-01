@@ -2,8 +2,7 @@
 #define SIMVICON_H
 
 
-#include <SimDevices/SimDevices.h>
-#include <ModelGraph/PhysicsEngine.h>
+#include <ModelGraph/ModelGraphBuilder.h>
 
 // return x,y,z,p,q,r of body A.
 class SimVicon
@@ -11,9 +10,8 @@ class SimVicon
 
 public:
     // request bullet the pose of object.
-    void init(string DeviceName, string BodyName, PhysicsEngine& rPhysWrapper)
+    void init(string DeviceName, string BodyName)
     {
-        m_rPhysWrapper = rPhysWrapper;
         m_sDeviceName  = DeviceName;
         m_sBodyName  = BodyName;
     }

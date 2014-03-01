@@ -164,14 +164,13 @@ vector<string> URDF_Parser::GetScemeFromString(string sCommandLine){
         return vSceme;
       }
       else{
-        cout<<"[GetScemeFromString] Fatal Error! Invalid command line string "<<sCommandLine<<endl;
+        cout<<"[GetScemeFromString] Fatal Error! Invalid command line string "<<
+              sCommandLine<<endl;
         exit(-1);
       }
     }
   }
 }
-
-// init deveice with sceme vector
 
 ////////////////////////////////////////////////////////////
 /// Parse Shape (Body)
@@ -253,7 +252,8 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
       double dBias = .5;
       double dRelaxation = .5;
 
-      // Construct joint based on children information. This information may include links, origin, axis.etc
+      // Construct joint based on children information.
+      // This information may include links, origin, axis.etc
       XMLElement *pChild=pElement->FirstChildElement();
       while(pChild){
         const char * sName = pChild->Name();
@@ -359,10 +359,14 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
           vUpperLinearLimit = GenNumFromChar( pChild->Attribute("upperlinear"));
           vLowerAngleLimit = GenNumFromChar( pChild->Attribute("lowerangle"));
           vUpperAngleLimit = GenNumFromChar( pChild->Attribute("upperangle"));
-          LowerAngleLimit<<vLowerAngleLimit[0],vLowerAngleLimit[1],vLowerAngleLimit[2];
-          UpperAngleLimit<<vUpperAngleLimit[0],vUpperAngleLimit[1],vUpperAngleLimit[2];
-          LowerLinearLimit<<vLowerLinearLimit[0],vLowerLinearLimit[1],vLowerLinearLimit[2];
-          UpperLinearLimit<<vUpperLinearLimit[0],vUpperLinearLimit[1],vUpperLinearLimit[2];
+          LowerAngleLimit<<vLowerAngleLimit[0],vLowerAngleLimit[1],
+              vLowerAngleLimit[2];
+          UpperAngleLimit<<vUpperAngleLimit[0],vUpperAngleLimit[1],
+              vUpperAngleLimit[2];
+          LowerLinearLimit<<vLowerLinearLimit[0],vLowerLinearLimit[1],
+              vLowerLinearLimit[2];
+          UpperLinearLimit<<vUpperLinearLimit[0],vUpperLinearLimit[1],
+              vUpperLinearLimit[2];
         }
         // read next child (joint)
         pChild=pChild->NextSiblingElement();
@@ -391,7 +395,8 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
       Eigen::Vector3d eig_pivot_A;
       Eigen::Vector3d eig_pivot_B;
       XMLElement *pChild=pElement->FirstChildElement();
-      // Construct joint based on children information. This information may include links, origin, axis.etc
+      // Construct joint based on children information.
+      // This information may include links, origin, axis.etc
       while(pChild){
         const char * sName = pChild->Name();
         // get parent link of joint
@@ -459,7 +464,7 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
 //      Eigen::Vector3d LowerAngleLimit;
 //      Eigen::Vector3d UpperAngleLimit;
 //      XMLElement *pChild=pElement->FirstChildElement();
-//      // Construct joint based on children information. This information may include links, origin, axis.etc
+//      // Construct joint based on children information.
 //      while(pChild){
 //        const char * sName = pChild->Name();
 //        // get parent link of joint
@@ -493,8 +498,8 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
 ////////////////////////////////////////////////////////////
 /// Parse Raycast Car
 ////////////////////////////////////////////////////////////
-RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pElement)
-{
+RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
+                                             XMLElement *pElement){
   cout<<"[URDF_Parser] Trying to build a RaycastVehicle"<<endl;
 
   std::vector<double> vParameters;
@@ -503,16 +508,14 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pEle
 
   XMLElement *pChild = pElement->FirstChildElement();
 
-  while(pChild)
-  {
+  while(pChild){
     string sAttrName = pChild->Name();
 
     // Car paramters
     // All of these are stored in a vector of doubles. Access them through
     // their enum specification in ModelGraph/VehicleEnums.h
 
-    if(!sAttrName.compare("param"))
-    {
+    if(!sAttrName.compare("param")){
       std::string param = pChild->Attribute("name");
       if(!param.compare("control delay")){
         vParameters[6] = GenNumFromChar(pChild->Attribute("value")).front();
@@ -640,8 +643,7 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName, XMLElement *pEle
 //////////////////////////////////////////////////////////////
 /// Parse SENSOR BODIES. Automatically Create Body for Sensor
 //////////////////////////////////////////////////////////////
-void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
-{
+void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement ){
   const char* sRootContent = pElement->Name();
   if(strcmp(sRootContent,"Sensor")==0){
     cout<<"[ParseSensorShape] Trying to create a body for a Sensor"<<endl;
@@ -681,8 +683,10 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
     vAxis<< 1, 0, 0;
     HingeTwoPivot* pCameraHinge =
         new HingeTwoPivot(sCameraJointName,
-                          dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
-                          dynamic_cast<Shape*>(m_mModelNodes.find(sCameraName)->second),
+                          dynamic_cast<Shape*>(m_mModelNodes.
+                                               find(sParentName)->second),
+                          dynamic_cast<Shape*>(m_mModelNodes.
+                                               find(sCameraName)->second),
                           Eigen::Vector3d::Zero(), vPivot,
                           vAxis, vAxis);
     pCameraHinge->SetLimits(-0.01, 0.01, 1, .1, 1);
@@ -697,38 +701,33 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement )
 /// PARSE ROBOT.XML FOR DEVICES AND BUILD INTO LocalSim
 ////////////////////////////////////////////////////////////
 bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
-                                SimDeviceManager& m_SimDeviceManager,
-                                string sProxyName)
-{
+                                SimDevices& m_SimDevices,
+                                string sProxyName){
   XMLElement *pParent=rDoc.RootElement();
   XMLElement *pElement=pParent->FirstChildElement();
   string sRobotName(GetAttribute(pParent,"name"));
-  sRobotName = sRobotName+"@"+sProxyName;          // e.g. robo
+  sRobotName = sRobotName+"@"+sProxyName;
 
   // read high level parent (root parent)
-  while (pElement)
-  {
+  while (pElement){
     const char* sRootContent = pElement->Name();
 
     // create sim Sensor device
-    if(strcmp(sRootContent,"Sensor")==0)
-    {
+    if(strcmp(sRootContent,"Sensor")==0){
       string sType( pElement->Attribute("Type"));
 
-      if(sType == "Camera")
-      {
+      if(sType == "Camera"){
         const char* sMode = pElement->Attribute("Mode");
         string sModel = GetAttribute(pElement, "Model");
 
-        //----------------------------------------------------------------------------------------- Singel Camera
-        if(strcmp(sMode, "RGB")==0 || strcmp(sMode,"Depth")==0 ||strcmp(sMode,"Gray")==0)
-        {
-          string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+        // Single-view systems: RGB, Grey, Depth
+        if(strcmp(sMode, "RGB")==0 || strcmp(sMode,"Depth")==0 ||
+           strcmp(sMode,"Grey")==0){
+          string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;
           string sCamMode(sMode);
-          string sSensorName = sCamMode + sCameraName; // this is body name for sensor of the camera. e.g. RGBLCam@robot1@proxy
+          string sSensorName = sCamMode + sCameraName;
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
           vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-
           // save device info
           SimDeviceInfo Device;
           Device.m_sDeviceName = sCameraName;
@@ -737,21 +736,20 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
           Device.m_vSensorList.push_back(sSensorName);
           Device.m_vModel.push_back(sModel);
           Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
-          m_SimDeviceManager.AddDevice(Device);
-
-          cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCamera "<<sSensorName<<") success. Device Name is "<<sCameraName<<"."<<endl;
+          m_SimDevices.AddDevice(Device);
+          cout<<"[Proxy/ParseDevice] register "<<sType<<
+                " (SimCamera "<<sSensorName<<") success. Device Name is "<<
+                sCameraName<<"."<<endl;
         }
 
-        // ---------------------------------------------------------------------------------------- RGB-Depth Camera
-        if(strcmp(sMode, "RGBD")==0 )
-        {
-          string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+        // Double-view system: RGB-Depth Camera
+        if(strcmp(sMode, "RGBD")==0 ){
+          string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;
           int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
           vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
           vector<double> vBaseline =
               GenNumFromChar(pElement->Attribute("Baseline"));
-
-          // 3 save into device, this device have two sensors
+          // Be careful: this device has two sensors.
           SimDeviceInfo Device;
           Device.m_sDeviceName = sCameraName;
           Device.m_sDeviceType = sType;
@@ -762,64 +760,51 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
           Device.m_vModel.push_back(sModel);
           Device.m_vModel.push_back(sModel);
           Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
-          m_SimDeviceManager.AddDevice(Device);
-
-          cout<<"[Proxy/ParseDevice] register "<<sType<<" (SimCamera "<<sMode<<") success." <<endl;
+          m_SimDevices.AddDevice(Device);
+          cout<<"[Proxy/ParseDevice] register "<<sType<<
+                " (SimCamera "<<sMode<<") success." <<endl;
         }
       }
 
-      if(sType=="GPS")
-      {
-        string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
-
-        cout<<"[Proxy/ParseDevice] Register Sim GPS success."<<endl;
+      if(sType=="GPS"){
+        // TODO: GPS
+        string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;
+        cout<<"[Proxy/ParseDevice] Register SimGPS success."<<endl;
       }
 
 
-      if(sType=="Vicon")
-      {
-        string sViconName = GetAttribute( pElement, "Name")+"@"+sRobotName;// name of the camera. e.g. LCam@robot1@proxy
+      if(sType=="Vicon"){
+        string sViconName = GetAttribute( pElement, "Name")+"@"+sRobotName;
         string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
-
         SimDeviceInfo Device;
         Device.m_sDeviceName = sViconName;
         Device.m_sDeviceType = sType;
         Device.m_sBodyName = sBodyName;
-        m_SimDeviceManager.AddDevice(Device);
-        cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<" success."<<endl;
+        m_SimDevices.AddDevice(Device);
+        cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<
+              " success."<<endl;
       }
     }
 
-    // create sim controller device
-    if(strcmp(sRootContent, "Controller")==0)
-    {
+    // SimController for camera or RaycastVehicle
+    if(strcmp(sRootContent, "Controller")==0){
       string sType( sRootContent );
       string sMode( pElement->Attribute("Mode"));
-
-      if(sMode == "SimpleController")
-      {
-        string  sControllerName = GetAttribute(pElement, "Name");
-
-        SimDeviceInfo Device;
-        Device.m_sDeviceName = sControllerName;
-        Device.m_sDeviceType = sType;
-        Device.m_sDeviceMode = sMode;
-        Device.m_sRobotName = sRobotName;
-        m_SimDeviceManager.AddDevice(Device);
-        cout<<"[Proxy/ParseDevice] Add controller device "<<sControllerName<<" success."<<endl;
-      }
-
-      if(sType =="CarController")
-      {
-
-
-      }
+      string  sControllerName = GetAttribute(pElement, "Name");
+      SimDeviceInfo Device;
+      Device.m_sDeviceName = sControllerName;
+      Device.m_sDeviceType = sType;
+      Device.m_sDeviceMode = sMode;
+      Device.m_sRobotName = sRobotName;
+      m_SimDevices.AddDevice(Device);
+      cout<<"[Proxy/ParseDevice] Add controller device "<<sControllerName<<
+            " success."<<endl;
     }
 
     // read next parent element
     pElement=pElement->NextSiblingElement();
-  }
 
+  }
   return true;
 }
 
@@ -865,7 +850,8 @@ bool URDF_Parser::ParseWorldForInitRobotPose(
 /// HELPER FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////
 
-std::vector<ModelNode*> URDF_Parser::GetModelNodes(std::map<std::string, ModelNode*> mNodes){
+std::vector<ModelNode*> URDF_Parser::GetModelNodes(
+    std::map<std::string, ModelNode*> mNodes){
   std::vector<ModelNode*> Nodes;
   for( std::map<string, ModelNode*>::iterator it = mNodes.begin();
        it!=mNodes.end();it++){

@@ -39,7 +39,6 @@ include_directories( ${USER_INC} )
 ################
 
 list(APPEND MANAGERS_HDRS
-  Managers/SimDeviceManager.h
   Managers/RobotsManager.h
   Managers/NetworkManager.h
 )
@@ -79,7 +78,6 @@ list(APPEND SIMDEVICES_HDRS
 list(APPEND SIMDEVICES_CONTROLLER_HDRS
   SimDevices/Controller/Controller.h
   SimDevices/Controller/CarController.h
-  SimDevices/Controller/PoseController.h
   SimDevices/Controller/PIDControl.h
   SimDevices/Controller/SimpleAIController.h
   SimDevices/Controller/PIDController.h
@@ -128,12 +126,16 @@ list(APPEND SIMBA_HDRS ${MANAGERS_HDRS}           ${MODELGRAPH_HDRS}
 list(APPEND MANAGERS_SRCS
   Managers/RobotsManager.cpp
   Managers/NetworkManager.cpp
-  Managers/SimDeviceManager.cpp
 )
 list(APPEND MODELGRAPH_SRCS
   ModelGraph/PhysicsEngine.cpp
+  ModelGraph/RenderEngine.cpp
+  ModelGraph/ModelGraphBuilder.cpp
 )
 list(APPEND NETWORK_SRCS)
+list(APPEND SIMDEVICES_SRCS
+  SimDevices/SimDevices.cpp
+)
 list(APPEND SIMDEVICES_CONTROL_SRCS)
 list(APPEND SIMDEVICES_SENSOR_SRCS)
 list(APPEND SIMROBOTS_SRCS)
@@ -142,7 +144,10 @@ list(APPEND URDFPARSER_SRCS
 )
 list(APPEND UTILS_SRCS)
 
-list(APPEND SIMBA_SRCS ${MANAGERS_SRCS} ${URDFPARSER_SRCS} ${MODELGRAPH_SRCS})
+list(APPEND SIMBA_SRCS ${MANAGERS_SRCS}
+                       ${URDFPARSER_SRCS}
+                       ${MODELGRAPH_SRCS}
+                       ${SIMDEVICES_SRCS})
 
 ##################
 # CREATE THE SIMBA LIBRARY

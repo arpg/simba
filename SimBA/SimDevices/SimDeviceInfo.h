@@ -11,11 +11,9 @@ using namespace std;
 class SimDeviceInfo
 {
 public:
-  SimDeviceInfo()
-  {
+  SimDeviceInfo(){
     m_bDeviceOn = false;
   }
-
 
   string           m_sDeviceName;    // device name
   string           m_sDeviceType;    // name for device type

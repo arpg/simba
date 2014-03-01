@@ -11,8 +11,8 @@
 /////////////////////////////////////////
 
 //// Bullet instantiations reside in PhysicsEngine
-//// SceneGraph instantiations are in RenderEngine (rename RenderEngine)
-//// Both are called in ModelGraphBuilder (which makes sense for once)
+//// SceneGraph instantiations are in RenderEngine
+//// Both are called in ModelGraphBuilder
 
 class Shape : public ModelNode{
 public:

@@ -21,7 +21,7 @@
 
 #include "Managers/NetworkManager.h"           // for managing the Network
 #include "Managers/RobotsManager.h"            // for managing all robots
-#include "Managers/SimDeviceManager.h"         // for managing all the SimDevices
+#include "Managers/SimDevices.h"         // for managing all the SimDevices
 
 #include <URDFParser/URDF_Parser.h>            // for parsing URDF file
 
@@ -30,9 +30,6 @@
 
 // for communicating between the Physics Engine and ModelGraph
 #include <ModelGraph/ModelGraphBuilder.h>
-
-// A controller (SimBA use only; does not use driver format)
-#include <SimDevices/Controller/PoseController.h>
 
 class LocalSim{
 
@@ -44,7 +41,7 @@ public:
   ModelGraphBuilder           m_Scene;
   SimRobot                    m_SimRobot;         // user's robot. will be delete in final version of robot LocalSim (as we are not going to key control main robot in LocalSim)
   SimWorld                    m_SimWorld;
-  SimDeviceManager            m_SimDeviceManager;
+  SimDevices            m_SimDevices;
   RobotsManager               m_RobotManager;
   NetworkManager              m_NetworkManager;
   URDF_Parser                 m_Parser;
@@ -56,8 +53,6 @@ public:
             const std::string& sServerName);
 
   ///Functions
-  void ApplyCameraPose(Eigen::Vector6d dPose);
-  void ApplyPoseToEntity(string sName, Eigen::Vector6d dPose);
   void StepForward();
   bool SetImagesToWindow(SceneGraph::ImageView& LSimCamWnd,
                          SceneGraph::ImageView& RSimCamWnd );
@@ -80,17 +75,17 @@ public:
 //  // update RGB camera pose
 //  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-//  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+//  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDevices.GetSimCam(sNameRGBCam)->GetCameraPose() );
 //  dPoseRGB(5,0) = dPoseRGB(5,0) - 0.1;
-//  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
+//  m_SimDevices.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
 //  // update Depth camera pose
 //  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
 //  Eigen::Vector6d dPoseDepth =
-//      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+//      _T2Cart(m_SimDevices.GetSimCam(sNameDepthCam)->GetCameraPose() );
 //  dPoseDepth(5,0) = dPoseDepth(5,0) - 0.1;
-//  m_SimDeviceManager.
+//  m_SimDevices.
 //      GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
 
 //  //            string sMainRobotName = m_SimRobot->GetRobotName();
@@ -107,17 +102,17 @@ public:
 //  // update RGB camera pose
 //  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-//  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+//  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDevices.GetSimCam(sNameRGBCam)->GetCameraPose() );
 //  dPoseRGB(5,0) = dPoseRGB(5,0) + 0.1;
-//  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
+//  m_SimDevices.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
 //  // update Depth camera pose
 //  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
 //  Eigen::Vector6d dPoseDepth =
-//      _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+//      _T2Cart(m_SimDevices.GetSimCam(sNameDepthCam)->GetCameraPose() );
 //  dPoseDepth(5,0) = dPoseDepth(5,0) + 0.1;
-//  m_SimDeviceManager.
+//  m_SimDevices.
 //      GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
 //}
 
@@ -128,16 +123,16 @@ public:
 //  // update RGB camera pose
 //  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-//  Eigen::Vector6d dPoseRGB = _T2Cart( m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+//  Eigen::Vector6d dPoseRGB = _T2Cart( m_SimDevices.GetSimCam(sNameRGBCam)->GetCameraPose() );
 //  dPoseRGB(1,0) = dPoseRGB(1,0) + 1;
-//  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
+//  m_SimDevices.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
 //  // update Depth camera pose
 //  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
-//  Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+//  Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDevices.GetSimCam(sNameDepthCam)->GetCameraPose() );
 //  dPoseDepth(1,0) = dPoseDepth(1,0) + 1;
-//  m_SimDeviceManager.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
+//  m_SimDevices.GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
 //}
 
 //void LocalSim::ReverseKey(){
@@ -146,16 +141,16 @@ public:
 //  // update RGB camera pose
 //  string sNameRGBCam   = "RGBLCamera@" + sMainRobotName;
 
-//  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDeviceManager.GetSimCam(sNameRGBCam)->GetCameraPose() );
+//  Eigen::Vector6d dPoseRGB = _T2Cart(m_SimDevices.GetSimCam(sNameRGBCam)->GetCameraPose() );
 //  dPoseRGB(1,0) = dPoseRGB(1,0) - 1;
-//  m_SimDeviceManager.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
+//  m_SimDevices.GetSimCam(sNameRGBCam)->UpdateByPose(_Cart2T(dPoseRGB));
 
 //  // update Depth camera pose
 //  string sNameDepthCam = "DepthLCamera@"+sMainRobotName;
 
-//  Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDeviceManager.GetSimCam(sNameDepthCam)->GetCameraPose() );
+//  Eigen::Vector6d dPoseDepth = _T2Cart(m_SimDevices.GetSimCam(sNameDepthCam)->GetCameraPose() );
 //  dPoseDepth(1,0) = dPoseDepth(1,0) - 1;
-//  m_SimDeviceManager.
+//  m_SimDevices.
 //      GetSimCam(sNameDepthCam)->UpdateByPose(_Cart2T(dPoseDepth));
 //}
 

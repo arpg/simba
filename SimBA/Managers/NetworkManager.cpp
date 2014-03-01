@@ -37,12 +37,25 @@ bool NetworkManager::Init(string sProxyName, string sServerName, int verbocity){
   *
   ***********************************************************/
 
+// Return 'FALSE' if device is invalid. Otherwise return device name.
+
+string NetworkManager::CheckURI(string sURI){
+  // Find device in device manager
+  string sDeviceName = sURI;
+  // TODO: check if device is valid
+
+  // return device name if it is valid
+  return sDeviceName;
+}
+
+
+////////////////////////////////////////////////////////////////////////
 // Initializes all devices attached to the robot into Node.
 // Notice that if we run in 'WithStateKeeper' mode, we need to call this
 // function after the main robot has gotten its initial pose from StateKeeper,
 // and been built into the ModelGraph.
-void NetworkManager::RegisterDevices(
-    SimDeviceManager* pSimDeviceManager){
+
+void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
 
   // Check if we need to init device in node.
   if(m_sServerName=="WithoutNetwork"){
@@ -51,37 +64,34 @@ void NetworkManager::RegisterDevices(
   }
 
   else{
-    m_pSimDeviceManager = pSimDeviceManager;
+    m_pSimDevices = pSimDevices;
 
     /*******************
-    // SimControllers
+    // SimSensors
     ********************/
 
     ///////////
     // SimCam
     ///////////
-    if(m_pSimDeviceManager->m_SimCamList.size()!=0){
-      cout<<"[NetworkManager/RegisterDevices] Try to init "<<
-            m_pSimDeviceManager->m_SimCamList.size()<<" NodeCam."<<endl;
+    if(m_pSimDevices->m_SimCamList.size()!=0){
+      cout<<"[NetworkManager/RegisterDevices] Trying to init "<<
+            m_pSimDevices->m_SimCamList.size()<<" NodeCams."<<endl;
 
       // provide rpc method for camera to register
       m_Node.provide_rpc("RegsiterCamDevice",&_RegisterCamDevice,this);
 
       for(unsigned int i = 0;
-          i!= m_pSimDeviceManager->m_vSimDevices.size();
+          i!= m_pSimDevices->m_vSimDevices.size();
           i++){
-        SimDeviceInfo Device = m_pSimDeviceManager->m_vSimDevices[i];
+        SimDeviceInfo Device = m_pSimDevices->m_vSimDevices[i];
         string sServiceName = GetFirstName(Device.m_sDeviceName);
-
         if(m_Node.advertise(sServiceName)==true){
           cout<<"[NetworkManager/RegisterDevices]"<<
-                " advertise register "<<sServiceName<<" Success."<<endl;
+                " Advertising "<<sServiceName<<" --> Success."<<endl;
         }
         else{
           cout<<"[NetworkManager/RegisterDevices]"<<
-                " advertise register "<<sServiceName<<" Fail."<<endl;
-          cout<<"[NetworkManager/RegisterDevices]"<<
-                " Cannot init Nextwrok"<<endl;
+                " Advertising "<<sServiceName<<" --> Fail."<<endl;
           exit(-1);
         }
       }
@@ -90,10 +100,10 @@ void NetworkManager::RegisterDevices(
     ///////////////
     // SimGPS
     ///////////////
-    if(m_pSimDeviceManager->m_SimGPSList.size()!=0){
+    if(m_pSimDevices->m_SimGPSList.size()!=0){
       map<string, SimGPS*>::iterator iter;
-      for(iter = m_pSimDeviceManager->m_SimGPSList.begin();
-          iter!= m_pSimDeviceManager->m_SimGPSList.end();
+      for(iter = m_pSimDevices->m_SimGPSList.begin();
+          iter!= m_pSimDevices->m_SimGPSList.end();
           iter++){
         m_Node.advertise(iter->first);
         cout<<"[NetworkManager/CheckIfInitDevices] advertise "<<
@@ -118,53 +128,38 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
 
   string sDeviceName = CheckURI(mRequest.uri());
   if(sDeviceName!="FALSE"){
-    // Init Device.
-    m_pSimDeviceManager->InitDeviceByName(sDeviceName );
-    SimCamera* pCam = m_pSimDeviceManager->GetSimCam(sDeviceName);
-
+    SimCamera* pCam = m_pSimDevices->GetSimCam(sDeviceName);
     mReply.set_time_step(m_iTimeStep);
     mReply.set_regsiter_flag(1);
     mReply.set_channels(pCam->m_nChannels);
     mReply.set_width(pCam->m_nImgWidth);
     mReply.set_height(pCam->m_nImgHeight);
-
-    m_iNodeClients = m_iNodeClients +1;
-    cout<<"[NetworkManager/RegisterCamDevice] HAL reuqest for use "<<
+    m_iNodeClients = m_iNodeClients + 1;
+    cout<<"[NetworkManager/RegisterCamDevice] HAL requesting "<<
           sDeviceName<<". Device Ready!"<<endl;
   }
   else{
     mReply.set_time_step(m_iTimeStep);
     mReply.set_regsiter_flag(0);
-    cout<<"[NetworkManager/RegisterCamDevice] HAL reuqest for use "<<sDeviceName<<". Device Invalid!"<<endl;
+    cout<<"[NetworkManager/RegisterCamDevice] HAL requesting "<<
+          sDeviceName<<". Device Invalid!"<<endl;
   }
-}
-
-////////////////////////////////////////////////////////////////////////
-// Return 'FALSE' if device is invalid. Otherwise return device name.
-
-string NetworkManager::CheckURI(string sURI){
-  // Find device in device manager
-  string sDeviceName = sURI;
-  // TODO: check if device is valid
-
-  // return device name if it is valid
-  return sDeviceName;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 void NetworkManager::RegisterControllerDevice(
     RegisterControllerReqMsg& mRequest,RegisterControllerRepMsg & mReply){
-  cout<<"[NetworkManager] NodeVehicle is asking for register in timestep "
-     <<m_iTimeStep<<"."<<endl;
   mReply.set_success(true);
-  m_iNodeClients = m_iNodeClients +1;
 
-  // robot proxy subscribe to this controller device for command
+  // Check to see if you can even subscribe to this topic.
   if( m_Node.subscribe(mRequest.topic())==false ){
     cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! "
           "Cannot subscribe to "<<mRequest.topic()
        <<". Please make sure service is running."<<endl;
+  }
+  else{
+    m_iNodeClients = m_iNodeClients + 1;
   }
 }
 
@@ -172,26 +167,21 @@ void NetworkManager::RegisterControllerDevice(
 /// UPDATE AND PUBLISH INFO
 ////////////////////////////////////////////////////////////////////////
 
-bool NetworkManager::UpdateNetWork(){
-
+bool NetworkManager::UpdateNetwork(){
   m_iTimeStep++;
-
   if(m_sServerName == "WithoutNetwork"){
     return true;
   }
-
   if(m_verbocity != 0){
     /// What is this supposed to do...?
     cout<<"*************************************************************"<<endl;
   }
-
   if(m_sServerName == "WithStateKeeper"){
     if(PublishRobotToStateKeeper() == false){
       cout<<"[NetworkManager] Cannot Publish Robot State To StateKeeper!!!"<<
             " You might be disconnected from the server..."<<endl;
       return false;
     }
-
     if(ReceiveWorldFromStateKeeper() == false){
       cout<<"[NetworkManager] Cannot Receive World State from StateKeeper!!!"<<
             " You may be disconnected from the server... "<<endl;
@@ -199,91 +189,30 @@ bool NetworkManager::UpdateNetWork(){
     }
   }
 
-  for(unsigned int i=0;i!= m_pSimDeviceManager->m_vSimDevices.size();i++){
-    SimDeviceInfo Device = m_pSimDeviceManager->m_vSimDevices[i];
+  for(unsigned int i=0;i!= m_pSimDevices->m_vSimDevices.size();i++){
+    SimDeviceInfo Device = m_pSimDevices->m_vSimDevices[i];
     string sDeviceType = Device.m_sDeviceType;
     string sDeviceName = Device.m_sDeviceName;
     bool bDeviceOn = Device.m_bDeviceOn;
-
-    // update Camera info
+    // Update Camera
     if( sDeviceType == "Camera" && bDeviceOn == true){
       if( PublishSimCamBySensor(sDeviceName) == false){
         return false;
       }
     }
-    // update GPS info
+    // Update GPS
     else if(sDeviceType == "GPS" && bDeviceOn == true){
       if(PublishGPS(sDeviceName) == false ){
         return false;
       }
     }
-    // update controller info
+    // update Controller Info
     else if(sDeviceType == "Controller" && bDeviceOn == true){
-      if(ReceiveControlInfo(sDeviceName) == false){
+      if(ReceiveControllerInfo(sDeviceName) == false){
         return false;
       }
     }
   }
-  return true;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-// To publish device information
-// Receive information from all controller.
-// (we may have more than one controller here.)
-bool NetworkManager::ReceiveControlInfo(string sDeviceName){
-  SimpleController* pController =
-      m_pSimDeviceManager->GetSimpleController(sDeviceName);
-  string sServiceName=sDeviceName+"/Controller";
-
-  // SYNCHRONIZED PROTOCOL:
-  // Wait until we get the lastest world state
-  int                iUpdateFlag=0;
-  PoseMsg            Command;
-  PoseMsg            TryCommand;
-  while(1){
-    if(m_Node.receive( sServiceName, TryCommand )==true){
-      Command=TryCommand;
-      iUpdateFlag=1;
-      cout<<"[Command] Update Command success! Command time step is "<<
-            Command.time_step()<<endl;
-    }
-    else if(m_Node.receive( sServiceName, TryCommand )==false &&
-            iUpdateFlag==1 ){
-      cout<<"[Command] Update Command success! Command time step is "<<
-            Command.time_step()<<endl;
-      Eigen::Vector6d command;
-      command<<Command.x(), Command.y(), Command.z(),
-          Command.p(),Command.q(),Command.r();
-      vector<string> vBodyFullName;
-      for(int j =0; j!= Command.body_name_size();j++){
-        string sBodyFullName = Command.body_name(j);
-        vBodyFullName.push_back(sBodyFullName);
-      }
-      pController->UpdateCommand(vBodyFullName, command);
-      return true;
-    }
-    else if(m_Node.receive( sServiceName, TryCommand )==false &&
-            iUpdateFlag==0 ){
-      return false;
-    }
-  }
-}
-
-///////////////////////////////////////////////////////////////////////
-
-bool NetworkManager::ReceiveSimpleControllerInfo(){
-  // TODO: Turn this into an acceptor for a pose controller.
-  // Right place to put it...? Probably not.
-  return true;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-bool NetworkManager::ReceiveCarControllerInfo(){
-  // TODO: Turn this into an acceptor for a car controller.
-  // Right place to put it...? Probably not.
   return true;
 }
 
@@ -296,8 +225,8 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName){
   int image_size = 0;
 
   // save image to NodeCamMsg data struct
-  for(unsigned int i = 0; i!= m_pSimDeviceManager->m_vSimDevices.size(); i++){
-    SimDeviceInfo Device = m_pSimDeviceManager->m_vSimDevices[i];
+  for(unsigned int i = 0; i!= m_pSimDevices->m_vSimDevices.size(); i++){
+    SimDeviceInfo Device = m_pSimDevices->m_vSimDevices[i];
     string sDeviceName = Device.m_sDeviceName;
 
     if(sDeviceName == sCamName){
@@ -306,7 +235,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName){
 
         // get one camera sensor
         string sSensorName = Device.m_vSensorList[j];
-        SimCamera* pSimCam= m_pSimDeviceManager->GetSimCam(sSensorName);
+        SimCamera* pSimCam= m_pSimDevices->GetSimCam(sSensorName);
 
         // set NodeCamMsg info
         NodeCamImageMsg *pImage = mNodeCamMsg.add_image();
@@ -383,13 +312,11 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName){
 }
 
 ////////////////////////////////////////////////////////////////////////
-
 // publish GPS by device name
 
-bool NetworkManager::PublishGPS(string sDeviceName)
-{
+bool NetworkManager::PublishGPS(string sDeviceName){
   Eigen::Vector3d pose;
-  m_pSimDeviceManager->GetSimGPS(sDeviceName)->GetPose(pose);
+  m_pSimDevices->GetSimGPS(sDeviceName)->GetPose(pose);
 
   GPSMsg mGPSMSg;
   mGPSMSg.set_time_step(m_iTimeStep);
@@ -399,9 +326,10 @@ bool NetworkManager::PublishGPS(string sDeviceName)
 
   sDeviceName = GetFirstName(sDeviceName);
 
-  if(m_verbocity!=0)
-  {
-    cout<<"[NodeGPS] Try to publish "<<sDeviceName<< ". x="<<pose[0]<<" y="<<pose[1]<<" z="<<pose[2]<< ". Time step is "<<mGPSMSg.time_step()<<"."<<endl;
+  if(m_verbocity!=0){
+    cout<<"[NodeGPS] Try to publish "<<sDeviceName<< ". x="<<pose[0]<<
+          " y="<<pose[1]<<" z="<<pose[2]<<
+          ". Time step is "<<mGPSMSg.time_step()<<"."<<endl;
   }
 
   bool bStatus=false;
@@ -415,6 +343,46 @@ bool NetworkManager::PublishGPS(string sDeviceName)
     cout<<"[NodeGPS] publsih GPS success." <<endl;
   }
   return true;
+}
+
+////////////////////////////////////////////////////////////////////////
+// Receive information from all controllers hooked up to HAL.
+// (we may have more than one controller here.)
+
+bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
+  Controller* pController = m_pSimDevices->GetController(sDeviceName);
+  string sServiceName = sDeviceName+"/Controller";
+
+  // TODO: Synch vs. asynch
+  // SYNCHRONIZED PROTOCOL:
+
+  // Car Controller
+  if(static_cast<CarController*>( pController ) != NULL){
+    CarController* pCarController = (CarController*) pController;
+    VehicleMsg Command;
+    if(m_Node.receive( sServiceName, Command)==true){
+      pCarController->UpdateCommand(Command);
+      return true;
+    }
+    else{
+      cout<<"Couldn't get the command for the Car Controller"<<endl;
+      return false;
+    }
+  }
+
+  // Simple Controller (aka Camera Body control?)
+  else if(static_cast<SimpleController*>( pController ) != NULL){
+    SimpleController* pSimpController = (SimpleController*) pController;
+    PoseMsg Command;
+    if(m_Node.receive( sServiceName, Command)==true){
+      pSimpController->UpdateCommand(Command);
+      return true;
+    }
+    else{
+      cout<<"Couldn't get the command for the Simple Controller"<<endl;
+      return false;
+    }
+  }
 }
 
 
@@ -715,8 +683,3 @@ bool NetworkManager::ReceiveWorldFromStateKeeper(){
   }
   return true;
 }
-
-
-
-
-
