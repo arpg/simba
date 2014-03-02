@@ -14,11 +14,11 @@ using namespace CVarUtils;
 /// is a SIM.
 ////////////////////////////////////////////////////////////////////////
 
-LocalSim::LocalSim(const std::string& sLocalSimName,
-                   const std::string& sRobotURDFPath,
-                   const std::string& sWorldURDFPath,
-                   const std::string& sServerOption):
-  m_sLocalSimName(sLocalSimName), m_SimDevices(&m_Scene)
+LocalSim::LocalSim(const string& sLocalSimName,
+                   const string& sRobotURDFPath,
+                   const string& sWorldURDFPath,
+                   const string& sServerOption):
+  m_sLocalSimName(sLocalSimName)
 {
   // 1. Read URDF files.
   XMLDocument RobotURDF, WorldURDF;
