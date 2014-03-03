@@ -11,12 +11,11 @@
 #include <iostream>
 #include <boost/bind.hpp>
 #include <Eigen/Eigen>                         // for vector math
-
 #include "Utils/CVarHelpers.h"                 // for parsing Eigen Vars as CVars
 #include <CVars/CVar.h>                        // for GLConsole
 #include <Utils/GetPot>                        // for command line parsing
 
-// Node used for communication between RP and any devices
+// Node is used for communication between RP and any devices
 #include <Node/Node.h>
 
 #include "Managers/NetworkManager.h"           // for managing the Network

@@ -1,7 +1,7 @@
 #ifndef SIMCAMERA_H
 #define SIMCAMERA_H
 
-#include <ModelGraph/EigenHelpers.h>
+#include <SimDevices/SimDeviceInfo.h>
 #include <SceneGraph/SimCam.h>
 #include <calibu/cam/CameraXml.h>
 
@@ -17,7 +17,7 @@
 ////////////////
 /////////////////
 
-class SimCamera
+class SimCamera: public SimDeviceInfo
 {
 public:
 
@@ -28,12 +28,17 @@ public:
   unsigned int                   m_nImgWidth;
   unsigned int                   m_nImgHeight;
   unsigned int                   m_nChannels;
+
   // Reference camera we use
   SceneGraph::GLSimCam           m_Camera;
+  int                            m_iBaseline;
   SceneGraph::eSimCamType        m_iCamType;
   int                            m_iFPS;
+  // Path of model.xml file for the sensor
+  string                         m_sModel;
+
   // Physical entity that camera attaches to
-  string                         m_sDeviceName;
+
   vector<string>                 m_vCameraModel;
   calibu::CameraRig              m_CameraRig;
 
@@ -41,12 +46,15 @@ public:
   /// INITIALIZER
   ///////////////////////
 
+  SimCamera(){
+  }
+
   bool init(Eigen::Vector6d vInitPose, string sDeviceName,
             SceneGraph::eSimCamType CameraType, int FPS, string sCameraModel){
     m_sDeviceName = sDeviceName;
     m_iFPS = FPS;
-    cout<<"[SimCamera] camera model file name is "<<sCameraModel<<
-          ". Device name is "<<m_sDeviceName<<endl;
+    cout<<"[SimCamera] camera model file name is "<<sCameraModel<<endl;
+    cout<<"Device name is "<<m_sDeviceName<<endl;
     m_CameraRig = calibu::ReadXmlRig(sCameraModel);
     calibu::CameraModel theCam = m_CameraRig.cameras[0].camera;
 
@@ -58,10 +66,10 @@ public:
     // initialize cameras
     m_iCamType = CameraType;
 
-
-//    m_Camera.Init(&pModelGraph->m_Render.m_glGraph,
-//                  Sophus::SE3d::exp( vInitPose ).matrix(),
-//                  K, m_nImgWidth, m_nImgHeight, m_iCamType );
+    // This now happens in RenderEngine
+    //    m_Camera.Init(&pModelGraph->m_Render.m_glGraph,
+    //                  Sophus::SE3d::exp( vInitPose ).matrix(),
+    //                  K, m_nImgWidth, m_nImgHeight, m_iCamType );
 
     cout<<"[SimCamera] init sim cam success. Type is "<<
           CameraType<<". Width is:"<<m_nImgWidth <<", "

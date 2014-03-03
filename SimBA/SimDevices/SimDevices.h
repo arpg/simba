@@ -39,19 +39,13 @@ public:
 
   // GETTERS
   SimDeviceInfo GetDeviceInfo(string sDeviceName);
-  Controller* GetController(string name);
+  SimDeviceInfo* GetController(string name);
   SimCamera* GetSimCam(string name);
   SimGPS* GetSimGPS(string name);
   SimVicon* GetSimVecon(string name);
 
   // MEMBER VARIABLES
-  vector<SimDeviceInfo>              m_vSimDevices;
-  map<string, SimGPS*>               m_SimGPSList;
-  map<string, SimVicon*>             m_SimViconList;
-  map<string, SimCamera*>            m_SimCamList;
-  map<string, SimLaser2D*>           m_SimLaser2DList;
-  map<string, SimLaser3D*>           m_SimLaser3DList;
-  map<string, Controller*>           m_ControllerList;
+  map<string, SimDeviceInfo*>  m_vSimDevices;
 
 };
 

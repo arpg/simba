@@ -674,6 +674,7 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement ){
                                         vDepthCameraPose);
     m_mModelNodes[pCameraBox->GetName()] = pCameraBox;
     cout<<pCameraBox->GetName()<<endl;
+
     // CREATE THE PHYSICS CONSTRAINT
 
     Eigen::Vector3d vPivot;
@@ -721,48 +722,56 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
         string sModel = GetAttribute(pElement, "Model");
 
         // Single-view systems: RGB, Grey, Depth
-        if(strcmp(sMode, "RGB")==0 || strcmp(sMode,"Depth")==0 ||
+        if(strcmp(sMode, "RGB")==0 ||
+           strcmp(sMode,"Depth")==0 ||
            strcmp(sMode,"Grey")==0){
           string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;
-          string sCamMode(sMode);
-          string sSensorName = sCamMode + sCameraName;
-          int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
+          int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
           vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
           // save device info
-          SimDeviceInfo Device;
-          Device.m_sDeviceName = sCameraName;
-          Device.m_sDeviceType = sType;
-          Device.m_iFPS = iFPS;
-          Device.m_vSensorList.push_back(sSensorName);
-          Device.m_vModel.push_back(sModel);
-          Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
+          SimCamera* Device = new SimCamera();
+          Device->m_sDeviceName = sCameraName;
+          Device->m_sDeviceType = sType;
+          Device->m_sDeviceMode = sMode;
+          Device->m_iFPS = iFPS;
+          Device->m_vModel.push_back(sModel);
+          Device->m_vPose<<vPose[0], vPose[1], vPose[2],
+              vPose[3], vPose[4], vPose[5];
           m_SimDevices.AddDevice(Device);
-          cout<<"[Proxy/ParseDevice] register "<<sType<<
-                " (SimCamera "<<sSensorName<<") success. Device Name is "<<
-                sCameraName<<"."<<endl;
         }
 
         // Double-view system: RGB-Depth Camera
+
+        /////?
+        ////TODO
+
+
+        // It's pointless to treat a two-camera system like one-,
+        // so let's make two!
         if(strcmp(sMode, "RGBD")==0 ){
           string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;
-          int iFPS=atoi( GetAttribute(pElement,"FPS").c_str());
+          int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
           vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-          vector<double> vBaseline =
-              GenNumFromChar(pElement->Attribute("Baseline"));
-          // Be careful: this device has two sensors.
-          SimDeviceInfo Device;
-          Device.m_sDeviceName = sCameraName;
-          Device.m_sDeviceType = sType;
-          Device.m_iFPS = iFPS;
-          Device.m_iBaseline = vBaseline[0];
-          Device.m_vSensorList.push_back("RGB"+sCameraName);
-          Device.m_vSensorList.push_back("Depth"+sCameraName);
-          Device.m_vModel.push_back(sModel);
-          Device.m_vModel.push_back(sModel);
-          Device.m_vPose<<vPose[0],vPose[1],vPose[2],vPose[3],vPose[4],vPose[5];
-          m_SimDevices.AddDevice(Device);
-          cout<<"[Proxy/ParseDevice] register "<<sType<<
-                " (SimCamera "<<sMode<<") success." <<endl;
+          // RGB Camera
+          SimCamera* RGBDevice = new SimCamera();
+          RGBDevice->m_sDeviceName = "RGB_"+sCameraName;
+          RGBDevice->m_sDeviceType = sType;
+          RGBDevice->m_sDeviceMode = "RGB";
+          RGBDevice->m_iFPS = iFPS;
+          RGBDevice->m_sModel = sModel;
+          RGBDevice->m_vPose<<vPose[0], vPose[1], vPose[2],
+              vPose[3], vPose[4], vPose[5];
+          m_SimDevices.AddDevice(RGBDevice);
+          // Depth Camera
+          SimCamera* DepthDevice = new SimCamera();
+          DepthDevice->m_sDeviceName = "Depth_"+sCameraName;
+          DepthDevice->m_sDeviceType = sType;
+          DepthDevice->m_sDeviceMode = "Depth";
+          DepthDevice->m_iFPS = iFPS;
+          DepthDevice->m_sModel = sModel;
+          DepthDevice->m_vPose<<vPose[0], vPose[1], vPose[2],
+              vPose[3], vPose[4], vPose[5];
+          m_SimDevices.AddDevice(DepthDevice);
         }
       }
 
@@ -776,10 +785,10 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
       if(sType=="Vicon"){
         string sViconName = GetAttribute( pElement, "Name")+"@"+sRobotName;
         string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
-        SimDeviceInfo Device;
-        Device.m_sDeviceName = sViconName;
-        Device.m_sDeviceType = sType;
-        Device.m_sBodyName = sBodyName;
+        SimDeviceInfo* Device = new SimDeviceInfo();
+        Device->m_sDeviceName = sViconName;
+        Device->m_sDeviceType = sType;
+        Device->m_sBodyName = sBodyName;
         m_SimDevices.AddDevice(Device);
         cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<
               " success."<<endl;
@@ -790,15 +799,24 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
     if(strcmp(sRootContent, "Controller")==0){
       string sType( sRootContent );
       string sMode( pElement->Attribute("Mode"));
-      string  sControllerName = GetAttribute(pElement, "Name");
-      SimDeviceInfo Device;
-      Device.m_sDeviceName = sControllerName;
-      Device.m_sDeviceType = sType;
-      Device.m_sDeviceMode = sMode;
-      Device.m_sRobotName = sRobotName;
-      m_SimDevices.AddDevice(Device);
-      cout<<"[Proxy/ParseDevice] Add controller device "<<sControllerName<<
-            " success."<<endl;
+      string sControllerName = GetAttribute(pElement, "Name");
+      string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
+      if(sMode=="Car"){
+        CarController* CarDevice = new CarController(sControllerName,
+                                                     sRobotName);
+        CarDevice->m_sDeviceType = sType;
+        CarDevice->m_sDeviceMode = sMode;
+        CarDevice->SetBodyName(sBodyName);
+        m_SimDevices.AddDevice(Device);
+      }
+      if(sMode=="Simple"){
+        SimpleController* SimpleDevice = new SimpleController(sControllerName,
+                                                              sRobotName);
+        SimpleDevice->m_sDeviceType = sType;
+        SimpleDevice->m_sDeviceMode = sMode;
+        SimpleDevice->SetBodyName(sBodyName);
+        m_SimDevices.AddDevice(Device);
+      }
     }
 
     // read next parent element

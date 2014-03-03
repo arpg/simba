@@ -11,7 +11,7 @@ SimDevices::SimDevices(){
 /// INITIALIZERS
 ////////////////////////////////////////////////////////////////////////
 
-void SimDevices::AddDevice(SimDeviceInfo devInfo){
+void SimDevices::AddDevice(SimDeviceInfo* devInfo){
   m_vSimDevices.push_back(devInfo);
 }
 
@@ -40,14 +40,10 @@ void SimDevices::InitAllDevices(){
   cout<<"[SimDevices] Successfully init all devices. "<<endl;
 }
 
-
-
 //////////////////////////////////////////////////////////////////////////
 
-void SimDevices::InitCamDevice(SimDeviceInfo& Device,
-                                     string sCameraModel){
-  string sCameraName = Device.m_sDeviceName;
-  int iFPS = Device.m_iFPS;
+void SimDevices::InitCamDevice(SimDeviceInfo& Device, string sCameraModel){
+
   for(unsigned int j = 0; j!= Device.m_vSensorList.size(); j++){
     string sSensorName = Device.m_vSensorList[j];
 
