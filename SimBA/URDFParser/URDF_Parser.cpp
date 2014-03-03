@@ -727,50 +727,50 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
            strcmp(sMode,"Grey")==0){
           string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;
           int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
-          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+          vector<double> dPose = GenNumFromChar(pElement->Attribute("Pose"));
+          Eigen::Vector6d vPose;
+          vPose<<dPose[0], dPose[1], dPose[2], dPose[3], dPose[4], dPose[5];
           // save device info
           SimCamera* Device = new SimCamera();
-          Device->m_sDeviceName = sCameraName;
+          if(sMode == "RGB"){
+            Device->init(vPose, sCameraName, SceneGraph::eSimCamRGB,
+                         iFPS, sModel);
+          }
+          else if(sMode == "Depth"){
+            Device->init(vPose, sCameraName, SceneGraph::eSimCamDepth,
+                         iFPS, sModel);
+          }
+          else if(sMode == "Grey"){
+            Device->init(vPose, sCameraName, SceneGraph::eSimCamLuminance,
+                         iFPS, sModel);
+          }
           Device->m_sDeviceType = sType;
           Device->m_sDeviceMode = sMode;
-          Device->m_iFPS = iFPS;
-          Device->m_vModel.push_back(sModel);
-          Device->m_vPose<<vPose[0], vPose[1], vPose[2],
-              vPose[3], vPose[4], vPose[5];
           m_SimDevices.AddDevice(Device);
         }
 
         // Double-view system: RGB-Depth Camera
-
-        /////?
-        ////TODO
-
-
-        // It's pointless to treat a two-camera system like one-,
-        // so let's make two!
         if(strcmp(sMode, "RGBD")==0 ){
           string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;
           int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
-          vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
+          vector<double> dPose = GenNumFromChar(pElement->Attribute("Pose"));
+          Eigen::Vector6d vPose;
+          vPose<<dPose[0], dPose[1], dPose[2], dPose[3], dPose[4], dPose[5];
           // RGB Camera
           SimCamera* RGBDevice = new SimCamera();
-          RGBDevice->m_sDeviceName = "RGB_"+sCameraName;
+          string sDeviceName = "RGB_"+sCameraName;
+          RGBDevice->init(vPose, sDeviceName, SceneGraph::eSimCamLuminance,
+                          iFPS, sModel);
           RGBDevice->m_sDeviceType = sType;
           RGBDevice->m_sDeviceMode = "RGB";
-          RGBDevice->m_iFPS = iFPS;
-          RGBDevice->m_sModel = sModel;
-          RGBDevice->m_vPose<<vPose[0], vPose[1], vPose[2],
-              vPose[3], vPose[4], vPose[5];
           m_SimDevices.AddDevice(RGBDevice);
           // Depth Camera
           SimCamera* DepthDevice = new SimCamera();
-          DepthDevice->m_sDeviceName = "Depth_"+sCameraName;
+          sDeviceName = "Depth_"+sCameraName;
+          DepthDevice->init(vPose, sDeviceName, SceneGraph::eSimCamDepth,
+                            iFPS, sModel);
           DepthDevice->m_sDeviceType = sType;
           DepthDevice->m_sDeviceMode = "Depth";
-          DepthDevice->m_iFPS = iFPS;
-          DepthDevice->m_sModel = sModel;
-          DepthDevice->m_vPose<<vPose[0], vPose[1], vPose[2],
-              vPose[3], vPose[4], vPose[5];
           m_SimDevices.AddDevice(DepthDevice);
         }
       }
@@ -807,7 +807,7 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
         CarDevice->m_sDeviceType = sType;
         CarDevice->m_sDeviceMode = sMode;
         CarDevice->SetBodyName(sBodyName);
-        m_SimDevices.AddDevice(Device);
+        m_SimDevices.AddDevice(CarDevice);
       }
       if(sMode=="Simple"){
         SimpleController* SimpleDevice = new SimpleController(sControllerName,
@@ -815,7 +815,7 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
         SimpleDevice->m_sDeviceType = sType;
         SimpleDevice->m_sDeviceMode = sMode;
         SimpleDevice->SetBodyName(sBodyName);
-        m_SimDevices.AddDevice(Device);
+        m_SimDevices.AddDevice(SimpleDevice);
       }
     }
 

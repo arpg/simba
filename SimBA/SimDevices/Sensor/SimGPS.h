@@ -1,9 +1,11 @@
 #ifndef SIMGPS_H
 #define SIMGPS_H
 
+#include "SimDevices/SimDeviceInfo.h"
+
 
 // return x,y,z of a GPS sensor.
-class SimGPS
+class SimGPS : public SimDeviceInfo
 {
 public:
     void init(string DeviceName){

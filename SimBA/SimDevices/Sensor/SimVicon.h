@@ -1,9 +1,11 @@
 #ifndef SIMVICON_H
 #define SIMVICON_H
 
+#include "SimDevices/SimDeviceInfo.h"
+
 // return x,y,z,p,q,r of body A.
 
-class SimVicon
+class SimVicon : public SimDeviceInfo
 {
 
 public:

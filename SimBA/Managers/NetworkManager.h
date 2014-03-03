@@ -98,14 +98,14 @@ public:
 
 private:
 
-  hal::node                                    m_Node;
-  std::string                                  m_sLocalSimName;
-  string                                       m_sServerName;
-  int                                          m_verbocity;
-  int                                          m_iTimeStep;
-  boost::mutex                                 m_Mutex;
-  SimDevices*                            m_pSimDevices;
-  RobotsManager*                               m_pRobotsManager;
+  hal::node       m_Node;
+  std::string     m_sLocalSimName;
+  string          m_sServerName;
+  int             m_verbocity;
+  int             m_iTimeStep;
+  boost::mutex    m_Mutex;
+  SimDevices*     m_pSimDevices;
+  RobotsManager*  m_pRobotsManager;
 
 };
 

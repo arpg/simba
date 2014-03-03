@@ -12,7 +12,7 @@
 #include <ModelGraph/RaycastVehicle.h>
 
 // Our Sensor data
-#include <SimDevices/SimDeviceInfo.h>
+#include <SimDevices/SimDevices.h>
 
 class RenderEngine
 {
@@ -46,6 +46,7 @@ public:
   /// MEMBER VARIABLES
   std::map<ModelNode*, SceneGraph::GLObject*> m_mSceneEntities;
   std::map<string, SceneGraph::GLObject*>     m_mRaycastWheels;
+  std::map<string, SimDeviceInfo*>            m_mDevices;
   SceneGraph::GLSceneGraph                    m_glGraph;
   SceneGraph::ImageView*                      m_LSimCamImage;
   SceneGraph::ImageView*                      m_RSimCamImage;

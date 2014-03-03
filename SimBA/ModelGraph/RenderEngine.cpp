@@ -122,10 +122,92 @@ void RenderEngine::AddNode( ModelNode *pNode){
 
 ///////////////////////////////////////
 
-void RenderEngine::AddDevice(SimDeviceInfo info){
+void RenderEngine::AddDevices(SimDevices& Devices){
+  // Fix this to only accept cameras
 
+  m_mDevices = Devices.m_vSimDevices;
 
 }
+
+/////////////////////////////////////////////////
+
+// Scan all SimDevices and send the simulated camera images to Pangolin.
+// Right now, we can only support up to two windows.
+
+// TODO: Fairly certain that there's a glitch here. Go through and correct the
+// Image buffers for content.
+bool RenderEngine::SetImagesToWindow(){
+  int WndCounter = 0;
+  for(unsigned int i =0 ; i!= m_SimDevices.m_vSimDevices.size(); i++){
+    SimDeviceInfo Device = m_SimDevices.m_vSimDevices[i];
+    if(Device.m_bDeviceOn==true){
+      for(unsigned int j=0;j!=Device.m_vSensorList.size();j++){
+        string sSimCamName = Device.m_vSensorList[j];
+        SimCamera* pSimCam = m_SimDevices.GetSimCam(sSimCamName);
+        SceneGraph::ImageView* ImageWnd;
+        // get pointer to window
+        if(WndCounter == 0){
+          ImageWnd = &m_LSimCamImage;
+        }
+        else if(WndCounter == 1){
+          ImageWnd = &m_RSimCamImage;
+        }
+
+        WndCounter++;
+        // set image to window
+        if (pSimCam->m_iCamType == 5){       // for depth image
+          float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
+                                            pSimCam->m_nImgHeight *
+                                            sizeof(float) );
+          if(pSimCam->capture(pImgbuf)==true){
+            ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
+                               pSimCam->m_nImgHeight,
+                               GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
+            free(pImgbuf);
+          }
+          else{
+            cout<<"[SetImagesToWindow] Set depth Image fail"<<endl;
+            return false;
+          }
+        }
+        else if(pSimCam->m_iCamType == 2){   // for RGB image
+          char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
+                                        pSimCam->m_nImgHeight * 3);
+          if(pSimCam->capture(pImgbuf)==true){
+            ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
+                               pSimCam->m_nImgHeight,
+                               GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
+            free(pImgbuf);
+          }
+          else{
+            cout<<"[SetImagesToWindow] Set RGB Image fail"<<endl;
+            return false;
+          }
+        }
+        else if(pSimCam->m_iCamType == 1){    //to show greyscale image
+          char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
+                                        pSimCam->m_nImgHeight);
+          if(pSimCam->capture(pImgbuf)==true){
+            ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
+                               pSimCam->m_nImgHeight,
+                               GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+            free(pImgbuf);
+          }
+          else{
+            cout<<"[SetImagesToWindow] Set Gray Image fail"<<endl;
+            return false;
+          }
+        }
+      }
+    }
+  }
+  return true;
+}
+
+
+
+
+
 
 ///////////////////////////////////////
 

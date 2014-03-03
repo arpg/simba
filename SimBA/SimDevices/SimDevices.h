@@ -28,21 +28,13 @@ public:
   SimDevices();
 
   // Initializers
-  void AddDevice(SimDeviceInfo devInfo);
-  void InitAllDevices();
-  void InitCamDevice(SimDeviceInfo& Device, string sCameraModel);
-  void InitViconDevice(SimDeviceInfo& Device);
-  void InitController(SimDeviceInfo& Device);
+  void AddDevice(SimDeviceInfo* devInfo);
 
   /// Update devices
-  void UpdateAllSensors();
+  void UpdateSensors();
 
   // GETTERS
-  SimDeviceInfo GetDeviceInfo(string sDeviceName);
-  SimDeviceInfo* GetController(string name);
-  SimCamera* GetSimCam(string name);
-  SimGPS* GetSimGPS(string name);
-  SimVicon* GetSimVecon(string name);
+  SimDeviceInfo* GetDeviceInfo(string sDeviceName);
 
   // MEMBER VARIABLES
   map<string, SimDeviceInfo*>  m_vSimDevices;
