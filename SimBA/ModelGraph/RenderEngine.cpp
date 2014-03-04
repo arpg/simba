@@ -143,7 +143,6 @@ void RenderEngine::AddDevices(SimDevices& Devices){
         }
       }
     }
-    cout<<Devices.m_vSimDevices.size()<<endl;
   }
 }
 

@@ -16,7 +16,7 @@ public:
 
   void Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
             SimDevices& m_SimDevices,
-            std::string sSimName, bool debug);
+            std::string sSimName, bool debug, bool render);
 
   /////////////////////////////////////////
   /// PHYSICS_ENGINE CONSTRUCTORS
@@ -49,6 +49,7 @@ public:
   PhysicsEngine m_Phys;
   RenderEngine m_Render;
   bool m_debug;
+  bool m_render;
 
 };
 

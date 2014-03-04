@@ -45,6 +45,7 @@ public:
   RobotsManager               m_RobotManager;
   NetworkManager              m_NetworkManager;
   URDF_Parser                 m_Parser;
+  bool                        m_bRender;
 
   /// Constructor
   LocalSim( const string &sLocalSimName,

@@ -66,10 +66,13 @@ void ModelGraphBuilder::RenderRobotGraph(SimRobot m_SimRobot){
 
 void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
                              SimDevices& m_SimDevices,
-                             std::string sSimName, bool debug){
+                             std::string sSimName, bool debug, bool render){
   m_debug = debug;
+  m_render = render;
   m_Phys.Init();
-  m_Render.Init(sSimName);
+  if(m_render){
+    m_Render.Init(sSimName);
+  }
   if(m_SimRobot.GetStateKeeperStatus()==true){
     // Get the PoseRW from the StateKeeper, and not the World.XML file.
   }
@@ -83,16 +86,20 @@ void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
   // This inheritance pattern is what makes the ModelNode class so important.
   AssociateWorldPhysics(m_WorldModel);
   AssociateRobotPhysics(m_SimRobot);
-  RenderWorldGraph(m_WorldModel);
-  RenderRobotGraph(m_SimRobot);
-  m_Render.AddToScene();
-  m_Render.CompleteScene();
-  m_Render.AddDevices(m_SimDevices);
+  if(m_render){
+    RenderWorldGraph(m_WorldModel);
+    RenderRobotGraph(m_SimRobot);
+    m_Render.AddToScene();
+    m_Render.CompleteScene();
+    m_Render.AddDevices(m_SimDevices);
+  }
 }
 
 void ModelGraphBuilder::UpdateScene(){
   m_Phys.StepSimulation();
-  m_Render.UpdateScene();
+  if(m_render){
+    m_Render.UpdateScene();
+  }
 }
 
 

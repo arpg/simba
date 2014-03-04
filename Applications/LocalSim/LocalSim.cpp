@@ -36,6 +36,9 @@ LocalSim::LocalSim(const string& sLocalSimName,
   // Do we want to run in debug mode?
   bool debug = false;
 
+  // Do we want to render the world?
+  m_bRender = false;
+
   // 4. We must decide the next actions based off of the Server Option.
   cout<<" The server option is set to "<<sServerOption<<"."<<endl;
 
@@ -45,7 +48,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
 
   // 5. Add the world, robot, and controllers to the ModelGraph
   m_Scene.Init(m_SimWorld, m_SimRobot, m_SimDevices,
-               sLocalSimName, debug);
+               sLocalSimName, debug, m_bRender);
 
   // TODO: What to do with StateKeeper option...?
 
@@ -106,23 +109,22 @@ int main( int argc, char** argv )
   // Initialize a LocalSim.
   LocalSim mLocalSim(sLocalSimName, sRobotURDF, sWorldURDF, sServerOption);
 
-  pangolin::RegisterKeyPressCallback('s',
-                                     boost::bind( &LocalSim::StepForward,
-                                                  &mLocalSim) );
-
-  // Default hooks for exiting (Esc) and fullscreen (tab).
-  while( !pangolin::ShouldQuit() ){
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-    // Swap frames and Process Events
-    pangolin::FinishFrame();
-
-    // Update Physics and ModelGraph
-    mLocalSim.StepForward();
-
-//    usleep( 1E6 / 60 );
+  // Are we rendering the world?
+  if(mLocalSim.m_bRender){
+    while( !pangolin::ShouldQuit() ){
+      glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+      // Swap frames and Process Events
+      pangolin::FinishFrame();
+      // Update Physics and ModelGraph
+      mLocalSim.StepForward();
+      usleep( 1E6 / 60 );
+    }
   }
 
+  else{
+    while(1){
+      mLocalSim.StepForward();
+    }
+  }
   return 0;
-
 }
