@@ -120,7 +120,7 @@ int main( int argc, char** argv )
     // Update Physics and ModelGraph
     mLocalSim.StepForward();
 
-    usleep( 1E6 / 60 );
+//    usleep( 1E6 / 60 );
   }
 
   return 0;

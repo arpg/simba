@@ -24,11 +24,9 @@ void SimDevices::UpdateSensors(){
       it != m_vSimDevices.end();
       it++){
     SimDeviceInfo* Device = it->second;
-    if(static_cast<SimCamera*>(Device) != NULL){
-      SimCamera* pCam = (SimCamera*) Device;
-      pCam->Update();
-    }
-    else if(static_cast<SimGPS*>(Device) != NULL){
+    // Cameras are taken care of in RenderEngine, so don't worry about
+    // them here.
+    if(static_cast<SimGPS*>(Device) != NULL){
       SimGPS* pGPS = (SimGPS*) Device;
       pGPS->Update();
     }

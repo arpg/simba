@@ -29,6 +29,7 @@ public:
 
   // Add sensors and cameras to the Scene
   void AddDevices(SimDevices& Devices);
+  void UpdateCameras();
   void SetImagesToWindow();
 
   ///////////////////////////////////////
@@ -40,6 +41,8 @@ public:
   // Complete the SceneGraph and Pangolin initialization
   void CompleteScene();
 
+  bool isCameraBody(string BodyName, string CameraName);
+
   // Update the Scene by one timestep
   void UpdateScene();
 
@@ -47,7 +50,7 @@ public:
   /// MEMBER VARIABLES
   std::map<ModelNode*, SceneGraph::GLObject*> m_mSceneEntities;
   std::map<string, SceneGraph::GLObject*>     m_mRaycastWheels;
-  std::map<string, SimCamera*>                m_mCameras;
+  std::map<SimCamera*, ModelNode*>            m_mCameras;
   SceneGraph::GLSceneGraph                    m_glGraph;
   SceneGraph::ImageView*                      m_LSimCamImage;
   SceneGraph::ImageView*                      m_RSimCamImage;

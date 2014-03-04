@@ -132,12 +132,32 @@ void RenderEngine::AddDevices(SimDevices& Devices){
       SimCamera* pSimCam = (SimCamera*) Device;
       // Initialize the cameras with SceneGraph
       pSimCam->init(&m_glGraph);
-      m_mCameras[pSimCam->GetDeviceName()] = pSimCam;
+      // Match devices with their ModelNodes
+      for(map<ModelNode*, SceneGraph::GLObject*>::iterator jj =
+          m_mSceneEntities.begin();
+          jj != m_mSceneEntities.end();
+          jj++){
+        ModelNode* pNode = jj->first;
+        if(isCameraBody(pNode->GetName(), pSimCam->GetBodyName())){
+          m_mCameras[pSimCam] = pNode;
+        }
+      }
     }
+    cout<<Devices.m_vSimDevices.size()<<endl;
   }
-  cout<<Devices.m_vSimDevices.size()<<endl;
-  cout<<"WOO"<<endl;
 }
+
+/////////////////////////////////////////////////
+
+void RenderEngine::UpdateCameras(){
+  for(map<SimCamera*, ModelNode*>::iterator it = m_mCameras.begin();
+      it != m_mCameras.end();
+      it++){
+    SimCamera* Device = it->first;
+    Device->Update();
+  }
+}
+
 
 /////////////////////////////////////////////////
 
@@ -148,10 +168,10 @@ void RenderEngine::AddDevices(SimDevices& Devices){
 // Image buffers for content.
 void RenderEngine::SetImagesToWindow(){
   int WndCounter = 0;
-  for(map<string, SimCamera*>::iterator it = m_mCameras.begin();
+  for(map<SimCamera*, ModelNode*>::iterator it = m_mCameras.begin();
       it != m_mCameras.end();
       it++){
-    SimCamera* Device = it->second;
+    SimCamera* Device = it->first;
     if(Device->m_bDeviceOn==true){
       SimCamera* pSimCam = (SimCamera*) Device;
       SceneGraph::ImageView* ImageWnd;
@@ -266,6 +286,17 @@ void RenderEngine::CompleteScene(){
 
 ////////////////////////////////////////////////////
 
+bool RenderEngine::isCameraBody(string BodyName, string CameraName){
+  bool inthere = false;
+  std::size_t found = BodyName.find(CameraName);
+  if (found!=std::string::npos){
+    inthere = true;
+  }
+  return inthere;
+}
+
+////////////////////////////////////////////////////
+
 void RenderEngine::UpdateScene(){
   /// React to changes in the PhysicsEngine
   std::map<ModelNode*, SceneGraph::GLObject*>::iterator it;
@@ -273,10 +304,6 @@ void RenderEngine::UpdateScene(){
     ModelNode* mn = it->first;
     SceneGraph::GLObject* p = it->second;
     p->SetPose( mn->GetPose() );
-    // Update our camera poses, if their objects moved.
-    // TODO: What names do they have? How do we connect them to their
-    // parents?
-
     // Update all of our tires.
     if((dynamic_cast<RaycastVehicle*>(mn) != NULL)){
       std::map<string, SceneGraph::GLObject*>::iterator jj;
@@ -300,6 +327,13 @@ void RenderEngine::UpdateScene(){
     }
   }
   /// Change the views in the Cameras
+  std::map<SimCamera*, ModelNode*>::iterator jj;
+  for(jj=m_mCameras.begin(); jj != m_mCameras.end(); jj++) {
+    SimCamera* pCamera = jj->first;
+    ModelNode* pNode = jj->second;
+    pCamera->m_vPose = pNode->GetPose();
+  }
+  UpdateCameras();
   SetImagesToWindow();
 }
 

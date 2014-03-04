@@ -734,18 +734,18 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
           SimCamera* Device;
           if(sMode == "RGB"){
             Device = new SimCamera(vPose, sCameraName,
-                                              SceneGraph::eSimCamRGB,
-                                              iFPS, sModel);
+                                   SceneGraph::eSimCamRGB,
+                                   iFPS, sModel);
           }
           else if(sMode == "Depth"){
             Device = new SimCamera(vPose, sCameraName,
-                                              SceneGraph::eSimCamDepth,
-                                              iFPS, sModel);
+                                   SceneGraph::eSimCamDepth,
+                                   iFPS, sModel);
           }
           else if(sMode == "Grey"){
             Device = new SimCamera(vPose, sCameraName,
-                                              SceneGraph::eSimCamLuminance,
-                                              iFPS, sModel);
+                                   SceneGraph::eSimCamLuminance,
+                                   iFPS, sModel);
           }
           Device->m_sDeviceType = sType;
           Device->m_sDeviceMode = sMode;
