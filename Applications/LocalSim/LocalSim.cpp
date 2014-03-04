@@ -61,22 +61,13 @@ LocalSim::LocalSim(const string& sLocalSimName,
 ////////////////////////////////
 
 void LocalSim::StepForward(){
-
+  // Update SimDevices
+  m_SimDevices.UpdateSensors();
+  // Update the Network
+  m_NetworkManager.UpdateNetwork();
   // Update the PhysicsEngine and RenderEngine
   // Comes after UpdateNetwork due to controller commands
   m_Scene.UpdateScene();
-
-  // Update SimDevices
-  m_SimDevices.UpdateSensors();
-
-  // Update the Network
-  m_NetworkManager.UpdateNetwork();
-
-
-
-  // Show the image in the current window
-  SetImagesToWindow(*m_Scene.m_Render.m_LSimCamImage,
-                    *m_Scene.m_Render.m_RSimCamImage);
 }
 
 

@@ -28,7 +28,8 @@ public:
   ///////////////////////////////////////
 
   // Add sensors and cameras to the Scene
-  void AddDevice(SimDeviceInfo info);
+  void AddDevices(SimDevices& Devices);
+  void SetImagesToWindow();
 
   ///////////////////////////////////////
 
@@ -46,7 +47,7 @@ public:
   /// MEMBER VARIABLES
   std::map<ModelNode*, SceneGraph::GLObject*> m_mSceneEntities;
   std::map<string, SceneGraph::GLObject*>     m_mRaycastWheels;
-  std::map<string, SimDeviceInfo*>            m_mDevices;
+  std::map<string, SimCamera*>                m_mCameras;
   SceneGraph::GLSceneGraph                    m_glGraph;
   SceneGraph::ImageView*                      m_LSimCamImage;
   SceneGraph::ImageView*                      m_RSimCamImage;
