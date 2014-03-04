@@ -62,14 +62,6 @@ void ModelGraphBuilder::RenderRobotGraph(SimRobot m_SimRobot){
   }
 }
 
-
-/////////////////////////////////////////////////
-
-void ModelGraphBuilder::ConstructDevices(SimDevices m_SimDevices){
-
-
-}
-
 ////////////////////////////////////////
 
 void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
@@ -95,6 +87,7 @@ void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
   RenderRobotGraph(m_SimRobot);
   m_Render.AddToScene();
   m_Render.CompleteScene();
+  m_Render.AddDevices(m_SimDevices);
 }
 
 void ModelGraphBuilder::UpdateScene(){

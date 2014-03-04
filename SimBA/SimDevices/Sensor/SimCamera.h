@@ -38,42 +38,32 @@ public:
   string                         m_sModel;
 
   // Physical entity that camera attaches to
-
-  vector<string>                 m_vCameraModel;
+  string                         m_sCameraModel;
   calibu::CameraRig              m_CameraRig;
 
   ///////////////////////
   /// INITIALIZER
   ///////////////////////
 
-  SimCamera(){
-  }
-
-  bool init(Eigen::Vector6d vInitPose, string sDeviceName,
+  SimCamera(Eigen::Vector6d vInitPose, string sDeviceName,
             SceneGraph::eSimCamType CameraType, int FPS, string sCameraModel){
     m_sDeviceName = sDeviceName;
     m_iFPS = FPS;
-    cout<<"[SimCamera] camera model file name is "<<sCameraModel<<endl;
-    cout<<"Device name is "<<m_sDeviceName<<endl;
-    m_CameraRig = calibu::ReadXmlRig(sCameraModel);
-    calibu::CameraModel theCam = m_CameraRig.cameras[0].camera;
-
-    // get some camera parameters
-    Eigen::Matrix3d K = theCam.K();
-    m_nImgWidth       = theCam.Width();
-    m_nImgHeight      = theCam.Height();
-
-    // initialize cameras
     m_iCamType = CameraType;
+    m_CameraRig = calibu::ReadXmlRig(sCameraModel);
+    m_sCameraModel = sCameraModel;
+    m_vPose = vInitPose;
+  }
 
-    // This now happens in RenderEngine
-    //    m_Camera.Init(&pModelGraph->m_Render.m_glGraph,
-    //                  Sophus::SE3d::exp( vInitPose ).matrix(),
-    //                  K, m_nImgWidth, m_nImgHeight, m_iCamType );
-
-    cout<<"[SimCamera] init sim cam success. Type is "<<
-          CameraType<<". Width is:"<<m_nImgWidth <<", "
-       <<" Height is: "<<m_nImgHeight<<endl;
+  bool init(SceneGraph::GLSceneGraph* glGraph){
+    calibu::CameraModel theCam = m_CameraRig.cameras[0].camera;
+    m_nImgWidth = theCam.Width();
+    m_nImgHeight = theCam.Height();
+    m_Camera.Init(glGraph, _Cart2T(m_vPose), theCam.K(),
+                  m_nImgWidth, m_nImgHeight, m_iCamType);
+    cout<<"[SimCamera] SimCamera initialization success."<<endl;
+    cout<<"Type is "<<m_sDeviceType<<". ";
+    cout<<"Width is:"<<m_nImgWidth <<". Height is: "<<m_nImgHeight<<endl;
     return true;
   }
 
@@ -109,12 +99,10 @@ public:
 
   bool capture(char* pImgbuf){
     if(m_iCamType == SceneGraph::eSimCamLuminance){
-      m_Camera.CaptureGrey(pImgbuf);
-      return true;
+      return m_Camera.CaptureGrey(pImgbuf);
     }
     else if(m_iCamType == SceneGraph::eSimCamRGB){
-      m_Camera.CaptureRGB(pImgbuf);
-      return true;
+      return m_Camera.CaptureRGB(pImgbuf);
     }
     else{
       return false;
@@ -123,7 +111,10 @@ public:
 
   bool capture(float* pImgbuf){
     if(m_iCamType == SceneGraph::eSimCamDepth){
-      m_Camera.CaptureDepth(pImgbuf);
+      return m_Camera.CaptureDepth(pImgbuf);
+    }
+    else{
+      return false;
     }
   }
 
@@ -132,37 +123,20 @@ public:
   ///////
 
   void Update(){
-    m_Camera.SetPoseRobot( _Cart2T(GetCameraPoseByBody()) );
+    m_Camera.SetPoseRobot(_Cart2T(m_vPose));
     m_Camera.RenderToTexture();
     m_Camera.DrawCamera();
-
     // TODO: Improve this methodology
-    // simluate frame rate. This is not a clever method because the whole app
-    // will sleep because of this line. However, what we want is just to
-    // capture 30 image in a second.
     usleep(1E0/m_iFPS);
   }
 
-  void UpdateByPose(Eigen::Matrix4d DesirePose){
-    m_Camera.SetPoseRobot(DesirePose);
+  // Must set this through the ModelNode set.
+  void UpdateByPose(Eigen::Vector6d DesiredPose){
+    m_vPose = DesiredPose;
+    m_Camera.SetPoseRobot(_Cart2T(DesiredPose));
     m_Camera.RenderToTexture();
     m_Camera.DrawCamera();
     usleep(1E0/m_iFPS);
-  }
-
-  ///////////////////////
-  /// GETTERS
-  ///////////////////////
-
-  Eigen::Vector6d GetCameraPoseByBody(){
-//    return m_pModelGraph->m_Phys.GetEntity6Pose( m_sDeviceName );
-  }
-
-  Eigen::Matrix4d GetCameraPose(){
-    Eigen::Matrix4d dPose = m_Camera.GetPoseRobot();
-
-    //          cout<<"Get camera pose "<<endl<< _T2Cart(dPose)<<endl;
-    return dPose;
   }
 
 };

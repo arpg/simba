@@ -59,7 +59,16 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
   // Check if we need to init device in node.
   if(m_sServerName=="WithoutNetwork"){
     cout<<"[NetworkManager/RegisterDevices]"<<
-          "Skip! Init Robot LocalSim without Network."<<endl;
+          "Skip! Init LocalSim without Network."<<endl;
+    m_pSimDevices = pSimDevices;
+    // Turn all of our devices on.
+    for(map<string, SimDeviceInfo*>::iterator it =
+        m_pSimDevices->m_vSimDevices.begin();
+        it != m_pSimDevices->m_vSimDevices.end();
+        it++){
+      SimDeviceInfo* Device = it->second;
+      Device->m_bDeviceOn = true;
+    }
   }
   else{
     m_pSimDevices = pSimDevices;
@@ -74,6 +83,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
       /// CAMERAS
       if(static_cast<SimCamera*>(Device) != NULL){
         SimCamera* pCam = (SimCamera*) Device;
+        pCam->m_bDeviceOn = true;
         // provide rpc method for camera to register
         m_Node.provide_rpc("RegsiterCamDevice",&_RegisterCamDevice,this);
         string sServiceName = GetFirstName(pCam->GetDeviceName());
@@ -90,25 +100,33 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
       /// GPS
       else if(static_cast<SimGPS*>(Device) != NULL){
         SimGPS* pGPS = (SimGPS*) Device;
+        pGPS->m_bDeviceOn = true;
         m_Node.advertise(pGPS->GetDeviceName());
       }
       /// VICON
       else if(static_cast<SimVicon*>(Device) != NULL){
         SimVicon* pVicon = (SimVicon*) Device;
+        pVicon->m_bDeviceOn = true;
         pVicon->Update();
       }
 
       /*******************
        * SimControllers
        ********************/
+
+      // TODO
+
+
       else if(static_cast<CarController*>(Device) != NULL){
         CarController* pCarCon = (CarController*) Device;
+        pCarCon->m_bDeviceOn = true;
 
 
       }
 
       else if(static_cast<SimpleController*>(Device) != NULL){
         SimpleController* pSimpleCon = (SimpleController*) Device;
+        pSimpleCon->m_bDeviceOn = true;
 
 
       }

@@ -36,16 +36,16 @@ LocalSim::LocalSim(const string& sLocalSimName,
   // Do we want to run in debug mode?
   bool debug = false;
 
-  // 5. Add the world, robot, and controllers to the ModelGraph
-  m_Scene.Init(m_SimWorld, m_SimRobot, m_SimDevices,
-               sLocalSimName, debug);
-
   // 4. We must decide the next actions based off of the Server Option.
   cout<<" The server option is set to "<<sServerOption<<"."<<endl;
 
   m_NetworkManager.Init( m_sLocalSimName, sServerOption);
   m_NetworkManager.RegisterRobot(&m_RobotManager);
   m_NetworkManager.RegisterDevices(&m_SimDevices);
+
+  // 5. Add the world, robot, and controllers to the ModelGraph
+  m_Scene.Init(m_SimWorld, m_SimRobot, m_SimDevices,
+               sLocalSimName, debug);
 
   // TODO: What to do with StateKeeper option...?
 

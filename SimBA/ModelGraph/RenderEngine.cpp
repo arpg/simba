@@ -130,9 +130,13 @@ void RenderEngine::AddDevices(SimDevices& Devices){
     SimDeviceInfo* Device = it->second;
     if(static_cast<SimCamera*>(Device) != NULL){
       SimCamera* pSimCam = (SimCamera*) Device;
+      // Initialize the cameras with SceneGraph
+      pSimCam->init(&m_glGraph);
       m_mCameras[pSimCam->GetDeviceName()] = pSimCam;
     }
   }
+  cout<<Devices.m_vSimDevices.size()<<endl;
+  cout<<"WOO"<<endl;
 }
 
 /////////////////////////////////////////////////
@@ -162,7 +166,8 @@ void RenderEngine::SetImagesToWindow(){
         float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
                                           pSimCam->m_nImgHeight *
                                           sizeof(float) );
-        if(pSimCam->capture(pImgbuf)==true){
+        bool success = pSimCam->capture(pImgbuf);
+        if(success){
           ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
                              pSimCam->m_nImgHeight,
                              GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
@@ -195,13 +200,7 @@ void RenderEngine::SetImagesToWindow(){
   }
 }
 
-
-
-
-
-
 ///////////////////////////////////////
-
 
 void RenderEngine::AddToScene(){
 
@@ -218,6 +217,8 @@ void RenderEngine::AddToScene(){
     m_glGraph.AddChild( w );
   }
 }
+
+///////////////////////////////////////
 
 void RenderEngine::CompleteScene(){
   const SceneGraph::AxisAlignedBoundingBox bbox =
@@ -272,8 +273,11 @@ void RenderEngine::UpdateScene(){
     ModelNode* mn = it->first;
     SceneGraph::GLObject* p = it->second;
     p->SetPose( mn->GetPose() );
+    // Update our camera poses, if their objects moved.
+    // TODO: What names do they have? How do we connect them to their
+    // parents?
 
-    //Update all of our tires.
+    // Update all of our tires.
     if((dynamic_cast<RaycastVehicle*>(mn) != NULL)){
       std::map<string, SceneGraph::GLObject*>::iterator jj;
       RaycastVehicle* pVehicle = (RaycastVehicle*) mn;

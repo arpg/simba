@@ -87,10 +87,4 @@
   Location="@Proxy1"
   Model="/home/bminortx/Code/SimBA/SimBA/SimDevices/Sensor/cameras.xml"/>
 
-
-  <!-- Lu: Must include this sensor if you use RobotProxy!
-  RobotProxy needs this sensor to get the robot's pose information. -->
-  <!--  <Sensor Name="ChassisVicon" Type="Vicon" Body="Chassis"/>
-  <Controller Name="MController" Mode="SimpleController"/>-->
-
 </robot>

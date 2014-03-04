@@ -87,7 +87,7 @@ public:
                                 int& iDataSize);
 
   /// RAYCAST VEHICLE METHODS
-  std::vector< Eigen::Matrix4d > GetVehiclePoses( Vehicle_Entity* Vehicle );
+  std::vector<Eigen::Matrix4d> GetVehiclePoses( Vehicle_Entity* Vehicle );
   std::vector<Eigen::Matrix4d> GetVehicleTransform(std::string sVehicleName);
 
   /// PUBLIC MEMBER VARIABLES

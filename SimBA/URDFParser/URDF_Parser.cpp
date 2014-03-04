@@ -731,18 +731,21 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
           Eigen::Vector6d vPose;
           vPose<<dPose[0], dPose[1], dPose[2], dPose[3], dPose[4], dPose[5];
           // save device info
-          SimCamera* Device = new SimCamera();
+          SimCamera* Device;
           if(sMode == "RGB"){
-            Device->init(vPose, sCameraName, SceneGraph::eSimCamRGB,
-                         iFPS, sModel);
+            Device = new SimCamera(vPose, sCameraName,
+                                              SceneGraph::eSimCamRGB,
+                                              iFPS, sModel);
           }
           else if(sMode == "Depth"){
-            Device->init(vPose, sCameraName, SceneGraph::eSimCamDepth,
-                         iFPS, sModel);
+            Device = new SimCamera(vPose, sCameraName,
+                                              SceneGraph::eSimCamDepth,
+                                              iFPS, sModel);
           }
           else if(sMode == "Grey"){
-            Device->init(vPose, sCameraName, SceneGraph::eSimCamLuminance,
-                         iFPS, sModel);
+            Device = new SimCamera(vPose, sCameraName,
+                                              SceneGraph::eSimCamLuminance,
+                                              iFPS, sModel);
           }
           Device->m_sDeviceType = sType;
           Device->m_sDeviceMode = sMode;
@@ -757,18 +760,18 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
           Eigen::Vector6d vPose;
           vPose<<dPose[0], dPose[1], dPose[2], dPose[3], dPose[4], dPose[5];
           // RGB Camera
-          SimCamera* RGBDevice = new SimCamera();
           string sDeviceName = "RGB_"+sCameraName;
-          RGBDevice->init(vPose, sDeviceName, SceneGraph::eSimCamLuminance,
-                          iFPS, sModel);
+          SimCamera* RGBDevice = new SimCamera(vPose, sDeviceName,
+                                               SceneGraph::eSimCamRGB,
+                                               iFPS, sModel);
           RGBDevice->m_sDeviceType = sType;
           RGBDevice->m_sDeviceMode = "RGB";
           m_SimDevices.AddDevice(RGBDevice);
           // Depth Camera
-          SimCamera* DepthDevice = new SimCamera();
           sDeviceName = "Depth_"+sCameraName;
-          DepthDevice->init(vPose, sDeviceName, SceneGraph::eSimCamDepth,
-                            iFPS, sModel);
+          SimCamera* DepthDevice = new SimCamera(vPose, sDeviceName,
+                                                 SceneGraph::eSimCamDepth,
+                                                 iFPS, sModel);
           DepthDevice->m_sDeviceType = sType;
           DepthDevice->m_sDeviceMode = "Depth";
           m_SimDevices.AddDevice(DepthDevice);
