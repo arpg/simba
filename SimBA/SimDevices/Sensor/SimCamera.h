@@ -38,6 +38,8 @@ public:
     SetDeviceName(sDeviceName);
     SetBodyName(sBodyName);
     SetRobotName(sRobotName);
+    m_nChannels = 1;
+//    (CameraType==SceneGraph::eSim) ? m_nChannels = 2 : m_nChannels = 1;
     m_iFPS = FPS;
     m_iCamType = CameraType;
     m_sModel = sCameraModel;
@@ -60,10 +62,6 @@ public:
   ///////////////////////
   /// CAMERA FUNCTIONS
   ///////////////////////
-
-  void SaveCamChannel(unsigned int CamType){
-    (CamType==SceneGraph::eSimCamRGB) ? m_nChannels = 2 : m_nChannels = 1;
-  }
 
   inline void NormalizeDepth( float* Depth, unsigned int Size){
     // find max depth

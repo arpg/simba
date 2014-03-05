@@ -43,6 +43,11 @@ void SimDevices::UpdateSensors(){
   *****************************************************************************/
 
 SimDeviceInfo* SimDevices::GetDeviceInfo(string sDeviceName){
-  return m_vSimDevices[sDeviceName];
+  for(map<string, SimDeviceInfo*>::iterator it = m_vSimDevices.begin();
+      it != m_vSimDevices.end();
+      it++){
+   cout<<it->first<<endl;
+  }
+    return m_vSimDevices[sDeviceName];
 }
 
