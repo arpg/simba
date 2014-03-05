@@ -358,6 +358,14 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
 
 }
 
+///////////////////////////////////////////////////////
+
+void PhysicsEngine::RegisterDevice(SimDeviceInfo* pDevice){
+  m_mDevices.push_back(pDevice);
+}
+
+///////////////////////////////////////////////////////
+
 bool PhysicsEngine::isVehicle(string Shape){
   bool vehi = false;
   std::size_t found = Shape.find("RaycastVehicle");
@@ -377,31 +385,22 @@ void PhysicsEngine::DebugDrawWorld(){
   m_pDynamicsWorld->debugDrawWorld();
 }
 
-///////////
-/// TODO: Figure out why this is necessary.
-///////////
 
-Eigen::Vector6d SwitchYaw(Eigen::Vector6d bad_yaw){
-  Eigen::Vector6d good_yaw;
-  good_yaw<<bad_yaw(0), bad_yaw(1), bad_yaw(2),
-      bad_yaw(4), bad_yaw(5), bad_yaw(3);
-  return good_yaw;
-}
+void PhysicsEngine::RunDevices(){
 
-Eigen::Vector6d SwitchWheelYaw(Eigen::Vector6d bad_yaw){
-  Eigen::Vector6d good_yaw;
-  good_yaw<<bad_yaw(0), bad_yaw(1), bad_yaw(2),
-      bad_yaw(4), -bad_yaw(3), bad_yaw(5);
-  Eigen::Vector6d temp;
-  temp<<0,0,0,M_PI/2,0,0;
-  good_yaw = good_yaw+temp;
-  return good_yaw;
+  // TODO: Complete this function for all available Devices
+  // This function takes all of our controller/sensors and processes
+  // whatever they need to do. For instance, the CarController would
+  // command the RaycastVehicle in a certain way, and all of the GPS
+  // and IMU would register the states of the physics.
+
 }
 
 ////////////////////////////////
 
 void PhysicsEngine::StepSimulation(){
   m_pDynamicsWorld->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
+  RunDevices();
   if(m_mRayVehicles.size()!=0){
     // Go through all of our vehicles and update their part poses.
     for(std::map<string, boost::shared_ptr<Vehicle_Entity> > ::iterator it =
@@ -410,12 +409,15 @@ void PhysicsEngine::StepSimulation(){
       Vehicle_Entity* eVehicle = it->second.get();
       NodeMotionState* mMotion = eVehicle->m_pMotionState.get();
 
+      // TODO: make the physics react to all of the commands coming
+      // through Node.
+
       //HOW TO PASS COMMANDS TO THE CAR:
-      VehiclePtr pVeh = eVehicle->m_pVehicle;
-      pVeh->setSteeringValue(M_PI/6, 0);
-      pVeh->setSteeringValue(M_PI/6, 1);
-      pVeh->applyEngineForce(10, 2);
-      pVeh->applyEngineForce(10, 3);
+//      VehiclePtr pVeh = eVehicle->m_pVehicle;
+//      pVeh->setSteeringValue(M_PI/6, 0);
+//      pVeh->setSteeringValue(M_PI/6, 1);
+//      pVeh->applyEngineForce(10, 2);
+//      pVeh->applyEngineForce(10, 3);
 
       RaycastVehicle* pVehicle = (RaycastVehicle*) &mMotion->object;
       std::vector<Eigen::Matrix4d> VehiclePoses =
@@ -443,90 +445,13 @@ void PhysicsEngine::PrintAllShapes(){
   }
 }
 
-//////////////////////////////////////////////////////////
-///
-/// OBJECT DELETION
-///
-//////////////////////////////////////////////////////////
-void PhysicsEngine::DeleteHingeConstraintFromDynamicsWorld(string sConstraintName){
-  btHingeConstraint* h = getHingeConstraint(sConstraintName);
-  btDiscreteDynamicsWorld* dynmaicsWorld = m_pDynamicsWorld.get();
-  dynmaicsWorld->removeConstraint(h);
-}
 
-///////////////////////////////////////////////////////////////////
-void PhysicsEngine::DeleteHinge2ConstraintFromDynamicsWorld(string sConstraintName){
-  btHinge2Constraint* h = getHinge2Constraint(sConstraintName);
-  btDiscreteDynamicsWorld* dynmaicsWorld = m_pDynamicsWorld.get();
-  dynmaicsWorld->removeConstraint(h);
-}
-
-///////////////////////////////////////////////////////////////////
-// Important! Must remove the constraint before removing the rigid Shape
-void PhysicsEngine::DeleteRigidBodyFromDynamicsWorld(string sShapeFullName){
-  Entity e = getEntity(sShapeFullName);
-  btRigidBody* objectShape = e.m_pRigidBody.get();
-
-  btDiscreteDynamicsWorld* dynmaicsWorld = m_pDynamicsWorld.get();
-
-  for(int i = dynmaicsWorld->getNumCollisionObjects()-1;i>=0;i--){
-    btCollisionObject* obj =dynmaicsWorld->getCollisionObjectArray()[i];
-    btRigidBody* Shape = btRigidBody::upcast(obj);
-
-    if(Shape == objectShape){
-      if (Shape && Shape->getMotionState()){
-        delete Shape->getMotionState();
-      }
-      dynmaicsWorld->removeCollisionObject(obj);
-      delete obj;
-    }
-  }
-}
-
-///////////////////////////////////////////////////////////////////
-// Remove all bodies and joints in m_mShapes mapping
-void PhysicsEngine::EraseEntityInShapeList(string sEntityName){
-  boost::shared_ptr<Entity> pEntity =  m_mShapes.find(sEntityName)->second;
-  pEntity.reset();
-  cout<<"find entity "<<sEntityName<< " success"<<endl;
-}
 
 //////////////////////////////////////////////////////////
 ///
 /// GETTERS
 ///
 //////////////////////////////////////////////////////////
-
-Entity PhysicsEngine::getEntity(string name){
-  if(m_mShapes.find(name) !=m_mShapes.end()){
-    Entity e =*m_mShapes.find(name)->second;
-    return e;
-  }
-  else{
-    cout<<"[PhysicsEngine] Fatal Error! Cannot get entity '"<<
-          name<<"'. Exit!"<<endl;
-    vector<string> Names = GetAllEntityName();
-    for(unsigned int ii = 0; ii<Names.size(); ii++){
-      cout<<Names.at(ii)<<endl;
-    }
-    Entity e =*m_mShapes.find(name)->second;
-    return e;
-  }
-}
-
-///////////////////////////////////////////////////////////////////
-vector<string> PhysicsEngine::GetAllEntityName(){
-  vector<string> vNameList;
-  std::map<string, boost::shared_ptr<Entity> >::iterator iter =
-      m_mShapes.begin();
-  for(iter = m_mShapes.begin();iter!=m_mShapes.end(); iter++){
-    string sFullName = iter->first;
-    vNameList.push_back(sFullName);
-  }
-  return vNameList;
-}
-
-///////////////////////////////////////////////////////////////////
 
 btHinge2Constraint* PhysicsEngine::getHinge2Constraint(string name){
   std::map<string, btHinge2Constraint*>::iterator iter = m_mHinge2.find(name);
@@ -556,333 +481,28 @@ btHingeConstraint* PhysicsEngine::getHingeConstraint(string name){
   }
 }
 
-///////////////////////////////////////////////////////////////////
-
-btDynamicsWorld* PhysicsEngine::GetDynamicsWorld(){
-  btDynamicsWorld* pDynmaicsWorld= m_pDynamicsWorld.get();
-  return pDynmaicsWorld;
-}
-
-///////////////////////////////////////////////////////////////////
-
-Eigen::Vector6d PhysicsEngine::GetEntity6Pose( string name )
-{
-  Entity e = getEntity( name );
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btTransform WorldTransform = rB->getCenterOfMassTransform();
-
-  btScalar roll, pitch, yaw;
-  WorldTransform.getBasis().getEulerZYX(yaw,pitch,roll);
-  double x, y, z, r, p, q;
-  x = WorldTransform.getOrigin().getX();
-  y = WorldTransform.getOrigin().getY();
-  z = WorldTransform.getOrigin().getZ();
-  r = roll;
-  p = pitch;
-  q = yaw;
-  Eigen::Vector6d toRet;
-  toRet << x, y, z, r, p, q;
-
-  return toRet;
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::GetEntity6Pose(string name, Eigen::Vector6d& rPose)
-{
-  Entity e = getEntity(name);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btTransform WorldTransform = rB->getCenterOfMassTransform();
-
-  btScalar roll, pitch, yaw;
-  WorldTransform.getBasis().getEulerZYX(yaw,pitch,roll);
-
-  rPose[0] = WorldTransform.getOrigin().getX();
-  rPose[1] = WorldTransform.getOrigin().getY();
-  rPose[2] = WorldTransform.getOrigin().getZ();
-  rPose[3] = roll;
-  rPose[4] = pitch;
-  rPose[5] = yaw;
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::SetEntity6Pose(string sName, Eigen::Vector6d Pose)
-{
-  SetEntityRotation(sName, Pose(3,0), Pose(4,0), Pose(5,0));
-
-  Eigen::Vector3d eOrigin;
-  eOrigin<<Pose(0,0), Pose(1,0), Pose(2,0);
-  SetEntityOrigin(sName, eOrigin);
-}
-
-///////////////////////////////////////////////////////////////////
-
-Eigen::Vector3d PhysicsEngine::GetEntityOrigin(string sName)
-{
-
-  Entity e = getEntity(sName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btVector3 btOrigin = rB->getCenterOfMassTransform().getOrigin();
-
-  Eigen::Vector3d eOrigin;
-  eOrigin<< btOrigin.getX(), btOrigin.getY() , btOrigin.getZ();
-
-  return eOrigin;
-}
-
-///////////////////////////////////////////////////////////////////
-
-Eigen::Matrix3d PhysicsEngine::GetEntityBasis(string sName)
-{
-  Entity e = getEntity(sName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btMatrix3x3 btBasis = rB->getCenterOfMassTransform().getBasis();
-
-  Eigen::Matrix3d mBasis;
-  mBasis << btBasis[0][0], btBasis[0][1], btBasis[0][2],
-      btBasis[1][0], btBasis[1][1], btBasis[1][2],
-      btBasis[2][0], btBasis[2][1], btBasis[2][2];
-  return mBasis;
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::SetEntityOrigin(string sName, Eigen::Vector3d eOrigin)
-{
-  Entity e = getEntity(sName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btTransform btTran = rB->getCenterOfMassTransform();
-
-  btVector3 BtOrigin = btTran.getOrigin();
-  BtOrigin.setX(eOrigin[0]);
-  BtOrigin.setY(eOrigin[1]);
-  BtOrigin.setZ(eOrigin[2]);
-  btTran.setOrigin(BtOrigin);
-
-  rB->setCenterOfMassTransform(btTran);
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::SetEntityBasis(string sName, Eigen::Matrix3d mBasis)
-{
-  Entity e = getEntity(sName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btTransform btTran = rB->getCenterOfMassTransform();
-
-  btMatrix3x3 btBasis;
-  btBasis.setValue(mBasis(0,0),mBasis(0,1),mBasis(0,2),
-                   mBasis(1,0),mBasis(1,1),mBasis(1,2),
-                   mBasis(2,0),mBasis(2,1),mBasis(2,2));
-  btTran.setBasis(btBasis);
-
-  rB->setCenterOfMassTransform(btTran);
-}
-
-///////////////////////////////////////////////////////////////////
-
-Eigen::Vector3d PhysicsEngine::GetEntityLinearVelocity(string sBodyFullName)
-{
-  Entity e = getEntity(sBodyFullName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btVector3 LinVelocity = rB->getLinearVelocity();
-
-  Eigen::Vector3d  eLinearVelocity;
-  eLinearVelocity<<LinVelocity.getX(),LinVelocity.getY(),LinVelocity.getZ();
-
-  return eLinearVelocity;
-}
-
-///////////////////////////////////////////////////////////////////
-
-double PhysicsEngine::GetEntityVelocity(string name)
-{
-  Entity e = getEntity(name);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  double vx = rB->getLinearVelocity()[0];
-  double vy = rB->getLinearVelocity()[1];
-  double vz = rB->getLinearVelocity()[2];
-
-  double velocity = sqrt(vx*vx + vy*vy+vz*vz);
-  return velocity;
-}
-
-///////////////////////////////////////////////////////////////////
-
-Eigen::Vector3d PhysicsEngine::GetEntityAngularVelocity(string sBodyFullName){
-  Entity e = getEntity(sBodyFullName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btVector3 AngVelocity = rB->getAngularVelocity();
-
-  Eigen::Vector3d  eAngularVelocity;
-  eAngularVelocity<<AngVelocity.getX(),AngVelocity.getY(),AngVelocity.getZ();
-
-  return eAngularVelocity;
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::SetEntityLinearvelocity(string sBodyFullName,
-                                            Eigen::Vector3d eLinearVelocity){
-  Entity e = getEntity(sBodyFullName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btVector3 btLinearvelocity;
-  btLinearvelocity.setX(eLinearVelocity[0]);
-  btLinearvelocity.setY(eLinearVelocity[1]);
-  btLinearvelocity.setZ(eLinearVelocity[2]);
-
-  rB->setLinearVelocity(btLinearvelocity);
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::SetEntityAngularvelocity(string sBodyFullName,
-                                             Eigen::Vector3d eAngularVelocity){
-  Entity e = getEntity(sBodyFullName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btVector3 btAngularvelocity;
-  btAngularvelocity.setX(eAngularVelocity[0]);
-  btAngularvelocity.setY(eAngularVelocity[1]);
-  btAngularvelocity.setZ(eAngularVelocity[2]);
-
-  rB->setAngularVelocity(btAngularvelocity);
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::SetEntityRotation(string EntityName, double roll, double pitch,
-                                      double yaw){
-  Entity e = getEntity(EntityName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btTransform tr= rB->getCenterOfMassTransform();
-  btQuaternion quat;
-  cout<<"try to set roll "<<roll<<" pitch "<<pitch<<" yaw "<<yaw<<endl;
-  quat.setEulerZYX(yaw,pitch,roll);
-  tr.setRotation(quat);
-
-  rB->setCenterOfMassTransform(tr);
-  PrintEntityRotation(EntityName);
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::GetEntityRotation(string EntityName, double& roll, double& pitch,
-                                      double& yaw)
-{
-  Entity e = getEntity(EntityName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-  btQuaternion quat = rB->getCenterOfMassTransform().getRotation();
-  roll = quat.getX();
-  pitch = quat.getY();
-  yaw = quat.getZ();
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::PrintEntityRotation(string EntityName){
-  Entity e = getEntity(EntityName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-  btQuaternion quat = rB->getCenterOfMassTransform().getRotation();
-  double roll = quat.getX();
-  double pitch = quat.getY();
-  double yaw = quat.getZ();
-  cout<<"get roll "<<roll<<" pitch "<<pitch<<" yaw "<<yaw<<endl;
-}
-
-///////////////////////////////////////////////////////////////////
-/// force, steering and Torque
-
-void PhysicsEngine::SetFriction(string name, double F)
-{
-  Entity e = getEntity(name);
-  btRigidBody* rB = e.m_pRigidBody.get(); //.m_pRigidBody->
-
-  rB->setFriction(F);
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::ApplyForceToEntity(string name, double F){
-  Entity e = getEntity(name);
-  btRigidBody* rB = e.m_pRigidBody.get(); //.m_pRigidBody->
-
-  btVector3 force;
-  force.setX(F);
-  force.setY(0);
-  force.setZ(0);
-
-  rB->applyCentralForce(force);
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::ApplyTorque(string sBodyFullName, Eigen::Vector3d eTorque){
-  Entity e = getEntity(sBodyFullName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  btVector3 Torque;
-
-  Torque.setX(eTorque[0]);
-  Torque.setY(eTorque[1]);
-  Torque.setZ(eTorque[2]);
-
-  Torque = (rB->getCenterOfMassTransform().getBasis())*Torque;
-
-  rB->applyTorque(Torque);
-}
-
-///////////////////////////////////////////////////////////////////
-
-void PhysicsEngine::ApplySteering(string sBodyFullName, Eigen::Vector3d eSteering){
-  Entity Wheel = getEntity(sBodyFullName);
-
-  btRigidBody* pWheel = Wheel.m_pRigidBody.get();
-  btVector3 eSteer;
-  eSteer[0] = eSteering[0];
-  eSteer[1] = eSteering[1];
-  eSteer[2] = eSteering[2];
-  pWheel->applyTorque(eSteer);
-}
-
-///////////////////////////////////////////////////////////////////
-/// serialize and deserialize. experimental .. not working now
-// return the serialize char* buffer for rigid body with 'bodyname'
-
-void PhysicsEngine::SerializeRigidBodyToChar(string sBodyName, const unsigned char*& pData,
-                                             int& iDataSize){
-  Entity e = getEntity(sBodyName);
-  btRigidBody* rB = e.m_pRigidBody.get();
-
-  int maxSerializeBufferSize = 1024*1024*5;
-  btDefaultSerializer serializer (maxSerializeBufferSize);
-
-  serializer.startSerialization();
-  serializer.registerNameForPointer(rB,"fuck!!!!");
-  rB->serializeSingleObject(&serializer);
-  serializer.finishSerialization();
-
-  pData = serializer.getBufferPointer();
-  iDataSize = serializer.getCurrentBufferSize();
-}
-
 //////////////////////////////////////////////////////////
 ///
 /// VEHICLE POSE GETTERS
 ///
 //////////////////////////////////////////////////////////
+
+Eigen::Vector6d PhysicsEngine::SwitchYaw(Eigen::Vector6d bad_yaw){
+  Eigen::Vector6d good_yaw;
+  good_yaw<<bad_yaw(0), bad_yaw(1), bad_yaw(2),
+      bad_yaw(4), bad_yaw(5), bad_yaw(3);
+  return good_yaw;
+}
+
+Eigen::Vector6d PhysicsEngine::SwitchWheelYaw(Eigen::Vector6d bad_yaw){
+  Eigen::Vector6d good_yaw;
+  good_yaw<<bad_yaw(0), bad_yaw(1), bad_yaw(2),
+      bad_yaw(4), -bad_yaw(3), bad_yaw(5);
+  Eigen::Vector6d temp;
+  temp<<0,0,0,M_PI/2,0,0;
+  good_yaw = good_yaw+temp;
+  return good_yaw;
+}
 
 std::vector< Eigen::Matrix4d > PhysicsEngine::GetVehiclePoses( Vehicle_Entity* Vehicle ){
   std::vector<Eigen::Matrix4d> VehiclePoses;

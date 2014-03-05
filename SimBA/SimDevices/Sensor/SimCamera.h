@@ -7,16 +7,6 @@
 
 // A wrapper for SceneGraph::SimCam for LocalSim.
 
-/////////////////
-////////////////
-////////////////
-// TODO: Strip away the ModelGraph references from this class.
-// It should hold information; it does not initialize anything
-// That functionality has now been moved to RenderEngine
-/////////////////
-////////////////
-/////////////////
-
 class SimCamera: public SimDeviceInfo
 {
 public:
@@ -25,33 +15,33 @@ public:
   /// GLOBAL VARIABLES
   ///////////////////////
 
-  unsigned int                   m_nImgWidth;
-  unsigned int                   m_nImgHeight;
-  unsigned int                   m_nChannels;
-
-  // Reference camera we use
-  SceneGraph::GLSimCam           m_Camera;
-  int                            m_iBaseline;
-  SceneGraph::eSimCamType        m_iCamType;
-  int                            m_iFPS;
+  /// Camera Properties
+  unsigned int            m_nImgWidth;
+  unsigned int            m_nImgHeight;
+  unsigned int            m_nChannels;
+  int                     m_iBaseline;
+  int                     m_iFPS;
+  SceneGraph::GLSimCam    m_Camera;
+  calibu::CameraRig       m_CameraRig;
+  SceneGraph::eSimCamType m_iCamType;
   // Path of model.xml file for the sensor
-  string                         m_sModel;
+  string                  m_sModel;
 
-  // Physical entity that camera attaches to
-  string                         m_sCameraModel;
-  calibu::CameraRig              m_CameraRig;
 
   ///////////////////////
   /// INITIALIZER
   ///////////////////////
 
-  SimCamera(Eigen::Vector6d vInitPose, string sDeviceName,
-            SceneGraph::eSimCamType CameraType, int FPS, string sCameraModel){
-    m_sDeviceName = sDeviceName;
+  SimCamera(string sDeviceName, string sBodyName, string sRobotName,
+            SceneGraph::eSimCamType CameraType, int FPS,
+            Eigen::Vector6d vInitPose, string sCameraModel){
+    SetDeviceName(sDeviceName);
+    SetBodyName(sBodyName);
+    SetRobotName(sRobotName);
     m_iFPS = FPS;
     m_iCamType = CameraType;
+    m_sModel = sCameraModel;
     m_CameraRig = calibu::ReadXmlRig(sCameraModel);
-    m_sCameraModel = sCameraModel;
     m_vPose = vInitPose;
   }
 

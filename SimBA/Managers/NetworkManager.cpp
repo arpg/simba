@@ -582,47 +582,50 @@ bool NetworkManager::PublishRobotToStateKeeper(){
   // 2. Set body state info
   vector<string> vAllBodyFullName =
       m_pRobotsManager->GetMainRobot()->GetAllBodyName();
-  for (unsigned int i=0;i!=vAllBodyFullName.size();i++)
-  {
-    string sBodyName = vAllBodyFullName[i];
-    // prepare pose info
-    Eigen::Vector3d eOrigin =
-        m_pRobotsManager->m_Scene.m_Phys.GetEntityOrigin(sBodyName);
-    Eigen::Matrix3d eBasis =
-        m_pRobotsManager->m_Scene.m_Phys.GetEntityBasis(sBodyName);
 
-    // prepare veloicty info
-    Eigen::Vector3d eLinearV =
-        m_pRobotsManager->m_Scene.m_Phys.GetEntityLinearVelocity(sBodyName);
-    Eigen::Vector3d eAngularV =
-        m_pRobotsManager->m_Scene.m_Phys.GetEntityAngularVelocity(sBodyName);
+  // TODO: Fix this implementation.
 
-    // set pose info
-    BodyStateMsg* mBodyState = mRobotFullState.add_body_state();
-    mBodyState->set_body_name(sBodyName);
-    mBodyState->mutable_origin()->set_x(eOrigin[0]);
-    mBodyState->mutable_origin()->set_y(eOrigin[1]);
-    mBodyState->mutable_origin()->set_z(eOrigin[2]);
+//  for (unsigned int i=0;i!=vAllBodyFullName.size();i++)
+//  {
+//    string sBodyName = vAllBodyFullName[i];
+//    // prepare pose info
+//    Eigen::Vector3d eOrigin =
+//        m_pRobotsManager->m_Scene.m_Phys.GetEntityOrigin(sBodyName);
+//    Eigen::Matrix3d eBasis =
+//        m_pRobotsManager->m_Scene.m_Phys.GetEntityBasis(sBodyName);
 
-    mBodyState->mutable_basis()->set_x11(eBasis(0,0));
-    mBodyState->mutable_basis()->set_x12(eBasis(0,1));
-    mBodyState->mutable_basis()->set_x13(eBasis(0,2));
-    mBodyState->mutable_basis()->set_x21(eBasis(1,0));
-    mBodyState->mutable_basis()->set_x22(eBasis(1,1));
-    mBodyState->mutable_basis()->set_x23(eBasis(1,2));
-    mBodyState->mutable_basis()->set_x31(eBasis(2,0));
-    mBodyState->mutable_basis()->set_x32(eBasis(2,1));
-    mBodyState->mutable_basis()->set_x33(eBasis(2,2));
+//    // prepare veloicty info
+//    Eigen::Vector3d eLinearV =
+//        m_pRobotsManager->m_Scene.m_Phys.GetEntityLinearVelocity(sBodyName);
+//    Eigen::Vector3d eAngularV =
+//        m_pRobotsManager->m_Scene.m_Phys.GetEntityAngularVelocity(sBodyName);
 
-    // set velocity
-    mBodyState->mutable_linear_velocity()->set_x(eLinearV[0]);
-    mBodyState->mutable_linear_velocity()->set_y(eLinearV[1]);
-    mBodyState->mutable_linear_velocity()->set_z(eLinearV[2]);
+//    // set pose info
+//    BodyStateMsg* mBodyState = mRobotFullState.add_body_state();
+//    mBodyState->set_body_name(sBodyName);
+//    mBodyState->mutable_origin()->set_x(eOrigin[0]);
+//    mBodyState->mutable_origin()->set_y(eOrigin[1]);
+//    mBodyState->mutable_origin()->set_z(eOrigin[2]);
 
-    mBodyState->mutable_angular_velocity()->set_x(eAngularV[0]);
-    mBodyState->mutable_angular_velocity()->set_y(eAngularV[1]);
-    mBodyState->mutable_angular_velocity()->set_z(eAngularV[2]);
-  }
+//    mBodyState->mutable_basis()->set_x11(eBasis(0,0));
+//    mBodyState->mutable_basis()->set_x12(eBasis(0,1));
+//    mBodyState->mutable_basis()->set_x13(eBasis(0,2));
+//    mBodyState->mutable_basis()->set_x21(eBasis(1,0));
+//    mBodyState->mutable_basis()->set_x22(eBasis(1,1));
+//    mBodyState->mutable_basis()->set_x23(eBasis(1,2));
+//    mBodyState->mutable_basis()->set_x31(eBasis(2,0));
+//    mBodyState->mutable_basis()->set_x32(eBasis(2,1));
+//    mBodyState->mutable_basis()->set_x33(eBasis(2,2));
+
+//    // set velocity
+//    mBodyState->mutable_linear_velocity()->set_x(eLinearV[0]);
+//    mBodyState->mutable_linear_velocity()->set_y(eLinearV[1]);
+//    mBodyState->mutable_linear_velocity()->set_z(eLinearV[2]);
+
+//    mBodyState->mutable_angular_velocity()->set_x(eAngularV[0]);
+//    mBodyState->mutable_angular_velocity()->set_y(eAngularV[1]);
+//    mBodyState->mutable_angular_velocity()->set_z(eAngularV[2]);
+//  }
 
   // 4. Publish robot state
   bool bStatus=false;

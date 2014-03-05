@@ -40,6 +40,17 @@ void ModelGraphBuilder::AssociateRobotPhysics(SimRobot& m_SimRobot){
   AssociatePhysicsConstraints(m_SimRobot);
 }
 
+
+void ModelGraphBuilder::AssociateDevices(SimDevices& m_SimDevices){
+ for(map<string, SimDeviceInfo*>::iterator it =
+      m_SimDevices.m_vSimDevices.begin();
+      it != m_SimDevices.m_vSimDevices.end();
+      it++){
+    SimDeviceInfo* pDevice = it->second;
+    m_Phys.RegisterDevice(pDevice);
+  }
+}
+
 /////////////////////////////////////////
 
 void ModelGraphBuilder::RenderWorldGraph(SimWorld m_SimWorld){
@@ -86,6 +97,7 @@ void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
   // This inheritance pattern is what makes the ModelNode class so important.
   AssociateWorldPhysics(m_WorldModel);
   AssociateRobotPhysics(m_SimRobot);
+  AssociateDevices(m_SimDevices);
   if(m_render){
     RenderWorldGraph(m_WorldModel);
     RenderRobotGraph(m_SimRobot);

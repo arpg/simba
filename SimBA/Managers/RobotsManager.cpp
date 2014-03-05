@@ -119,11 +119,13 @@ void RobotsManager::ApplyWorldFullState()
             origin.x21(), origin.x22(), origin.x23(),
             origin.x31(), origin.x32(), origin.x33();
 
-        // apply in bullet engine
-        m_Scene.m_Phys.SetEntityOrigin(sBodyName ,eOrigin);
-        m_Scene.m_Phys.SetEntityBasis(sBodyName ,mBasis);
-        m_Scene.m_Phys.SetEntityLinearvelocity(sBodyName, eLinearVelocity);
-        m_Scene.m_Phys.SetEntityAngularvelocity(sBodyName, eAngularVelocity);
+        // TODO: Make this happen. But not right now.
+
+//        // apply in bullet engine
+//        m_Scene.m_Phys.SetEntityOrigin(sBodyName ,eOrigin);
+//        m_Scene.m_Phys.SetEntityBasis(sBodyName ,mBasis);
+//        m_Scene.m_Phys.SetEntityLinearvelocity(sBodyName, eLinearVelocity);
+//        m_Scene.m_Phys.SetEntityAngularvelocity(sBodyName, eAngularVelocity);
       }
     }
   }

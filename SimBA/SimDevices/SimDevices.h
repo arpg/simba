@@ -16,7 +16,6 @@
 #include <SimDevices/Sensor/SimLaser3D.h>
 #include <SimDevices/Sensor/SimVicon.h>
 
-
 using namespace std;
 
 class SimDevices

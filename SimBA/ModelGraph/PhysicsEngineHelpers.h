@@ -13,6 +13,7 @@
 #include <ModelGraph/Shape.h>
 #include <ModelGraph/RaycastVehicle.h>
 #include <ModelGraph/Constraint.h>
+#include <SimDevices/SimDeviceInfo.h>
 
 //SceneGraphMotionState (for tracking our shapes)
 #include <SceneGraph/SceneGraph.h>

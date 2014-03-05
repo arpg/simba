@@ -29,7 +29,6 @@ public:
     m_sRobotName = sRobotName;
   }
 
-  // Not sure what this does... keeping for now.
   void SetBodyName(string sBodyName){
     m_sBodyName = sBodyName;
   }
@@ -51,7 +50,11 @@ public:
   string           m_sDeviceName;    // Device name (i.e. LCam@RaycastVehicle)
   string           m_sDeviceType;    // Type of device ('Camera')
   string           m_sDeviceMode;    // Mode for device ('RGB')
-  string           m_sBodyName;      // Physics body for the device
+  // Physics body for the device; note that the Physics body and the device
+  // usually have the same name. A notable exception is the RGBD camera, which
+  // is composed of two cameras, each with "RGB_" and "Depth_" before their
+  // device names, respectively.
+  string           m_sBodyName;
   string           m_sRobotName;     // Name of the Robot system
   bool             m_bDeviceOn;      // Mark if device is on or not.
   Eigen::Vector6d  m_vPose;

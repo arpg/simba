@@ -725,7 +725,7 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
         if(strcmp(sMode, "RGB")==0 ||
            strcmp(sMode,"Depth")==0 ||
            strcmp(sMode,"Grey")==0){
-          string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;
+          string sDeviceName= GetAttribute( pElement, "Name")+"@"+sRobotName;
           int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
           vector<double> dPose = GenNumFromChar(pElement->Attribute("Pose"));
           Eigen::Vector6d vPose;
@@ -733,47 +733,42 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
           // save device info
           SimCamera* Device;
           if(sMode == "RGB"){
-            Device = new SimCamera(vPose, sCameraName,
-                                   SceneGraph::eSimCamRGB,
-                                   iFPS, sModel);
+            Device = new SimCamera(sDeviceName, sDeviceName, sRobotName,
+                                   SceneGraph::eSimCamRGB, iFPS, vPose, sModel);
           }
           else if(sMode == "Depth"){
-            Device = new SimCamera(vPose, sCameraName,
-                                   SceneGraph::eSimCamDepth,
-                                   iFPS, sModel);
+            Device = new SimCamera(sDeviceName, sDeviceName, sRobotName,
+                                   SceneGraph::eSimCamDepth, iFPS,
+                                   vPose, sModel);
           }
           else if(sMode == "Grey"){
-            Device = new SimCamera(vPose, sCameraName,
-                                   SceneGraph::eSimCamLuminance,
-                                   iFPS, sModel);
+            Device = new SimCamera(sDeviceName, sDeviceName, sRobotName,
+                                   SceneGraph::eSimCamLuminance, iFPS,
+                                   vPose, sModel);
           }
-          Device->m_sDeviceType = sType;
-          Device->m_sDeviceMode = sMode;
           m_SimDevices.AddDevice(Device);
         }
 
         // Double-view system: RGB-Depth Camera
         if(strcmp(sMode, "RGBD")==0 ){
-          string sCameraName= GetAttribute( pElement, "Name")+"@"+sRobotName;
+          string sDeviceName= GetAttribute( pElement, "Name")+"@"+sRobotName;
           int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
           vector<double> dPose = GenNumFromChar(pElement->Attribute("Pose"));
           Eigen::Vector6d vPose;
           vPose<<dPose[0], dPose[1], dPose[2], dPose[3], dPose[4], dPose[5];
           // RGB Camera
-          string sDeviceName = "RGB_"+sCameraName;
-          SimCamera* RGBDevice = new SimCamera(vPose, sDeviceName,
+          string sCameraName = "RGB_"+sDeviceName;
+          SimCamera* RGBDevice = new SimCamera(sCameraName, sDeviceName,
+                                               sRobotName,
                                                SceneGraph::eSimCamRGB,
-                                               iFPS, sModel);
-          RGBDevice->m_sDeviceType = sType;
-          RGBDevice->m_sDeviceMode = "RGB";
+                                               iFPS, vPose, sModel);
           m_SimDevices.AddDevice(RGBDevice);
           // Depth Camera
-          sDeviceName = "Depth_"+sCameraName;
-          SimCamera* DepthDevice = new SimCamera(vPose, sDeviceName,
+          sCameraName = "Depth_"+sDeviceName;
+          SimCamera* DepthDevice = new SimCamera(sCameraName, sDeviceName,
+                                                 sRobotName,
                                                  SceneGraph::eSimCamDepth,
-                                                 iFPS, sModel);
-          DepthDevice->m_sDeviceType = sType;
-          DepthDevice->m_sDeviceMode = "Depth";
+                                                 iFPS, vPose, sModel);
           m_SimDevices.AddDevice(DepthDevice);
         }
       }

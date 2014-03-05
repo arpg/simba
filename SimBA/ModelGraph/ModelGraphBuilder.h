@@ -30,6 +30,8 @@ public:
 
   void AssociateRobotPhysics(SimRobot& m_SimRobot);
 
+  void AssociateDevices(SimDevices& m_SimDevices);
+
   /////////////////////////////////////////
   /// RENDER_ENGINE CONSTRUCTORS
   /////////////////////////////////////////
