@@ -39,6 +39,7 @@ public:
   void RegisterDevices(SimDevices* pSimDevices);
   void RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
                          RegisterNodeCamRepMsg & mReply);
+  std::map<string, string> ParseURI(string sURI);
   string CheckURI(string sURI);
   void RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
                                 RegisterControllerRepMsg & mReply);

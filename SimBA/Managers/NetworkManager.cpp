@@ -37,10 +37,43 @@ bool NetworkManager::Init(string sProxyName, string sServerName, int verbocity){
   *
   ***********************************************************/
 
+std::map<string, string> NetworkManager::ParseURI(string sURI){
+  std::map<string, string> uri_contents;
+  std::size_t found = sURI.find("[");
+    if(found!=std::string::npos){
+      uri_contents.insert(std::pair<string,string>("device",
+                                                   sURI.substr(0, found)));
+      found = found+1;
+      sURI = sURI.substr(found);
+    }
+    while(sURI.find(",")!=std::string::npos){
+      std::size_t found_name = sURI.find("=");
+      std::size_t found_value = sURI.find(',');
+      uri_contents.insert(std::pair<string,string>(
+                            sURI.substr(0, (found_name)),
+                            sURI.substr(found_name+1,
+                                        (found_value-found_name-1))));
+      sURI = sURI.substr(found_value+1);
+    }
+    std::size_t found_name = sURI.find("=");
+    std::size_t found_value = sURI.find(']');
+    uri_contents.insert(std::pair<string,string>(
+                          sURI.substr(0, (found_name)),
+                          sURI.substr(found_name+1,
+                                      (found_value-found_name-1))));
+    return uri_contents;
+}
+
 // Return 'FALSE' if device is invalid. Otherwise return device name.
 
 string NetworkManager::CheckURI(string sURI){
   // Find device in device manager
+  std::map<string, string> uri_contents = ParseURI(sURI);
+  for(map<string, string>::iterator it = uri_contents.begin();
+      it != uri_contents.end();
+      it++){
+    cout<<it->first<<" is set to "<<it->second<<endl;
+  }
   string sDeviceName = sURI+"@"+m_sLocalSimName;
   vector<SimDeviceInfo*> pDevices =
       m_pSimDevices->GetRelatedDevices(sDeviceName);
@@ -155,7 +188,7 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
     // the first camera.
     mReply.set_time_step(m_iTimeStep);
     mReply.set_regsiter_flag(1);
-//    mReply.set_channels(pCam->m_nChannels);
+    mReply.set_channels(pDevices.size());
     mReply.set_width(pCam->m_nImgWidth);
     mReply.set_height(pCam->m_nImgHeight);
     m_iNodeClients = m_iNodeClients + 1;
