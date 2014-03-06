@@ -41,7 +41,7 @@ void SimDevices::UpdateSensors(){
   * GETTERS
   *****************************************************************************/
 
-vector<SimDeviceInfo*> SimDevices::GetRelatedDevices(string sDeviceBodyName){
+vector<SimDeviceInfo*> SimDevices::GetAllRelatedDevices(string sDeviceBodyName){
   vector<SimDeviceInfo*> related_devices;
   for(map<string, SimDeviceInfo*>::iterator it = m_vSimDevices.begin();
       it != m_vSimDevices.end();
@@ -54,3 +54,34 @@ vector<SimDeviceInfo*> SimDevices::GetRelatedDevices(string sDeviceBodyName){
   return related_devices;
 }
 
+//////////////////////////
+
+// Only returns devices if they're on. Really handy for NetworkManager.
+vector<SimDeviceInfo*> SimDevices::GetOnDevices(){
+  vector<SimDeviceInfo*> on_devices;
+  for(map<string, SimDeviceInfo*>::iterator it = m_vSimDevices.begin();
+      it != m_vSimDevices.end();
+      it++){
+    SimDeviceInfo* pDevice = it->second;
+    if (pDevice->m_bDeviceOn){
+      on_devices.push_back(pDevice);
+    }
+  }
+  return on_devices;
+}
+
+////////////////////////
+
+// Only returns devices if they're on. Really handy for NetworkManager.
+vector<SimDeviceInfo*> SimDevices::GetOnRelatedDevices(string sDeviceBodyName){
+  vector<SimDeviceInfo*> related_devices;
+  for(map<string, SimDeviceInfo*>::iterator it = m_vSimDevices.begin();
+      it != m_vSimDevices.end();
+      it++){
+    SimDeviceInfo* pDevice = it->second;
+    if (pDevice->GetBodyName()==sDeviceBodyName && pDevice->m_bDeviceOn){
+      related_devices.push_back(pDevice);
+    }
+  }
+  return related_devices;
+}

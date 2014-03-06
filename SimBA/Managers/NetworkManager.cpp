@@ -33,7 +33,10 @@ bool NetworkManager::Init(string sProxyName, string sServerName, int verbocity){
 
 /************************************************************
   *
-  * NODE FUNCTIONS
+  * URI PARSERS
+  * These are incredibly useful; they provide paramenters,
+  * ahd they're the only things that tell us what
+  * devices the user wants on or off.
   *
   ***********************************************************/
 
@@ -74,15 +77,29 @@ string NetworkManager::CheckURI(string sURI){
       it++){
     cout<<it->first<<" is set to "<<it->second<<endl;
   }
-  string sDeviceName = sURI+"@"+m_sLocalSimName;
+  string sDeviceName = uri_contents["name"]+"@"+uri_contents["sim"];
   vector<SimDeviceInfo*> pDevices =
-      m_pSimDevices->GetRelatedDevices(sDeviceName);
+      m_pSimDevices->GetAllRelatedDevices(sDeviceName);
   if(!pDevices.empty()){
+    // Check for different devices here. Not sure how else to do this...
+    if(uri_contents["device"]=="openni:"){
+      if(uri_contents["rgb"]=="1"){
+        m_pSimDevices->m_vSimDevices["RGB_"+sDeviceName]->m_bDeviceOn == true;
+      }
+      if(uri_contents["depth"]=="1"){
+        m_pSimDevices->m_vSimDevices["Depth_"+sDeviceName]->m_bDeviceOn == true;
+      }
+    }
     return sDeviceName;
   }
   return "FALSE";
 }
 
+/************************************************************
+  *
+  * NODE FUNCTIONS
+  *
+  ***********************************************************/
 
 ////////////////////////////////////////////////////////////////////////
 // Initializes all devices attached to the robot into Node.
@@ -91,11 +108,12 @@ string NetworkManager::CheckURI(string sURI){
 // and been built into the ModelGraph.
 
 void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
+  m_pSimDevices = pSimDevices;
+
   // Check if we need to init device in node.
   if(m_sServerName=="WithoutNetwork"){
     cout<<"[NetworkManager/RegisterDevices]"<<
           "Skip! Init LocalSim without Network."<<endl;
-    m_pSimDevices = pSimDevices;
     // Turn all of our devices on.
     for(map<string, SimDeviceInfo*>::iterator it =
         m_pSimDevices->m_vSimDevices.begin();
@@ -106,7 +124,6 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
     }
   }
   else{
-    m_pSimDevices = pSimDevices;
     for(map<string, SimDeviceInfo*>::iterator it =
         m_pSimDevices->m_vSimDevices.begin();
         it != m_pSimDevices->m_vSimDevices.end();
@@ -118,7 +135,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
       /// CAMERAS
       if(static_cast<SimCamera*>(Device) != NULL && !Device->m_bHasAdvertised){
         vector<SimDeviceInfo*> related_devices =
-            m_pSimDevices->GetRelatedDevices(Device->GetBodyName());
+            m_pSimDevices->GetAllRelatedDevices(Device->GetBodyName());
         SimCamera* pCam = (SimCamera*) related_devices.at(0);
         // provide rpc method for camera to register
         m_Node.provide_rpc("RegsiterCamDevice",&_RegisterCamDevice,this);
@@ -182,7 +199,7 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
   string sDeviceName = CheckURI(mRequest.uri());
   if(sDeviceName!="FALSE"){
     vector<SimDeviceInfo*> pDevices =
-        m_pSimDevices->GetRelatedDevices(sDeviceName);
+        m_pSimDevices->GetAllRelatedDevices(sDeviceName);
     SimCamera* pCam = (SimCamera*) pDevices.at(0);
     // For multiple-camera systems, we take the parameters from
     // the first camera.
@@ -246,27 +263,20 @@ bool NetworkManager::UpdateNetwork(){
     }
   }
 
-  for(map<string, SimDeviceInfo*>::iterator it =
-      m_pSimDevices->m_vSimDevices.begin();
-      it != m_pSimDevices->m_vSimDevices.end();
-      it++){
-    SimDeviceInfo* Device = it->second;
-    // TODO: Narrow down our publishing to only devices that are on.
-
+  vector<SimDeviceInfo*> pDevices = m_pSimDevices->GetOnDevices();
+  for(unsigned int ii=0; ii<pDevices.size(); ii++){
+    SimDeviceInfo* Device = pDevices.at(ii);
     // Update Camera
-    if(static_cast<SimCamera*>(Device)!=NULL && Device->m_bDeviceOn &&
-       !Device->m_bHasPublished){
+    if(static_cast<SimCamera*>(Device)!=NULL && !Device->m_bHasPublished){
       PublishSimCamBySensor(Device->GetBodyName());
     }
     // TODO: Update cast model
     // Update GPS
-    else if(Device->m_sDeviceType == "GPS" && Device->m_bDeviceOn &&
-            !Device->m_bHasPublished){
+    else if(Device->m_sDeviceType == "GPS" && !Device->m_bHasPublished){
       PublishGPS(Device->GetBodyName());
     }
     // update Controller Info
-    else if(Device->m_sDeviceType == "Controller" && Device->m_bDeviceOn &&
-            !Device->m_bHasPublished){
+    else if(Device->m_sDeviceType == "Controller" && !Device->m_bHasPublished){
       ReceiveControllerInfo(Device->GetBodyName());
     }
 
@@ -286,20 +296,17 @@ bool NetworkManager::UpdateNetwork(){
 bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
   pb::CameraMsg mCamImage;
   mCamImage.set_device_time(m_iTimeStep);
-  /// Retrieve all of the cameras attached to this device.
-  /// Assumption: a body will never be made up of two different devices.
   vector<SimDeviceInfo*> pDevices =
-      m_pSimDevices->GetRelatedDevices(sCamBodyName);
+      m_pSimDevices->GetOnRelatedDevices(sCamBodyName);
   for(unsigned int ii=0; ii<pDevices.size(); ii++){
     SimCamera* pSimCam = (SimCamera*) pDevices.at(ii);
     pSimCam->m_bHasPublished = true;
-    std::cout<<"Name = "<<pSimCam->GetDeviceName()<<std::endl;
-    pb::ImageMsg *pImage = mCamImage.add_image();
 
     ////////////
     // A grayscale image
     ////////////
     if(pSimCam->m_iCamType == SceneGraph::eSimCamLuminance){
+      pb::ImageMsg *pImage = mCamImage.add_image();
       char* pImgbuf = (char*)malloc (pSimCam->m_nImgWidth *
                                      pSimCam->m_nImgHeight);
       if(pSimCam->capture(pImgbuf) == true){
@@ -319,6 +326,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
     // An RGB image
     ////////////
     else if(pSimCam->m_iCamType == SceneGraph::eSimCamRGB){
+      pb::ImageMsg *pImage = mCamImage.add_image();
       char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
                                     pSimCam->m_nImgHeight * 3);
       if(pSimCam->capture(pImgbuf)==true){
@@ -339,6 +347,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
     // A depth image
     ////////////
     else if(pSimCam->m_iCamType == SceneGraph::eSimCamDepth){
+      pb::ImageMsg *pImage = mCamImage.add_image();
       float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
                                         pSimCam->m_nImgHeight *
                                         sizeof(float) );

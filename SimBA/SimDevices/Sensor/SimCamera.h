@@ -45,6 +45,7 @@ public:
     m_sModel = sCameraModel;
     m_CameraRig = calibu::ReadXmlRig(sCameraModel);
     m_vPose = vInitPose;
+    m_bDeviceOn = false;
     m_bHasPublished = false;
   }
 
