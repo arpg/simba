@@ -86,8 +86,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
         pCam->m_bDeviceOn = true;
         // provide rpc method for camera to register
         m_Node.provide_rpc("RegsiterCamDevice",&_RegisterCamDevice,this);
-        string sServiceName = pCam->GetDeviceName();
-            //GetFirstName(pCam->GetDeviceName());
+        string sServiceName = GetFirstName(pCam->GetDeviceName());
         if(m_Node.advertise(sServiceName)==true){
           cout<<"[NetworkManager/RegisterDevices]"<<
                 " Advertising "<<sServiceName<<" --> Success."<<endl;
@@ -142,7 +141,8 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
         " NodeCam asking for register in timestep "<<m_iTimeStep<<"."<<endl;
   string sDeviceName = CheckURI(mRequest.uri());
   if(sDeviceName!="FALSE"){
-    SimCamera* pCam = (SimCamera*) m_pSimDevices->GetDeviceInfo(sDeviceName);
+    SimCamera* pCam = (SimCamera*) m_pSimDevices->
+        GetDeviceInfo(sDeviceName+"@"+m_sLocalSimName);
     mReply.set_time_step(m_iTimeStep);
     mReply.set_regsiter_flag(1);
     mReply.set_channels(pCam->m_nChannels);
@@ -209,10 +209,12 @@ bool NetworkManager::UpdateNetwork(){
       it++){
     SimDeviceInfo* Device = it->second;
     bool bDeviceOn = Device->m_bDeviceOn;
+
+    // TODO: Narrow down our publishing to only be devices that are on.
+
     // Update Camera
     if(static_cast<SimCamera*>(Device)!=NULL && bDeviceOn == true){
-      std::cout<<"Going in to publish"<<std::endl;
-      return PublishSimCamBySensor(Device->GetDeviceName());
+      PublishSimCamBySensor(Device->GetDeviceName());
     }
     // TODO: Update cast model
     // Update GPS
@@ -234,6 +236,10 @@ bool NetworkManager::UpdateNetwork(){
 ////////////////////////////////////////////////////////////////////////
 
 // Publish SimCamera by Sensor.
+// We MUST MAKE SURE that the glGraph has been activated, or else there
+// will be nothing to take a picture of!
+
+
 bool NetworkManager::PublishSimCamBySensor(string sCamName){
   NodeCamMsg mNodeCamMsg;
   mNodeCamMsg.set_time_step(m_iTimeStep);
@@ -243,8 +249,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName){
   SimCamera* pSimCam = (SimCamera*) m_pSimDevices->m_vSimDevices[sCamName];
   image_size = image_size + 1;
   NodeCamImageMsg *pImage = mNodeCamMsg.add_image();
-
-  std::cout<<"May be RGB = "<<pSimCam->m_iCamType<<std::endl;
+  std::cout<<"Name = "<<pSimCam->GetDeviceName()<<std::endl;
 
   ////////////
   // A grayscale image
@@ -265,7 +270,6 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName){
   // An RGB image
   ////////////
   else if(pSimCam->m_iCamType == SceneGraph::eSimCamRGB){
-    std::cout<<"It is RGB"<<std::endl;
     char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
                                   pSimCam->m_nImgHeight * 3);
     if(pSimCam->capture(pImgbuf)==true){
@@ -274,7 +278,6 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName){
       std::cout<<"captured!!"<<std::endl;
     }
     else{
-      std::cout<<"Didn't Capture!!"<<std::endl;
       return false;
     }
     free(pImgbuf);
@@ -296,13 +299,15 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName){
     }
     free(pImgbuf);
   }
+
   pImage->set_image_type(pSimCam->m_iCamType);
   pImage->set_image_height(pSimCam->m_nImgHeight);
   pImage->set_image_width(pSimCam->m_nImgWidth);
   mNodeCamMsg.set_size(image_size);
 
   // Publish the info
-  string sFirstName = pSimCam->GetDeviceName();//GetFirstName(sCamName);
+  string sFirstName = GetFirstName(pSimCam->GetDeviceName());
+  cout<<sFirstName<<endl;
   bool bStatus = m_Node.publish(sFirstName, mNodeCamMsg);
   if( bStatus == false){
     cout<<"["<<m_sLocalSimName<<

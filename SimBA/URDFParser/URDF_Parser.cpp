@@ -66,7 +66,8 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
   cout<<"[ParseRobot] Starting to parse robot"<<endl;
   XMLElement *pParent=pDoc.RootElement();
   string sRobotName(GetAttribute(pParent, "name"));
-  sRobotName = sRobotName+"@"+sProxyName;
+  sRobotName = sProxyName;
+
   rSimRobot.SetName(sRobotName);
   rSimRobot.SetRobotURDF(pDoc.ToDocument());
   rSimRobot.SetProxyName(sProxyName);
@@ -707,7 +708,8 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
   XMLElement *pParent=rDoc.RootElement();
   XMLElement *pElement=pParent->FirstChildElement();
   string sRobotName(GetAttribute(pParent,"name"));
-  sRobotName = sRobotName+"@"+sProxyName;
+  sRobotName = sProxyName;
+
 
   // read high level parent (root parent)
   while (pElement){

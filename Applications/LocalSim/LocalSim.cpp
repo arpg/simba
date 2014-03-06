@@ -37,7 +37,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
   bool debug = false;
 
   // Do we want to render the world?
-  m_bRender = false;
+  m_bRender = true;
 
   // 4. We must decide the next actions based off of the Server Option.
   cout<<" The server option is set to "<<sServerOption<<"."<<endl;
