@@ -18,6 +18,7 @@ public:
   // CONSTRUCTOR
   SimDeviceInfo(){
     m_bDeviceOn = false;
+    m_bHasPublished = false;
   }
 
   /// SETTERS
@@ -57,6 +58,9 @@ public:
   string           m_sBodyName;
   string           m_sRobotName;     // Name of the Robot system
   bool             m_bDeviceOn;      // Mark if device is on or not.
+  // Used in NetworkManager. True if it published already in a given cycle.
+  bool             m_bHasPublished;
+  bool             m_bHasAdvertised;
   Eigen::Vector6d  m_vPose;
 
 };

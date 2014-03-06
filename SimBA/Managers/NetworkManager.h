@@ -7,7 +7,12 @@
 #include <SimDevices/SimDevices.h>
 #include <URDFParser/URDF_Parser.h>
 #include <Managers/RobotsManager.h>
+
+/// Node messages for our controllers
 #include <NodeMessages.pb.h>
+#include <Camera.pb.h>
+#include <NodeCamMessage.pb.h>
+#include <NodeCar.pb.h>
 #include <Network/WorldState.h>
 
 using namespace std;
@@ -39,7 +44,7 @@ public:
                                 RegisterControllerRepMsg & mReply);
   bool UpdateNetwork();
   bool ReceiveControllerInfo(string sDeviceName);
-  bool PublishSimCamBySensor(string sCamName);
+  bool PublishSimCamBySensor(string sCamBodyName);
   bool PublishGPS(string sDeviceName);
 
 

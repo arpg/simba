@@ -33,7 +33,7 @@ public:
   void UpdateSensors();
 
   // GETTERS
-  SimDeviceInfo* GetDeviceInfo(string sDeviceName);
+  vector<SimDeviceInfo*> GetRelatedDevices(string sDeviceBodyName);
 
   // MEMBER VARIABLES
   map<string, SimDeviceInfo*>  m_vSimDevices;

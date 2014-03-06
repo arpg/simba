@@ -14,6 +14,7 @@ find_package( HAL 0.1 QUIET)
 find_package( Calibu 0.1 REQUIRED )
 find_package( Protobuf REQUIRED )
 find_package( Node REQUIRED )
+find_package( PbMsgs REQUIRED )
 find_package( Eigen3 REQUIRED )
 find_package( TinyXML2 REQUIRED )
 
@@ -27,6 +28,7 @@ set(USER_INC ${BULLET_INCLUDE_DIR}
   ${Node_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${TinyXML2_INCLUDE_DIRS}
+  ${PbMsgs_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR} )
 
@@ -164,6 +166,7 @@ target_link_libraries( ${PROJECT_NAME}
   ${Node_LIBRARIES}
   ${TinyXML2_LIBRARIES}
   ${EIGEN3_LIBRARIES}
+  ${PbMsgs_LIBRARIES}
   SimMessages
 )
 

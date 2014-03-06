@@ -41,11 +41,13 @@ bool NetworkManager::Init(string sProxyName, string sServerName, int verbocity){
 
 string NetworkManager::CheckURI(string sURI){
   // Find device in device manager
-  string sDeviceName = sURI;
-  // TODO: check if device is valid
-
-  // return device name if it is valid
-  return sDeviceName;
+  string sDeviceName = sURI+"@"+m_sLocalSimName;
+  vector<SimDeviceInfo*> pDevices =
+      m_pSimDevices->GetRelatedDevices(sDeviceName);
+  if(!pDevices.empty()){
+    return sDeviceName;
+  }
+  return "FALSE";
 }
 
 
@@ -81,12 +83,13 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
       * SimSensors
       ********************/
       /// CAMERAS
-      if(static_cast<SimCamera*>(Device) != NULL){
-        SimCamera* pCam = (SimCamera*) Device;
-        pCam->m_bDeviceOn = true;
+      if(static_cast<SimCamera*>(Device) != NULL && !Device->m_bHasAdvertised){
+        vector<SimDeviceInfo*> related_devices =
+            m_pSimDevices->GetRelatedDevices(Device->GetBodyName());
+        SimCamera* pCam = (SimCamera*) related_devices.at(0);
         // provide rpc method for camera to register
         m_Node.provide_rpc("RegsiterCamDevice",&_RegisterCamDevice,this);
-        string sServiceName = GetFirstName(pCam->GetDeviceName());
+        string sServiceName = GetFirstName(pCam->GetBodyName());
         if(m_Node.advertise(sServiceName)==true){
           cout<<"[NetworkManager/RegisterDevices]"<<
                 " Advertising "<<sServiceName<<" --> Success."<<endl;
@@ -95,6 +98,10 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
           cout<<"[NetworkManager/RegisterDevices]"<<
                 " Advertising "<<sServiceName<<" --> Fail."<<endl;
           exit(-1);
+        }
+        for(unsigned int ii=0; ii<related_devices.size(); ii++){
+          related_devices.at(ii)->m_bDeviceOn = true;
+         related_devices.at(ii)->m_bHasAdvertised = true;
         }
       }
       /// GPS
@@ -141,11 +148,14 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
         " NodeCam asking for register in timestep "<<m_iTimeStep<<"."<<endl;
   string sDeviceName = CheckURI(mRequest.uri());
   if(sDeviceName!="FALSE"){
-    SimCamera* pCam = (SimCamera*) m_pSimDevices->
-        GetDeviceInfo(sDeviceName+"@"+m_sLocalSimName);
+    vector<SimDeviceInfo*> pDevices =
+        m_pSimDevices->GetRelatedDevices(sDeviceName);
+    SimCamera* pCam = (SimCamera*) pDevices.at(0);
+    // For multiple-camera systems, we take the parameters from
+    // the first camera.
     mReply.set_time_step(m_iTimeStep);
     mReply.set_regsiter_flag(1);
-    mReply.set_channels(pCam->m_nChannels);
+//    mReply.set_channels(pCam->m_nChannels);
     mReply.set_width(pCam->m_nImgWidth);
     mReply.set_height(pCam->m_nImgHeight);
     m_iNodeClients = m_iNodeClients + 1;
@@ -208,28 +218,29 @@ bool NetworkManager::UpdateNetwork(){
       it != m_pSimDevices->m_vSimDevices.end();
       it++){
     SimDeviceInfo* Device = it->second;
-    bool bDeviceOn = Device->m_bDeviceOn;
-
-    // TODO: Narrow down our publishing to only be devices that are on.
+    // TODO: Narrow down our publishing to only devices that are on.
 
     // Update Camera
-    if(static_cast<SimCamera*>(Device)!=NULL && bDeviceOn == true){
-      PublishSimCamBySensor(Device->GetDeviceName());
+    if(static_cast<SimCamera*>(Device)!=NULL && Device->m_bDeviceOn &&
+       !Device->m_bHasPublished){
+      PublishSimCamBySensor(Device->GetBodyName());
     }
     // TODO: Update cast model
     // Update GPS
-    else if(Device->m_sDeviceType == "GPS" && bDeviceOn == true){
-      if(PublishGPS(Device->GetDeviceName()) == false ){
-        return false;
-      }
+    else if(Device->m_sDeviceType == "GPS" && Device->m_bDeviceOn &&
+            !Device->m_bHasPublished){
+      PublishGPS(Device->GetBodyName());
     }
     // update Controller Info
-    else if(Device->m_sDeviceType == "Controller" && bDeviceOn == true){
-      if(ReceiveControllerInfo(Device->GetDeviceName()) == false){
-        return false;
-      }
+    else if(Device->m_sDeviceType == "Controller" && Device->m_bDeviceOn &&
+            !Device->m_bHasPublished){
+      ReceiveControllerInfo(Device->GetBodyName());
     }
+
+    Device->m_bHasPublished = false;
+
   }
+
   return true;
 }
 
@@ -239,76 +250,85 @@ bool NetworkManager::UpdateNetwork(){
 // We MUST MAKE SURE that the glGraph has been activated, or else there
 // will be nothing to take a picture of!
 
+bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
+  pb::CameraMsg mCamImage;
+  mCamImage.set_device_time(m_iTimeStep);
+  /// Retrieve all of the cameras attached to this device.
+  /// Assumption: a body will never be made up of two different devices.
+  vector<SimDeviceInfo*> pDevices =
+      m_pSimDevices->GetRelatedDevices(sCamBodyName);
+  for(unsigned int ii=0; ii<pDevices.size(); ii++){
+    SimCamera* pSimCam = (SimCamera*) pDevices.at(ii);
+    pSimCam->m_bHasPublished = true;
+    std::cout<<"Name = "<<pSimCam->GetDeviceName()<<std::endl;
+    pb::ImageMsg *pImage = mCamImage.add_image();
 
-bool NetworkManager::PublishSimCamBySensor(string sCamName){
-  NodeCamMsg mNodeCamMsg;
-  mNodeCamMsg.set_time_step(m_iTimeStep);
-  int image_size = 0;
-
-  // save image to NodeCamMsg data strucure
-  SimCamera* pSimCam = (SimCamera*) m_pSimDevices->m_vSimDevices[sCamName];
-  image_size = image_size + 1;
-  NodeCamImageMsg *pImage = mNodeCamMsg.add_image();
-  std::cout<<"Name = "<<pSimCam->GetDeviceName()<<std::endl;
-
-  ////////////
-  // A grayscale image
-  ////////////
-  if(pSimCam->m_iCamType == SceneGraph::eSimCamLuminance){
-    char* pImgbuf = (char*)malloc (pSimCam->m_nImgWidth *
-                                   pSimCam->m_nImgHeight);
-    if(pSimCam->capture(pImgbuf)==true){
-      pImage->set_image(pImgbuf, pSimCam->m_nImgWidth *
-                        pSimCam->m_nImgHeight);
+    ////////////
+    // A grayscale image
+    ////////////
+    if(pSimCam->m_iCamType == SceneGraph::eSimCamLuminance){
+      char* pImgbuf = (char*)malloc (pSimCam->m_nImgWidth *
+                                     pSimCam->m_nImgHeight);
+      if(pSimCam->capture(pImgbuf) == true){
+        pImage->set_timestamp( m_iTimeStep);
+        pImage->set_width( pSimCam->m_nImgWidth );
+        pImage->set_height( pSimCam->m_nImgHeight );
+        pImage->set_type(pb::PB_UNSIGNED_SHORT);
+        pImage->set_format(pb::PB_LUMINANCE);
+        pImage->set_data(pImgbuf);
+      }
+      else{
+        return false;
+      }
+      free(pImgbuf);
     }
-    else{
-      return false;
+    ////////////
+    // An RGB image
+    ////////////
+    else if(pSimCam->m_iCamType == SceneGraph::eSimCamRGB){
+      char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
+                                    pSimCam->m_nImgHeight * 3);
+      if(pSimCam->capture(pImgbuf)==true){
+        pImage->set_data(pImgbuf);
+        pImage->set_timestamp( m_iTimeStep);
+        pImage->set_width( pSimCam->m_nImgWidth );
+        pImage->set_height( pSimCam->m_nImgHeight );
+        pImage->set_type(pb::PB_UNSIGNED_BYTE);
+        pImage->set_format(pb::PB_RGB);
+        cout<<"Published RGB"<<endl;
+      }
+      else{
+        return false;
+      }
+      free(pImgbuf);
     }
-    free(pImgbuf);
+    ////////////
+    // A depth image
+    ////////////
+    else if(pSimCam->m_iCamType == SceneGraph::eSimCamDepth){
+      float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
+                                        pSimCam->m_nImgHeight *
+                                        sizeof(float) );
+      if(pSimCam->capture(pImgbuf)==true){
+        pImage->set_data((char*)pImgbuf);
+        pImage->set_timestamp( m_iTimeStep);
+        pImage->set_width( pSimCam->m_nImgWidth );
+        pImage->set_height( pSimCam->m_nImgHeight );
+        pImage->set_type(pb::PB_FLOAT);
+        pImage->set_format(pb::PB_LUMINANCE);
+        cout<<"Published Depth"<<endl;
+      }
+      else{
+        return false;
+      }
+      free(pImgbuf);
+    }
   }
-  ////////////
-  // An RGB image
-  ////////////
-  else if(pSimCam->m_iCamType == SceneGraph::eSimCamRGB){
-    char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
-                                  pSimCam->m_nImgHeight * 3);
-    if(pSimCam->capture(pImgbuf)==true){
-      pImage->set_image(pImgbuf,pSimCam->m_nImgWidth *
-                        pSimCam->m_nImgHeight*3);
-      std::cout<<"captured!!"<<std::endl;
-    }
-    else{
-      return false;
-    }
-    free(pImgbuf);
-  }
-  ////////////
-  // A depth image
-  ////////////
-  else if(pSimCam->m_iCamType == SceneGraph::eSimCamDepth){
-    float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
-                                      pSimCam->m_nImgHeight *
-                                      sizeof(float) );
-    if(pSimCam->capture(pImgbuf)==true){
-      pImage->set_image(pImgbuf, pSimCam->m_nImgWidth *
-                        pSimCam->m_nImgHeight *
-                        sizeof(float));
-    }
-    else{
-      return false;
-    }
-    free(pImgbuf);
-  }
-
-  pImage->set_image_type(pSimCam->m_iCamType);
-  pImage->set_image_height(pSimCam->m_nImgHeight);
-  pImage->set_image_width(pSimCam->m_nImgWidth);
-  mNodeCamMsg.set_size(image_size);
 
   // Publish the info
-  string sFirstName = GetFirstName(pSimCam->GetDeviceName());
+  string sFirstName = GetFirstName(sCamBodyName);
   cout<<sFirstName<<endl;
-  bool bStatus = m_Node.publish(sFirstName, mNodeCamMsg);
+  bool bStatus = m_Node.publish(sFirstName, mCamImage);
   if( bStatus == false){
     cout<<"["<<m_sLocalSimName<<
           "/"<<sFirstName<<"] ERROR: publishing images fail.."<<endl;
@@ -318,6 +338,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamName){
     cout<<"["<<m_sLocalSimName<<
           "/"<<sFirstName<<"] Publsih NodeCam image success." <<endl;
   }
+  cout<<"Published the Whole Image"<<endl;
   return true;
 }
 
@@ -383,7 +404,7 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
   // Simple Controller (aka Camera Body control?)
   else if(static_cast<SimpleController*>( pDevice ) != NULL){
     SimpleController* pSimpController = (SimpleController*) pDevice;
-    PoseMsg Command;
+    pb::PoseMsg Command;
     if(m_Node.receive( sServiceName, Command)==true){
       pSimpController->UpdateCommand(Command);
       return true;

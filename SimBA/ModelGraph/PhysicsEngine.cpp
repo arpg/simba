@@ -413,11 +413,11 @@ void PhysicsEngine::StepSimulation(){
       // through Node.
 
       //HOW TO PASS COMMANDS TO THE CAR:
-//      VehiclePtr pVeh = eVehicle->m_pVehicle;
-//      pVeh->setSteeringValue(M_PI/6, 0);
-//      pVeh->setSteeringValue(M_PI/6, 1);
-//      pVeh->applyEngineForce(10, 2);
-//      pVeh->applyEngineForce(10, 3);
+      VehiclePtr pVeh = eVehicle->m_pVehicle;
+      pVeh->setSteeringValue(M_PI/6, 0);
+      pVeh->setSteeringValue(M_PI/6, 1);
+      pVeh->applyEngineForce(10, 2);
+      pVeh->applyEngineForce(10, 3);
 
       RaycastVehicle* pVehicle = (RaycastVehicle*) &mMotion->object;
       std::vector<Eigen::Matrix4d> VehiclePoses =

@@ -37,17 +37,20 @@ void SimDevices::UpdateSensors(){
   }
 }
 
-
 /******************************************************************************
   * GETTERS
   *****************************************************************************/
 
-SimDeviceInfo* SimDevices::GetDeviceInfo(string sDeviceName){
+vector<SimDeviceInfo*> SimDevices::GetRelatedDevices(string sDeviceBodyName){
+  vector<SimDeviceInfo*> related_devices;
   for(map<string, SimDeviceInfo*>::iterator it = m_vSimDevices.begin();
       it != m_vSimDevices.end();
       it++){
-   cout<<it->first<<endl;
+    SimDeviceInfo* pDevice = it->second;
+    if (pDevice->GetBodyName()==sDeviceBodyName){
+      related_devices.push_back(pDevice);
+    }
   }
-    return m_vSimDevices[sDeviceName];
+  return related_devices;
 }
 

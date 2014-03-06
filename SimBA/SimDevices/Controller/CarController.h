@@ -3,6 +3,7 @@
 
 #include "SimDevices/SimDeviceInfo.h"
 #include "PB_Headers/SimMessages.pb.h"
+#include "NodeCar.pb.h"
 
 class CarController: public SimDeviceInfo
 {

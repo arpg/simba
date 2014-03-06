@@ -121,7 +121,6 @@ message WorldFullStateMsg
 message RegisterRobotReqMsg
 {
     required string             name               =1;
-    required PoseMsg            command            =2;
 }
 
 message RegisterRobotRepMsg
@@ -133,40 +132,6 @@ message RegisterRobotRepMsg
 
 
 /////////////////////////// For RPG device /////////////////////////
-
-// ------ For controller
-message PoseMsg
-{
-    repeated string               body_name        =1; // allow apply same command to several body
-    required double               time_step        =2;
-    required double               x                =3;
-    required double               y                =4;
-    required double               z                =5;
-    required double               p                =6;
-    required double               q                =7;
-    required double               r                =8;
-}
-
-
-message VehicleMsg
-{
-    required double          steering_angle        =1;
-    required double          desired_force         =2;
-}
-
-
-message RegisterControllerReqMsg
-{
-    optional bytes          topic        	   =1;
-}
-
-message RegisterControllerRepMsg
-{
-    optional bool           success                = 1;
-}
-
-
-
 // ------ For GPS --------
 message GPSReqMsg
 {
@@ -197,18 +162,4 @@ message NodeCamImageMsg
     optional int32          image_type            = 2;
     optional int32          image_height          = 3;
     optional int32          image_width           = 4;
-}
-
-message RegisterNodeCamReqMsg
-{
-    optional string         uri                    =1;
-}
-
-message RegisterNodeCamRepMsg
-{
-    optional int32          time_step              = 1;
-    optional int32          regsiter_flag          = 2;
-    optional int32          width                  = 3;
-    optional int32          height                 = 4;
-    optional int32          channels               = 5;
 }

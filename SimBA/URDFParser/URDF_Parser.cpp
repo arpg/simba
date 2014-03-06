@@ -674,7 +674,6 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement ){
                                         vDimension[2], vMass[0], 1,
                                         vDepthCameraPose);
     m_mModelNodes[pCameraBox->GetName()] = pCameraBox;
-    cout<<pCameraBox->GetName()<<endl;
 
     // CREATE THE PHYSICS CONSTRAINT
 
