@@ -72,11 +72,11 @@ std::map<string, string> NetworkManager::ParseURI(string sURI){
 string NetworkManager::CheckURI(string sURI){
   // Find device in device manager
   std::map<string, string> uri_contents = ParseURI(sURI);
-  for(map<string, string>::iterator it = uri_contents.begin();
-      it != uri_contents.end();
-      it++){
-    cout<<it->first<<" is set to "<<it->second<<endl;
-  }
+//  for(map<string, string>::iterator it = uri_contents.begin();
+//      it != uri_contents.end();
+//      it++){
+//    cout<<it->first<<" is set to "<<it->second<<endl;
+//  }
   string sDeviceName = uri_contents["name"]+"@"+uri_contents["sim"];
   vector<SimDeviceInfo*> pDevices =
       m_pSimDevices->GetAllRelatedDevices(sDeviceName);
@@ -150,8 +150,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
           exit(-1);
         }
         for(unsigned int ii=0; ii<related_devices.size(); ii++){
-          related_devices.at(ii)->m_bDeviceOn = true;
-         related_devices.at(ii)->m_bHasAdvertised = true;
+          related_devices.at(ii)->m_bHasAdvertised = true;
         }
       }
       /// GPS
@@ -199,7 +198,7 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
   string sDeviceName = CheckURI(mRequest.uri());
   if(sDeviceName!="FALSE"){
     vector<SimDeviceInfo*> pDevices =
-        m_pSimDevices->GetAllRelatedDevices(sDeviceName);
+        m_pSimDevices->GetOnRelatedDevices(sDeviceName);
     SimCamera* pCam = (SimCamera*) pDevices.at(0);
     // For multiple-camera systems, we take the parameters from
     // the first camera.

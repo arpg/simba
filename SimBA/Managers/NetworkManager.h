@@ -35,12 +35,14 @@ public:
   /// INITIALIZE NETWORK
   bool Init(string sLocalSimName, string sServerName, int verbocity=0);
 
+  /// URI PARSERS
+  std::map<string, string> ParseURI(string sURI);
+  string CheckURI(string sURI);
+
   /// NODE FUNCTIONS
   void RegisterDevices(SimDevices* pSimDevices);
   void RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
                          RegisterNodeCamRepMsg & mReply);
-  std::map<string, string> ParseURI(string sURI);
-  string CheckURI(string sURI);
   void RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
                                 RegisterControllerRepMsg & mReply);
   bool UpdateNetwork();
