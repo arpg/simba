@@ -9,7 +9,7 @@ using namespace std;
 StateKeeper::StateKeeper(string sStateKeeperName, string sWorldURDFFile)
 {
   // initialize node
-  m_Node.set_verbocity(1); // be a bit noisy
+//  m_Node.set_verbocity(1); // be a bit noisy
   m_Node.init( sStateKeeperName );
 
   // set up a publisher

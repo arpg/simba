@@ -21,7 +21,7 @@ bool NetworkManager::Init(string sProxyName, string sServerName, int verbocity){
   m_verbocity      = verbocity;
   m_iNodeClients   = 0;
 
-  m_Node.set_verbocity(m_verbocity ); // make some noise on errors
+//  m_Node.set_verbocity(m_verbocity ); // make some noise on errors
   bool worked = m_Node.init(m_sLocalSimName);
   if(!worked){
     cout<<"[NetworkManager] Init Node '"<<

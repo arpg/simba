@@ -103,9 +103,12 @@ void RenderEngine::AddNode( ModelNode *pNode){
     //Light
     else if (dynamic_cast<LightShape*>(pShape) != NULL){
       LightShape* pbShape = (LightShape *) pShape;
-      SceneGraph::GLShadowLight* new_light = new SceneGraph::GLShadowLight();
-      new_light->SetPose(pbShape->GetPose());
-      new_light->EnableLight();
+//      SceneGraph::GLShadowLight* new_light = new SceneGraph::GLShadowLight();
+      // IMPORTANT!! Can only use GLLight here if you want to use sim cam...
+      // DO NOT USE GL Shadow HERE!!!
+      SceneGraph::GLLight* new_light = new SceneGraph::GLLight(pbShape->GetPose()(0,0),
+                                                               pbShape->GetPose()(1,0),
+                                                               pbShape->GetPose()(2,0));
       m_mSceneEntities[pNode] = new_light;
     }
 
@@ -148,7 +151,8 @@ void RenderEngine::AddDevices(SimDevices& Devices){
 
 /////////////////////////////////////////////////
 
-void RenderEngine::UpdateCameras(){
+void RenderEngine::UpdateCameras()
+{
   for(map<SimCamera*, ModelNode*>::iterator it = m_mCameras.begin();
       it != m_mCameras.end();
       it++){
