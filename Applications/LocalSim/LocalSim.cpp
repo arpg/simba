@@ -48,7 +48,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
 
   // 5. Add the world, robot, and controllers to the ModelGraph
   m_Scene.Init(m_SimWorld, m_SimRobot, m_SimDevices,
-               sLocalSimName, debug, m_bRender);
+               sLocalSimName, debug, m_bRender, false);
 
   // TODO: What to do with StateKeeper option...?
 

@@ -115,8 +115,13 @@ void RenderEngine::AddNode( ModelNode *pNode){
     //Mesh
     else if (dynamic_cast<MeshShape*>(pShape) != NULL){
       MeshShape* pbShape = (MeshShape *) pShape;
-      SceneGraph::GLMesh* new_mesh =
-          new SceneGraph::GLMesh(pbShape->GetFileDir());
+//      SceneGraph::GLMesh* new_mesh =
+//          new SceneGraph::GLMesh(pbShape->GetFileDir());
+
+      SceneGraph::GLMesh* new_mesh = new SceneGraph::GLMesh();
+      new_mesh->Init(pbShape->GetFileDir());
+      new_mesh->SetPerceptable(true);
+      new_mesh->SetScale(pbShape->GetScale());
       new_mesh->SetPose(pbShape->GetPose());
       m_mSceneEntities[pNode] = new_mesh;
     }
@@ -151,14 +156,16 @@ void RenderEngine::AddDevices(SimDevices& Devices){
 
 /////////////////////////////////////////////////
 
-void RenderEngine::UpdateCameras()
+bool RenderEngine::UpdateCameras()
 {
   for(map<SimCamera*, ModelNode*>::iterator it = m_mCameras.begin();
       it != m_mCameras.end();
       it++){
     SimCamera* Device = it->first;
     Device->Update();
+    return true;
   }
+    return false;
 }
 
 
@@ -243,7 +250,8 @@ void RenderEngine::AddToScene(){
 
 ///////////////////////////////////////
 
-void RenderEngine::CompleteScene(){
+void RenderEngine::CompleteScene(bool bEnableCameraView=false)
+{
   const SceneGraph::AxisAlignedBoundingBox bbox =
       m_glGraph.ObjectAndChildrenBounds();
   const Eigen::Vector3d center = bbox.Center();
@@ -272,19 +280,27 @@ void RenderEngine::CompleteScene(){
   m_view3d->SetDrawFunction( SceneGraph::ActivateDrawFunctor(
                                m_glGraph, m_stacks3d) );
 
-//  // window for display image capture from SimCamera
-//  m_LSimCamImage = new SceneGraph::ImageView(true, true);
-//  m_LSimCamImage->SetBounds( 0.0, 0.5, 0.75, 1.0/*, 512.0f/384.0f*/ );
-
-//  // window for display image capture from SimCamera
-//  m_RSimCamImage = new SceneGraph::ImageView(true, true);
-//  m_RSimCamImage->SetBounds( 0.5, 1.0, 0.75, 1.0/*, 512.0f/384.0f */);
-
   // Add our views as children to the base container.
   pangolin::DisplayBase().AddDisplay( *m_view3d );
-//  pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
-//  pangolin::DisplayBase().AddDisplay( *m_RSimCamImage );
 
+  if(bEnableCameraView==true)
+  {
+      m_bCameraView= true;
+    //  // window for display image capture from SimCamera
+      m_LSimCamImage = new SceneGraph::ImageView(true, true);
+      m_LSimCamImage->SetBounds( 0.0, 0.5, 0.75, 1.0/*, 512.0f/384.0f*/ );
+
+    //  // window for display image capture from SimCamera
+      m_RSimCamImage = new SceneGraph::ImageView(true, true);
+      m_RSimCamImage->SetBounds( 0.5, 1.0, 0.75, 1.0/*, 512.0f/384.0f */);
+
+      pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
+      pangolin::DisplayBase().AddDisplay( *m_RSimCamImage );
+  }
+  else
+  {
+    m_bCameraView= false;
+  }
 }
 
 ////////////////////////////////////////////////////
@@ -336,8 +352,10 @@ void RenderEngine::UpdateScene(){
     ModelNode* pNode = jj->second;
     pCamera->m_vPose = pNode->GetPose();
   }
-  UpdateCameras();
-//  SetImagesToWindow();
+  if(UpdateCameras()==true &&m_bCameraView==true)
+  {
+    SetImagesToWindow();
+  }
 }
 
 

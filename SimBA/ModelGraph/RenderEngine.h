@@ -29,7 +29,7 @@ public:
 
   // Add sensors and cameras to the Scene
   void AddDevices(SimDevices& Devices);
-  void UpdateCameras();
+  bool UpdateCameras();
   void SetImagesToWindow();
 
   ///////////////////////////////////////
@@ -39,7 +39,7 @@ public:
   void AddToScene();
 
   // Complete the SceneGraph and Pangolin initialization
-  void CompleteScene();
+  void CompleteScene(bool bEnableCameraView);
 
   bool isCameraBody(string BodyName, string CameraName);
 
@@ -56,6 +56,7 @@ public:
   SceneGraph::ImageView*                      m_RSimCamImage;
   pangolin::View*                             m_view3d;
   pangolin::OpenGlRenderState                 m_stacks3d;
+  bool                                        m_bCameraView;
 
 };
 

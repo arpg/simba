@@ -77,7 +77,8 @@ void ModelGraphBuilder::RenderRobotGraph(SimRobot m_SimRobot){
 
 void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
                              SimDevices& m_SimDevices,
-                             std::string sSimName, bool debug, bool render){
+                             std::string sSimName, bool debug, bool render,
+                             bool bEnableCameraView=false){
   m_debug = debug;
   m_render = render;
   m_Phys.Init();
@@ -102,7 +103,7 @@ void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
     RenderWorldGraph(m_WorldModel);
     RenderRobotGraph(m_SimRobot);
     m_Render.AddToScene();
-    m_Render.CompleteScene();
+    m_Render.CompleteScene(bEnableCameraView);
     m_Render.AddDevices(m_SimDevices);
   }
 }

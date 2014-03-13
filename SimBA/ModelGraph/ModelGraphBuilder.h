@@ -16,7 +16,7 @@ public:
 
   void Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
             SimDevices& m_SimDevices,
-            std::string sSimName, bool debug, bool render);
+            std::string sSimName, bool debug, bool render, bool bEnableCameraView);
 
   /////////////////////////////////////////
   /// PHYSICS_ENGINE CONSTRUCTORS
