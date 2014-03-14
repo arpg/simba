@@ -58,7 +58,7 @@ public:
   std::vector<Eigen::Matrix4d> GetVehicleTransform(std::string sVehicleName);
 
   /// PUBLIC MEMBER VARIABLES
-  DebugDraw                                               m_DebugDrawer;
+  GLDebugDrawer	                                          m_DebugDrawer;
   std::map<string, boost::shared_ptr<Vehicle_Entity> >    m_mRayVehicles;
   std::map<string, boost::shared_ptr<Entity> >            m_mShapes;
   std::map<string, boost::shared_ptr<Compound_Entity> >   m_mCompounds;

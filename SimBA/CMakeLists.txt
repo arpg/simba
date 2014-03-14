@@ -57,6 +57,7 @@ list(APPEND MODELGRAPH_HDRS
   ModelGraph/PhysicsEngine.h
   ModelGraph/PhysicsEngineHelpers.h
   ModelGraph/GL_ShapeDrawer.h
+  ModelGraph/GLDebugDrawer.h
   ModelGraph/GlutStuff.h
   ModelGraph/ModelNode.h
   ModelGraph/RenderEngine.h
@@ -138,6 +139,7 @@ list(APPEND MODELGRAPH_SRCS
   ModelGraph/PhysicsEngine.cpp
   ModelGraph/RenderEngine.cpp
   ModelGraph/ModelGraphBuilder.cpp
+  ModelGraph/GLDebugDrawer.cpp
 )
 list(APPEND NETWORK_SRCS)
 list(APPEND SIMDEVICES_SRCS

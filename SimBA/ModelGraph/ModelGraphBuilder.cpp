@@ -110,6 +110,12 @@ void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
 
 void ModelGraphBuilder::UpdateScene(){
   m_Phys.StepSimulation();
+  if(m_debug){
+    m_Phys.DebugDrawWorld();
+  }
+  else{
+    m_Phys.StepSimulation();
+  }
   if(m_render){
     m_Render.UpdateScene();
   }

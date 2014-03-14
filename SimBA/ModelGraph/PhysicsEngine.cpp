@@ -18,7 +18,6 @@ bool PhysicsEngine::Init(double dGravity, double dTimeStep,
   m_dGravity     = dGravity;
   m_nMaxSubSteps = nMaxSubSteps;
 
-
   // Physics stuff
   // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
@@ -37,9 +36,6 @@ bool PhysicsEngine::Init(double dGravity, double dTimeStep,
                                     &m_CollisionConfiguration
                                     ) );
   m_pDynamicsWorld->setGravity( btVector3(0,0,m_dGravity) );
-
-
-
   m_pDynamicsWorld->setDebugDrawer( &m_DebugDrawer );
   m_pDynamicsWorld->getDebugDrawer()->
       setDebugMode(btIDebugDraw::DBG_DrawWireframe +

@@ -38,6 +38,7 @@ public:
                                                    bulletShape,
                                                    btVector3(0, 0, 0));
     bulletBody = new btRigidBody(cInfo);
+    bulletBody->setContactProcessingThreshold(BT_LARGE_FLOAT);
   }
 
   /// To actually get the mesh, we have to connect the dots...

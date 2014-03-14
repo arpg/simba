@@ -11,7 +11,7 @@ using namespace CVarUtils;
 ////////////////////////////////////////////////////////////////////////
 /// CONSTRUCTOR
 /// LocalSim does not get produced willy-nilly; it is only produced if there
-/// is a SIM.
+/// is a SIM.xml
 ////////////////////////////////////////////////////////////////////////
 
 LocalSim::LocalSim(const string& sLocalSimName,
@@ -34,7 +34,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
   m_RobotManager.Init(m_sLocalSimName, m_Scene, m_SimRobot, sServerOption);
 
   // Do we want to run in debug mode?
-  bool debug = false;
+  bool debug = true;
 
   // Do we want to render the world?
   m_bRender = true;

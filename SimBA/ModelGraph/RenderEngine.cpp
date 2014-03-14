@@ -281,8 +281,7 @@ void RenderEngine::CompleteScene(bool bEnableCameraView=false)
   // Add our views as children to the base container.
   pangolin::DisplayBase().AddDisplay( *m_view3d );
 
-  if(bEnableCameraView==true)
-  {
+  if(bEnableCameraView==true){
       m_bCameraView= true;
     //  // window for display image capture from SimCamera
       m_LSimCamImage = new SceneGraph::ImageView(true, true);
@@ -350,11 +349,7 @@ void RenderEngine::UpdateScene(){
     ModelNode* pNode = jj->second;
     pCamera->m_vPose = pNode->GetPose();
   }
-  if(UpdateCameras()==true &&m_bCameraView==true)
-  {
+  if(UpdateCameras()==true &&m_bCameraView==true){
     SetImagesToWindow();
   }
 }
-
-
-
