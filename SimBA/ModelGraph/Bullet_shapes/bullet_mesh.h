@@ -25,9 +25,6 @@ public:
     btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
     btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
     btTriangleMesh* pTriangleMesh = new btTriangleMesh(true, true);
-    // Have to rotate the mesh, due to discrepancies between
-    // Bullet and RenderEngine.
-    aiMatrix4x4::RotationY(M_PI,pScene->mRootNode->mTransformation);
     GenerateStaticHull(pScene, pScene->mRootNode,
                        pScene->mRootNode->mTransformation,
                        1.0, *pTriangleMesh, dMin, dMax);

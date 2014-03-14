@@ -4,7 +4,7 @@
   <base mesh="/Users/Trystan/Code/Builds/Meshes/Temple/LostTemple.dae"
 	scale="1"
 	mass="0"
-	worldpose="0,0,0"
+	worldpose="0,0,0,0,0,1.570795"
 	worldnormal="0,0,1"
 	robotpose="0,0,1.4,0,0,0"
 	lightpose="10,10,-100"/>

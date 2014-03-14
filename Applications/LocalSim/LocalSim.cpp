@@ -34,7 +34,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
   m_RobotManager.Init(m_sLocalSimName, m_Scene, m_SimRobot, sServerOption);
 
   // Do we want to run in debug mode?
-  bool debug = true;
+  bool debug = false;
 
   // Do we want to render the world?
   m_bRender = true;

@@ -103,15 +103,14 @@ public:
 class Compound_Entity
 {
 public:
-  Compound_Entity()
-  {
+  Compound_Entity(){
 
   }
+
   Compound_Entity(double* Shape_ids,
                   double* Con_ids,
                   Compounds type,
-                  string sName
-                  ){
+                  string sName){
     m_sName        = sName;
     m_vShape_ids = Shape_ids;
     m_vCon_ids = Con_ids;

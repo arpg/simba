@@ -441,7 +441,7 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
     }
 
     //////////////////////////
-    // Six Degrees of Freedom
+    // TODO: Six Degrees of Freedom
     //////////////////////////
 //    else if(sJointType=="SixDOFJoint"){
 //      string sParentName;
