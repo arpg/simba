@@ -1,7 +1,6 @@
 #ifndef BULLET_PLANE_H
 #define BULLET_PLANE_H
 
-
 #include <bullet/btBulletDynamicsCommon.h>
 #include <bullet/BulletCollision/CollisionShapes/btStaticPlaneShape.h>
 #include <bullet/LinearMath/btAlignedAllocator.h>

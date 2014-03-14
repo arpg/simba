@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 2.4.3)
 
 set(LIBRARY_NAME ${PROJECT_NAME})
 
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 OLD)
+endif(COMMAND cmake_policy)
+
 ###################
 # LINK TO OUR LIBRARIES
 ###################
@@ -64,6 +68,7 @@ list(APPEND MODELGRAPH_HDRS
   ModelGraph/Bullet_shapes/bullet_sphere.h
   ModelGraph/Bullet_shapes/bullet_vehicle.h
   ModelGraph/Bullet_shapes/bullet_plane.h
+  ModelGraph/Bullet_shapes/bullet_mesh.h
   ModelGraph/VehicleEnums.h
 )
 

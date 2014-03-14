@@ -106,18 +106,16 @@ void RenderEngine::AddNode( ModelNode *pNode){
 //      SceneGraph::GLShadowLight* new_light = new SceneGraph::GLShadowLight();
       // IMPORTANT!! Can only use GLLight here if you want to use sim cam...
       // DO NOT USE GL Shadow HERE!!!
-      SceneGraph::GLLight* new_light = new SceneGraph::GLLight(pbShape->GetPose()(0,0),
-                                                               pbShape->GetPose()(1,0),
-                                                               pbShape->GetPose()(2,0));
+      SceneGraph::GLLight* new_light =
+          new SceneGraph::GLLight(pbShape->GetPose()(0,0),
+                                  pbShape->GetPose()(1,0),
+                                  pbShape->GetPose()(2,0));
       m_mSceneEntities[pNode] = new_light;
     }
 
     //Mesh
     else if (dynamic_cast<MeshShape*>(pShape) != NULL){
       MeshShape* pbShape = (MeshShape *) pShape;
-//      SceneGraph::GLMesh* new_mesh =
-//          new SceneGraph::GLMesh(pbShape->GetFileDir());
-
       SceneGraph::GLMesh* new_mesh = new SceneGraph::GLMesh();
       new_mesh->Init(pbShape->GetFileDir());
       new_mesh->SetPerceptable(true);

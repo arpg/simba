@@ -85,6 +85,6 @@
   Pose="0,0,2,0,0,0"
   Baseline="0.1"
   Location="@Proxy1"
-  Model="/Users/luma/Code/RobotGroup/simba/SimBA/SimDevices/Sensor/cameras.xml"/>
+  Model="/Users/Trystan/Code/simba/SimBA/SimDevices/Sensor/cameras.xml"/>
 
 </robot>

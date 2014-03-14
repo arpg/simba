@@ -11,6 +11,7 @@
 #include <ModelGraph/Bullet_shapes/bullet_sphere.h>
 #include <ModelGraph/Bullet_shapes/bullet_vehicle.h>
 #include <ModelGraph/Bullet_shapes/bullet_plane.h>
+#include <ModelGraph/Bullet_shapes/bullet_mesh.h>
 
 //////////////////////////////////////////////////////////
 ///
@@ -44,7 +45,7 @@ public:
   void RunDevices();
   void StepSimulation();
 
-  /// PRINT FUNCTIONS
+  /// PRINT AND DRAW FUNCTIONS
   void PrintAllShapes();
 
   /// GETTERS - Used for sensors and controllers

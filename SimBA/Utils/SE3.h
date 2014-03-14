@@ -9,7 +9,7 @@
 #ifndef _MVLPP_SE3_H_
 #define _MVLPP_SE3_H_
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 namespace Eigen
 {

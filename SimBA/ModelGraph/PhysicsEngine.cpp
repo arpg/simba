@@ -131,12 +131,21 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
 
     //Mesh
     else if (dynamic_cast<MeshShape*>( pNodeShape ) != NULL){
-      /// TODO:
-      /// Write a bullet_mesh class.
-      /// import through this framework.
-    }
+      bullet_mesh btMesh(pItem);
+      CollisionShapePtr pShape( btMesh.getBulletShapePtr() );
+      MotionStatePtr pMotionState( btMesh.getBulletMotionStatePtr() );
+      RigidBodyPtr body( btMesh.getBulletBodyPtr() );
+      m_pDynamicsWorld->addRigidBody( body.get() );
 
+      //Save the object; easier deconstruction this way.
+      boost::shared_ptr<Entity> pEntity( new Entity );
+      pEntity->m_pRigidBody = body;
+      pEntity->m_pShape = pShape;
+      pEntity->m_pMotionState = pMotionState;
+      m_mShapes[pItem->GetName()] = pEntity;
+    }
   }
+
 
 
   /*********************************************************************
@@ -427,14 +436,13 @@ void PhysicsEngine::StepSimulation(){
       pVehicle->SetWheelPose(1, SwitchWheelYaw(_T2Cart(VehiclePoses.at(2))));
       pVehicle->SetWheelPose(2, SwitchWheelYaw(_T2Cart(VehiclePoses.at(3))));
       pVehicle->SetWheelPose(3, SwitchWheelYaw(_T2Cart(VehiclePoses.at(4))));
-
     }
   }
 }
 
 //////////////////////////////////////////////////////////
 ///
-/// PRINT FUNCTIONS
+/// PRINT AND DRAW FUNCTIONS
 ///
 //////////////////////////////////////////////////////////
 
@@ -444,8 +452,6 @@ void PhysicsEngine::PrintAllShapes(){
     std::cout<<it->first<<std::endl;
   }
 }
-
-
 
 //////////////////////////////////////////////////////////
 ///

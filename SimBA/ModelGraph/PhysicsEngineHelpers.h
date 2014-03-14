@@ -19,6 +19,11 @@
 #include <SceneGraph/SceneGraph.h>
 #include <pangolin/pangolin.h>
 
+//Assimp to import our meshes into the Physics system
+#include <assimp/cimport.h>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 enum Compounds{
   VEHICLE = 0
 };
