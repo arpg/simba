@@ -30,8 +30,6 @@
      <!--Wheel shape variables   -->
      <wheel name="radius"            value=".25"/>
      <wheel name="width"             value=".25"/>
-     <!-- <wheel name="mass"              value="0"/> -->
-     <!-- <wheel name="restitution"       value="0"/> -->
      <wheel name="dyn friction"      value="0.247"/>
      <wheel name="slip coeff"        value="0"/>
      <wheel name="traction friction" value="1000"/>
