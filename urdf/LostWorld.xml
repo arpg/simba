@@ -1,7 +1,7 @@
 <world name="SimWorld">
 
 <!-- No Mesh -->
-  <base mesh="/Users/Trystan/Code/Builds/Meshes/Temple/LargeLostTemple.dae"
+  <base mesh="/Users/Trystan/Code/Meshes/Temple/LargeLostTemple.dae"
 	scale="1"
 	mass="0"
 	worldpose="0,0,0,0,0,1.570795"

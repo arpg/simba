@@ -506,6 +506,8 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
   std::vector<double> vParameters;
   vParameters.resize(29);
   std::vector<double> pose;
+  std::string body_mesh = "NONE";
+  std::string wheel_mesh = "NONE";
 
   XMLElement *pChild = pElement->FirstChildElement();
 
@@ -595,6 +597,9 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
       if(!body.compare("pose")){
         pose = GenNumFromChar(pChild->Attribute("value"));
       }
+      if(!body.compare("mesh")){
+        body_mesh = pChild->Attribute("value");
+      }
 
     }
 
@@ -619,6 +624,9 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
       if(!wheel.compare("side friction")){
         vParameters[4] = GenNumFromChar(pChild->Attribute("value")).front();
       }
+      if(!wheel.compare("mesh")){
+        wheel_mesh = pChild->Attribute("value");
+      }
     }
 
     pChild=pChild->NextSiblingElement();
@@ -629,6 +637,9 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
   RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,
                                                        vParameters,
                                                        dPose);
+  if(body_mesh!="NONE" && wheel_mesh!="NONE"){
+    pRaycastVehicle->SetMeshes(body_mesh, wheel_mesh);
+  }
 
   /// Build the car here.
   m_mModelNodes[sRobotName] = pRaycastVehicle;

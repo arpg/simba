@@ -26,6 +26,8 @@
      <body name="restitution" value="0"/>
      <!-- NB: The pose of the robot is set in World.xml  -->
      <body name="pose"    value="0,0,0,0,0,0"/>
+     <body name="mesh"
+	   value="/Users/Trystan/Code/Meshes/Herbie/Herbie.blend"/>
 
      <!--Wheel shape variables   -->
      <wheel name="radius"            value=".25"/>
@@ -34,6 +36,8 @@
      <wheel name="slip coeff"        value="0"/>
      <wheel name="traction friction" value="1000"/>
      <wheel name="side friction"     value="1.56"/>
+     <wheel name="mesh"
+	    value="/Users/Trystan/Code/Meshes/Herbie/Wheel.blend"/>
 
      <!--Parameters dependent on other parts  -->
      <param name="susp rest length" value=".35"/>

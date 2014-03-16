@@ -16,6 +16,8 @@ public:
     m_dParameters = dParameters;
     m_dPose = dPose;
     m_sName = sName;
+    m_sBodyMesh = "NONE";
+    m_sWheelMesh = "NONE";
   }
 
   void SetWheelPose(int i, Eigen::Vector6d wheel_pose){
@@ -36,6 +38,10 @@ public:
     }
   }
 
+  void SetMeshes(std::string sBodyMesh, std::string sWheelMesh){
+    m_sBodyMesh = sBodyMesh;
+    m_sWheelMesh = sWheelMesh;
+  }
 
   vector<double> GetParameters(){
     return m_dParameters;
@@ -59,12 +65,21 @@ public:
     }
   }
 
+  std::string GetBodyMesh(){
+    return m_sBodyMesh;
+  }
+
+  std::string GetWheelMesh(){
+    return m_sWheelMesh;
+  }
 
   vector<double> m_dParameters;
   Eigen::Vector6d m_FLWheelPose;
   Eigen::Vector6d m_FRWheelPose;
   Eigen::Vector6d m_BLWheelPose;
   Eigen::Vector6d m_BRWheelPose;
+  std::string m_sBodyMesh;
+  std::string m_sWheelMesh;
 
 };
 
