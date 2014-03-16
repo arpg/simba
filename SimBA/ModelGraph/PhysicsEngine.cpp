@@ -421,15 +421,15 @@ void PhysicsEngine::StepSimulation(){
       VehiclePtr pVeh = eVehicle->m_pVehicle;
       pVeh->setSteeringValue(M_PI/6, 0);
       pVeh->setSteeringValue(M_PI/6, 1);
-      pVeh->applyEngineForce(10, 2);
-      pVeh->applyEngineForce(10, 3);
+      pVeh->applyEngineForce(5, 2);
+      pVeh->applyEngineForce(5, 3);
 
       RaycastVehicle* pVehicle = (RaycastVehicle*) &mMotion->object;
       std::vector<Eigen::Matrix4d> VehiclePoses =
           GetVehicleTransform(pVehicle->GetName());
       pVehicle->SetPose(SwitchYaw(_T2Cart(VehiclePoses.at(0))));
-      pVehicle->SetWheelPose(0, SwitchWheelYaw(_T2Cart(VehiclePoses.at(1))));
-      pVehicle->SetWheelPose(1, SwitchWheelYaw(_T2Cart(VehiclePoses.at(2))));
+      pVehicle->SetWheelPose(1, SwitchWheelYaw(_T2Cart(VehiclePoses.at(1))));
+      pVehicle->SetWheelPose(0, SwitchWheelYaw(_T2Cart(VehiclePoses.at(2))));
       pVehicle->SetWheelPose(2, SwitchWheelYaw(_T2Cart(VehiclePoses.at(3))));
       pVehicle->SetWheelPose(3, SwitchWheelYaw(_T2Cart(VehiclePoses.at(4))));
     }
