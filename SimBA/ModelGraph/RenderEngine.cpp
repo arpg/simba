@@ -34,28 +34,48 @@ void RenderEngine::AddNode( ModelNode *pNode){
       SceneGraph::GLMesh* chassis_mesh = new SceneGraph::GLMesh();
       chassis_mesh->Init(pVehicle->GetBodyMesh());
       chassis_mesh->SetPerceptable(true);
-      // There's the issue of scale... see how it behaves otherwise.
+      Eigen::Vector3d vScale;
+      Eigen::Vector3d vBodyDim = pVehicle->GetBodyMeshDim();
+      vScale<<params[Width]/vBodyDim(1),
+          params[WheelBase]/vBodyDim(0),
+          params[Height]/vBodyDim(2);
+      chassis_mesh->SetScale(vScale);
       chassis_mesh->SetPose(pVehicle->GetPose());
       m_mSceneEntities[pNode] = chassis_mesh;
 
+      Eigen::Vector3d vWheelScale;
+      Eigen::Vector3d vWheelDim = pVehicle->GetWheelMeshDim();
+      vWheelScale<<2*params[WheelRadius]/vWheelDim(1),
+          2*params[WheelRadius]/vWheelDim(2),
+          params[WheelWidth]/vWheelDim(0);
+      cout<<vWheelScale<<endl;
+
       // FL Wheel
       SceneGraph::GLMesh* FLWheel = new SceneGraph::GLMesh();
+      FLWheel->Init(pVehicle->GetWheelMesh());
+      FLWheel->SetScale(vWheelScale);
       FLWheel->SetPose(pVehicle->GetWheelPose(0));
       m_mRaycastWheels[pVehicle->GetName()+"@FLWheel"] = FLWheel;
 
       // FR Wheel
       SceneGraph::GLMesh* FRWheel = new SceneGraph::GLMesh();
+      FRWheel->Init(pVehicle->GetWheelMesh());
       FRWheel->SetPose(pVehicle->GetWheelPose(1));
+      FRWheel->SetScale(vWheelScale);
       m_mRaycastWheels[pVehicle->GetName()+"@FRWheel"] = FRWheel;
 
       // BL Wheel
       SceneGraph::GLMesh* BLWheel = new SceneGraph::GLMesh();
+      BLWheel->Init(pVehicle->GetWheelMesh());
       BLWheel->SetPose(pVehicle->GetWheelPose(2));
+      BLWheel->SetScale(vWheelScale);
       m_mRaycastWheels[pVehicle->GetName()+"@BLWheel"] = BLWheel;
 
       // BR Wheel
       SceneGraph::GLMesh* BRWheel = new SceneGraph::GLMesh();
+      BRWheel->Init(pVehicle->GetWheelMesh());
       BRWheel->SetPose(pVehicle->GetWheelPose(3));
+      BRWheel->SetScale(vWheelScale);
       m_mRaycastWheels[pVehicle->GetName()+"@BRWheel"] = BRWheel;
     }
 

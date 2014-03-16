@@ -38,9 +38,16 @@ public:
     }
   }
 
-  void SetMeshes(std::string sBodyMesh, std::string sWheelMesh){
+  void SetMeshes(std::string sBodyMesh, std::string sWheelMesh,
+                 std::vector<double> vBodyDim, std::vector<double> vWheelDim){
     m_sBodyMesh = sBodyMesh;
     m_sWheelMesh = sWheelMesh;
+    Eigen::Vector3d body_dim;
+    Eigen::Vector3d wheel_dim;
+    body_dim<<vBodyDim[0], vBodyDim[1], vBodyDim[2];
+    wheel_dim<<vWheelDim[0], vWheelDim[1], vWheelDim[2];
+    m_BodyMeshDim = body_dim;
+    m_WheelMeshDim = wheel_dim;
   }
 
   vector<double> GetParameters(){
@@ -73,6 +80,14 @@ public:
     return m_sWheelMesh;
   }
 
+  Eigen::Vector3d GetBodyMeshDim(){
+    return m_BodyMeshDim;
+  }
+
+  Eigen::Vector3d GetWheelMeshDim(){
+    return m_WheelMeshDim;
+  }
+
   vector<double> m_dParameters;
   Eigen::Vector6d m_FLWheelPose;
   Eigen::Vector6d m_FRWheelPose;
@@ -80,6 +95,8 @@ public:
   Eigen::Vector6d m_BRWheelPose;
   std::string m_sBodyMesh;
   std::string m_sWheelMesh;
+  Eigen::Vector3d m_BodyMeshDim;
+  Eigen::Vector3d m_WheelMeshDim;
 
 };
 
