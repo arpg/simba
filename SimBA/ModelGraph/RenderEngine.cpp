@@ -27,39 +27,93 @@ void RenderEngine::AddNode( ModelNode *pNode){
     RaycastVehicle* pVehicle = (RaycastVehicle*) pNode;
     std::vector<double> params = pVehicle->GetParameters();
 
-    // The chassis
-    SceneGraph::GLBox* chassis = new SceneGraph::GLBox();
-    chassis->SetExtent(params[Width], params[WheelBase], params[Height]);
-    chassis->SetPose(pVehicle->GetPose());
-    m_mSceneEntities[pNode] = chassis;
+    // Were the meshes set for the car? If so, import those; else, use shapes.
+    if(pVehicle->GetBodyMesh()!="NONE" && pVehicle->GetWheelMesh()!="NONE"){
 
-    // FL Wheel
-    SceneGraph::GLCylinder* FLWheel = new SceneGraph::GLCylinder();
-    FLWheel->Init(2*params[WheelRadius], 2*params[WheelRadius],
-                  params[WheelWidth], 10, 10);
-    FLWheel->SetPose(pVehicle->GetWheelPose(0));
-    m_mRaycastWheels[pVehicle->GetName()+"@FLWheel"] = FLWheel;
+      // The chassis
+      SceneGraph::GLMesh* chassis_mesh = new SceneGraph::GLMesh();
+      chassis_mesh->Init(pVehicle->GetBodyMesh());
+      chassis_mesh->SetPerceptable(true);
+      Eigen::Vector3d vScale;
+      Eigen::Vector3d vBodyDim = pVehicle->GetBodyMeshDim();
+      vScale<<(params[WheelBase]/vBodyDim(1)),
+          1.5*params[Width]/vBodyDim(0),
+          params[Height]/vBodyDim(2);
+      chassis_mesh->SetScale(vScale);
+      chassis_mesh->SetPose(pVehicle->GetPose());
+      m_mSceneEntities[pNode] = chassis_mesh;
 
-    // FR Wheel
-    SceneGraph::GLCylinder* FRWheel = new SceneGraph::GLCylinder();
-    FRWheel->Init(2*params[WheelRadius], 2*params[WheelRadius],
-                  params[WheelWidth], 10, 10);
-    FRWheel->SetPose(pVehicle->GetWheelPose(1));
-    m_mRaycastWheels[pVehicle->GetName()+"@FRWheel"] = FRWheel;
+      Eigen::Vector3d vWheelScale;
+      Eigen::Vector3d vWheelDim = pVehicle->GetWheelMeshDim();
+      vWheelScale<<2*params[WheelRadius]/vWheelDim(1),
+          2*params[WheelRadius]/vWheelDim(2),
+          params[WheelWidth]/vWheelDim(0);
+      cout<<vWheelScale<<endl;
 
-    // BL Wheel
-    SceneGraph::GLCylinder* BLWheel = new SceneGraph::GLCylinder();
-    BLWheel->Init(2*params[WheelRadius], 2*params[WheelRadius],
-                  params[WheelWidth], 10, 10);
-    BLWheel->SetPose(pVehicle->GetWheelPose(2));
-    m_mRaycastWheels[pVehicle->GetName()+"@BLWheel"] = BLWheel;
+      // FL Wheel
+      SceneGraph::GLMesh* FLWheel = new SceneGraph::GLMesh();
+      FLWheel->Init(pVehicle->GetWheelMesh());
+      FLWheel->SetScale(vWheelScale);
+      FLWheel->SetPose(pVehicle->GetWheelPose(0));
+      m_mRaycastWheels[pVehicle->GetName()+"@FLWheel"] = FLWheel;
 
-    // BR Wheel
-    SceneGraph::GLCylinder* BRWheel = new SceneGraph::GLCylinder();
-    BRWheel->Init(2*params[WheelRadius], 2*params[WheelRadius],
-                  params[WheelWidth], 10, 10);
-    BRWheel->SetPose(pVehicle->GetWheelPose(3));
-    m_mRaycastWheels[pVehicle->GetName()+"@BRWheel"] = BRWheel;
+      // FR Wheel
+      SceneGraph::GLMesh* FRWheel = new SceneGraph::GLMesh();
+      FRWheel->Init(pVehicle->GetWheelMesh());
+      FRWheel->SetPose(pVehicle->GetWheelPose(1));
+      FRWheel->SetScale(vWheelScale);
+      m_mRaycastWheels[pVehicle->GetName()+"@FRWheel"] = FRWheel;
+
+      // BL Wheel
+      SceneGraph::GLMesh* BLWheel = new SceneGraph::GLMesh();
+      BLWheel->Init(pVehicle->GetWheelMesh());
+      BLWheel->SetPose(pVehicle->GetWheelPose(2));
+      BLWheel->SetScale(vWheelScale);
+      m_mRaycastWheels[pVehicle->GetName()+"@BLWheel"] = BLWheel;
+
+      // BR Wheel
+      SceneGraph::GLMesh* BRWheel = new SceneGraph::GLMesh();
+      BRWheel->Init(pVehicle->GetWheelMesh());
+      BRWheel->SetPose(pVehicle->GetWheelPose(3));
+      BRWheel->SetScale(vWheelScale);
+      m_mRaycastWheels[pVehicle->GetName()+"@BRWheel"] = BRWheel;
+    }
+
+    else{
+      // The chassis
+      SceneGraph::GLBox* chassis = new SceneGraph::GLBox();
+      chassis->SetExtent(params[WheelBase], params[Width], params[Height]);
+      chassis->SetPose(pVehicle->GetPose());
+      m_mSceneEntities[pNode] = chassis;
+
+      // FL Wheel
+      SceneGraph::GLCylinder* FLWheel = new SceneGraph::GLCylinder();
+      FLWheel->Init(params[WheelRadius], params[WheelRadius],
+                    params[WheelWidth], 10, 10);
+      FLWheel->SetPose(pVehicle->GetWheelPose(0));
+      m_mRaycastWheels[pVehicle->GetName()+"@FLWheel"] = FLWheel;
+
+      // FR Wheel
+      SceneGraph::GLCylinder* FRWheel = new SceneGraph::GLCylinder();
+      FRWheel->Init(params[WheelRadius], params[WheelRadius],
+                    params[WheelWidth], 10, 10);
+      FRWheel->SetPose(pVehicle->GetWheelPose(1));
+      m_mRaycastWheels[pVehicle->GetName()+"@FRWheel"] = FRWheel;
+
+      // BL Wheel
+      SceneGraph::GLCylinder* BLWheel = new SceneGraph::GLCylinder();
+      BLWheel->Init(params[WheelRadius], params[WheelRadius],
+                    params[WheelWidth], 10, 10);
+      BLWheel->SetPose(pVehicle->GetWheelPose(2));
+      m_mRaycastWheels[pVehicle->GetName()+"@BLWheel"] = BLWheel;
+
+      // BR Wheel
+      SceneGraph::GLCylinder* BRWheel = new SceneGraph::GLCylinder();
+      BRWheel->Init(params[WheelRadius], params[WheelRadius],
+                    params[WheelWidth], 10, 10);
+      BRWheel->SetPose(pVehicle->GetWheelPose(3));
+      m_mRaycastWheels[pVehicle->GetName()+"@BRWheel"] = BRWheel;
+    }
   }
 
   // Add our Shapes
@@ -106,18 +160,16 @@ void RenderEngine::AddNode( ModelNode *pNode){
 //      SceneGraph::GLShadowLight* new_light = new SceneGraph::GLShadowLight();
       // IMPORTANT!! Can only use GLLight here if you want to use sim cam...
       // DO NOT USE GL Shadow HERE!!!
-      SceneGraph::GLLight* new_light = new SceneGraph::GLLight(pbShape->GetPose()(0,0),
-                                                               pbShape->GetPose()(1,0),
-                                                               pbShape->GetPose()(2,0));
+      SceneGraph::GLLight* new_light =
+          new SceneGraph::GLLight(pbShape->GetPose()(0,0),
+                                  pbShape->GetPose()(1,0),
+                                  pbShape->GetPose()(2,0));
       m_mSceneEntities[pNode] = new_light;
     }
 
     //Mesh
     else if (dynamic_cast<MeshShape*>(pShape) != NULL){
       MeshShape* pbShape = (MeshShape *) pShape;
-//      SceneGraph::GLMesh* new_mesh =
-//          new SceneGraph::GLMesh(pbShape->GetFileDir());
-
       SceneGraph::GLMesh* new_mesh = new SceneGraph::GLMesh();
       new_mesh->Init(pbShape->GetFileDir());
       new_mesh->SetPerceptable(true);
@@ -283,8 +335,7 @@ void RenderEngine::CompleteScene(bool bEnableCameraView=false)
   // Add our views as children to the base container.
   pangolin::DisplayBase().AddDisplay( *m_view3d );
 
-  if(bEnableCameraView==true)
-  {
+  if(bEnableCameraView==true){
       m_bCameraView= true;
     //  // window for display image capture from SimCamera
       m_LSimCamImage = new SceneGraph::ImageView(true, true);
@@ -352,11 +403,7 @@ void RenderEngine::UpdateScene(){
     ModelNode* pNode = jj->second;
     pCamera->m_vPose = pNode->GetPose();
   }
-  if(UpdateCameras()==true &&m_bCameraView==true)
-  {
+  if(UpdateCameras()==true &&m_bCameraView==true){
     SetImagesToWindow();
   }
 }
-
-
-

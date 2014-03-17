@@ -4,8 +4,8 @@
 // This enum list gives us a way to pluck out parameters from the vector.
 
 enum{
-  WheelBase = 0,                //< Wheel base of the car
-  Width = 1,                    //< Width of the car
+  Width = 0,                    //< Width
+  WheelBase = 1,                //< Wheel Base of the car
   Height = 2,                   //< Height of the CG above the vehicle datum
   DynamicFrictionCoef = 3,      //< Friction coefficient, which slows the car
   /// down.

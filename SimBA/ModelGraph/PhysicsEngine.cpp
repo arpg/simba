@@ -18,7 +18,6 @@ bool PhysicsEngine::Init(double dGravity, double dTimeStep,
   m_dGravity     = dGravity;
   m_nMaxSubSteps = nMaxSubSteps;
 
-
   // Physics stuff
   // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
@@ -37,9 +36,6 @@ bool PhysicsEngine::Init(double dGravity, double dTimeStep,
                                     &m_CollisionConfiguration
                                     ) );
   m_pDynamicsWorld->setGravity( btVector3(0,0,m_dGravity) );
-
-
-
   m_pDynamicsWorld->setDebugDrawer( &m_DebugDrawer );
   m_pDynamicsWorld->getDebugDrawer()->
       setDebugMode(btIDebugDraw::DBG_DrawWireframe +
@@ -131,12 +127,21 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
 
     //Mesh
     else if (dynamic_cast<MeshShape*>( pNodeShape ) != NULL){
-      /// TODO:
-      /// Write a bullet_mesh class.
-      /// import through this framework.
-    }
+      bullet_mesh btMesh(pItem);
+      CollisionShapePtr pShape( btMesh.getBulletShapePtr() );
+      MotionStatePtr pMotionState( btMesh.getBulletMotionStatePtr() );
+      RigidBodyPtr body( btMesh.getBulletBodyPtr() );
+      m_pDynamicsWorld->addRigidBody( body.get() );
 
+      //Save the object; easier deconstruction this way.
+      boost::shared_ptr<Entity> pEntity( new Entity );
+      pEntity->m_pRigidBody = body;
+      pEntity->m_pShape = pShape;
+      pEntity->m_pMotionState = pMotionState;
+      m_mShapes[pItem->GetName()] = pEntity;
+    }
   }
+
 
 
   /*********************************************************************
@@ -416,25 +421,24 @@ void PhysicsEngine::StepSimulation(){
       VehiclePtr pVeh = eVehicle->m_pVehicle;
       pVeh->setSteeringValue(M_PI/6, 0);
       pVeh->setSteeringValue(M_PI/6, 1);
-      pVeh->applyEngineForce(10, 2);
-      pVeh->applyEngineForce(10, 3);
+      pVeh->applyEngineForce(5, 2);
+      pVeh->applyEngineForce(5, 3);
 
       RaycastVehicle* pVehicle = (RaycastVehicle*) &mMotion->object;
       std::vector<Eigen::Matrix4d> VehiclePoses =
           GetVehicleTransform(pVehicle->GetName());
       pVehicle->SetPose(SwitchYaw(_T2Cart(VehiclePoses.at(0))));
-      pVehicle->SetWheelPose(0, SwitchWheelYaw(_T2Cart(VehiclePoses.at(1))));
-      pVehicle->SetWheelPose(1, SwitchWheelYaw(_T2Cart(VehiclePoses.at(2))));
+      pVehicle->SetWheelPose(1, SwitchWheelYaw(_T2Cart(VehiclePoses.at(1))));
+      pVehicle->SetWheelPose(0, SwitchWheelYaw(_T2Cart(VehiclePoses.at(2))));
       pVehicle->SetWheelPose(2, SwitchWheelYaw(_T2Cart(VehiclePoses.at(3))));
       pVehicle->SetWheelPose(3, SwitchWheelYaw(_T2Cart(VehiclePoses.at(4))));
-
     }
   }
 }
 
 //////////////////////////////////////////////////////////
 ///
-/// PRINT FUNCTIONS
+/// PRINT AND DRAW FUNCTIONS
 ///
 //////////////////////////////////////////////////////////
 
@@ -444,8 +448,6 @@ void PhysicsEngine::PrintAllShapes(){
     std::cout<<it->first<<std::endl;
   }
 }
-
-
 
 //////////////////////////////////////////////////////////
 ///

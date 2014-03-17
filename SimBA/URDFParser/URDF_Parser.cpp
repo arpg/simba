@@ -441,7 +441,7 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
     }
 
     //////////////////////////
-    // Six Degrees of Freedom
+    // TODO: Six Degrees of Freedom
     //////////////////////////
 //    else if(sJointType=="SixDOFJoint"){
 //      string sParentName;
@@ -506,6 +506,10 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
   std::vector<double> vParameters;
   vParameters.resize(29);
   std::vector<double> pose;
+  std::string body_mesh = "NONE";
+  std::string wheel_mesh = "NONE";
+  std::vector<double> body_dim;
+  std::vector<double> wheel_dim;
 
   XMLElement *pChild = pElement->FirstChildElement();
 
@@ -595,6 +599,10 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
       if(!body.compare("pose")){
         pose = GenNumFromChar(pChild->Attribute("value"));
       }
+      if(!body.compare("mesh")){
+        body_mesh = pChild->Attribute("path");
+        body_dim = GenNumFromChar(pChild->Attribute("dim"));
+      }
 
     }
 
@@ -619,6 +627,10 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
       if(!wheel.compare("side friction")){
         vParameters[4] = GenNumFromChar(pChild->Attribute("value")).front();
       }
+      if(!wheel.compare("mesh")){
+        wheel_mesh = pChild->Attribute("path");
+        wheel_dim = GenNumFromChar(pChild->Attribute("dim"));
+      }
     }
 
     pChild=pChild->NextSiblingElement();
@@ -629,6 +641,9 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
   RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,
                                                        vParameters,
                                                        dPose);
+  if(body_mesh!="NONE" && wheel_mesh!="NONE"){
+    pRaycastVehicle->SetMeshes(body_mesh, wheel_mesh, body_dim, wheel_dim);
+  }
 
   /// Build the car here.
   m_mModelNodes[sRobotName] = pRaycastVehicle;
