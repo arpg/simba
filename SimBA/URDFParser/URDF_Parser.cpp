@@ -104,7 +104,7 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
         const char* sType = pElement->Attribute("type");
         if(strcmp(sType, "Box") ==0){
           BoxShape* pBox =new BoxShape(sBodyName, vDimension[0],vDimension[1],
-                                       vDimension[2],iMass, 1, vPose);
+              vDimension[2],iMass, 1, vPose);
           rSimRobot.SetBase( pBox );
           cout<<"[ParseRobot] Successfully built bodybase: "<<sBodyName<<endl;
           m_mModelNodes[pBox->GetName()] = pBox;
@@ -193,20 +193,20 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
 
     if(strcmp(sType, "Box") == 0){
       BoxShape* pBox =new BoxShape(sBodyName, vDimension[0], vDimension[1],
-                                   vDimension[2], iMass, 1, vPose);
+          vDimension[2], iMass, 1, vPose);
       m_mModelNodes[pBox->GetName()] = pBox;
     }
 
     else if(strcmp(sType,"Cylinder")== 0){
       CylinderShape* pCylinder =new CylinderShape(sBodyName, vDimension[0],
-                                                  vDimension[1], iMass,1,
-                                                  vPose);
+          vDimension[1], iMass,1,
+          vPose);
       m_mModelNodes[pCylinder->GetName()] = pCylinder;
     }
 
     else if(strcmp(sType, "Sphere") == 0){
       SphereShape* pSphere =new SphereShape(sBodyName, vDimension[0],
-                                            iMass, 1, vPose);
+          iMass, 1, vPose);
       m_mModelNodes[pSphere->GetName()] = pSphere;
     }
 
@@ -377,7 +377,7 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
             sJointName,
             dynamic_cast<Shape*>(m_mModelNodes.find(sParentName)->second),
             dynamic_cast<Shape*>(m_mModelNodes.find(sChildName)->second),
-                                    Anchor, Axis1, Axis2);
+            Anchor, Axis1, Axis2);
       pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
                          LowerAngleLimit, UpperAngleLimit);
       m_mModelNodes[pHinge2->GetName()] = pHinge2;
@@ -443,53 +443,53 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
     //////////////////////////
     // TODO: Six Degrees of Freedom
     //////////////////////////
-//    else if(sJointType=="SixDOFJoint"){
-//      string sParentName;
-//      string sChildName;
-//      vector<double> transform_in_A;
-//      vector<double> transform_in_B;
-//      Eigen::Vector6d eig_transform_A;
-//      Eigen::Vector6d eig_transform_B;
-//      vector<double> vAnchor;
-//      vector<double> vAxis1;
-//      vector<double> vAxis2;
-//      vector<double> vLowerLinearLimit;
-//      vector<double> vUpperLinearLimit;
-//      vector<double> vLowerAngleLimit;
-//      vector<double> vUpperAngleLimit;
-//      Eigen::Vector3d Anchor;
-//      Eigen::Vector3d Axis1;
-//      Eigen::Vector3d Axis2;
-//      Eigen::Vector3d LowerLinearLimit;
-//      Eigen::Vector3d UpperLinearLimit;
-//      Eigen::Vector3d LowerAngleLimit;
-//      Eigen::Vector3d UpperAngleLimit;
-//      XMLElement *pChild=pElement->FirstChildElement();
-//      // Construct joint based on children information.
-//      while(pChild){
-//        const char * sName = pChild->Name();
-//        // get parent link of joint
-//        if(strcmp(sName, "parent")==0){
-//          sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
-//        }
-//        // get child link of joint
-//        if(strcmp(sName, "child")==0){
-//          sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
-//        }
-//        if(strcmp(sName, "pivot in A")==0){
-//          pivot_in_A = GenNumFromChar( pChild->Attribute("setting"));
-//          eig_pivot_A<<pivot_in_A[0], pivot_in_A[1], pivot_in_A[2];
-//        }
-//        if(strcmp(sName, "pivot in B")==0){
-//          pivot_in_B = GenNumFromChar( pChild->Attribute("axis1"));
-//          eig_pivot_B = pivot_in_B[0], pivot_in_B[1], pivot_in_B[2];
-//        }
+    //    else if(sJointType=="SixDOFJoint"){
+    //      string sParentName;
+    //      string sChildName;
+    //      vector<double> transform_in_A;
+    //      vector<double> transform_in_B;
+    //      Eigen::Vector6d eig_transform_A;
+    //      Eigen::Vector6d eig_transform_B;
+    //      vector<double> vAnchor;
+    //      vector<double> vAxis1;
+    //      vector<double> vAxis2;
+    //      vector<double> vLowerLinearLimit;
+    //      vector<double> vUpperLinearLimit;
+    //      vector<double> vLowerAngleLimit;
+    //      vector<double> vUpperAngleLimit;
+    //      Eigen::Vector3d Anchor;
+    //      Eigen::Vector3d Axis1;
+    //      Eigen::Vector3d Axis2;
+    //      Eigen::Vector3d LowerLinearLimit;
+    //      Eigen::Vector3d UpperLinearLimit;
+    //      Eigen::Vector3d LowerAngleLimit;
+    //      Eigen::Vector3d UpperAngleLimit;
+    //      XMLElement *pChild=pElement->FirstChildElement();
+    //      // Construct joint based on children information.
+    //      while(pChild){
+    //        const char * sName = pChild->Name();
+    //        // get parent link of joint
+    //        if(strcmp(sName, "parent")==0){
+    //          sParentName = GetAttribute(pChild, "body") +"@"+sRobotName;
+    //        }
+    //        // get child link of joint
+    //        if(strcmp(sName, "child")==0){
+    //          sChildName = GetAttribute(pChild, "body") +"@"+sRobotName;
+    //        }
+    //        if(strcmp(sName, "pivot in A")==0){
+    //          pivot_in_A = GenNumFromChar( pChild->Attribute("setting"));
+    //          eig_pivot_A<<pivot_in_A[0], pivot_in_A[1], pivot_in_A[2];
+    //        }
+    //        if(strcmp(sName, "pivot in B")==0){
+    //          pivot_in_B = GenNumFromChar( pChild->Attribute("axis1"));
+    //          eig_pivot_B = pivot_in_B[0], pivot_in_B[1], pivot_in_B[2];
+    //        }
 
-//        pChild=pChild->NextSiblingElement();
+    //        pChild=pChild->NextSiblingElement();
 
-//      }
+    //      }
 
-//    }
+    //    }
 
 
   }
@@ -686,8 +686,8 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement ){
     vDepthCameraPose.push_back(vPose[5]+parent_pose(5));
     BoxShape* pCameraBox = new BoxShape(sCameraName,
                                         vDimension[0], vDimension[1],
-                                        vDimension[2], vMass[0], 1,
-                                        vDepthCameraPose);
+        vDimension[2], vMass[0], 1,
+        vDepthCameraPose);
     m_mModelNodes[pCameraBox->GetName()] = pCameraBox;
 
     // CREATE THE PHYSICS CONSTRAINT
@@ -707,10 +707,8 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement ){
                           vAxis, vAxis);
     pCameraHinge->SetLimits(-0.01, 0.01, 1, .1, 1);
     m_mModelNodes[pCameraHinge->GetName()] = pCameraHinge;
+    cout<<"[ParseSensorShape] Successfully init Sensor body."<<endl;
   }
-
-  cout<<"[ParseSensorShape] Successfully init Sensor body."<<endl;
-
 }
 
 ////////////////////////////////////////////////////////////
@@ -728,74 +726,71 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
   // read high level parent (root parent)
   while (pElement){
     const char* sRootContent = pElement->Name();
-
-    // create sim Sensor device
-    if(strcmp(sRootContent,"Sensor")==0){
+    cout<<sRootContent<<endl;
+    if(strcmp(sRootContent,"Device")==0){
       string sType( pElement->Attribute("Type"));
 
-      if(sType == "Camera"){
-        const char* sMode = pElement->Attribute("Mode");
-        string sModel = GetAttribute(pElement, "Model");
+      ////////////////////////////
+      /// SENSOR DEVICES
+      /// Include everything in SimDevices::Sensor directory
+      ////////////////////////////
 
+      /// CAMERAS
+      if(sType == "Camera"){
+        string sMode = GetAttribute(pElement, "Mode");
+        string sModel = GetAttribute(pElement, "Model");
+        int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
+        string sDeviceName= GetAttribute( pElement, "Name")+"@"+sRobotName;
+        vector<double> dPose = GenNumFromChar(pElement->Attribute("Pose"));
+        Eigen::Vector6d vPose;
+        vPose<<dPose[0], dPose[1], dPose[2], dPose[3], dPose[4], dPose[5];
         // Single-view systems: RGB, Grey, Depth
-        if(strcmp(sMode, "RGB")==0 ||
-           strcmp(sMode,"Depth")==0 ||
-           strcmp(sMode,"Grey")==0){
-          string sDeviceName= GetAttribute( pElement, "Name")+"@"+sRobotName;
-          int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
-          vector<double> dPose = GenNumFromChar(pElement->Attribute("Pose"));
-          Eigen::Vector6d vPose;
-          vPose<<dPose[0], dPose[1], dPose[2], dPose[3], dPose[4], dPose[5];
-          // save device info
-          SimCamera* Device;
-          if(sMode == "RGB"){
-            Device = new SimCamera(sDeviceName, sDeviceName, sRobotName,
-                                   SceneGraph::eSimCamRGB, iFPS, vPose, sModel);
-          }
-          else if(sMode == "Depth"){
-            Device = new SimCamera(sDeviceName, sDeviceName, sRobotName,
-                                   SceneGraph::eSimCamDepth, iFPS,
-                                   vPose, sModel);
-          }
-          else if(sMode == "Grey"){
-            Device = new SimCamera(sDeviceName, sDeviceName, sRobotName,
-                                   SceneGraph::eSimCamLuminance, iFPS,
-                                   vPose, sModel);
-          }
-          m_SimDevices.AddDevice(Device);
+        if(sMode=="RGB"){
+          SimCamera* Device =
+              new SimCamera(sDeviceName, sDeviceName, sRobotName,
+                            SceneGraph::eSimCamRGB, iFPS, vPose, sModel);
+           m_SimDevices.AddDevice(Device);
+        }
+        if(sMode=="Depth"){
+          SimCamera* Device =
+              new SimCamera(sDeviceName, sDeviceName, sRobotName,
+                            SceneGraph::eSimCamDepth, iFPS, vPose, sModel);
+           m_SimDevices.AddDevice(Device);
+        }
+        if(sMode=="Grey"){
+          SimCamera* Device =
+              new SimCamera(sDeviceName, sDeviceName, sRobotName,
+                            SceneGraph::eSimCamLuminance, iFPS, vPose, sModel);
+           m_SimDevices.AddDevice(Device);
         }
 
         // Double-view system: RGB-Depth Camera
-        if(strcmp(sMode, "RGBD")==0 ){
-          string sDeviceName= GetAttribute( pElement, "Name")+"@"+sRobotName;
-          int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
-          vector<double> dPose = GenNumFromChar(pElement->Attribute("Pose"));
-          Eigen::Vector6d vPose;
-          vPose<<dPose[0], dPose[1], dPose[2], dPose[3], dPose[4], dPose[5];
+        if(sMode=="RGBD"){
           // RGB Camera
           string sCameraName = "RGB_"+sDeviceName;
-          SimCamera* RGBDevice = new SimCamera(sCameraName, sDeviceName,
-                                               sRobotName,
-                                               SceneGraph::eSimCamRGB,
-                                               iFPS, vPose, sModel);
+          SimCamera* RGBDevice =
+              new SimCamera(sCameraName, sDeviceName, sRobotName,
+                            SceneGraph::eSimCamRGB, iFPS, vPose, sModel);
           m_SimDevices.AddDevice(RGBDevice);
           // Depth Camera
           sCameraName = "Depth_"+sDeviceName;
-          SimCamera* DepthDevice = new SimCamera(sCameraName, sDeviceName,
-                                                 sRobotName,
-                                                 SceneGraph::eSimCamDepth,
-                                                 iFPS, vPose, sModel);
+          SimCamera* DepthDevice =
+              new SimCamera(sCameraName, sDeviceName, sRobotName,
+                            SceneGraph::eSimCamDepth, iFPS, vPose, sModel);
           m_SimDevices.AddDevice(DepthDevice);
         }
       }
 
+      /// GPS
       if(sType=="GPS"){
-        // TODO: GPS
         string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;
-        cout<<"[Proxy/ParseDevice] Register SimGPS success."<<endl;
+        SimDeviceInfo* Device = new SimDeviceInfo();
+        Device->m_sDeviceType = sType;
+        Device->m_sBodyName = sBodyName;
+        m_SimDevices.AddDevice(Device);
       }
 
-
+      /// Vicon
       if(sType=="Vicon"){
         string sViconName = GetAttribute( pElement, "Name")+"@"+sRobotName;
         string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
@@ -807,90 +802,86 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
         cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<
               " success."<<endl;
       }
-    }
 
-    // SimController for camera or RaycastVehicle
-    if(strcmp(sRootContent, "Controller")==0){
-      string sType( sRootContent );
-      string sMode( pElement->Attribute("Mode"));
-      string sControllerName = GetAttribute(pElement, "Name");
-      string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
-      if(sMode=="Car"){
-        CarController* CarDevice = new CarController(sControllerName,
-                                                     sRobotName);
-        CarDevice->m_sDeviceType = sType;
-        CarDevice->m_sDeviceMode = sMode;
-        CarDevice->SetBodyName(sBodyName);
+
+      ////////////////////////////
+      /// CONTROLLER DEVICES
+      /// Include everything in SimDevices::Controller directory
+      ////////////////////////////
+
+      if(sType=="CarController"){
+        string sControllerName = GetAttribute(pElement, "Name")+"@"+sRobotName;
+        string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
+        CarController* CarDevice =
+            new CarController(sControllerName, sBodyName, sRobotName);
         m_SimDevices.AddDevice(CarDevice);
       }
-      if(sMode=="Simple"){
-        SimpleController* SimpleDevice = new SimpleController(sControllerName,
-                                                              sRobotName);
-        SimpleDevice->m_sDeviceType = sType;
-        SimpleDevice->m_sDeviceMode = sMode;
-        SimpleDevice->SetBodyName(sBodyName);
+
+      if(sType=="SimpleController"){
+        string sControllerName = GetAttribute(pElement, "Name")+"@"+sRobotName;
+        string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
+        SimpleController* SimpleDevice =
+            new SimpleController(sControllerName, sBodyName, sRobotName);
         m_SimDevices.AddDevice(SimpleDevice);
       }
     }
-
     // read next parent element
     pElement=pElement->NextSiblingElement();
-
   }
   return true;
 }
 
 
-////////////////////////////////////////////////////////////////////////////
-/// PARSE WORLD.XML FOR STATEKEEPER
-////////////////////////////////////////////////////////////////////////////
-bool URDF_Parser::ParseWorldForInitRobotPose(
-    const char* filename,
-    vector<Eigen::Vector6d>& rvRobotInitPose){
+  ////////////////////////////////////////////////////////////////////////////
+  /// PARSE WORLD.XML FOR STATEKEEPER
+  ////////////////////////////////////////////////////////////////////////////
+  bool URDF_Parser::ParseWorldForInitRobotPose(
+        const char* filename,
+        vector<Eigen::Vector6d>& rvRobotInitPose){
 
-  // make sure the vector is empty
-  rvRobotInitPose.clear();
+    // make sure the vector is empty
+    rvRobotInitPose.clear();
 
-  // open xml document
-  XMLDocument doc;
-  if(doc.LoadFile(filename) !=0){
-    printf("Cannot open %s\n", filename);
-    return false;
-  }
-
-  XMLElement *pParent=doc.RootElement();
-  XMLElement *pElement=pParent->FirstChildElement();
-
-  // read high level parent (root parent)
-  while (pElement){
-    const char* sRootContent = pElement->Name();
-    if(strcmp(sRootContent,"robot")==0){
-      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
-      Eigen::Vector6d ePose;
-      ePose<<vPose[0], vPose[1], vPose[2], vPose[3], vPose[4], vPose[5];
-      rvRobotInitPose.push_back(ePose);
+    // open xml document
+    XMLDocument doc;
+    if(doc.LoadFile(filename) !=0){
+      printf("Cannot open %s\n", filename);
+      return false;
     }
-    pElement=pElement->NextSiblingElement();
+
+    XMLElement *pParent=doc.RootElement();
+    XMLElement *pElement=pParent->FirstChildElement();
+
+    // read high level parent (root parent)
+    while (pElement){
+      const char* sRootContent = pElement->Name();
+      if(strcmp(sRootContent,"robot")==0){
+        vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
+        Eigen::Vector6d ePose;
+        ePose<<vPose[0], vPose[1], vPose[2], vPose[3], vPose[4], vPose[5];
+        rvRobotInitPose.push_back(ePose);
+      }
+      pElement=pElement->NextSiblingElement();
+    }
+
+    return true;
   }
 
-  return true;
-}
 
 
+  ////////////////////////////////////////////////////////////////////////////
+  /// HELPER FUNCTIONS
+  ////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////
-/// HELPER FUNCTIONS
-////////////////////////////////////////////////////////////////////////////
-
-std::vector<ModelNode*> URDF_Parser::GetModelNodes(
-    std::map<std::string, ModelNode*> mNodes){
-  std::vector<ModelNode*> Nodes;
-  for( std::map<string, ModelNode*>::iterator it = mNodes.begin();
-       it!=mNodes.end();it++){
-    Nodes.push_back(it->second);
+  std::vector<ModelNode*> URDF_Parser::GetModelNodes(
+        std::map<std::string, ModelNode*> mNodes){
+    std::vector<ModelNode*> Nodes;
+    for( std::map<string, ModelNode*>::iterator it = mNodes.begin();
+         it!=mNodes.end();it++){
+      Nodes.push_back(it->second);
+    }
+    return Nodes;
   }
-  return Nodes;
-}
 
 
 

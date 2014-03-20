@@ -50,36 +50,39 @@
      <param name="Magic E"          value="-5"/>
  </bodybase>
 
-<!--Sensors
-<body name="Stick"
-  dir="/media/psf/Home/Code/RobotGames/Dev/luma/RobotGames/media"
-  mass="1"
-  pose="0,0,1,0,0,0"
-  dimension="2,0.1,0.1"
-  scale="25"
-  type="Box"/>
+<!-- 
+     HOW TO DESCRIBE SIM_DEVICES
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     Every device should start and end with <Device ...... />. This is in
+     contrast to the separate designations we used to have for sensors and
+     controllers; no more of that.
+     Name = The name of the device. This is the string that Node picks up
+       on, if you're using the network; therefore, a device should always
+       have a unique name.
+     Type = the kind of simulated device it is. Look under SimBA/SimDevices
+       for a complete listing. For sensors, it's described as the Sensor
+       filename without "Sim-" at the beginning. Put the full filename
+       for Controllers. Ex: Type="Camera" | Type="CarController"
+       ~~~~~~~~~~
+     Sensor Parameters [specifics are in brackets]:
+       Mode = [Camera] Kind of Camera (i.e "RGB"|"RGBD"|"Depth"|"Grey")
+       Size = [Camera] The size of the window
+       FPS = [Camera] frames per second
+       Align = [Camera] "true"|"false"
+       Parent = What body in the scene the sensor is attached to.
+       Physical properties are Mass=, Dimension=, Pose=, [Camera] Baseline=,
+       Model = The .xml file that describes other parameters for the sensor.
+       ~~~~~~~~~~
+     Controller Parameters:
+       Body = What body we're controlling. For CarControllers, this should
+         be a RaycastVehicle. For a SimpleController, it could be another
+         object...
+       Controllers do not need physical properties, since they directly
+       connect to a physical body already. 
+--> 
 
-<joint name="StickJoint" type="HingeJoint">
-  <parent body = "RaycastVehicle"/>
-  <child body = "Stick"/>
-  <pivot setting = "0,0,1"/>
-  <axis setting = "1,0,0"/>
-  <upperlimit setting = "0.05" />
-  <lowerlimit setting = "-0.05" />
-  <softness setting = "0.9" />
-  <bias setting  = "0.3" />
-  <relaxation setting = "1" />
-</joint>
--->
-<!-- The poses for this camera are in relation to its parent shape -->
-<!-- This needs to be more descriptive. We need a baseline and specific
-     positions for both cameras in an RGBD setup if we're going to make
-     two separate bodies for them. -->
-<!-- Baseline should be in relation to y-axis; this is why it's longer
-     than the x- or z-dimension -->
-<Sensor Name="LCamera"
+<Device Name="LCamera"
   Type="Camera"
-  Driver="Node2Cam"
   Size="512*384"
   Mode="RGBD"
   FPS="30"
@@ -89,7 +92,10 @@
   Dimension="0.2, 0.5, 0.2"
   Pose="0,0,2,0,0,0"
   Baseline="0.1"
-  Location="@Proxy1"
   Model="/Users/Trystan/Code/simba/SimBA/SimDevices/Sensor/cameras.xml"/>
+
+<Device Name="VehicleController"
+  Type="CarController"
+  Body="RaycastVehicle"/>
 
 </robot>

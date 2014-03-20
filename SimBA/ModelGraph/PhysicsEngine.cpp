@@ -392,13 +392,43 @@ void PhysicsEngine::DebugDrawWorld(){
 
 
 void PhysicsEngine::RunDevices(){
+  for(unsigned int ii=0; ii<m_mDevices.size(); ii++){
+    ///////////////
+    // CAR CONTROLLERS
+    ///////////////
+    SimDeviceInfo* Device = m_mDevices.at(ii);
+    if(Device->m_sDeviceType=="CarController"){
+      // We have to check all controllers.
+      // TODO: Better way: do this mapping as soon as we add the controller.
+      CarController* pCarCon = (CarController*) m_mDevices.at(ii);
+      for(std::map<string, boost::shared_ptr<Vehicle_Entity> > ::iterator it =
+          m_mRayVehicles.begin(); it!=m_mRayVehicles.end(); it++ ){
+        if(pCarCon->GetBodyName()==it->first){
+          //This controller goes to this car.
+          Vehicle_Entity* eVehicle = it->second.get();
+          VehiclePtr pVeh = eVehicle->m_pVehicle;
+          cout<<"[PhysicsEngine::RunDevices]"<<endl;
+          cout<<pCarCon->m_dSteering<<endl;
+          cout<<pCarCon->m_dTorque<<endl;
+          cout<<"-------"<<endl;
+          pVeh->setSteeringValue(pCarCon->m_dSteering, 0);
+          pVeh->setSteeringValue(pCarCon->m_dSteering, 1);
+          pVeh->applyEngineForce(pCarCon->m_dTorque, 2);
+          pVeh->applyEngineForce(pCarCon->m_dTorque, 3);
+        }
+      }
+    }
 
-  // TODO: Complete this function for all available Devices
-  // This function takes all of our controller/sensors and processes
-  // whatever they need to do. For instance, the CarController would
-  // command the RaycastVehicle in a certain way, and all of the GPS
-  // and IMU would register the states of the physics.
+    ///////////////
+    // GPS (TODO)
+    ///////////////
 
+
+    ///////////////
+    // IMU (TODO)
+    ///////////////
+
+  }
 }
 
 ////////////////////////////////
@@ -413,17 +443,6 @@ void PhysicsEngine::StepSimulation(){
       // The MotionStatePointer holds the ModelNode, which holds the poses.
       Vehicle_Entity* eVehicle = it->second.get();
       NodeMotionState* mMotion = eVehicle->m_pMotionState.get();
-
-      // TODO: make the physics react to all of the commands coming
-      // through Node.
-
-      //HOW TO PASS COMMANDS TO THE CAR:
-      VehiclePtr pVeh = eVehicle->m_pVehicle;
-      pVeh->setSteeringValue(M_PI/6, 0);
-      pVeh->setSteeringValue(M_PI/6, 1);
-      pVeh->applyEngineForce(5, 2);
-      pVeh->applyEngineForce(5, 3);
-
       RaycastVehicle* pVehicle = (RaycastVehicle*) &mMotion->object;
       std::vector<Eigen::Matrix4d> VehiclePoses =
           GetVehicleTransform(pVehicle->GetName());

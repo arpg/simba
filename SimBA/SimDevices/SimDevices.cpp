@@ -42,12 +42,19 @@ void SimDevices::UpdateSensors(){
   *****************************************************************************/
 
 vector<SimDeviceInfo*> SimDevices::GetAllRelatedDevices(string sDeviceBodyName){
+
+  //TODO: Fix naming system for controllers and sensors.
   vector<SimDeviceInfo*> related_devices;
   for(map<string, SimDeviceInfo*>::iterator it = m_vSimDevices.begin();
       it != m_vSimDevices.end();
       it++){
     SimDeviceInfo* pDevice = it->second;
-    if (pDevice->GetBodyName()==sDeviceBodyName){
+    if(pDevice->m_sDeviceType=="CarController"){
+      if (pDevice->GetDeviceName()==sDeviceBodyName){
+        related_devices.push_back(pDevice);
+      }
+    }
+    else if (pDevice->GetBodyName()==sDeviceBodyName){
       related_devices.push_back(pDevice);
     }
   }

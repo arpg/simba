@@ -59,10 +59,6 @@ LocalSim::LocalSim(const string& sLocalSimName,
 /// FUNCTIONS
 ////////////////////////////////////////////////////////////////////////
 
-
-
-////////////////////////////////
-
 void LocalSim::StepForward(){
   // Update SimDevices
   m_SimDevices.UpdateSensors();
@@ -72,7 +68,6 @@ void LocalSim::StepForward(){
   // Comes after UpdateNetwork due to controller commands
   m_Scene.UpdateScene();
 }
-
 
 ///////////////////////////////////////////////////////////////////
 /////

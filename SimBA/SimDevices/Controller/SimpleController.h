@@ -9,9 +9,12 @@ class SimpleController: public SimDeviceInfo
 {
 public:
 
-  SimpleController(string sDeviceName, string sRobotName){
+  SimpleController(string sDeviceName, string sBodyName, string sRobotName){
     SetDeviceName(sDeviceName);
+    SetBodyName(sBodyName);
     SetRobotName(sRobotName);
+
+    m_sDeviceType = "SimpleController";
   }
 
   ///////////////////////////////////////////////////

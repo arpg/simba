@@ -9,12 +9,14 @@ class CarController: public SimDeviceInfo
 {
 public:
 
-  CarController(string sDeviceName, string sRobotName){
+  CarController(string sDeviceName, string sBodyName, string sRobotName){
     SetDeviceName(sDeviceName);
+    SetBodyName(sBodyName);
     SetRobotName(sRobotName);
+    m_sDeviceType = "CarController";
   }
 
-  void UpdateCommand(VehicleMsg& Command){
+  void UpdateCommand(pb::VehicleMsg& Command){
     m_dSteering = Command.steering_angle();
     m_dTorque = Command.desired_force();
   }

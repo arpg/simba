@@ -43,8 +43,8 @@ public:
   void RegisterDevices(SimDevices* pSimDevices);
   void RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
                          RegisterNodeCamRepMsg & mReply);
-  void RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
-                                RegisterControllerRepMsg & mReply);
+  void RegisterControllerDevice(pb::RegisterControllerReqMsg& mRequest,
+                                pb::RegisterControllerRepMsg & mReply);
   bool UpdateNetwork();
   bool ReceiveControllerInfo(string sDeviceName);
   bool PublishSimCamBySensor(string sCamBodyName);
@@ -98,8 +98,8 @@ public:
   // then we can use recv and publish method to sync command between
   // controller and LocalSim.
 
-  static void _RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
-                                        RegisterControllerRepMsg& mReply,
+  static void _RegisterControllerDevice(pb::RegisterControllerReqMsg& mRequest,
+                                        pb::RegisterControllerRepMsg& mReply,
                                         void* pUserData){
     ((NetworkManager*)pUserData)->RegisterControllerDevice(mRequest, mReply);
   }
