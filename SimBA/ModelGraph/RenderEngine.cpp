@@ -211,14 +211,15 @@ void RenderEngine::AddDevices(SimDevices& Devices){
 
 bool RenderEngine::UpdateCameras()
 {
+  bool bStatus = false;
   for(map<SimCamera*, ModelNode*>::iterator it = m_mCameras.begin();
       it != m_mCameras.end();
       it++){
     SimCamera* Device = it->first;
     Device->Update();
-    return true;
+    bStatus = true;
   }
-    return false;
+    return bStatus;
 }
 
 

@@ -1,5 +1,5 @@
 project( SimBA )
-cmake_minimum_required(VERSION 2.4.3)
+cmake_minimum_required(VERSION 2.8)
 
 set(LIBRARY_NAME ${PROJECT_NAME})
 
