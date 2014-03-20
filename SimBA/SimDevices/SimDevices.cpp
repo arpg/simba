@@ -26,14 +26,14 @@ void SimDevices::UpdateSensors(){
     SimDeviceInfo* Device = it->second;
     // Cameras are taken care of in RenderEngine, so don't worry about
     // them here.
-    if(static_cast<SimGPS*>(Device) != NULL){
-      SimGPS* pGPS = (SimGPS*) Device;
-      pGPS->Update();
-    }
-    else if(static_cast<SimVicon*>(Device) != NULL){
-      SimVicon* pVicon = (SimVicon*) Device;
-      pVicon->Update();
-    }
+//    if(Device->m_sDeviceType == "GPS"){
+//      SimGPS* pGPS = (SimGPS*) Device;
+//      pGPS->Update();
+//    }
+//    else if(Device->m_sDeviceType == "Vicon"){
+//      SimVicon* pVicon = (SimVicon*) Device;
+//      pVicon->Update();
+//    }
   }
 }
 
@@ -42,8 +42,6 @@ void SimDevices::UpdateSensors(){
   *****************************************************************************/
 
 vector<SimDeviceInfo*> SimDevices::GetAllRelatedDevices(string sDeviceBodyName){
-
-  //TODO: Fix naming system for controllers and sensors.
   vector<SimDeviceInfo*> related_devices;
   for(map<string, SimDeviceInfo*>::iterator it = m_vSimDevices.begin();
       it != m_vSimDevices.end();

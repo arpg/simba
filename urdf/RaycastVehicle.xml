@@ -77,6 +77,8 @@
        Body = What body we're controlling. For CarControllers, this should
          be a RaycastVehicle. For a SimpleController, it could be another
          object...
+       Parent = Should always be set to "NONE" for a controller. Must be
+         included.
        Controllers do not need physical properties, since they directly
        connect to a physical body already. 
 --> 
@@ -94,8 +96,16 @@
   Baseline="0.1"
   Model="/Users/Trystan/Code/simba/SimBA/SimDevices/Sensor/cameras.xml"/>
 
+<Device Name="MahGPS"
+  Type="GPS"
+  Parent="RaycastVehicle"
+  Mass="0.001"
+  Dimension="0.01, 0.01, 0.01"
+  Pose="0,0,0,0,0,0"/>
+
 <Device Name="VehicleController"
   Type="CarController"
-  Body="RaycastVehicle"/>
+  Body="RaycastVehicle"
+  Parent="NONE"/>
 
 </robot>

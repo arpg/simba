@@ -7,25 +7,24 @@
   *
   ***********************************************************/
 
-bool NetworkManager::Init(string sProxyName, string sServerName, int verbocity){
-  // Check if we need to init Node for LocalSim
+bool NetworkManager::Init(string sProxyName, string sServerName, int verbosity){
   m_sServerName = sServerName;
+  m_verbosity = verbosity;
   if(m_sServerName == "WithoutNetwork"){
-    cout<<"[NetworkManager] Skip Network due to WithoutNetwork Mode"<<endl;
+    if(m_verbosity != 0){cout<<"[NetworkManager] Skip Network due to "<<
+                               "WithoutNetwork Mode"<<endl;}
     return true;
   }
 
-  // Else, Init Node connection in LocalSim and provide
+  // If we do need it, Init Node connection in LocalSim and provide
   // relative RPC method.
   m_sLocalSimName  = sProxyName;
-  m_verbocity      = verbocity;
   m_iNodeClients   = 0;
 
-//  m_Node.set_verbocity(m_verbocity ); // make some noise on errors
+  m_Node.set_verbosity(m_verbosity); // make some noise on errors
   bool worked = m_Node.init(m_sLocalSimName);
-  if(!worked){
-    cout<<"[NetworkManager] Init Node '"<<
-          m_sLocalSimName<<"' failed..."<<endl;
+  if(!worked && m_verbosity!=0){
+    cout<<"[NetworkManager] Init Node '"<<m_sLocalSimName<<"' failed..."<<endl;
     return false;
   }
   return true;
@@ -64,11 +63,14 @@ std::map<string, string> NetworkManager::ParseURI(string sURI){
                           sURI.substr(0, (found_name)),
                           sURI.substr(found_name+1,
                                       (found_value-found_name-1))));
-//      for(map<string, string>::iterator it = uri_contents.begin();
-//          it != uri_contents.end();
-//          it++){
-//        cout<<it->first<<" is set to "<<it->second<<endl;
-//      }
+    if(m_verbosity!=0){
+      cout<<"URI parameters:"<<endl;
+      for(map<string, string>::iterator it = uri_contents.begin();
+          it != uri_contents.end();
+          it++){
+        cout<<it->first<<" is set to "<<it->second<<endl;
+      }
+    }
     return uri_contents;
 }
 
@@ -118,9 +120,9 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
 
   // Check if we need to init devices in Node.
   if(m_sServerName=="WithoutNetwork"){
-    cout<<"[NetworkManager/RegisterDevices]"<<
-          "Skip! Init LocalSim without Network."<<endl;
-    // Turn all of our devices on.
+    if(m_verbosity!=0){cout<<"[NetworkManager/RegisterDevices]"<<
+                             "Skip! Init LocalSim without Network."<<endl;}
+    // Turn all of our devices on, since it doesn't matter.
     for(map<string, SimDeviceInfo*>::iterator it =
         m_pSimDevices->m_vSimDevices.begin();
         it != m_pSimDevices->m_vSimDevices.end();
@@ -172,7 +174,6 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
       else if(Device->m_sDeviceType=="CarController"
               && !Device->m_bHasAdvertised){
         CarController* pCarCon = (CarController*) Device;
-//        pCarCon->m_bDeviceOn = true;
         m_Node.provide_rpc("RegisterControllerDevice",
                            &_RegisterControllerDevice, this);
         pCarCon->m_bHasAdvertised = true;
@@ -206,24 +207,26 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
     mReply.set_width(pCam->m_nImgWidth);
     mReply.set_height(pCam->m_nImgHeight);
     m_iNodeClients = m_iNodeClients + 1;
-    cout<<"[NetworkManager/RegisterCamDevice] HAL requesting "<<
-          sDeviceName<<". Device Ready!"<<endl;
     string sServiceName = GetFirstName(pCam->GetBodyName());
-    if(m_Node.advertise(sServiceName)==true){
+    if(m_Node.advertise(sServiceName)==true && m_verbosity!=0){
       cout<<"[NetworkManager/RegisterDevices]"<<
             " Advertising "<<sServiceName<<" --> Success."<<endl;
     }
     else{
-      cout<<"[NetworkManager/RegisterDevices]"<<
-            " Advertising "<<sServiceName<<" --> Fail."<<endl;
+      if(m_verbosity!=0){
+        cout<<"[NetworkManager/RegisterDevices]"<<
+              " Advertising "<<sServiceName<<" --> Fail."<<endl;
+      }
       exit(-1);
     }
   }
   else{
     mReply.set_time_step(m_iTimeStep);
     mReply.set_regsiter_flag(0);
-    cout<<"[NetworkManager/RegisterCamDevice] HAL requesting "<<
-          sDeviceName<<". Device Invalid!"<<endl;
+    if(m_verbosity!=0){
+      cout<<"[NetworkManager/RegisterCamDevice] HAL requesting "<<
+            sDeviceName<<". Device Invalid!"<<endl;
+    }
   }
 }
 
@@ -259,54 +262,61 @@ void NetworkManager::RegisterControllerDevice(
 
 bool NetworkManager::UpdateNetwork(){
   m_iTimeStep++;
+  /// -s WithoutNetwork
   if(m_sServerName == "WithoutNetwork"){
     return true;
   }
-  if(m_verbocity != 0){
-    /// What is this supposed to do...?
-    cout<<"*************************************************************"<<endl;
+  /// -s WithoutStateKeeper
+  ///  N.B. = A sensor must be published by its BODY NAME, called with
+  ///         sensor->GetBodyName(). This is because one body can have
+  ///         more than one device on it, and so we must account for them
+  ///         all.
+  ///         A controller must be called by its DEVICE NAME, called with
+  ///         controller->GetDeviceName(). It doesn't have a physics body;
+  ///         rather, it just controls one. It's purely a device.
+  vector<SimDeviceInfo*> pDevices = m_pSimDevices->GetOnDevices();
+  if(m_verbosity!=0){cout<<"[NetMan::UpdateNetwork] Num. devices: "<<
+                           pDevices.size()<<endl;}
+  for(unsigned int ii=0; ii<pDevices.size(); ii++){
+    SimDeviceInfo* Device = pDevices.at(ii);
+    ////////////////////
+    // SENSORS
+    //-- Camera
+    if(Device->m_sDeviceType=="Camera" && !Device->m_bHasPublished){
+      PublishSimCamBySensor(Device->GetBodyName());
+    }
+    //-- GPS
+    else if(Device->m_sDeviceType=="GPS" && !Device->m_bHasPublished){
+      PublishGPS(Device->GetBodyName());
+    }
+    ////////////////////
+    // CONTROLLERS
+    //-- CarController
+    else if(Device->m_sDeviceType=="CarController" &&
+            !Device->m_bHasPublished){
+      ReceiveControllerInfo(Device->GetDeviceName());
+    }
+    Device->m_bHasPublished = false;
   }
+
+  /// -s WithStateKeeper
   if(m_sServerName == "WithStateKeeper"){
-    if(PublishRobotToStateKeeper() == false){
+    if(PublishRobotToStateKeeper() == false && m_verbosity!=0){
       cout<<"[NetworkManager] Cannot Publish Robot State To StateKeeper!!!"<<
             " You might be disconnected from the server..."<<endl;
       return false;
     }
-    if(ReceiveWorldFromStateKeeper() == false){
+    if(ReceiveWorldFromStateKeeper() == false && m_verbosity!=0){
       cout<<"[NetworkManager] Cannot Receive World State from StateKeeper!!!"<<
             " You may be disconnected from the server... "<<endl;
       return false;
     }
   }
 
-  vector<SimDeviceInfo*> pDevices = m_pSimDevices->GetOnDevices();
-  cout<<"[NetMan::UpdateNetwork] "<<pDevices.size()<<endl;
-  for(unsigned int ii=0; ii<pDevices.size(); ii++){
-    SimDeviceInfo* Device = pDevices.at(ii);
-    // Update Camera
-    if(Device->m_sDeviceType=="Camera" && !Device->m_bHasPublished){
-      PublishSimCamBySensor(Device->GetBodyName());
-    }
-    // TODO: Update cast model
-    // Update GPS
-    else if(Device->m_sDeviceType=="GPS" && !Device->m_bHasPublished){
-      PublishGPS(Device->GetBodyName());
-    }
-    // update Controller Info
-    else if(Device->m_sDeviceType=="CarController" &&
-            !Device->m_bHasPublished){
-      ReceiveControllerInfo(Device->GetDeviceName());
-    }
-
-    Device->m_bHasPublished = false;
-
-  }
-
   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////
-
 // Publish SimCamera by Sensor.
 // We MUST MAKE SURE that the glGraph has been activated, or else there
 // will be nothing to take a picture of!
@@ -334,7 +344,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
         pImage->set_type(pb::PB_UNSIGNED_SHORT);
         pImage->set_format(pb::PB_LUMINANCE);
         pImage->set_data(pImgbuf);
-        cout<<"Published Greyscale"<<endl;
+        if(m_verbosity!=0){cout<<"Published Greyscale"<<endl;}
       }
       else{
         return false;
@@ -355,7 +365,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
         pImage->set_height( pSimCam->m_nImgHeight );
         pImage->set_type(pb::PB_UNSIGNED_BYTE);
         pImage->set_format(pb::PB_RGB);
-        cout<<"Published RGB"<<endl;
+        if(m_verbosity!=0){cout<<"Published RGB"<<endl;}
       }
       else{
         return false;
@@ -377,7 +387,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
         pImage->set_height( pSimCam->m_nImgHeight );
         pImage->set_type(pb::PB_FLOAT);
         pImage->set_format(pb::PB_LUMINANCE);
-        cout<<"Published Depth"<<endl;
+        if(m_verbosity!=0){cout<<"Published Depth"<<endl;}
       }
       else{
         return false;
@@ -388,17 +398,19 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
 
   // Publish the info
   string sFirstName = GetFirstName(sCamBodyName);
+  if(m_verbosity!=0){cout<<"Camera handle to puublish: "<<
+                           sFirstName<<endl;}
   bool bStatus = m_Node.publish(sFirstName, mCamImage);
-  if( bStatus == false){
-    cout<<"["<<m_sLocalSimName<<
-          "/"<<sFirstName<<"] ERROR: publishing images fail.."<<endl;
+  if(!bStatus){
+    if(m_verbosity!=0){cout<<"["<<m_sLocalSimName<<
+                             "/"<<sFirstName<<
+                             "] ERROR: publishing images fail.."<<endl;}
     return false;
   }
-  if(m_verbocity != 0){
-    cout<<"["<<m_sLocalSimName<<
-          "/"<<sFirstName<<"] Publsih NodeCam image success." <<endl;
+  if(m_verbosity != 0){cout<<"["<<m_sLocalSimName<<
+                             "/"<<sFirstName<<
+                             "] Publish NodeCam image success." <<endl;
   }
-  cout<<"Published the Whole Image"<<endl;
   return true;
 }
 
@@ -417,7 +429,7 @@ bool NetworkManager::PublishGPS(string sDeviceName){
 
   string sFirstName = GetFirstName(sDeviceName);
 
-  if(m_verbocity!=0){
+  if(m_verbosity!=0){
     cout<<"[NodeGPS] Try to publish "<<sFirstName<< ". x="<<pose[0]<<
           " y="<<pose[1]<<" z="<<pose[2]<<
           ". Time step is "<<mGPSMSg.time_step()<<"."<<endl;
@@ -430,7 +442,7 @@ bool NetworkManager::PublishGPS(string sDeviceName){
       printf("[NodeGPS] ERROR: publishing GPS fail. Try again.\n" );
     }
   }
-  if(m_verbocity!=0){
+  if(m_verbosity!=0){
     cout<<"[NodeGPS] publsih GPS success." <<endl;
   }
   return true;
@@ -442,34 +454,38 @@ bool NetworkManager::PublishGPS(string sDeviceName){
 
 bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
   SimDeviceInfo* pDevice = m_pSimDevices->m_vSimDevices[sDeviceName];
-  string sServiceName = GetFirstName(sDeviceName);
-  cout<<sServiceName<<endl;
-  // TODO: Synch vs. asynch
-  // ASYNCHRONIZED PROTOCOL:
-  //   The while loop doesn't wait forever to receive a command
-  // SYNCHRONIZED PROTOCOL:
-  //   ...we wait.
+  /// TODO: There's a naming issue here; we have to duplicate the name
+  /// to register correctly.
+  string sServiceName = GetFirstName(sDeviceName)+"/"+GetFirstName(sDeviceName);
+  if(m_verbosity != 0){cout<<sServiceName<<endl;}
+
+  // ASYNCHRONIZED PROTOCOL: The while loop doesn't wait forever to receive
+  //   a command
+  // SYNCHRONIZED PROTOCOL: ...we wait.
+  bool sync = false;
+  if(m_verbosity != 0){cout<<"Syncing protocol is "<<sync<<endl;}
+  int max_iter;
+  sync ? max_iter = 1e7 : max_iter = 100;
 
   // Car Controller
   if(pDevice->m_sDeviceType=="CarController"){
     CarController* pCarController = (CarController*) pDevice;
     pb::VehicleMsg Command;
     int n = 0;
-    while(m_Node.receive(sServiceName+"/"+sServiceName, Command)==false
-          && n<100){
-      cout<<".";
+    while(m_Node.receive(sServiceName, Command)==false
+          && n < max_iter){
+      if(m_verbosity!=0){cout<<".";}
       n++;
     }
-    if(n==100){
-      cout<<"NOOO"<<endl;
+    if(n==max_iter){
+      if(m_verbosity!=0){cout<<endl<<"No command"<<endl;}
       return false;
     }
     else{
-      cout<<"Yes"<<endl;
+      if(m_verbosity!=0){cout<<endl<<"Got command!"<<endl;}
       pCarController->UpdateCommand(Command);
       pCarController->m_bHasPublished = true;
       return true;
-
     }
   }
 
@@ -499,13 +515,12 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
 bool NetworkManager::RegisterRobot(RobotsManager* pRobotsManager){
   // Check if we need to connect to StateKeeper.
   if(m_sServerName == "WithoutNetwork"){
-    cout<<"[NetworkManager/RegisterRobot]"<<
-          " Skip due to WithoutNetwork mode"<<endl;
+    if(m_verbosity != 0){cout<<"[NetworkManager/RegisterRobot]"<<
+                               " Skip due to WithoutNetwork mode"<<endl;}
   }
-
   else if(m_sServerName == "WithoutStateKeeper"){
-    cout<<"[NetworkManager/RegisterRobot]"<<
-          " Skip due to WithoutStateKeeper mode"<<endl;
+    if(m_verbosity != 0){cout<<"[NetworkManager/RegisterRobot]"<<
+                               " Skip due to WithoutStateKeeper mode"<<endl;}
   }
 
   // We have a StateKeeper! Go publish. Now.
@@ -514,16 +529,18 @@ bool NetworkManager::RegisterRobot(RobotsManager* pRobotsManager){
     m_Node.advertise("RobotState");
     bool bStatus = RegisterWithStateKeeper();
     if(bStatus == false){
-      cout<<"[NetworkManager] Cannot register LocalSim '"<<
-            m_sLocalSimName<<"' in "<<m_sServerName<<
-            ". Please make sure "<<m_sServerName<<" is running!"<<endl;
+      if(m_verbosity != 0){cout<<"[NetworkManager] Cannot register LocalSim '"<<
+                                 m_sLocalSimName<<"' in "<<m_sServerName<<
+                                 ". Please make sure "<<m_sServerName<<
+                                 " is running!"<<endl;}
       return false;
     }
     // TODO: Allow these methods; not sure if they work yet, though.
     m_Node.provide_rpc("AddRobotByURDF",&_AddRobotByURDF, this);
     m_Node.provide_rpc("DeleteRobot",&_DeleteRobot, this);
-    cout<<"[NetworkManager] Init Robot Network "<<m_sLocalSimName<<
-          " for statekeeper success."<<endl;
+    if(m_verbosity != 0){cout<<"[NetworkManager] Init Robot Network "<<
+                               m_sLocalSimName<<
+                               " for statekeeper success."<<endl;}
   }
   return true;
 }
@@ -735,7 +752,7 @@ bool NetworkManager::PublishRobotToStateKeeper(){
     bStatus=m_Node.publish( "RobotState", mRobotFullState);
     if(bStatus==true)
     {
-      if(m_verbocity!=0)
+      if(m_verbosity!=0)
       {
         cout<<"[NetworkManager] Publish " <<m_sLocalSimName<<
               " State to Statekeeper success. Publish Timestep is "<<
@@ -772,7 +789,7 @@ bool NetworkManager::ReceiveWorldFromStateKeeper(){
       m_pRobotsManager->ApplyWorldFullState();
       m_iTimeStep = ws.time_step();
       bStatus=true;
-      if(m_verbocity!=0){
+      if(m_verbosity!=0){
         cout<<"[NetworkManager] Update World state success! Size is "<<
               ws.robot_state_size()<<". Time Step for world state is "<<
               ws.time_step()<<endl;

@@ -394,7 +394,7 @@ void PhysicsEngine::DebugDrawWorld(){
 void PhysicsEngine::RunDevices(){
   for(unsigned int ii=0; ii<m_mDevices.size(); ii++){
     ///////////////
-    // CAR CONTROLLERS
+    // CAR CONTROLLER
     ///////////////
     SimDeviceInfo* Device = m_mDevices.at(ii);
     if(Device->m_sDeviceType=="CarController"){
@@ -422,7 +422,23 @@ void PhysicsEngine::RunDevices(){
     ///////////////
     // GPS (TODO)
     ///////////////
-
+    else if(Device->m_sDeviceType=="GPS"){
+      SimGPS* pGPS = (SimGPS*) m_mDevices.at(ii);
+      for(std::map<string, boost::shared_ptr<Entity> > ::iterator it =
+          m_mShapes.begin(); it!=m_mShapes.end(); it++ ){
+        if(pGPS->GetBodyName()==it->first){
+          //This controller goes to this car.
+          Entity* eEntity = it->second.get();
+          MotionStatePtr bodyMotion = eEntity->m_pMotionState;
+          btTransform bodyTransform;
+          btVector3 bodyPos = bodyTransform.getOrigin();
+          bodyMotion->getWorldTransform(bodyTransform);
+          Eigen::Vector3d bodyPose;
+          bodyPose<<bodyPos.getX(), bodyPos.getY(), bodyPos.getZ();
+          pGPS->Update(bodyPose);
+        }
+      }
+    }
 
     ///////////////
     // IMU (TODO)

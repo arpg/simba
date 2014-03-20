@@ -8,12 +8,15 @@
 class SimGPS : public SimDeviceInfo
 {
 public:
-    void init(string DeviceName){
-        m_sDeviceName = DeviceName;
+    SimGPS(string DeviceName, string BodyName, string RobotName){
+        SetDeviceName(DeviceName);
+        SetBodyName(BodyName);
+        SetRobotName(RobotName);
+        m_sDeviceType = "GPS";
     }
 
-    void Update(){
-//        m_CurPose = m_pPhysWrapper->GetEntityOrigin(m_sDeviceName);
+    void Update(Eigen::Vector3d pose){
+      m_CurPose = pose;
     }
 
     void GetPose(Eigen::Vector3d &pose){

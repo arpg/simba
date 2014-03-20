@@ -33,7 +33,7 @@ public:
   int m_iNodeClients; // num of Node clients that subscribe to LocalSim
 
   /// INITIALIZE NETWORK
-  bool Init(string sLocalSimName, string sServerName, int verbocity=0);
+  bool Init(string sLocalSimName, string sServerName, int verbosity=0);
 
   /// URI PARSERS
   std::map<string, string> ParseURI(string sURI);
@@ -109,7 +109,7 @@ private:
   hal::node       m_Node;
   std::string     m_sLocalSimName;
   string          m_sServerName;
-  int             m_verbocity;
+  int             m_verbosity;
   int             m_iTimeStep;
   boost::mutex    m_Mutex;
   SimDevices*     m_pSimDevices;

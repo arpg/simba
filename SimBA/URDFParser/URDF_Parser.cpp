@@ -661,13 +661,16 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
 //////////////////////////////////////////////////////////////
 void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement ){
   const char* sRootContent = pElement->Name();
-  if(strcmp(sRootContent,"Sensor")==0){
+  if(strcmp(sRootContent,"Device")==0){
+    string sParentName = pElement->Attribute("Parent");
+    // This means that it's a controller, not a sensor.
+    if(sParentName=="NONE"){
+      return;
+    }
     cout<<"[ParseSensorShape] Trying to create a body for a Sensor"<<endl;
-    cout<<"[ParseSensorShape] Sensor Type: "<<pElement->Attribute("Mode")<<endl;
     string sCameraName = GetAttribute( pElement, "Name")+"@"+sRobotName;
-    string sParentName = GetAttribute( pElement, "Parent")+"@"+sRobotName;
+    sParentName = GetAttribute( pElement, "Parent")+"@"+sRobotName;
     vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
-    vector<double> dBaseline = GenNumFromChar(pElement->Attribute("Baseline"));
     vector<double> vMass = GenNumFromChar(pElement->Attribute("Mass"));
     vector<double> vDimension =
         GenNumFromChar(pElement->Attribute("Dimension"));
@@ -783,24 +786,21 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
 
       /// GPS
       if(sType=="GPS"){
-        string sBodyName = GetAttribute( pElement, "Name")+"@"+sRobotName;
-        SimDeviceInfo* Device = new SimDeviceInfo();
-        Device->m_sDeviceType = sType;
-        Device->m_sBodyName = sBodyName;
-        m_SimDevices.AddDevice(Device);
+        string sDeviceName = GetAttribute(pElement, "Name")+"@"+sRobotName;
+        SimGPS* pGPS = new SimGPS(sDeviceName, sDeviceName, sRobotName);
+        m_SimDevices.AddDevice(pGPS);
       }
 
       /// Vicon
       if(sType=="Vicon"){
-        string sViconName = GetAttribute( pElement, "Name")+"@"+sRobotName;
-        string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
-        SimDeviceInfo* Device = new SimDeviceInfo();
-        Device->m_sDeviceName = sViconName;
-        Device->m_sDeviceType = sType;
-        Device->m_sBodyName = sBodyName;
-        m_SimDevices.AddDevice(Device);
-        cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<
-              " success."<<endl;
+//        string sViconName = GetAttribute( pElement, "Name")+"@"+sRobotName;
+//        SimDeviceInfo* Device = new SimDeviceInfo();
+//        Device->m_sDeviceName = sViconName;
+//        Device->m_sDeviceType = sType;
+//        Device->m_sBodyName = sBodyName;
+//        m_SimDevices.AddDevice(Device);
+//        cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<
+//              " success."<<endl;
       }
 
 
