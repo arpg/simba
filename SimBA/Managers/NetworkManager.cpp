@@ -442,24 +442,34 @@ bool NetworkManager::PublishGPS(string sDeviceName){
 
 bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
   SimDeviceInfo* pDevice = m_pSimDevices->m_vSimDevices[sDeviceName];
-  string sServiceName = sDeviceName;
-
+  string sServiceName = GetFirstName(sDeviceName);
+  cout<<sServiceName<<endl;
   // TODO: Synch vs. asynch
+  // ASYNCHRONIZED PROTOCOL:
+  //   The while loop doesn't wait forever to receive a command
   // SYNCHRONIZED PROTOCOL:
+  //   ...we wait.
 
   // Car Controller
   if(pDevice->m_sDeviceType=="CarController"){
     CarController* pCarController = (CarController*) pDevice;
     pb::VehicleMsg Command;
-    if(m_Node.receive(sServiceName, Command)==true){
-
+    int n = 0;
+    while(m_Node.receive(sServiceName+"/"+sServiceName, Command)==false
+          && n<100){
+      cout<<".";
+      n++;
+    }
+    if(n==100){
+      cout<<"NOOO"<<endl;
+      return false;
+    }
+    else{
+      cout<<"Yes"<<endl;
       pCarController->UpdateCommand(Command);
       pCarController->m_bHasPublished = true;
       return true;
-    }
-    else{
-      cout<<"Couldn't get the command for the Car Controller"<<endl;
-      return false;
+
     }
   }
 
