@@ -15,6 +15,8 @@
 #include <NodeCar.pb.h>
 #include <Network/WorldState.h>
 
+#include <boost/thread/mutex.hpp>
+
 using namespace std;
 
 /*****************************************************
@@ -43,8 +45,8 @@ public:
   void RegisterDevices(SimDevices* pSimDevices);
   void RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
                          RegisterNodeCamRepMsg & mReply);
-  void RegisterControllerDevice(pb::RegisterControllerReqMsg& mRequest,
-                                pb::RegisterControllerRepMsg & mReply);
+  void RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
+                                RegisterControllerRepMsg & mReply);
   bool UpdateNetwork();
   bool ReceiveControllerInfo(string sDeviceName);
   bool PublishSimCamBySensor(string sCamBodyName);
@@ -98,8 +100,8 @@ public:
   // then we can use recv and publish method to sync command between
   // controller and LocalSim.
 
-  static void _RegisterControllerDevice(pb::RegisterControllerReqMsg& mRequest,
-                                        pb::RegisterControllerRepMsg& mReply,
+  static void _RegisterControllerDevice(RegisterControllerReqMsg& mRequest,
+                                        RegisterControllerRepMsg& mReply,
                                         void* pUserData){
     ((NetworkManager*)pUserData)->RegisterControllerDevice(mRequest, mReply);
   }
@@ -111,7 +113,7 @@ private:
   string          m_sServerName;
   int             m_verbosity;
   int             m_iTimeStep;
-  boost::mutex    m_Mutex;
+  boost::mutex           m_Mutex;
   SimDevices*     m_pSimDevices;
   RobotsManager*  m_pRobotsManager;
 

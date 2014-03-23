@@ -233,10 +233,14 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
 ////////////////////////////////////////////////////////////////////////
 
 void NetworkManager::RegisterControllerDevice(
-    pb::RegisterControllerReqMsg& mRequest,
-    pb::RegisterControllerRepMsg & mReply){
-  string sDeviceName = CheckURI(mRequest.uri());
+    RegisterControllerReqMsg& mRequest,
+    RegisterControllerRepMsg & mReply){
+
+//  string sDeviceName = CheckURI(mRequest.uri());
+  string sDeviceName = CheckURI(mRequest.topic());
+
   cout<<mRequest.topic()<<endl;
+
   if(sDeviceName!="FALSE"){
 
     // Check to see if you can even subscribe to this topic.
@@ -470,7 +474,7 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
   // Car Controller
   if(pDevice->m_sDeviceType=="CarController"){
     CarController* pCarController = (CarController*) pDevice;
-    pb::VehicleMsg Command;
+    VehicleMsg Command;
     int n = 0;
     while(m_Node.receive(sServiceName, Command)==false
           && n < max_iter){
