@@ -6,7 +6,7 @@
 #include <URDFParser/TinyXMLTool.h>
 #include <ModelGraph/Shape.h>
 #include <ModelGraph/Constraint.h>
-#include <ModelGraph/RaycastVehicle.h>
+#include <ModelGraph/SimRaycastVehicle.h>
 #include <SimDevices/SimDevices.h>
 #include <SimRobots/SimRobot.h>
 #include <SimRobots/SimWorld.h>
@@ -45,7 +45,7 @@ public:
 
   void ParseJoint(string sRobotName, XMLElement *pElement);
 
-  RaycastVehicle *ParseRaycastCar(string sRobotName, XMLElement *pElement);
+  SimRaycastVehicle *ParseRaycastCar(string sRobotName, XMLElement *pElement);
 
   void ParseSensorShape(string sRobotName, XMLElement *pElement );
 

@@ -33,8 +33,8 @@ bool NetworkManager::Init(string sProxyName, string sServerName, int verbosity){
 /************************************************************
   *
   * URI PARSERS
-  * These are incredibly useful; they provide paramenters,
-  * ahd they're the only things that tell us what
+  * These are incredibly useful; they provide parameters,
+  * and they're the only things that tell us what
   * devices the user wants on or off.
   *
   ***********************************************************/
@@ -149,14 +149,16 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
             m_pSimDevices->GetAllRelatedDevices(Device->GetBodyName());
         SimCamera* pCam = (SimCamera*) related_devices.at(0);
         // provide rpc method for camera to register
-        m_Node.provide_rpc("RegsiterCamDevice",&_RegisterCamDevice,this);
+        m_Node.provide_rpc("RegsiterSensorDevice",&_RegisterSensorDevice,this);
         for(unsigned int ii=0; ii<related_devices.size(); ii++){
           related_devices.at(ii)->m_bHasAdvertised = true;
         }
       }
       /// GPS
-//      else if(static_cast<SimGPS*>(Device) != NULL){
-//        SimGPS* pGPS = (SimGPS*) Device;
+//      else if(Device->m_sDeviceType=="GPS" && !Device->m_bHasAdvertised){
+//        vector<SimDeviceInfo*> related_devices =
+//            m_pSimDevices->GetAllRelatedDevices(Device->GetBodyName());
+//        SimGPS* pGPS = (SimGPS*) related_devices.at(0);
 //        pGPS->m_bDeviceOn = true;
 //        m_Node.advertise(pGPS->GetDeviceName());
 //      }
@@ -190,7 +192,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
 ////////////////////////////////////////////////////////////////////////
 /// REGISTER AND DELETE DEVICES FROM THE SIMULATION
 
-void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
+void NetworkManager::RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
                                        RegisterNodeCamRepMsg & mReply){
   cout<<"[NetworkManager/RegisterCamDevice]"<<
         " NodeCam asking for register in timestep "<<m_iTimeStep<<"."<<endl;
@@ -198,6 +200,9 @@ void NetworkManager::RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
   if(sDeviceName!="FALSE"){
     vector<SimDeviceInfo*> pDevices =
         m_pSimDevices->GetOnRelatedDevices(sDeviceName);
+
+    /// TODO: Get all of the devices in this function!!
+
     SimCamera* pCam = (SimCamera*) pDevices.at(0);
     // For multiple-camera systems, we take the parameters from
     // the first camera.
@@ -238,12 +243,13 @@ void NetworkManager::RegisterControllerDevice(
   string sDeviceName = CheckURI(mRequest.uri());
   cout<<mRequest.topic()<<endl;
   if(sDeviceName!="FALSE"){
-
-    // Check to see if you can even subscribe to this topic.
-
-    // TODO: WHY DOES THIS HAPPEN
-
+    // TODO: WHY DOES THIS NAME CHANGE HAPPEN
     if( m_Node.subscribe(mRequest.topic()+"/"+mRequest.topic())==false ){
+      cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! "
+            "Cannot subscribe to "<<mRequest.topic()
+         <<". Please make sure service is running."<<endl;
+    }
+    if( m_Node.subscribe(m_sLocalSimName+"/"+mRequest.topic())==false ){
       cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! "
             "Cannot subscribe to "<<mRequest.topic()
          <<". Please make sure service is running."<<endl;
@@ -668,7 +674,7 @@ void NetworkManager::AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
 void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
                                  LocalSimDeleteRobotRepMsg& mReply){
   // don't let anyone touch the shared resource table...
-  boost::mutex::scoped_lock lock(m_Mutex);
+  mutex lock();
 
   // set reply message for StateKeeper
   mReply.set_message("DeleteRobotSuccess");
@@ -688,7 +694,7 @@ void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
 /// pose, state, and current command.
 bool NetworkManager::PublishRobotToStateKeeper(){
   // don't let anyone touch the shared resource table...
-  boost::mutex::scoped_lock lock(m_Mutex);
+  mutex lock();
 
   // 1. Set robot name and time step info
   RobotFullStateMsg mRobotFullState;
@@ -772,7 +778,7 @@ bool NetworkManager::PublishRobotToStateKeeper(){
 ////////////////////////////////////////////////////////////////////////
 
 bool NetworkManager::ReceiveWorldFromStateKeeper(){
-  boost::mutex::scoped_lock lock(m_Mutex);
+  mutex lock();
 
   WorldFullStateMsg ws;
 

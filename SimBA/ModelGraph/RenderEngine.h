@@ -9,7 +9,7 @@
 // All of our bullet objects
 #include <ModelGraph/Shape.h>
 #include <ModelGraph/Constraint.h>
-#include <ModelGraph/RaycastVehicle.h>
+#include <ModelGraph/SimRaycastVehicle.h>
 
 // Our Sensor data
 #include <SimDevices/SimDevices.h>

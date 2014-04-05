@@ -90,7 +90,7 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
         //////////////////////////////////////////
         // Raycast Car
         //////////////////////////////////////////
-        RaycastVehicle* pVehicle = ParseRaycastCar(sBodyName, pElement);
+        SimRaycastVehicle* pVehicle = ParseRaycastCar(sBodyName, pElement);
 
         rSimRobot.SetBase(pVehicle);
         cout<<"[ParseRobot] Successfully built car bodybase: "<<sBodyName<<endl;
@@ -499,8 +499,8 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
 ////////////////////////////////////////////////////////////
 /// Parse Raycast Car
 ////////////////////////////////////////////////////////////
-RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
-                                             XMLElement *pElement){
+SimRaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
+                                                XMLElement *pElement){
   cout<<"[URDF_Parser] Trying to build a RaycastVehicle"<<endl;
 
   std::vector<double> vParameters;
@@ -638,9 +638,9 @@ RaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
 
   Eigen::Vector6d dPose;
   dPose<<pose[0], pose[1], pose[2], pose[3], pose[4], pose[5];
-  RaycastVehicle* pRaycastVehicle = new RaycastVehicle(sRobotName,
-                                                       vParameters,
-                                                       dPose);
+  SimRaycastVehicle* pRaycastVehicle = new SimRaycastVehicle(sRobotName,
+                                                             vParameters,
+                                                             dPose);
   if(body_mesh!="NONE" && wheel_mesh!="NONE"){
     pRaycastVehicle->SetMeshes(body_mesh, wheel_mesh, body_dim, wheel_dim);
   }

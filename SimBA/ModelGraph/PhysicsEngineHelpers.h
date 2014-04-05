@@ -2,7 +2,6 @@
 #define PHYSICSENGINEHELPERS_H
 
 #include <math.h>
-#include <boost/shared_ptr.hpp>
 
 // Bullet libraries
 #include <bullet/LinearMath/btIDebugDraw.h>
@@ -11,7 +10,7 @@
 
 // Our ModelNode Objects
 #include <ModelGraph/Shape.h>
-#include <ModelGraph/RaycastVehicle.h>
+#include <ModelGraph/SimRaycastVehicle.h>
 #include <ModelGraph/Constraint.h>
 
 // Our Controllers
@@ -61,10 +60,10 @@ public:
 ///
 //////////////////////////////////////////////////////////
 
-typedef  boost::shared_ptr<btCollisionShape>            CollisionShapePtr;
-typedef  boost::shared_ptr<btRigidBody>                 RigidBodyPtr;
-typedef  boost::shared_ptr<NodeMotionState>             MotionStatePtr;
-typedef  boost::shared_ptr<btRaycastVehicle>            VehiclePtr;
+typedef  std::shared_ptr<btCollisionShape>            CollisionShapePtr;
+typedef  std::shared_ptr<btRigidBody>                 RigidBodyPtr;
+typedef  std::shared_ptr<NodeMotionState>             MotionStatePtr;
+typedef  std::shared_ptr<btRaycastVehicle>            VehiclePtr;
 
 ///////////////////////////////////////////////////////
 ///

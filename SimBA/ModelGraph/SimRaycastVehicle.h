@@ -1,5 +1,5 @@
-#ifndef RAYCASTVEHICLE_H
-#define RAYCASTVEHICLE_H
+#ifndef SIMRAYCASTVEHICLE_H
+#define SIMRAYCASTVEHICLE_H
 
 #include <ModelGraph/Shape.h>
 #include <ModelGraph/VehicleEnums.h>
@@ -7,11 +7,11 @@
 
 // It's a simple class, but enough to hold the info we need.
 
-class RaycastVehicle : public Shape
+class SimRaycastVehicle : public Shape
 {
 public:
 
-  RaycastVehicle(std::string sName, vector<double> dParameters,
+  SimRaycastVehicle(std::string sName, vector<double> dParameters,
                  Eigen::Vector6d dPose){
     m_dParameters = dParameters;
     m_dPose = dPose;
@@ -34,7 +34,7 @@ public:
       m_BRWheelPose = wheel_pose;
     }
     else{
-      std::cout<<"[RaycastVehicle] There's nothing to do..."<<std::endl;
+      std::cout<<"[SimRaycastVehicle] There's nothing to do..."<<std::endl;
     }
   }
 
@@ -68,7 +68,7 @@ public:
       return m_BRWheelPose;
     }
     else{
-      std::cout<<"[RaycastVehicle] There's nothing to do..."<<std::endl;
+      std::cout<<"[SimRaycastVehicle] There's nothing to do..."<<std::endl;
     }
   }
 
@@ -102,4 +102,4 @@ public:
 
 
 
-#endif // RAYCASTVEHICLE_H
+#endif // SIMRAYCASTVEHICLE_H

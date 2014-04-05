@@ -84,8 +84,8 @@ int main( int argc, char* argv[] )
         for(size_t i=0; i<imgs->Size(); ++i ) {
             container[i].Activate();
             tex.Upload(
-                imgs->at(i).data(),
-                imgs->at(i).Format(), imgs->at(i).Type()
+                imgs->at(i)->data(),
+                imgs->at(i)->Format(), imgs->at(i)->Type()
             );
             tex.RenderToViewportFlipY();
         }

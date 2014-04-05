@@ -16,7 +16,7 @@ void RenderEngine::Init(std::string sLocalSimName){
 void RenderEngine::AddNode( ModelNode *pNode){
 
   // Add our RaycastVehicle (a myriad of shapes)
-  if (dynamic_cast<RaycastVehicle*>(pNode) != NULL){
+  if (dynamic_cast<SimRaycastVehicle*>(pNode) != NULL){
     // A RaycastVehicle is made of a cube and four cylinders.
     // Since a vehicle is one shape in the PhysicsEngine, but five shapes
     // in the RenderEngine, we must call PhysicsEngine::GetVehicleTransform
@@ -24,7 +24,7 @@ void RenderEngine::AddNode( ModelNode *pNode){
 
     // Get the positions of every part of the car.
 
-    RaycastVehicle* pVehicle = (RaycastVehicle*) pNode;
+    SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) pNode;
     std::vector<double> params = pVehicle->GetParameters();
 
     // Were the meshes set for the car? If so, import those; else, use shapes.
@@ -377,9 +377,9 @@ void RenderEngine::UpdateScene(){
     SceneGraph::GLObject* p = it->second;
     p->SetPose( mn->GetPose() );
     // Update all of our tires.
-    if((dynamic_cast<RaycastVehicle*>(mn) != NULL)){
+    if((dynamic_cast<SimRaycastVehicle*>(mn) != NULL)){
       std::map<string, SceneGraph::GLObject*>::iterator jj;
-      RaycastVehicle* pVehicle = (RaycastVehicle*) mn;
+      SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) mn;
       for(jj=m_mRaycastWheels.begin(); jj != m_mRaycastWheels.end(); jj++) {
         string name = jj->first;
         SceneGraph::GLObject* wheel = jj->second;

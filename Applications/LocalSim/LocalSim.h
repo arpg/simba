@@ -9,7 +9,6 @@
 ///
 /////////////////////////////////////////////
 #include <iostream>
-#include <boost/bind.hpp>
 #include <Eigen/Eigen>                         // for vector math
 #include "Utils/CVarHelpers.h"                 // for parsing Eigen Vars as CVars
 #include <CVars/CVar.h>                        // for GLConsole
@@ -39,7 +38,7 @@ public:
   //member variables
   std::string                 m_sLocalSimName;
   ModelGraphBuilder           m_Scene;
-  SimRobot                    m_SimRobot;         // user's robot. will be delete in final version of robot LocalSim (as we are not going to key control main robot in LocalSim)
+  SimRobot                    m_SimRobot;
   SimWorld                    m_SimWorld;
   SimDevices                  m_SimDevices;
   RobotsManager               m_RobotManager;

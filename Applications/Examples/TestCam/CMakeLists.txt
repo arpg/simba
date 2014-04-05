@@ -6,27 +6,30 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
 endif()
 
 find_package( Pangolin 0.1 QUIET )
-find_package( SceneGraph REQUIRED )
+#find_package( SceneGraph REQUIRED )
 find_package( HAL 0.1 QUIET)
 find_package( PbMsgs REQUIRED )
-find_package( TinyXML2 REQUIRED )
 find_package( SimBA )
+find_package( Node )
+#find_package( TinyXML2 REQUIRED )
+
 
 include_directories( ${Pangolin_INCLUDE_DIRS})
-include_directories( ${SceneGraph_INCLUDE_DIRS})
+#include_directories( ${SceneGraph_INCLUDE_DIRS})
 include_directories( ${HAL_INCLUDE_DIRS})
 include_directories( ${PbMsgs_INCLUDE_DIRS})
-include_directories( ${TinyXML2_INCLUDE_DIRS})
+#include_directories( ${TinyXML2_INCLUDE_DIRS})
 include_directories( ${SimBA_INCLUDE_DIRS})
 
 add_executable( TestCam TestCam.cpp )
 
+#${SceneGraph_LIBRARIES}
+#${TinyXML2_LIBRARIES}
 target_link_libraries( TestCam
-  ${Pangolin_LIBRARIES}
-  ${SceneGraph_LIBRARIES}
+  ${Pangolin_LIBRARIES} 
   ${HAL_LIBRARIES}
   ${PbMsgs_LIBRARIES}
-  ${TinyXML2_LIBRARIES}
+  ${Node_LIBRARIES}
   ${SimBA_LIBRARIES}
   SimMessages
  )

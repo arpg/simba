@@ -142,6 +142,42 @@ public:
   std::vector<double> m_dNormal;
 };
 
+/////////////////////
+/// HeightmapShape is unique; it's really not meant to be used unless
+/// we're getting heightmap vertices from MATLAB. Data describing X, Y, and
+/// Z are double* because that's the format data comes in when passed through
+/// a MEX function.
+
+class HeightmapShape : public Shape
+{
+public:
+  HeightmapShape(std::string sName, int row_count, int col_count,
+                 double* X, double* Y, double* Z){
+    SetName(sName);
+    SetMass(0);
+    SetRestitution(0);
+    std::vector<double> dPose;
+    dPose.push_back(0);
+    dPose.push_back(0);
+    dPose.push_back(0);
+    SetPose(dPose);
+    SetScale(1);
+    m_nColCount = col_count;
+    m_nRowCount = row_count;
+    m_dXData = X;
+    m_dYData = Y;
+    m_dZData = Z;
+  }
+
+  // Because of the way the constructor is set in bullet_heightmap,
+  // there are a lot of strange member variables here.
+  double* m_dXData;
+  double* m_dYData;
+  double* m_dZData;
+  int m_nRowCount;
+  int m_nColCount;
+};
+
 //////////////////////
 
 class MeshShape : public Shape

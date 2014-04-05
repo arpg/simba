@@ -21,20 +21,24 @@ bool PhysicsEngine::Init(double dGravity, double dTimeStep,
   // Physics stuff
   // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
-  m_pDispatcher
-      = boost::shared_ptr<btCollisionDispatcher>(
+
+  std::shared_ptr<btCollisionDispatcher> Dispatcher(
         new btCollisionDispatcher(&m_CollisionConfiguration) );
-  m_pBroadphase
-      = boost::shared_ptr<btDbvtBroadphase>( new btDbvtBroadphase );
-  m_pSolver
-      = boost::shared_ptr<btSequentialImpulseConstraintSolver>(
+  m_pDispatcher = Dispatcher;
+
+  std::shared_ptr<btDbvtBroadphase> Broadphase( new btDbvtBroadphase );
+  m_pBroadphase = Broadphase;
+
+  std::shared_ptr<btSequentialImpulseConstraintSolver> Solver(
         new btSequentialImpulseConstraintSolver );
-  m_pDynamicsWorld = boost::shared_ptr<btDiscreteDynamicsWorld>(
+  m_pSolver = Solver;
+  std::shared_ptr<btDiscreteDynamicsWorld> DWorld(
         new btDiscreteDynamicsWorld(m_pDispatcher.get(),
                                     m_pBroadphase.get(),
                                     m_pSolver.get(),
                                     &m_CollisionConfiguration
                                     ) );
+  m_pDynamicsWorld = DWorld;
   m_pDynamicsWorld->setGravity( btVector3(0,0,m_dGravity) );
   m_pDynamicsWorld->setDebugDrawer( &m_DebugDrawer );
   m_pDynamicsWorld->getDebugDrawer()->
@@ -63,13 +67,13 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
        *ADDING A RAYCAST VEHICLE
        ************************************/
 
-    if(dynamic_cast<RaycastVehicle*>(pNodeShape)!=NULL){
+    if(dynamic_cast<SimRaycastVehicle*>(pNodeShape)!=NULL){
       bullet_vehicle btRayVehicle( pItem, m_pDynamicsWorld.get());
       CollisionShapePtr pShape( btRayVehicle.getBulletShapePtr() );
       MotionStatePtr pMotionState( btRayVehicle.getBulletMotionStatePtr() );
       RigidBodyPtr body( btRayVehicle.getBulletBodyPtr() );
       VehiclePtr vehicle( btRayVehicle.getBulletRaycastVehicle() );
-      boost::shared_ptr<Vehicle_Entity> pEntity( new Vehicle_Entity );
+      std::shared_ptr<Vehicle_Entity> pEntity( new Vehicle_Entity );
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
@@ -86,7 +90,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       m_pDynamicsWorld->addRigidBody( body.get() );
 
       //Save the object; easier deconstruction this way.
-      boost::shared_ptr<Entity> pEntity( new Entity );
+      std::shared_ptr<Entity> pEntity( new Entity );
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
@@ -102,7 +106,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       m_pDynamicsWorld->addRigidBody( body.get() );
 
       //Save the object; easier deconstruction this way.
-      boost::shared_ptr<Entity> pEntity( new Entity );
+      std::shared_ptr<Entity> pEntity( new Entity );
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
@@ -118,7 +122,23 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       m_pDynamicsWorld->addRigidBody( body.get() );
 
       //Save the object; easier deconstruction this way.
-      boost::shared_ptr<Entity> pEntity( new Entity );
+      std::shared_ptr<Entity> pEntity( new Entity );
+      pEntity->m_pRigidBody = body;
+      pEntity->m_pShape = pShape;
+      pEntity->m_pMotionState = pMotionState;
+      m_mShapes[pItem->GetName()] = pEntity;
+    }
+
+    //Heightmap
+    else if (dynamic_cast<HeightmapShape*>( pNodeShape ) != NULL) {
+      bullet_heightmap btMap(pItem);
+      CollisionShapePtr pShape( btMap.getBulletShapePtr() );
+      MotionStatePtr pMotionState( btMap.getBulletMotionStatePtr() );
+      RigidBodyPtr body( btMap.getBulletBodyPtr() );
+      m_pDynamicsWorld->addRigidBody( body.get() );
+
+      //Save the object; easier deconstruction this way.
+      std::shared_ptr<Entity> pEntity( new Entity );
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
@@ -134,7 +154,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       m_pDynamicsWorld->addRigidBody( body.get() );
 
       //Save the object; easier deconstruction this way.
-      boost::shared_ptr<Entity> pEntity( new Entity );
+      std::shared_ptr<Entity> pEntity( new Entity );
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
@@ -155,15 +175,15 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       PToPOne* pCon = (PToPOne*) pNodeCon;
       btRigidBody* RigidShape_A;
       if(isVehicle(pCon->m_Shape_A)){
-        boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
-                        pCon->m_pivot_in_A[2]);
+          pCon->m_pivot_in_A[2]);
       btPoint2PointConstraint* PToP =
           new btPoint2PointConstraint(*RigidShape_A, pivot_A);
       m_pDynamicsWorld->addConstraint(PToP);
@@ -175,25 +195,25 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       btRigidBody* RigidShape_A;
       btRigidBody* RigidShape_B;
       if(isVehicle(pCon->m_Shape_A)){
-        boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       if(isVehicle(pCon->m_Shape_B)){
-        boost::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+        std::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        std::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
-                        pCon->m_pivot_in_A[2]);
+          pCon->m_pivot_in_A[2]);
       btVector3 pivot_B(pCon->m_pivot_in_B[0], pCon->m_pivot_in_B[1],
-                        pCon->m_pivot_in_B[2]);
+          pCon->m_pivot_in_B[2]);
       btPoint2PointConstraint* PToP =
           new btPoint2PointConstraint(*RigidShape_A, *RigidShape_B,
                                       pivot_A, pivot_B);
@@ -206,17 +226,17 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       HingeOnePivot* pCon = (HingeOnePivot*) pNodeCon;
       btRigidBody* RigidShape_A;
       if(isVehicle(pCon->m_Shape_A)){
-        boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
-                        pCon->m_pivot_in_A[2]);
+          pCon->m_pivot_in_A[2]);
       btVector3 axis_A(pCon->m_axis_in_A[0], pCon->m_axis_in_A[1],
-                       pCon->m_axis_in_A[2]);
+          pCon->m_axis_in_A[2]);
       btHingeConstraint* Hinge =
           new btHingeConstraint(*RigidShape_A, pivot_A,
                                 axis_A, true);
@@ -231,29 +251,29 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       btRigidBody* RigidShape_A;
       btRigidBody* RigidShape_B;
       if(isVehicle(pCon->m_Shape_A)){
-        boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       if(isVehicle(pCon->m_Shape_B)){
-        boost::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+        std::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        std::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
-                        pCon->m_pivot_in_A[2]);
+          pCon->m_pivot_in_A[2]);
       btVector3 axis_A(pCon->m_axis_in_A[0], pCon->m_axis_in_A[1],
-                       pCon->m_axis_in_A[2]);
+          pCon->m_axis_in_A[2]);
       btVector3 pivot_B(pCon->m_pivot_in_B[0], pCon->m_pivot_in_B[1],
-                        pCon->m_pivot_in_B[2]);
+          pCon->m_pivot_in_B[2]);
       btVector3 axis_B(pCon->m_axis_in_B[0], pCon->m_axis_in_B[1],
-                       pCon->m_axis_in_B[2]);
+          pCon->m_axis_in_B[2]);
       btHingeConstraint* Hinge =
           new btHingeConstraint(*RigidShape_A,
                                 *RigidShape_B,
@@ -272,27 +292,27 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       btRigidBody* RigidShape_A;
       btRigidBody* RigidShape_B;
       if(isVehicle(pCon->m_Shape_A)){
-        boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       if(isVehicle(pCon->m_Shape_B)){
-        boost::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+        std::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        std::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       btVector3 btAnchor(pCon->m_Anchor[0], pCon->m_Anchor[1],
-                         pCon->m_Anchor[2]);
+          pCon->m_Anchor[2]);
       btVector3 btAxis_1(pCon->m_Axis_1[0], pCon->m_Axis_1[1],
-                         pCon->m_Axis_1[2]);
+          pCon->m_Axis_1[2]);
       btVector3 btAxis_2(pCon->m_Axis_2[0], pCon->m_Axis_2[1],
-                         pCon->m_Axis_2[2]);
+          pCon->m_Axis_2[2]);
       btHinge2Constraint* Hinge =
           new btHinge2Constraint(*RigidShape_A, *RigidShape_B,
                                  btAnchor, btAxis_1, btAxis_2);
@@ -310,7 +330,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
     //SixDOF
     else if(dynamic_cast<SixDOFOne*>( pNodeCon ) != NULL) {
       SixDOFOne* pCon = (SixDOFOne*) pNodeCon;
-      boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+      std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
       btTransform trans_A = toBullet(_Cart2T(pCon->m_Transform_A));
       btGeneric6DofConstraint* SixDOF =
           new btGeneric6DofConstraint(*Shape_A->m_pRigidBody.get(),
@@ -329,19 +349,19 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       btRigidBody* RigidShape_A;
       btRigidBody* RigidShape_B;
       if(isVehicle(pCon->m_Shape_A)){
-        boost::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       if(isVehicle(pCon->m_Shape_B)){
-        boost::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+        std::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       else{
-        boost::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        std::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       btTransform trans_A = toBullet(_Cart2T(pCon->m_Transform_A));
@@ -401,16 +421,12 @@ void PhysicsEngine::RunDevices(){
       // We have to check all controllers.
       // TODO: Better way: do this mapping as soon as we add the controller.
       CarController* pCarCon = (CarController*) m_mDevices.at(ii);
-      for(std::map<string, boost::shared_ptr<Vehicle_Entity> > ::iterator it =
+      for(std::map<string, std::shared_ptr<Vehicle_Entity> > ::iterator it =
           m_mRayVehicles.begin(); it!=m_mRayVehicles.end(); it++ ){
         if(pCarCon->GetBodyName()==it->first){
           //This controller goes to this car.
           Vehicle_Entity* eVehicle = it->second.get();
           VehiclePtr pVeh = eVehicle->m_pVehicle;
-          cout<<"[PhysicsEngine::RunDevices]"<<endl;
-          cout<<pCarCon->m_dSteering<<endl;
-          cout<<pCarCon->m_dTorque<<endl;
-          cout<<"-------"<<endl;
           pVeh->setSteeringValue(pCarCon->m_dSteering, 0);
           pVeh->setSteeringValue(pCarCon->m_dSteering, 1);
           pVeh->applyEngineForce(pCarCon->m_dTorque, 2);
@@ -424,7 +440,7 @@ void PhysicsEngine::RunDevices(){
     ///////////////
     else if(Device->m_sDeviceType=="GPS"){
       SimGPS* pGPS = (SimGPS*) m_mDevices.at(ii);
-      for(std::map<string, boost::shared_ptr<Entity> > ::iterator it =
+      for(std::map<string, std::shared_ptr<Entity> > ::iterator it =
           m_mShapes.begin(); it!=m_mShapes.end(); it++ ){
         if(pGPS->GetBodyName()==it->first){
           //This controller goes to this car.
@@ -454,12 +470,12 @@ void PhysicsEngine::StepSimulation(){
   RunDevices();
   if(m_mRayVehicles.size()!=0){
     // Go through all of our vehicles and update their part poses.
-    for(std::map<string, boost::shared_ptr<Vehicle_Entity> > ::iterator it =
+    for(std::map<string, std::shared_ptr<Vehicle_Entity> > ::iterator it =
         m_mRayVehicles.begin(); it!=m_mRayVehicles.end(); it++ ){
       // The MotionStatePointer holds the ModelNode, which holds the poses.
       Vehicle_Entity* eVehicle = it->second.get();
       NodeMotionState* mMotion = eVehicle->m_pMotionState.get();
-      RaycastVehicle* pVehicle = (RaycastVehicle*) &mMotion->object;
+      SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) &mMotion->object;
       std::vector<Eigen::Matrix4d> VehiclePoses =
           GetVehicleTransform(pVehicle->GetName());
       pVehicle->SetPose(SwitchYaw(_T2Cart(VehiclePoses.at(0))));
@@ -478,7 +494,7 @@ void PhysicsEngine::StepSimulation(){
 //////////////////////////////////////////////////////////
 
 void PhysicsEngine::PrintAllShapes(){
-  for(std::map<string, boost::shared_ptr<Entity> > ::iterator it =
+  for(std::map<string, std::shared_ptr<Entity> > ::iterator it =
       m_mShapes.begin(); it!=m_mShapes.end(); it++ ){
     std::cout<<it->first<<std::endl;
   }
@@ -520,9 +536,11 @@ btHingeConstraint* PhysicsEngine::getHingeConstraint(string name){
 
 //////////////////////////////////////////////////////////
 ///
-/// VEHICLE POSE GETTERS
+/// RAYCAST VEHICLE FUNCTIONS
 ///
 //////////////////////////////////////////////////////////
+
+/// These functions just help draw the car properly.
 
 Eigen::Vector6d PhysicsEngine::SwitchYaw(Eigen::Vector6d bad_yaw){
   Eigen::Vector6d good_yaw;
@@ -540,6 +558,8 @@ Eigen::Vector6d PhysicsEngine::SwitchWheelYaw(Eigen::Vector6d bad_yaw){
   good_yaw = good_yaw+temp;
   return good_yaw;
 }
+
+///////////////////////////////////////////////////
 
 std::vector< Eigen::Matrix4d > PhysicsEngine::GetVehiclePoses( Vehicle_Entity* Vehicle ){
   std::vector<Eigen::Matrix4d> VehiclePoses;
@@ -562,9 +582,191 @@ std::vector< Eigen::Matrix4d > PhysicsEngine::GetVehiclePoses( Vehicle_Entity* V
 // to perform some trickery.
 
 std::vector<Eigen::Matrix4d> PhysicsEngine::GetVehicleTransform(std::string sVehicleName){
-  boost::shared_ptr<Vehicle_Entity> boost_Vehicle =
+  std::shared_ptr<Vehicle_Entity> std_Vehicle =
       m_mRayVehicles.at(sVehicleName);
-  Vehicle_Entity* Vehicle = boost_Vehicle.get();
+  Vehicle_Entity* Vehicle = std_Vehicle.get();
   std::vector<Eigen::Matrix4d> Eig_transforms = GetVehiclePoses(Vehicle);
   return Eig_transforms;
 }
+
+/////////////////////////////////////////////////////
+///// Since we're usually starting above the mesh, we use this function
+///// to set the car on the ground before we start simulation.
+/////
+
+//double* RaycastToGround(double id, double x, double y){
+//  double* pose = new double[3];
+//  VehiclePtr Vehicle = m_mRayVehicles[id]->m_pVehicle;
+
+//  // Move our vehicle out of the way...
+//  btVector3 point(x+50, y+50, -100);
+//  btMatrix3x3 rot = Vehicle->getChassisWorldTransform().getBasis();
+//  btTransform bullet_trans(rot, point);
+//  m_mRayVehicles[id]->m_pRigidBody->setCenterOfMassTransform(bullet_trans);
+
+//  // Now shoot our ray...
+//  btVector3 ray_start(x, y, 100);
+//  btVector3 ray_end(x, y, -100);
+//  btCollisionWorld::ClosestRayResultCallback ray_callback(ray_start,
+//                                                          ray_end);
+//  m_pDynamicsWorld->rayTest(ray_start, ray_end, ray_callback);
+//  btVector3 hitpoint = Vehicle->getChassisWorldTransform().getOrigin();
+//  if(ray_callback.hasHit()){
+//    hitpoint = ray_callback.m_hitPointWorld;
+//    btWheelInfo wheel = Vehicle->getWheelInfo(2);
+//    double radius = wheel.m_wheelsRadius;
+//    // Find a way to access the height of the car.
+//    hitpoint.setZ(hitpoint.getZ()+(3*radius));
+//  }
+
+//  // Now move our car!
+//  btTransform bullet_move(rot, hitpoint);
+//  m_mRayVehicles[id]->m_pRigidBody->setCenterOfMassTransform(bullet_move);
+
+//  //Now make sure none of our wheels are in the ground.
+//  //Kind of a nasty oop, but keep it for now.
+//  double hit = -1;
+//  double count = 0;
+//  while(hit==-1 && count<20){
+//    for(int i = 0; i<4; i++){
+//      hit = Vehicle->rayCast(Vehicle->getWheelInfo(i));
+//      if(hit!=-1){
+//        break;
+//      }
+//    }
+//    //If we're still in the ground, lift us up!
+//    hitpoint.setZ(hitpoint.getZ()+.1);
+//    btTransform bullet_move(rot, hitpoint);
+//    m_mRayVehicles[id]->
+//        m_pRigidBody->setCenterOfMassTransform(bullet_move);
+//    if(hit!=-1){
+//      break;
+//    }
+//    count++;
+//    if(count==20){
+//     break;
+//    }
+//  }
+//  int on = false;
+//  btVector3 VehiclePose = Vehicle->getChassisWorldTransform().getOrigin();
+//  while(on == 0){
+//    on = OnTheGround(id);
+//    StepSimulation();
+//    VehiclePose = Vehicle->getChassisWorldTransform().getOrigin();
+//  }
+
+//  pose[0] = VehiclePose.getX();
+//  pose[1] =VehiclePose.getY();
+//  pose[2] = VehiclePose.getZ();
+//  return pose;
+
+//}
+
+/////////////////////////////////////////////////////
+//// This just drops us off on the surface...
+
+//int OnTheGround(double id){
+//  VehiclePtr Vehicle = m_mRayVehicles[id]->m_pVehicle;
+//  int OnGround = 0;
+//  int hit = 0;
+//  for(int i = 0; i<4; i++){
+//    hit = hit + Vehicle->rayCast(Vehicle->getWheelInfo(i));
+//  }
+//  if(hit==0){
+//    OnGround = 1;
+//  }
+//  return OnGround;
+//}
+
+/////////////////////////////////////////////////////
+
+//void SetVehicleVels(double id, double* lin_vel, double* ang_vel){
+//  RigidBodyPtr VehicleBody = m_mRayVehicles[id]->m_pRigidBody;
+//  VehiclePtr Vehicle = m_mRayVehicles[id]->m_pVehicle;
+//  btVector3 Lin(lin_vel[0], lin_vel[1], lin_vel[2]);
+//  btVector3 Ang(ang_vel[0], ang_vel[1], ang_vel[2]);
+//  VehicleBody->setLinearVelocity(Lin);
+//  VehicleBody->setAngularVelocity(Ang);
+//  Vehicle->resetSuspension();
+//}
+
+/////////////////////////////////////////////////////
+///// This function resets the car to its initial start pose for the mesh
+///// we were just on (a set of poses we originally got from RaycastToGround.
+
+//void ResetVehicle(double id, double* start_pose, double* start_rot){
+//  // Move the vehicle into start position
+//  btMatrix3x3 rot(start_rot[0], start_rot[3], start_rot[6],
+//                  start_rot[1], start_rot[4], start_rot[7],
+//                  start_rot[2], start_rot[5], start_rot[8]);
+//  btVector3 pose(start_pose[0], start_pose[1], start_pose[2]);
+//  btTransform bullet_trans(rot, pose);
+//  // Reset our car to its initial state.
+//  m_mRayVehicles[id]->m_pRigidBody->setCenterOfMassTransform(bullet_trans);
+//}
+
+/////////////////////////////////////////////////////
+///// SPEED_COMMAND_SIM
+///// When we just need state information from a RaycastVehicle, and rendering is
+///// not an object, then we run the simulation as fast as possible. We can
+///// just grab intermediate states, along with the end state, once the
+///// simulation is finished.
+////////
+
+//double* SpeedSim(double id, double* start_pose, double* start_rot,
+//                 double* start_lin_vel, double* start_ang_vel,
+//                 double* forces, double* steering_angles,
+//                 double command_length){
+//  int state_size = (command_length*3)+22;
+//  double* states = new double[state_size];
+//  VehiclePtr Vehicle = m_mRayVehicles[id]->m_pVehicle;
+//  ResetVehicle(id, start_pose, start_rot);
+//  SetVehicleVels(id, start_lin_vel, start_ang_vel);
+
+//  // Run our commands through
+//  for(int i = 0; i < command_length; i++){
+//    CommandRaycastVehicle(id, steering_angles[i], forces[i]);
+//    StepSimulation();
+//    btVector3 VehiclePose =
+//        Vehicle->getChassisWorldTransform().getOrigin();
+//    states[3*i] = VehiclePose.getX();
+//    states[3*i+1] = VehiclePose.getY();
+//    states[3*i+2] = VehiclePose.getZ();
+
+//    // Get our whole state on the last step.
+
+//    if(i==command_length-1){
+//      btVector3 VehiclePose =
+//          Vehicle->getChassisWorldTransform().getOrigin();
+//      btMatrix3x3 VehicleRot =
+//          Vehicle->getChassisWorldTransform().getBasis();
+//      states[3*i+3] = VehiclePose.getX();
+//      states[3*i+4] = VehiclePose.getY();
+//      states[3*i+5] = VehiclePose.getZ();
+//      states[3*i+6] = VehicleRot[0].getX();
+//      states[3*i+7] = VehicleRot[1].getX();
+//      states[3*i+8] = VehicleRot[2].getX();
+//      states[3*i+9] = VehicleRot[0].getY();
+//      states[3*i+10] = VehicleRot[1].getY();
+//      states[3*i+11] = VehicleRot[2].getY();
+//      states[3*i+12] = VehicleRot[0].getZ();
+//      states[3*i+13] = VehicleRot[1].getZ();
+//      states[3*i+14] = VehicleRot[2].getZ();
+//      double* motionstate = GetRaycastMotionState( id );
+//      states[3*i+15] = motionstate[2];
+//      states[3*i+16] = motionstate[3];
+//      states[3*i+17] = motionstate[4];
+//      states[3*i+18] = motionstate[5];
+//      states[3*i+19] = motionstate[6];
+//      states[3*i+20] = motionstate[7];
+//      states[3*i+21] = motionstate[8];
+//    }
+//  }
+
+//  //Reset our vehicle again (just in case this is our last iteration)
+//  ResetVehicle(id, start_pose, start_rot);
+//  SetVehicleVels(id, start_lin_vel, start_ang_vel);
+//  CommandRaycastVehicle(id, 0, 0);
+//  return states;
+//}
+

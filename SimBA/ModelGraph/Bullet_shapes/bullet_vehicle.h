@@ -24,7 +24,7 @@ public:
 
   //constructor
   bullet_vehicle(ModelNode* mnVehicle, btDynamicsWorld* m_pDynamicsWorld){
-    RaycastVehicle* pVehicle = (RaycastVehicle*) mnVehicle;
+    SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) mnVehicle;
 
     std::vector<double> parameters = pVehicle->GetParameters();
     Eigen::Matrix4d dPose;

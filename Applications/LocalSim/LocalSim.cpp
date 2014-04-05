@@ -51,8 +51,8 @@ LocalSim::LocalSim(const string& sLocalSimName,
                sLocalSimName, debug, m_bRender, false);
 
   // TODO: What to do with StateKeeper option...?
-
   cout<<"[LocalSim] Init Local Sim Success!"<<endl;
+
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -94,31 +94,31 @@ int main( int argc, char** argv )
                " 'WithoutStateKeeper', or 'WithoutNetwork'"<<std::endl;
   }
 
-    GetPot cl( argc, argv );
-    std::string sLocalSimName = cl.follow( "SimWorld", "-n" );
-    std::string sRobotURDF = cl.follow("", "-r");
-    std::string sWorldURDF = cl.follow( "", "-w" );
-    std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
+  GetPot cl( argc, argv );
+  std::string sLocalSimName = cl.follow( "SimWorld", "-n" );
+  std::string sRobotURDF = cl.follow("", "-r");
+  std::string sWorldURDF = cl.follow( "", "-w" );
+  std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
 
-    // Initialize a LocalSim.
-    LocalSim mLocalSim(sLocalSimName, sRobotURDF, sWorldURDF, sServerOption);
+  // Initialize a LocalSim.
+  LocalSim mLocalSim(sLocalSimName, sRobotURDF, sWorldURDF, sServerOption);
 
-    // Are we rendering the world?
-    if(mLocalSim.m_bRender){
-      while( !pangolin::ShouldQuit() ){
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        // Swap frames and Process Events
-        pangolin::FinishFrame();
-        // Update Physics and ModelGraph
-        mLocalSim.StepForward();
-        usleep( 1E6 / 60 );
-      }
+  // Are we rendering the world?
+  if(mLocalSim.m_bRender){
+    while( !pangolin::ShouldQuit() ){
+      glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+      // Swap frames and Process Events
+      pangolin::FinishFrame();
+      // Update Physics and ModelGraph
+      mLocalSim.StepForward();
+      usleep( 1E6 / 60 );
     }
+  }
 
-    else{
-      while(1){
-        mLocalSim.StepForward();
-      }
+  else{
+    while(1){
+      mLocalSim.StepForward();
     }
+  }
   return 0;
 }

@@ -11,6 +11,7 @@
 #include <ModelGraph/Bullet_shapes/bullet_sphere.h>
 #include <ModelGraph/Bullet_shapes/bullet_vehicle.h>
 #include <ModelGraph/Bullet_shapes/bullet_plane.h>
+#include <ModelGraph/Bullet_shapes/bullet_heightmap.h>
 #include <ModelGraph/Bullet_shapes/bullet_mesh.h>
 
 //////////////////////////////////////////////////////////
@@ -59,23 +60,23 @@ public:
 
   /// PUBLIC MEMBER VARIABLES
   GLDebugDrawer	                                          m_DebugDrawer;
-  std::map<string, boost::shared_ptr<Vehicle_Entity> >    m_mRayVehicles;
-  std::map<string, boost::shared_ptr<Entity> >            m_mShapes;
-  std::map<string, boost::shared_ptr<Compound_Entity> >   m_mCompounds;
+  std::map<string, std::shared_ptr<Vehicle_Entity> >    m_mRayVehicles;
+  std::map<string, std::shared_ptr<Entity> >            m_mShapes;
+  std::map<string, std::shared_ptr<Compound_Entity> >   m_mCompounds;
   std::map<string, btHingeConstraint*>                    m_mHinge;
   std::map<string, btHinge2Constraint*>                   m_mHinge2;
   std::map<string, btGeneric6DofConstraint*>              m_mSixDOF;
   std::map<string, btPoint2PointConstraint*>              m_mPtoP;
   vector<SimDeviceInfo*>                                  m_mDevices;
-  boost::shared_ptr<btDiscreteDynamicsWorld>              m_pDynamicsWorld;
+  std::shared_ptr<btDiscreteDynamicsWorld>              m_pDynamicsWorld;
 
 private:
 
   /// PRIVATE MEMBER VARIABLES
   btDefaultCollisionConfiguration                        m_CollisionConfiguration;
-  boost::shared_ptr<btCollisionDispatcher>               m_pDispatcher;
-  boost::shared_ptr<btDbvtBroadphase>                    m_pBroadphase;
-  boost::shared_ptr<btSequentialImpulseConstraintSolver> m_pSolver;
+  std::shared_ptr<btCollisionDispatcher>               m_pDispatcher;
+  std::shared_ptr<btDbvtBroadphase>                    m_pBroadphase;
+  std::shared_ptr<btSequentialImpulseConstraintSolver> m_pSolver;
   double                                                 m_dTimeStep;
   double                                                 m_dGravity;
   int                                                    m_nMaxSubSteps;

@@ -21,6 +21,8 @@ find_package( Node REQUIRED )
 find_package( PbMsgs REQUIRED )
 find_package( Eigen3 REQUIRED )
 find_package( TinyXML2 REQUIRED )
+find_package( MINIGLOG REQUIRED )
+
 
 #######################################################
 
@@ -33,12 +35,12 @@ set(USER_INC ${BULLET_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIRS}
   ${TinyXML2_INCLUDE_DIRS}
   ${PbMsgs_INCLUDE_DIRS}
+  ${MINIGLOG_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR} )
 
 # Library directories
 include_directories( ${USER_INC} )
-
 
 ################
 # HEADER FILES FOR SIMBA LIB
@@ -50,7 +52,7 @@ list(APPEND MANAGERS_HDRS
 )
 
 list(APPEND MODELGRAPH_HDRS
-  ModelGraph/RaycastVehicle.h
+  ModelGraph/SimRaycastVehicle.h
   ModelGraph/Constraint.h
   ModelGraph/Shape.h
   ModelGraph/ModelGraphBuilder.h
@@ -159,6 +161,25 @@ list(APPEND SIMBA_SRCS ${MANAGERS_SRCS}
                        ${SIMDEVICES_SRCS})
 
 ##################
+# CHECK FOR THE CAR_PLANNER FILES
+# These are needed for SimPlanner
+##################
+
+if(BUILD_SIM_PLANNER)
+  find_package( CarPlanner REQUIRED )
+  include_directories( ${CAR_PLANNER_INCLUDE_DIRS} )
+  list(APPEND SIMPLANNER_HDRS
+
+  )
+  list(APPEND SIMPLANNER_SRCS
+
+  )
+  list(APPEND SIMBA_SRCS ${SIMPLANNER_SRCS})
+  list(APPEND SIMBA_HDRS ${SIMPLANNER_HDRS})
+endif()
+
+
+##################
 # CREATE THE SIMBA LIBRARY
 ##################
 
@@ -170,12 +191,18 @@ target_link_libraries( ${PROJECT_NAME}
   ${Pangolin_LIBRARIES}
   ${SceneGraph_LIBRARIES}
   ${Calibu_LIBRARIES}
+  ${HAL_LIBRARIES}
   ${Node_LIBRARIES}
   ${TinyXML2_LIBRARIES}
   ${EIGEN3_LIBRARIES}
   ${PbMsgs_LIBRARIES}
+  miniglog
   SimMessages
 )
+
+if(BUILD_SIM_PLANNER)
+  target_link_libraries(${PROJECT_NAME} ${CAR_PLANNER_LIBRARIES})
+endif()
 
 
 #######################################################
@@ -187,8 +214,6 @@ CONFIGURE_FILE(
   "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/config.h"
 )
-
-
 
 #######################################################
 

@@ -1,6 +1,11 @@
 build
 *~
 *.txt.user
+*CMakeCache.txt*
+*Makefile*
+*.autosave
+*.cmake
+*.user.*
 /#CMakeLists.txt#
 /.#CMakeLists.txt
 /SimBA/#CMakeLists.txt#

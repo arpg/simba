@@ -41,7 +41,7 @@ public:
 
   /// NODE FUNCTIONS
   void RegisterDevices(SimDevices* pSimDevices);
-  void RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
+  void RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
                          RegisterNodeCamRepMsg & mReply);
   void RegisterControllerDevice(pb::RegisterControllerReqMsg& mRequest,
                                 pb::RegisterControllerRepMsg & mReply);
@@ -85,10 +85,10 @@ public:
   /// Register hal camera device in LocalSim. This RPC function is called by hal.
   /// Once we register a cam device, we can use the recv and publish method.
 
-  static void _RegisterCamDevice(RegisterNodeCamReqMsg& mRequest,
+  static void _RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
                                  RegisterNodeCamRepMsg& mReply,
                                  void* pUserData){
-    ((NetworkManager*)pUserData)->RegisterCamDevice(mRequest, mReply);
+    ((NetworkManager*)pUserData)->RegisterSensorDevice(mRequest, mReply);
   }
 
   //////////////////////////////
@@ -111,7 +111,7 @@ private:
   string          m_sServerName;
   int             m_verbosity;
   int             m_iTimeStep;
-  boost::mutex    m_Mutex;
+  mutex           m_Mutex;
   SimDevices*     m_pSimDevices;
   RobotsManager*  m_pRobotsManager;
 
