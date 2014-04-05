@@ -16,7 +16,7 @@ public:
     m_sDeviceType = "CarController";
   }
 
-  void UpdateCommand(pb::VehicleMsg& Command){
+  void UpdateCommand(VehicleMsg& Command){
     m_dSteering = Command.steering_angle();
     m_dTorque = Command.desired_force();
   }

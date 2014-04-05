@@ -92,6 +92,7 @@ list(APPEND SIMDEVICES_CONTROLLER_HDRS
   SimDevices/Controller/SimpleAIController.h
   SimDevices/Controller/PIDController.h
   SimDevices/Controller/SimpleController.h
+  SimDevices/Controller/PoseController.h
 )
 
 list(APPEND SIMDEVICES_SENSOR_HDRS
@@ -120,6 +121,7 @@ list(APPEND UTILS_HDRS
   Utils/GetPot
   Utils/MatrixTools.h
   Utils/SE3.h
+  Utils/SaveImages.h
 )
 
 list(APPEND SIMBA_HDRS ${MANAGERS_HDRS}           ${MODELGRAPH_HDRS}

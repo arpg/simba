@@ -238,10 +238,14 @@ void NetworkManager::RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
 ////////////////////////////////////////////////////////////////////////
 
 void NetworkManager::RegisterControllerDevice(
-    pb::RegisterControllerReqMsg& mRequest,
-    pb::RegisterControllerRepMsg & mReply){
-  string sDeviceName = CheckURI(mRequest.uri());
+    RegisterControllerReqMsg& mRequest,
+    RegisterControllerRepMsg & mReply){
+
+//  string sDeviceName = CheckURI(mRequest.uri());
+  string sDeviceName = CheckURI(mRequest.topic());
+
   cout<<mRequest.topic()<<endl;
+
   if(sDeviceName!="FALSE"){
     // TODO: WHY DOES THIS NAME CHANGE HAPPEN
     if( m_Node.subscribe(mRequest.topic()+"/"+mRequest.topic())==false ){
@@ -476,7 +480,7 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
   // Car Controller
   if(pDevice->m_sDeviceType=="CarController"){
     CarController* pCarController = (CarController*) pDevice;
-    pb::VehicleMsg Command;
+    VehicleMsg Command;
     int n = 0;
     while(m_Node.receive(sServiceName, Command)==false
           && n < max_iter){
