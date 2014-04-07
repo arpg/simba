@@ -53,9 +53,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   NodeWrapper *Node_instance = convertMat2Ptr<NodeWrapper>(prhs[1]);
 
   /*********************************************************************
-   *
+   * CHECK STATUS OF SIMS
+   **********************************************************************/
+
+  if (!strcmp("CheckSimStatus", cmd)) {
+    double* sim_num = mxGetPr(prhs[2]);
+    double* status = Node_instance->CheckSimStatus(int(*sim_num));
+    plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
+    plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL);
+    double* problem = mxGetPr(plhs[0]);
+    double* policy = mxGetPr(plhs[1]);
+    problem = status[0];
+    policy = status[1];
+    return;
+  }
+
+  /*********************************************************************
    * SENDING/RECEIVING COMMANDS
-   *
    **********************************************************************/
 
   if (!strcmp("SendBVP", cmd)) {
@@ -69,27 +83,39 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double* x_data = mxGetPr(prhs[8]);
     double* y_data = mxGetPr(prhs[9]);
     double* z_data = mxGetPr(prhs[10]);
-    bool confirm = Node_instance->SendBVP(int(*sim_num), start_point,
-                                          goal_point, int(*row_count),
-                                          int(*col_count), int(*tau),
-                                          x_data, y_data, z_data);
-    plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
-    double* sent = mxGetPr(plhs[0]);
-    if(confirm){
-      // The BVP was successfully sent, and the Sim chosen is now working hard.
-      *sent = 0;
-    }
-    else{ *sent = 1; }
+    Node_instance->SendBVP(int(*sim_num), int(*tau),
+                           x_data, y_data, z_data,
+                           int(*row_count), int(*col_count),
+                           start_point, goal_point);
     return;
   }
 
-  if (!strcmp("ReceiveCommands", cmd)) {
+  ///////////
+
+  if (!strcmp("ReceivePolicy", cmd)) {
     double* sim_num = mxGetPr(prhs[2]);
     double* commands = Node_instance->ReceiveCommands(int(*sim_num));
-    plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
-    // TODO: What to return here...
-    //    double* ShapeIndex = mxGetPr(plhs[0]);
-    //    ShapeIndex = commands;
+    // The first element of 'commands' has the length of all command
+    // vectors.
+    plhs[0] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
+    plhs[1] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
+    plhs[2] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
+    int counter = 1;
+    double* force = mxGetPr(plhs[0]);
+    double* phi = mxGetPr(plhs[1]);
+    double* time = mxGetPr(plhs[2]);
+    for(int ii=0; ii<commands[0]; ii++){
+      force[ii] = commands[counter];
+      counter++;
+    }
+    for(int ii=0; ii<commands[0]; ii++){
+      phi[ii] = commands[counter];
+      counter++;
+    }
+    for(int ii=0; ii<commands[0]; ii++){
+      time[ii] = commands[counter];
+      counter++;
+    }
     return;
   }
 
