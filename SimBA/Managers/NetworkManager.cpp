@@ -238,8 +238,8 @@ void NetworkManager::RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
 ////////////////////////////////////////////////////////////////////////
 
 void NetworkManager::RegisterControllerDevice(
-    RegisterControllerReqMsg& mRequest,
-    RegisterControllerRepMsg & mReply){
+    pb::RegisterControllerReqMsg& mRequest,
+    pb::RegisterControllerRepMsg & mReply){
 
 //  string sDeviceName = CheckURI(mRequest.uri());
   string sDeviceName = CheckURI(mRequest.topic());
@@ -480,7 +480,7 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
   // Car Controller
   if(pDevice->m_sDeviceType=="CarController"){
     CarController* pCarController = (CarController*) pDevice;
-    VehicleMsg Command;
+    pb::VehicleMsg Command;
     int n = 0;
     while(m_Node.receive(sServiceName, Command)==false
           && n < max_iter){

@@ -10,13 +10,16 @@ endif()
 find_package( HAL 0.1 QUIET )
 find_package( Pangolin )
 find_package( Node )
+find_package( Calibu )
 include_directories( ${HAL_INCLUDE_DIRS} )
 include_directories( ${Pangolin_INCLUDE_DIRS} )
 include_directories( ${Node_INCLUDE_DIRS} )
+include_directories( ${Calibu_INCLUDE_DIRS})
 add_executable( ${PROJECT_NAME} main.cpp )
 target_link_libraries(
   ${PROJECT_NAME}
   ${Pangolin_LIBRARIES}
   ${HAL_LIBRARIES}
   ${Node_LIBRARIES}
+  ${Calibu_LIBRARIES}
 )

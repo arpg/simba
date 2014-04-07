@@ -4,6 +4,7 @@
 #include <SimDevices/SimDeviceInfo.h>
 #include <SceneGraph/SimCam.h>
 #include <calibu/cam/CameraXml.h>
+#include <unistd.h>
 
 // A wrapper for SceneGraph::SimCam for LocalSim.
 
