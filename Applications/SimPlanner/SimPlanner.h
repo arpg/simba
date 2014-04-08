@@ -49,6 +49,8 @@ public:
   bool                  need_BVP_;
   bool                  solved_BVP_;
   bool reset_;
+  std::vector<double> start_;
+  std::vector<double> goal_;
 
   /// CONSTRUCTOR
   SimPlanner();

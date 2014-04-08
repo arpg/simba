@@ -58,18 +58,19 @@ public:
     status[1] = 0;
     pb::BVP_check sim_needs_bvp;
     pb::BVP_check sim_solved;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if(node_.receive("Sim"+std::to_string(sim_number)+"/CheckNeed",
                              sim_needs_bvp)){
-      std::cout<<"We have need!"<<std::endl;
-      if(sim_needs_bvp.need()==true){
+      bool give = sim_needs_bvp.need();
+      if(give==true){
         status[0] = 1;
       }
     }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if(node_.receive("Sim"+std::to_string(sim_number)+"/CheckSolved",
                              sim_solved)){
-      if(sim_solved.need()==true){
+      bool take = sim_needs_bvp.need();
+      if(take==true){
         status[1] = 1;
       }
     }
@@ -111,11 +112,11 @@ public:
     policy[0] = -1;
     int count = 0;
     while (!node_.receive("Sim"+std::to_string(sim_num)+"/Policy", policy_)
-           && count<5) {
+           && count<100) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       count++;
     }
-    if(count<50){
+    if(count<100){
       double* policy = TurnPolicyIntoArray(policy_);
       return policy;
     }
@@ -174,8 +175,10 @@ public:
   ///////
 
   double* TurnPolicyIntoArray(pb::BVP_policy buffer){
+    // Array Size = time vector + force vector + phi vector + length of
+    //   these vectors, so MATLAB knows + start state + goal state
     int array_size = buffer.time_size() + buffer.force_size() +
-        buffer.phi_size() + 1;
+        buffer.phi_size() + 1 + 4 + 4;
     double* policy = new double[array_size];
     // Space 0 gives us the length of each column vector.
     policy[0] = buffer.force_size();
@@ -193,6 +196,14 @@ public:
     // Time
     for (int ii=0; ii<buffer.time_size(); ii++) {
       policy[counter] = buffer.time(ii);
+      counter++;
+    }
+    for (int ii=0; ii<4; ii++) {
+      policy[counter] = buffer.start_param(ii);
+      counter++;
+    }
+    for (int ii=0; ii<4; ii++) {
+      policy[counter] = buffer.goal_param(ii);
       counter++;
     }
     return policy;

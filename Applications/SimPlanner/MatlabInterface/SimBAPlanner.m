@@ -55,12 +55,14 @@ classdef SimBAPlanner < handle
             % policy = 1: the Sim is ready to provide a solved policy
             disp(['[MATLAB] Checking sim status for sim ', num2str(ii)]);
             [problem, policy] = node_mex('CheckSimStatus', this.sims_, ii);
-            disp(['Our problem status: ' num2str(problem)]);
-            disp(['Our policy status: ' num2str(policy)]);
             if problem == 1,
               disp('[MATLAB] We can send a problem now!');
               start_point = [1; -.5; pi/2; 0];
               % This sends the BVP until it's passed. 
+              disp('[MATLAB] start_state: ');
+              start_point
+              disp('[MATLAB] goal_state: ');
+              cur_goal_state
               node_mex('SendBVP', this.sims_, ii, tau, mesh.xx, mesh.yy, mesh.zz, ...
                 mesh.row_count, mesh.col_count, start_point, cur_goal_state);
               cur_pol = cur_pol+1;
@@ -72,9 +74,18 @@ classdef SimBAPlanner < handle
             
             if policy == 1,
               disp('[MATLAB] We can get a policy now!');
-              [force, phi, time] = node_mex('ReceivePolicy', this.sims_, ii);
-              this.SavePolicy(force, phi, time, tau, mesh); 
+              [force, phi, time, start_params, goal_params] = ...
+                node_mex('ReceivePolicy', this.sims_, ii);
+              force
+              phi
+              time
+              tau
+              start_params
+              goal_params
+              this.SavePolicy(force, phi, time, tau, ...
+                start_params, goal_params, mesh.X, mesh.Y, mesh.Z); 
             end
+            disp(['Our current policy is', num2str(cur_goal_state)]);
           end
         end
       end
@@ -111,13 +122,19 @@ classdef SimBAPlanner < handle
     
     %%% Save our Policy
     
-    function SavePolicy(force, phi, time, tau, mesh)
-      mesh_x = mesh.X;
-      mesh_y = mesh.Y;
-      mesh_z = mesh.Z;
+    function SavePolicy(this, force, phi, time, tau, ...
+        start_params, goal_params, meshX, meshY, meshZ)
+      force;
+      phi;
+      time;
+      meshX;
+      meshY;
+      meshZ;
+      start_params;
+      goal_params;
       filename = ['Mesh-' num2str(tau)];
-      save([filename '.mat'],'force','phi', 'time', 'tau', 'mesh_x', ...
-        'mesh_y', 'mesh_z');
+      save([filename '.mat'],'force','phi', 'time', 'tau', ...
+        'start_params', 'goal_params', 'meshX', 'meshY', 'meshZ');
     end
     
   end

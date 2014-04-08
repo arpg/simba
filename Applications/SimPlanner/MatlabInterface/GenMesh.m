@@ -45,6 +45,8 @@ z_extend = repmat(mesh.zz(1,:), 10, 1);
 mesh.xx = [x_extend; mesh.xx];
 mesh.yy = [y_extend; mesh.yy];
 mesh.zz = [z_extend; mesh.zz];
+mesh.row_count = numel(mesh.xx(:,1));
+mesh.col_count = numel(mesh.xx(1,:));
 % xx, yy, and zz are going to be passed into the LocalSim, 
 % and will be what we use to create the mesh
 % For bullet -> ModelGraph/Bullet_shapes/bullet_heightmap.h

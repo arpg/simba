@@ -76,7 +76,6 @@ bool SimPlanner::InitMesh(pb::BVP_params params){
 /////////////////////////////////////////////
 
 void SimPlanner::GroundStates(){
-  cout<<"GSOO"<<endl;
   // Ground the start point.
   Eigen::Vector3d dIntersect;
   Eigen::Vector3d normal;
@@ -92,7 +91,7 @@ void SimPlanner::GroundStates(){
                                           m_vsStart.GetTheta(), normal));
       Eigen::Matrix3d rotMat = quatRot*m_vsStart.m_dTwv.rotationMatrix();
       m_vsStart.m_dTwv = Sophus::SE3d(rotMat, m_vsStart.m_dTwv.translation());
-      cout<<"GSOO"<<endl;
+      cout<<"Setting start point to ground..."<<endl;
       cout<<m_vsStart.m_dTwv.matrix()<<endl;
     }
 
@@ -109,7 +108,7 @@ void SimPlanner::GroundStates(){
                                             m_vsGoal.GetTheta(), normal));
         Eigen::Matrix3d rotMat = quatRot*m_vsGoal.m_dTwv.rotationMatrix();
         m_vsGoal.m_dTwv = Sophus::SE3d(rotMat, m_vsGoal.m_dTwv.translation());
-        cout<<"GSOO"<<endl;
+        cout<<"Setting goal point to ground..."<<endl;
         cout<<m_vsGoal.m_dTwv.matrix()<<endl;
       }
     }
@@ -123,6 +122,10 @@ void SimPlanner::InitGoals(pb::BVP_params params){
   // X, Y, yaw, and velocity... that should be it.
   const double* start = params.start_param().data();
   const double* goal = params.goal_param().data();
+  for(int ii = 0; ii<4; ii++){
+    start_.push_back(start[ii]);
+    goal_.push_back(goal[ii]);
+  }
   Eigen::Matrix4d eigen_start;
   Eigen::Vector6d eigen_cart;
   eigen_cart<<start[0], start[1], 0, 0, 0, start[2];
@@ -146,8 +149,6 @@ pb::BVP_policy SimPlanner::SampleTrajectory(){
   func.SetNoDelay(true);
   MotionSample sample;
   //Initialize the problem
-  cout<<m_vsStart.m_dTwv.matrix()<<endl;
-  cout<<m_vsGoal.m_dTwv.matrix()<<endl;
   LocalProblem problem(&func, m_vsStart, m_vsGoal, 1.0/30.0);
   m_snapper.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
   while(!success && count<100){
@@ -162,13 +163,18 @@ pb::BVP_policy SimPlanner::SampleTrajectory(){
   }
   pb::BVP_policy policy;
   // We have to get all of the commands over the time period described.
+  // And the start/ goal state. That's helpful too.
   for(unsigned int ii=0; ii<sample.m_vCommands.size(); ii++){
     ControlCommand Comm = sample.m_vCommands.at(ii);
     policy.add_force(Comm.m_dForce);
     policy.add_phi(Comm.m_dPhi);
     policy.add_time(Comm.m_dT);
   }
-  cout<<"STOO"<<endl;
+  for(unsigned int jj=0; jj<4; jj++){
+    policy.add_start_param(start_.at(jj));
+    policy.add_goal_param(goal_.at(jj));
+  }
+  cout<<"We're done with our policy search!!"<<endl;
   policy.set_tau(m_nTau);
   return policy;
 }
@@ -201,25 +207,28 @@ int main(int argc, char** argv){
     ineed_bvp.set_need(true);
     while(!sim->m_Node.publish("CheckNeed", ineed_bvp)){
       ineed_bvp.set_need(true);
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     pb::BVP_params params;
     std::cout<<"Starting to receive parameters..."<<std::endl;
     while(!sim->m_Node.receive("MATLAB/BVP"+number, params) && count<5){
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
       count++;
     }
     pb::BVP_policy policy;
-    if (count<5) {
+    if (count<100) {
       policy = sim->StartPolicy(params);
+      pb::BVP_check bvp_solved;
+      bvp_solved.set_need(true);
+      while (!sim->m_Node.publish("CheckSolved", bvp_solved) && count<10){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+      while(!sim->m_Node.publish("Policy", policy) && count<10){
+        std::cout<<"Sending policy..."<<std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::cout<<"Ready for the next plan!!"<<std::endl;
+      }
     }
-    pb::BVP_check bvp_solved;
-    bvp_solved.set_need(true);
-    while (!sim->m_Node.publish("CheckSolved", bvp_solved) && count<5){
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-    while(!sim->m_Node.publish("Policy", policy) && count<10){
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    std::cout<<"False alarm; no plan here."<<std::endl;
   }
 }

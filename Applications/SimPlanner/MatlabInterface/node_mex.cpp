@@ -67,8 +67,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL);
     double* problem = mxGetPr(plhs[0]);
     double* policy = mxGetPr(plhs[1]);
-    problem = &status[0];
-    policy = &status[1];
+    *problem = status[0];
+    *policy = status[1];
     return;
   }
 
@@ -79,14 +79,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (!strcmp("SendBVP", cmd)) {
     // This one command both sets the command and sends it to the Sim.
     double* sim_num = mxGetPr(prhs[2]);
-    double* start_point = mxGetPr(prhs[3]);
-    double* goal_point = mxGetPr(prhs[4]);
-    double* row_count = mxGetPr(prhs[5]);
-    double* col_count = mxGetPr(prhs[6]);
-    double* tau = mxGetPr(prhs[7]);
-    double* x_data = mxGetPr(prhs[8]);
-    double* y_data = mxGetPr(prhs[9]);
-    double* z_data = mxGetPr(prhs[10]);
+    double* tau = mxGetPr(prhs[3]);
+    double* x_data = mxGetPr(prhs[4]);
+    double* y_data = mxGetPr(prhs[5]);
+    double* z_data = mxGetPr(prhs[6]);
+    double* row_count = mxGetPr(prhs[7]);
+    double* col_count = mxGetPr(prhs[8]);
+    double* start_point = mxGetPr(prhs[9]);
+    double* goal_point = mxGetPr(prhs[10]);
     Node_instance->SendBVP(int(*sim_num), int(*tau),
                            x_data, y_data, z_data,
                            int(*row_count), int(*col_count),
@@ -104,10 +104,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     plhs[0] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
     plhs[1] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
     plhs[2] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
+    plhs[3] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
+    plhs[4] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
     int counter = 1;
     double* force = mxGetPr(plhs[0]);
     double* phi = mxGetPr(plhs[1]);
     double* time = mxGetPr(plhs[2]);
+    double* start_params = mxGetPr(plhs[3]);
+    double* goal_params = mxGetPr(plhs[4]);
     for(int ii=0; ii<commands[0]; ii++){
       force[ii] = commands[counter];
       counter++;
@@ -118,6 +122,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     for(int ii=0; ii<commands[0]; ii++){
       time[ii] = commands[counter];
+      counter++;
+    }
+    for(int ii=0; ii<4; ii++){
+      start_params[ii] = commands[counter];
+      counter++;
+    }
+    for(int ii=0; ii<4; ii++){
+      goal_params[ii] = commands[counter];
       counter++;
     }
     return;
