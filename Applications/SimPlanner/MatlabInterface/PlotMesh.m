@@ -6,9 +6,6 @@ for tau = 0:(2^2-1),
 %   % Add two bits to do smoothness (19 and 20)
 %   
 %   surf(mesh.xx, mesh.yy, mesh.zz);  
-%   mesh.xx
-%   mesh.yy
-%   mesh.zz
 %   xlabel('x');
 %   ylabel('y');
 %   zlabel('z');

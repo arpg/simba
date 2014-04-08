@@ -6,6 +6,7 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
 endif()
 
 find_package( Pangolin 0.1 QUIET )
+find_package( Calibu REQUIRED )
 #find_package( SceneGraph REQUIRED )
 find_package( HAL 0.1 QUIET)
 find_package( PbMsgs REQUIRED )
@@ -20,6 +21,7 @@ include_directories( ${HAL_INCLUDE_DIRS})
 include_directories( ${PbMsgs_INCLUDE_DIRS})
 #include_directories( ${TinyXML2_INCLUDE_DIRS})
 include_directories( ${SimBA_INCLUDE_DIRS})
+include_directories( ${Calibu_INCLUDE_DIRS})
 
 add_executable( TestCam TestCam.cpp )
 
@@ -31,5 +33,6 @@ target_link_libraries( TestCam
   ${PbMsgs_LIBRARIES}
   ${Node_LIBRARIES}
   ${SimBA_LIBRARIES}
+  ${Calibu_LIBRARIES}
   SimMessages
  )
