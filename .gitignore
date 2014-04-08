@@ -2,7 +2,8 @@ build
 *~
 *.txt.user
 *CMakeCache.txt*
-*Makefile*
+*.bin
+*.mexmaci64*
 *.autosave
 *.cmake
 *.user.*

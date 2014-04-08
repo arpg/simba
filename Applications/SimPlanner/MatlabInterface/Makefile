@@ -16,35 +16,36 @@ PbMsgs_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/HAL/PbMsgs/
 PbMsgs_BUILD_DIR = /Users/Trystan/Code/rslam/build/CoreDev/HAL/PbMsgs/
 PROTOBUF_DIR = /usr/local/Cellar/protobuf/2.5.0/include/
 PROTOBUF_LIB_DIR = /usr/local/Cellar/protobuf/2.5.0/lib/
+MINIGLOG_BUILD_DIR = /Users/Trystan/Code/rslam/build/CoreDev/miniglog/
+MINIGLOG_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/miniglog/
 ZMQ_DIR = /usr/local/include/
 BOOST_LIB_DIR = /usr/local/lib/
 GENERAL_HDR = /usr/include/
 CURRENT_DIR = /Users/Trystan/Code/simba_tests/MatlabInterface/
 
-#CXXFLAGS = -O2 -Wall -fmessage-length=0 -D CPPONLY
-#-I/Applications/MATLAB_R2013a.app/extern/include
-CXXFLAGS = -O -I/Applications/MATLAB_R2013a.app/extern/include\
--I$(HAL_SRC_DIR) -I$(HAL_DIR) -I$(NODE_DIR) -I$(NODE_BUILD_DIR)\
--I$(PANGOLIN_DIR) -I$(PbMsgs_DIR) -I$(PbMsgs_BUILD_DIR)\
--I$(PROTOBUF_DIR) -I$(ZMQ_DIR)\
--I$(GENERAL_HDR) -I$(CURRENT_DIR)
-#[PbMsgs_BUILD_DIR 'BVP.pb.cc'], ...
-#[NODE_BUILD_DIR 'NodeMessages.pb.cc'],...
+CXXFLAGS = -std=c++11 -O -I/Applications/MATLAB_R2013a.app/extern/include\
+  -I$(HAL_SRC_DIR) -I$(HAL_DIR) -I$(NODE_DIR) -I$(NODE_BUILD_DIR)\
+  -I$(PANGOLIN_DIR) -I$(PbMsgs_DIR) -I$(PbMsgs_BUILD_DIR)\
+  -I$(PROTOBUF_DIR) -I$(ZMQ_DIR)\
+  -I$(GENERAL_HDR) -I$(CURRENT_DIR) -I$(MINIGLOG_DIR)\
+  -I$(PbMsgs_BUILD_DIR)BVP.pb.cc\
+  -I$(NODE_BUILD_DIR)NodeMessages.pb.cc 
 
-#  -L$(BOOST_LIB_DIR) /usr/local/lib/libboost_system.dylib
-#  /usr/local/lib/libboost_thread.dylib\
-
+MXXFLAGS = -O -I/Applications/MATLAB_R2013a.app/extern/include\
+  -I$(HAL_SRC_DIR) -I$(HAL_DIR) -I$(NODE_DIR) -I$(NODE_BUILD_DIR)\
+  -I$(PANGOLIN_DIR) -I$(PbMsgs_DIR) -I$(PbMsgs_BUILD_DIR)\
+  -I$(PROTOBUF_DIR) -I$(ZMQ_DIR)\
+  -I$(GENERAL_HDR) -I$(CURRENT_DIR) -I$(MINIGLOG_DIR)\
+  -I$(PbMsgs_BUILD_DIR)BVP.pb.cc\
+  -I$(NODE_BUILD_DIR)NodeMessages.pb.cc 
 
 CXXLIBS = -L$(PROTOBUF_LIB_DIR) -lprotobuf\
-  -L$(NODE_BUILD_DIR) -lnode
-
-#  -L$(BOOST_LIB_DIR) /usr/local/lib/libboost_system.dylib
-#  /usr/local/lib/libboost_thread.dylib\
-#  $(PbMsgs_BUILD_DIR)BVP.pb.cc \
-#  $(NODE_BUILD_DIR)NodeMessages.pb.cc\
+  -L$(NODE_BUILD_DIR) -lnode\
+  -L$(MINIGLOG_BUILD_DIR) -lminiglog
 
 MXXLIBS = -L$(PROTOBUF_LIB_DIR) -lprotobuf\
-  -L$(NODE_BUILD_DIR) -lnode
+  -L$(NODE_BUILD_DIR) -lnode\
+  -L$(MINIGLOG_BUILD_DIR) -lminiglog
 
 # --- DEBUG   --- #
 # CXXFLAGS = -j2 -O2 -Wall -fmessage-length=0 -D CPPONLY -D DEBUG
@@ -60,7 +61,7 @@ ifndef MXX
 	ifeq ($(shell uname),Darwin)
 		MXX = /Applications/MATLAB_R2013a.app/bin/mex
 		MEXEXT = $(shell /Applications/MATLAB_R2013a.app/bin/mexext)
-		MXXFLAGS = $(CXXFLAGS)
+		#MXXFLAGS = $(MXXFLAGS)
 #-I/Applications/MATLAB_R2013a.app/extern/include
 	endif
 	ifeq ($(shell uname),Linux)
@@ -99,9 +100,7 @@ ARCHIVENAME = SimBAPlanner
 #------------------------------------------------------------------------------#
 HDRS = class_handle.hpp node_wrapper.h BVP.pb.h
 
-#NodeMessages.pb.
-
-TARGET = node_mex
+TARGET = node_mex 
 
 BINTARGET = $(TARGET:%=%.bin)
 MEXTARGET = $(TARGET:%=%.$(MEXEXT))

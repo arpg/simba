@@ -19,7 +19,7 @@ classdef SimBAPlanner < handle
     function this = SimBAPlanner(num_sims, dir_to_SimPlanner)
       this.sims_ = node_mex('new', num_sims, dir_to_SimPlanner);
       % TODO: Init all possible start/goal configurations
-      PopulateGoals();
+      this.PopulateGoals();
       this.num_sims_ = num_sims;
       this.goal_states_ = [];
     end
@@ -51,11 +51,11 @@ classdef SimBAPlanner < handle
             % CheckSimStatus will return two values:
             % problem = 1: the Sim is ready to receive a problem
             % policy = 1: the Sim is ready to provide a solved policy
-            [problem, policy] = node_mex('CheckSimStatus', this, ii);
+            [problem, policy] = node_mex('CheckSimStatus', this.sims_, ii);
             if problem == 1,
               start_point = [1; -.5; pi/2; 0];
               % This sends the BVP until it's passed. 
-              node_mex('SendBVP', this, ii, tau, mesh.xx, mesh.yy, mesh.zz, ...
+              node_mex('SendBVP', this.sims_, ii, tau, mesh.xx, mesh.yy, mesh.zz, ...
                 mesh.row_count, mesh.col_count, start_point, cur_goal_state);
               cur_pol = cur_pol+1;
               if cur_pol == numel(this.goal_states_(1,:)),
@@ -65,7 +65,7 @@ classdef SimBAPlanner < handle
             end
             
             if policy == 1,
-              [force, phi, time] = node_mex('ReceivePolicy', this, ii);
+              [force, phi, time] = node_mex('ReceivePolicy', this.sims_, ii);
               SavePolicy(force, phi, time, tau, mesh); 
             end
           end
@@ -78,7 +78,7 @@ classdef SimBAPlanner < handle
     function PopulateGoals(this)
       x = .5;
       y = .5;
-      yaw = -PI/6;
+      yaw = -pi/6;
       vel = 0;
       for ii = 0:13,
         x = x + (ii/12);

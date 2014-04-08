@@ -9,6 +9,8 @@
  */
 
 #include <PbMsgs/BVP.pb.h>
+// This is hacky, but I couldn't get the MEX file to compile any other way.
+#include "/Users/Trystan/Code/rslam/build/CoreDev/HAL/PbMsgs/BVP.pb.cc"
 #include <Node/Node.h>
 #include <unistd.h>
 #include <cstdlib>
@@ -19,7 +21,7 @@ public:
   /// CONSTRUCTOR
   NodeWrapper(int num_sims, std::string dir_to_sim){
     node_.init("MATLAB");
-    cout<<"MATLAB is successfully advertizing 'BVP'"<<endl;
+    std::cout<<"MATLAB is successfully advertizing 'BVP'"<<std::endl;
     /// I think this should work...
     for(int i = 0; i<num_sims; i++){
       std::string sim_name = "Sim"+std::to_string(i);
@@ -32,17 +34,17 @@ public:
       //    }
       while(!node_.subscribe(sim_name+"/CheckNeed")){
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        cout<<"=>";
+        std::cout<<"=>";
       }
       while(!node_.subscribe(sim_name+"/CheckSolved")){
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        cout<<"=>";
+        std::cout<<"=>";
       }
       while(!node_.subscribe(sim_name+"/Policy")){
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        cout<<"=>";
+        std::cout<<"=>";
       }
-      cout<<endl<<"MATLAB is subscribed to '"+sim_name+"/Policy'"<<endl;
+      std::cout<<std::endl<<"MATLAB is subscribed to '"+sim_name+"/Policy'"<<std::endl;
     }
   }
 
@@ -60,7 +62,7 @@ public:
     std::this_thread::sleep_for(std::chrono::seconds(1));
     if(node_.receive("Sim"+std::to_string(sim_number)+"/CheckNeed",
                              sim_needs_bvp)){
-      cout<<"We have need!"<<endl;
+      std::cout<<"We have need!"<<std::endl;
       if(sim_needs_bvp.need()==true){
         status[0] = 1;
       }
@@ -80,8 +82,8 @@ public:
   ////////////////////////
 
   void SendBVP(int sim_number, int tau, double* x_data, double* y_data,
-                 double* z_data, int row_count, in col_count,
-                 double* start_point, double* goal_point){
+               double* z_data, int row_count, int col_count,
+               double* start_point, double* goal_point){
     // I don't know how else to do this, 'cause I'm ig'nant.
     params_.Clear();
     for (int ii=0; ii<4;ii++) {

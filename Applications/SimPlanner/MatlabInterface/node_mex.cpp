@@ -63,8 +63,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL);
     double* problem = mxGetPr(plhs[0]);
     double* policy = mxGetPr(plhs[1]);
-    problem = status[0];
-    policy = status[1];
+    problem = &status[0];
+    policy = &status[1];
     return;
   }
 
@@ -94,7 +94,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   if (!strcmp("ReceivePolicy", cmd)) {
     double* sim_num = mxGetPr(prhs[2]);
-    double* commands = Node_instance->ReceiveCommands(int(*sim_num));
+    double* commands = Node_instance->ReceivePolicy(int(*sim_num));
     // The first element of 'commands' has the length of all command
     // vectors.
     plhs[0] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
