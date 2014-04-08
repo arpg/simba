@@ -11,25 +11,17 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  std::cout<<"WOOOOOO"<<std::endl;
   // Get the command string
   char cmd[64];
   if (nrhs < 1 || mxGetString(prhs[0], cmd, sizeof(cmd)))
-    mexErrMsgTxt("First input should be a command string less than 64 characters long.");
-  std::cout<<"WOOOOOO"<<std::endl;
+    mexErrMsgTxt("First input should be a tring less than 64 characters long.");
 
   // New
   if (!strcmp("new", cmd)) {
     // Check parameters
     if (nlhs != 1)
       mexErrMsgTxt("New: One output expected.");
-    std::cout<<"WOOOOOO"<<std::endl;
-    double* num_sims = mxGetPr(prhs[2]);
-    char dir_to_sim[80];
-    mxGetString(prhs[3], dir_to_sim, sizeof(dir_to_sim));
-    // Return a handle to a new C++ instance
-    std::cout<<"WOOOOOO"<<std::endl;
-    NodeWrapper* node_wrap = new NodeWrapper(int(*num_sims), dir_to_sim);
+    NodeWrapper* node_wrap = new NodeWrapper;
     plhs[0] = convertPtr2Mat<NodeWrapper>(node_wrap);
     void mexUnlock(void);
     return;
@@ -56,7 +48,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    * CHECK STATUS OF SIMS
    **********************************************************************/
 
+  if (!strcmp("StartConnections", cmd)) {
+    std::cout<<"[node.mex] Checking Sim Status..."<<std::endl;
+    double* num_sims = mxGetPr(prhs[2]);
+    //    char dir_to_sim[80];
+    //    mxGetString(prhs[3], dir_to_sim, sizeof(dir_to_sim));
+    // This "a" is just a placeholder until I can get that
+    // system call working.
+    Node_instance->StartConnections(int(*num_sims), "a");
+    return;
+  }
+
   if (!strcmp("CheckSimStatus", cmd)) {
+    std::cout<<"[node.mex] Checking Sim Status..."<<std::endl;
     double* sim_num = mxGetPr(prhs[2]);
     double* status = Node_instance->CheckSimStatus(int(*sim_num));
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);

@@ -19,19 +19,17 @@ class NodeWrapper{
 public:
 
   /// CONSTRUCTOR
-  NodeWrapper(int num_sims, std::string dir_to_sim){
+  NodeWrapper(){
     node_.init("MATLAB");
+  }
+
+  void StartConnections(int num_sims, std::string dir_to_sim){
     std::cout<<"MATLAB is successfully advertizing 'BVP'"<<std::endl;
     /// I think this should work...
     for(int i = 0; i<num_sims; i++){
       std::string sim_name = "Sim"+std::to_string(i);
       std::string new_proc_name = dir_to_sim+" "+sim_name;
       node_.advertise("BVP"+std::to_string(i));
-      // Spawn our own processes.
-      //    int child = fork();
-      //    if(child==0){
-      //      int did_it_work = system(sim_name.c_str());
-      //    }
       while(!node_.subscribe(sim_name+"/CheckNeed")){
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         std::cout<<"=>";
@@ -44,7 +42,8 @@ public:
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         std::cout<<"=>";
       }
-      std::cout<<std::endl<<"MATLAB is subscribed to '"+sim_name+"/Policy'"<<std::endl;
+      std::cout<<std::endl<<"MATLAB is subscribed to '"+sim_name+
+                 "/Policy'"<<std::endl;
     }
   }
 
