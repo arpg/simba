@@ -4,6 +4,8 @@
 
 SimPlanner::SimPlanner(){
   m_nTau = 8; //Something random, why not.
+  params_file_name_ =
+      "/Users/Trystan/Code/simba/Applications/SimPlanner/raycast_params.csv";
   need_BVP_ = true;
   solved_BVP_ = false;
 }
@@ -64,8 +66,8 @@ bool SimPlanner::InitMesh(pb::BVP_params params){
     bullet_heightmap* map = new bullet_heightmap(MapShape);
     btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
     btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
-    CarParameters::LoadFromFile(PARAMS_FILE_NAME,m_VehicleParams);
-    // MAKE SURE YOU ADD ENOUGH FREAKIN' WORLDS.
+    CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
+    // MAKE SURE YOU ADD ENOUGH FREAKIN' WORLDS TO THE CAR MODEL.
     // 11 should do it.
     m_CarModel->Init(map->getBulletShapePtr(), dMin, dMax, m_VehicleParams, 11);
     return true;

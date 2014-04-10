@@ -27,8 +27,6 @@
 // for communicating between the Physics Engine and ModelGraph
 #include <ModelGraph/ModelGraphBuilder.h>
 
-#define PARAMS_FILE_NAME "/Users/Trystan/Code/simba/Applications/SimPlanner/gui_params.csv"
-
 class SimPlanner
 {
 public:
@@ -51,6 +49,7 @@ public:
   bool reset_;
   std::vector<double> start_;
   std::vector<double> goal_;
+  std::string params_file_name_;
 
   /// CONSTRUCTOR
   SimPlanner();

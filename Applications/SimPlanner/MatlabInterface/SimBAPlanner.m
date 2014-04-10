@@ -85,7 +85,8 @@ classdef SimBAPlanner < handle
               this.SavePolicy(force, phi, time, tau, ...
                 start_params, goal_params, mesh.X, mesh.Y, mesh.Z); 
             end
-            disp(['Our current policy is', num2str(cur_goal_state)]);
+            disp('Our current policy is');
+            cur_goal_state
           end
         end
       end

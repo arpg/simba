@@ -114,8 +114,6 @@ public:
       pVehicle->SetWheelPose(i, _T2Cart(toEigen(wheelTrans)));
     }
 
-    btTransform chassisTrans = bulletVehicle->getChassisWorldTransform();
-
     //reset all parameters
     bulletBody->setLinearVelocity(btVector3(0,0,0));
     bulletBody->setAngularVelocity(btVector3(0,0,0));

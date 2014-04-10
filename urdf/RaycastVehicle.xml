@@ -3,6 +3,7 @@
 <bodybase name="RaycastVehicle">
      <!--Set the parameters for the car.  -->
      <param name="control delay"      value="0"/>
+     <!-- control delay is only applicable in real life -->
      <param name="stiffness"          value="120"/>
      <param name="susp conn height"   value="-.3"/>
      <param name="max susp force"     value="5812.4"/>
@@ -10,10 +11,10 @@
      <param name="exp damp factor"    value="0"/>
      <param name="roll influence"     value="0"/>
      <param name="steering coeff"     value="-1.5"/>
-     <param name="max steering"       value="20"/>
+     <param name="max steering"       value=".7"/> <!-- In degrees -->
      <param name="max steering rate"  value="13"/>
-     <param name="accel offset"       value="0"/>
-     <param name="steering offset"    value="0"/>
+     <param name="accel offset"       value=".463"/>
+     <param name="steering offset"    value=".450"/>
      <param name="stall torque coeff" value=".13"/>
      <param name="torque speed slope" value="1.2685"/>
 
