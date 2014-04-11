@@ -4,14 +4,15 @@
 
 #include <bullet/btBulletDynamicsCommon.h>
 #include <Eigen/Eigen>
+#include <sys/time.h>
 
 using namespace std;
 
 //Taken from SceneGraph
 namespace Eigen{
-    typedef Matrix<double, 6, 1> Vector6d;
-    typedef std::vector<Eigen::Vector6d, Eigen::aligned_allocator<Eigen::Vector6d> > Vector6dAlignedVec;
-    typedef std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d> > Vector3dAlignedVec;
+typedef Matrix<double, 6, 1> Vector6d;
+typedef std::vector<Eigen::Vector6d, Eigen::aligned_allocator<Eigen::Vector6d> > Vector6dAlignedVec;
+typedef std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d> > Vector3dAlignedVec;
 }
 
 
@@ -188,4 +189,3 @@ inline btVector3 toBulletVec3(const double x, const double y, const double z)
 }
 
 #endif
-

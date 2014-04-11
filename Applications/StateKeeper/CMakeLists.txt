@@ -11,14 +11,14 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 #find_package( SceneGraph 0.1 REQUIRED )
 #find_package( Pangolin )
 find_package( Node REQUIRED )
-#find_package( Calibu )
+find_package( Calibu )
 find_package( SimBA REQUIRED )
 
 include_directories(
 #  ${Pangolin_INCLUDE_DIRS}
 #  ${SceneGraph_INCLUDE_DIRS}
   ${NODE_INCLUDE_DIRS}
-#  ${Calibu_INCLUDE_DIRS}
+  ${Calibu_INCLUDE_DIRS}
   ${SimBA_INCLUDE_DIRS} )
 
 add_executable( StateKeeper StateKeeper.cpp

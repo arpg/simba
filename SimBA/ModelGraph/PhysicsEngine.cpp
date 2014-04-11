@@ -419,7 +419,6 @@ void PhysicsEngine::RunDevices(){
     SimDeviceInfo* Device = m_mDevices.at(ii);
     if(Device->m_sDeviceType=="CarController"){
       // We have to check all controllers.
-      // TODO: Better way: do this mapping as soon as we add the controller.
       CarController* pCarCon = (CarController*) m_mDevices.at(ii);
       for(std::map<string, std::shared_ptr<Vehicle_Entity> > ::iterator it =
           m_mRayVehicles.begin(); it!=m_mRayVehicles.end(); it++ ){
@@ -427,10 +426,19 @@ void PhysicsEngine::RunDevices(){
           //This controller goes to this car.
           Vehicle_Entity* eVehicle = it->second.get();
           VehiclePtr pVeh = eVehicle->m_pVehicle;
-          pVeh->setSteeringValue(pCarCon->m_dSteering, 0);
-          pVeh->setSteeringValue(pCarCon->m_dSteering, 1);
-          pVeh->applyEngineForce(pCarCon->m_dTorque, 2);
-          pVeh->applyEngineForce(pCarCon->m_dTorque, 3);
+          SimRaycastVehicle* vehicle_shape =
+              (SimRaycastVehicle*)&eVehicle->m_pMotionState.get()->object;
+          btVector3 vel = pVeh->getRigidBody()->getLinearVelocity();
+          Eigen::Vector3d lin_vel;
+          lin_vel<<vel.getX(), vel.getY(), vel.getZ();
+          vehicle_shape->CommandCar(pCarCon->m_dSteering,
+                                    pCarCon->m_dTorque,
+                                    pCarCon->delta_time,
+                                    lin_vel);
+          pVeh->setSteeringValue(vehicle_shape->wheel_angles.at(0), 0);
+          pVeh->setSteeringValue(vehicle_shape->wheel_angles.at(1), 1);
+          pVeh->applyEngineForce(vehicle_shape->driving_force, 2);
+          pVeh->applyEngineForce(vehicle_shape->driving_force, 3);
         }
       }
     }

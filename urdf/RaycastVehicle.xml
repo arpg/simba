@@ -13,8 +13,8 @@
      <param name="steering coeff"     value="-1.5"/>
      <param name="max steering"       value=".7"/> <!-- In degrees -->
      <param name="max steering rate"  value="13"/>
-     <param name="accel offset"       value=".463"/>
-     <param name="steering offset"    value=".450"/>
+     <param name="accel offset"       value="0"/> <!-- .463 -->
+     <param name="steering offset"    value="0"/> <!-- .450 -->
      <param name="stall torque coeff" value=".13"/>
      <param name="torque speed slope" value="1.2685"/>
 
