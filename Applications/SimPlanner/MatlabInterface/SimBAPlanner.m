@@ -10,6 +10,7 @@ classdef SimBAPlanner < handle
     num_sims_;
     dir_to_SimPlanner_;
     goal_states_;   % Holds all possible combos of start/goal
+    cur_pol_;
   end
   
   methods
@@ -22,6 +23,7 @@ classdef SimBAPlanner < handle
       % TODO: Init all possible start/goal configurations
       this.PopulateGoals();
       this.num_sims_ = num_sims;
+      this.cur_pol_ = 1;
     end
     
     function delete(this)
@@ -46,9 +48,9 @@ classdef SimBAPlanner < handle
         
         % TODO: Put scale in as part of the tau bits.
         mesh = GenMesh(tau, 3);
-        cur_pol = 1;
-        cur_goal_state = this.GetNextBVP(cur_pol);
-        while cur_pol <  numel(this.goal_states_(1,:)),
+        this.cur_pol_ = 1;
+        cur_goal_state = this.GetNextBVP(this.cur_pol_);
+        while this.cur_pol_ <  numel(this.goal_states_(1,:)),
           for ii=0:(this.num_sims_-1),
             % CheckSimStatus will return two values:
             % problem = 1: the Sim is ready to receive a problem
@@ -65,11 +67,11 @@ classdef SimBAPlanner < handle
               cur_goal_state
               node_mex('SendBVP', this.sims_, ii, tau, mesh.xx, mesh.yy, mesh.zz, ...
                 mesh.row_count, mesh.col_count, start_point, cur_goal_state);
-              cur_pol = cur_pol+1;
-              if cur_pol == numel(this.goal_states_(1,:)),
+              this.cur_pol_ = this.cur_pol_+1;
+              if this.cur_pol_ == numel(this.goal_states_(1,:)),
                 break;
               end
-              cur_goal_state = this.GetNextBVP(cur_pol);
+              cur_goal_state = this.GetNextBVP(this.cur_pol_);
             end
             
             if policy == 1,
@@ -134,8 +136,9 @@ classdef SimBAPlanner < handle
       start_params;
       goal_params;
       filename = ['Mesh-' num2str(tau)];
-      save([filename '.mat'],'force','phi', 'time', 'tau', ...
-        'start_params', 'goal_params', 'meshX', 'meshY', 'meshZ');
+      save(filename,'force','phi', 'time', 'tau', ...
+        'start_params', 'goal_params', 'meshX', 'meshY', 'meshZ', '-append',...
+        '-ascii', '-double', '-tabs');
     end
     
   end

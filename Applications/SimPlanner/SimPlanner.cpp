@@ -122,12 +122,14 @@ void SimPlanner::GroundStates(){
 void SimPlanner::InitGoals(pb::BVP_params params){
   // Now populate the start and goal parameters.
   // X, Y, yaw, and velocity... that should be it.
+  std::cout<<"WOO"<<std::endl;
   const double* start = params.start_param().data();
   const double* goal = params.goal_param().data();
   for(int ii = 0; ii<4; ii++){
     start_.push_back(start[ii]);
     goal_.push_back(goal[ii]);
   }
+  std::cout<<"WOO"<<std::endl;
   Eigen::Matrix4d eigen_start;
   Eigen::Vector6d eigen_cart;
   eigen_cart<<start[0], start[1], 0, 0, 0, start[2];
@@ -135,10 +137,13 @@ void SimPlanner::InitGoals(pb::BVP_params params){
   Eigen::Matrix4d eigen_goal;
   eigen_cart<<goal[0], goal[1], 0, 0, 0, goal[2];
   eigen_goal = _Cart2T(eigen_cart);
+  std::cout<<"WOO"<<std::endl;
   // Populate the VehicleStates
   m_vsStart = VehicleState(Sophus::SE3d(eigen_start), start[3], 0);
   m_vsGoal = VehicleState(Sophus::SE3d(eigen_goal), goal[3], 0);
+  std::cout<<"WOO"<<std::endl;
   GroundStates();
+  std::cout<<"WOO"<<std::endl;
 }
 
 /////////////////////////////////////////////

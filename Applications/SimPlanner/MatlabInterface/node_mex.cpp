@@ -104,8 +104,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     plhs[0] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
     plhs[1] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
     plhs[2] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
-    plhs[3] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
-    plhs[4] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
+    plhs[3] = mxCreateDoubleMatrix(4, 1, mxREAL);
+    plhs[4] = mxCreateDoubleMatrix(4, 1, mxREAL);
     int counter = 1;
     double* force = mxGetPr(plhs[0]);
     double* phi = mxGetPr(plhs[1]);

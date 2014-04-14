@@ -7,12 +7,14 @@ endif()
 
 find_package( SceneGraph 0.1 REQUIRED )
 find_package( Pangolin )
+find_package( HAL REQUIRED )
 find_package( Node REQUIRED )
 find_package( Calibu )
 find_package( SimBA REQUIRED )
 
 include_directories( ${Pangolin_INCLUDE_DIRS}
   ${SceneGraph_INCLUDE_DIRS}
+  ${HAL_INCLUDE_DIRS}
   ${Node_INCLUDE_DIRS}
   ${Calibu_INCLUDE_DIRS}
   ${SimBA_INCLUDE_DIRS} )
@@ -21,6 +23,7 @@ add_executable( LocalSim LocalSim.cpp LocalSim.h )
 
 target_link_libraries( LocalSim
                        ${SceneGraph_LIBRARIES}
+                       ${HAL_LIBRARIES}
                        ${Node_LIBRARIES}
                        ${SimBA_LIBRARIES}
                        SimMessages )
