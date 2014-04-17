@@ -320,7 +320,7 @@ void RenderEngine::CompleteScene(bool bEnableCameraView=false)
       m_glGraph.ObjectAndChildrenBounds();
   const Eigen::Vector3d center = bbox.Center();
   const double size = bbox.Size().norm();
-  const double far = 2*size;
+  const double far = 15*size;
   const double near = far / 1E3;
 
   // Define Camera Render Object (for view / scene browsing)

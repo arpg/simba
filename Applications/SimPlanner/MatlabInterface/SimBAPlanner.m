@@ -44,10 +44,12 @@ classdef SimBAPlanner < handle
       % start with 4 just to be safe.
       disp('[MATLAB] Starting Sim connections...');
       node_mex('StartConnections', this.sims_, this.num_sims_);
+      scale = 10;
       for tau = 0:2^2,
         
         % TODO: Put scale in as part of the tau bits.
-        mesh = GenMesh(tau, 10);
+        
+        mesh = GenMesh(tau, scale);
         this.cur_pol_ = 1;
         cur_goal_state = this.GetNextBVP(this.cur_pol_);
         while this.cur_pol_ <  numel(this.goal_states_(1,:)),
@@ -59,12 +61,13 @@ classdef SimBAPlanner < handle
             [problem, policy] = node_mex('CheckSimStatus', this.sims_, ii);
             if problem == 1,
               disp('[MATLAB] We can send a problem now!');
-              start_point = [1; -.5; pi/2; 0];
+              start_point = [1; -.5; 0; 0];
+              start_point(1:2) = start_point(1:2) * scale;
               % This sends the BVP until it's passed. 
               disp('[MATLAB] start_state: ');
               start_point
               disp('[MATLAB] goal_state: ');
-              cur_goal_state
+              cur_goal_state1:2) = cur_goal_state(1:2) * scale;
               node_mex('SendBVP', this.sims_, ii, tau, mesh.xx, mesh.yy, mesh.zz, ...
                 mesh.row_count, mesh.col_count, start_point, cur_goal_state);
               this.cur_pol_ = this.cur_pol_+1;

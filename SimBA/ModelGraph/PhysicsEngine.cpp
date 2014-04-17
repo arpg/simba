@@ -715,11 +715,11 @@ std::vector<Eigen::Matrix4d> PhysicsEngine::GetVehicleTransform(std::string sVeh
 
 /////////////////////////////////////////////////////
 ///// SPEED_COMMAND_SIM
-///// When we just need state information from a RaycastVehicle, and rendering is
-///// not an object, then we run the simulation as fast as possible. We can
+///// When we just need state information from a RaycastVehicle, and rendering
+///// is not an object, then we run the simulation as fast as possible. We can
 ///// just grab intermediate states, along with the end state, once the
 ///// simulation is finished.
-////////
+/////////////////////////////////////////////////////
 
 //double* SpeedSim(double id, double* start_pose, double* start_rot,
 //                 double* start_lin_vel, double* start_ang_vel,

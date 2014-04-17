@@ -143,6 +143,7 @@ void SimPlanner::InitGoals(pb::BVP_params params){
   m_vsGoal = VehicleState(Sophus::SE3d(eigen_goal), goal[3], 0);
   std::cout<<"WOO"<<std::endl;
   GroundStates();
+  m_CarModel->SetState(0, m_vsStart);
   std::cout<<"WOO"<<std::endl;
 }
 

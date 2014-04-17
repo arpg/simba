@@ -1,12 +1,12 @@
 <world name="SimWorld">
 
-<!-- No Mesh -->
+<!-- Heightmap imported from MATLAB -->
   <base mesh="MATLAB"
 	scale="1"
 	mass="0"
 	worldpose="0,0,0"
 	worldnormal="0,0,1"
-	robotpose="0,0,1.4,0,0,0"
+	robotpose="10, -5, 5, 0, 0, 0"
 	lightpose="10,10,-100"/>
 
 <!-- What does this do?   -->
