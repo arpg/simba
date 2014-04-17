@@ -67,7 +67,8 @@ classdef SimBAPlanner < handle
               disp('[MATLAB] start_state: ');
               start_point
               disp('[MATLAB] goal_state: ');
-              cur_goal_state1:2) = cur_goal_state(1:2) * scale;
+              cur_goal_state
+              cur_goal_state(1:2) = cur_goal_state(1:2) * scale;
               node_mex('SendBVP', this.sims_, ii, tau, mesh.xx, mesh.yy, mesh.zz, ...
                 mesh.row_count, mesh.col_count, start_point, cur_goal_state);
               this.cur_pol_ = this.cur_pol_+1;

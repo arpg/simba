@@ -73,7 +73,7 @@ public:
 
   std::map<std::string, ModelNode*> m_mModelNodes;
   std::map<std::string, ModelNode*> m_mWorldNodes;
-  hal::node node_;
+  node::node node_;
 
 };
 

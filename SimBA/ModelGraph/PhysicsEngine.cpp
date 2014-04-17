@@ -603,6 +603,17 @@ std::vector<Eigen::Matrix4d> PhysicsEngine::GetVehicleTransform(std::string sVeh
 /////
 
 //double* RaycastToGround(double id, double x, double y){
+
+//  for(std::map<string, std::shared_ptr<Vehicle_Entity> > ::iterator it =
+//      m_mRayVehicles.begin(); it!=m_mRayVehicles.end(); it++ ){
+//    // The MotionStatePointer holds the ModelNode, which holds the poses.
+//    Vehicle_Entity* eVehicle = it->second.get();
+//    NodeMotionState* mMotion = eVehicle->m_pMotionState.get();
+//    SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) &mMotion->object;
+//    std::vector<Eigen::Matrix4d> VehiclePoses =
+//        GetVehicleTransform(pVehicle->GetName());
+//  }
+
 //  double* pose = new double[3];
 //  VehiclePtr Vehicle = m_mRayVehicles[id]->m_pVehicle;
 
@@ -652,7 +663,7 @@ std::vector<Eigen::Matrix4d> PhysicsEngine::GetVehicleTransform(std::string sVeh
 //    }
 //    count++;
 //    if(count==20){
-//     break;
+//      break;
 //    }
 //  }
 //  int on = false;

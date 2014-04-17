@@ -41,7 +41,7 @@ public:
   std::vector<double> GetNextBVP(int cur_pol);
   bool SavePolicyToMat(std::vector< std::vector<double> > policy, int tau);
 
-  hal::node node_;
+  node::node node_;
   pb::BVP_params params_;
   pb::BVP_policy policy_;
   // TODO:

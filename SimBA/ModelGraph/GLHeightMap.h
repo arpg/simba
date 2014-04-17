@@ -2,16 +2,15 @@
 #define GLHEIGHTMAP_H
 
 #include "SceneGraph/GLObject.h"
-#include "SceneGraph/GLLineStrip.h"
 
 namespace SceneGraph {
 
 /// The SceneGraph heightmap
-class GLHeightMap : public GLObject
+class GLHeightmap : public GLObject
 {
 public:
 
-  GLHeightMap(double* x_array, double* y_array, double* z_array,
+  GLHeightmap(double* x_array, double* y_array, double* z_array,
               double row_count, double col_count){
     X_ = x_array;
     Y_ = y_array;
@@ -22,7 +21,6 @@ public:
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
   void DrawCanonicalObject(){
     if(render_){
       glBegin(GL_TRIANGLES); // Render Polygons
@@ -65,7 +63,6 @@ private:
   double row_count_;
   double col_count_;
   bool render_;
-
 };
 
 }

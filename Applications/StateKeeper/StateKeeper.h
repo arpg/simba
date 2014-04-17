@@ -14,7 +14,7 @@ class StateKeeper
 {
 
 public:
-  hal::node                               m_Node;
+  node::node                               m_Node;
 
   ///Constructor
   StateKeeper(string sStateKeeperName, string sWorldURDFFile);

@@ -40,7 +40,7 @@ public:
   VehicleState          m_vsStart;
   VehicleState          m_vsGoal;
   MotionSample          m_msFinalPath;
-  hal::node             m_Node;
+  node::node             m_Node;
   pb::BVP_params        m_params;
   pb::BVP_policy        m_policy;
   int                   m_nTau; // Our bitstring that describes the map.
