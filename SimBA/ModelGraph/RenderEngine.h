@@ -5,7 +5,7 @@
 
 // Our SceneGraph interface
 #include <SceneGraph/SceneGraph.h>
-#include "ModelGraph/GLHeightMap.h"
+#include "ModelGraph/GLHeightmap.h"
 
 // All of our bullet objects
 #include <ModelGraph/Shape.h>
