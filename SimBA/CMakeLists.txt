@@ -60,6 +60,7 @@ list(APPEND MODELGRAPH_HDRS
   ModelGraph/PhysicsEngineHelpers.h
   ModelGraph/GL_ShapeDrawer.h
   ModelGraph/GLDebugDrawer.h
+  ModelGraph/GLHeightMap.h
   ModelGraph/GlutStuff.h
   ModelGraph/ModelNode.h
   ModelGraph/RenderEngine.h

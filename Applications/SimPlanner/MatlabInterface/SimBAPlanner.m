@@ -47,7 +47,7 @@ classdef SimBAPlanner < handle
       for tau = 0:2^2,
         
         % TODO: Put scale in as part of the tau bits.
-        mesh = GenMesh(tau, 3);
+        mesh = GenMesh(tau, 10);
         this.cur_pol_ = 1;
         cur_goal_state = this.GetNextBVP(this.cur_pol_);
         while this.cur_pol_ <  numel(this.goal_states_(1,:)),
@@ -140,6 +140,14 @@ classdef SimBAPlanner < handle
         'start_params', 'goal_params', 'meshX', 'meshY', 'meshZ', '-append',...
         '-ascii', '-double', '-tabs');
     end
+    
+    
+    function SendHeightmap(this, tau)
+      mesh = GenMesh(tau, 10);
+      node_mex('SendHeightmap', this.sims_, mesh.xx, mesh.yy, mesh.zz, ...
+                mesh.row_count, mesh.col_count);
+    end
+    
     
   end
 end

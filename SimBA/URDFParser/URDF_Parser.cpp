@@ -40,6 +40,36 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
                                              mSimWorld.m_vWorldPose);
         m_mWorldNodes[pGround->GetName()] = pGround;
       }
+      // init world from MATLAB height data.
+      else if ( mSimWorld.m_sMesh == "MATLAB") {
+        node_.init("URDF");
+        while(!node_.subscribe("MATLAB/Heightmap")){
+          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+          std::cout<<"=>";
+        }
+        pb::Heightmap params;
+        std::cout<<"Starting to receive heightmap..."<<std::endl;
+        while(!node_.receive("MATLAB/Heightmap", params)){
+          std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        // Create our world mesh
+        int row_count = params.row_count();
+        int col_count = params.col_count();
+        // I think this should work?
+        double* X = new double[row_count*col_count];
+        double* Y = new double[row_count*col_count];
+        double* Z = new double[row_count*col_count];
+        for (int ii=0; ii < params.x_data().size(); ii++) {
+          X[ii] = params.x_data().Get(ii);
+          Y[ii] = params.y_data().Get(ii);
+          Z[ii] = params.z_data().Get(ii);
+        }
+        HeightmapShape* map_shape = new HeightmapShape("Map",
+                                                      row_count, col_count,
+                                                      X, Y, Z);
+        m_mWorldNodes[map_shape->GetName()] = map_shape;
+      }
+      // We actually have a mesh.
       else {
         MeshShape* pMesh = new MeshShape("Map", mSimWorld.m_sMesh,
                                          mSimWorld.m_vWorldPose);
@@ -752,19 +782,19 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
           SimCamera* Device =
               new SimCamera(sDeviceName, sDeviceName, sRobotName,
                             SceneGraph::eSimCamRGB, iFPS, vPose, sModel);
-           m_SimDevices.AddDevice(Device);
+          m_SimDevices.AddDevice(Device);
         }
         if(sMode=="Depth"){
           SimCamera* Device =
               new SimCamera(sDeviceName, sDeviceName, sRobotName,
                             SceneGraph::eSimCamDepth, iFPS, vPose, sModel);
-           m_SimDevices.AddDevice(Device);
+          m_SimDevices.AddDevice(Device);
         }
         if(sMode=="Grey"){
           SimCamera* Device =
               new SimCamera(sDeviceName, sDeviceName, sRobotName,
                             SceneGraph::eSimCamLuminance, iFPS, vPose, sModel);
-           m_SimDevices.AddDevice(Device);
+          m_SimDevices.AddDevice(Device);
         }
 
         // Double-view system: RGB-Depth Camera
@@ -793,14 +823,14 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
 
       /// Vicon
       if(sType=="Vicon"){
-//        string sViconName = GetAttribute( pElement, "Name")+"@"+sRobotName;
-//        SimDeviceInfo* Device = new SimDeviceInfo();
-//        Device->m_sDeviceName = sViconName;
-//        Device->m_sDeviceType = sType;
-//        Device->m_sBodyName = sBodyName;
-//        m_SimDevices.AddDevice(Device);
-//        cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<
-//              " success."<<endl;
+        //        string sViconName = GetAttribute( pElement, "Name")+"@"+sRobotName;
+        //        SimDeviceInfo* Device = new SimDeviceInfo();
+        //        Device->m_sDeviceName = sViconName;
+        //        Device->m_sDeviceType = sType;
+        //        Device->m_sBodyName = sBodyName;
+        //        m_SimDevices.AddDevice(Device);
+        //        cout<<"[Proxy/ParseDevice] Add vicon device "<<sViconName<<
+        //              " success."<<endl;
       }
 
 
@@ -832,56 +862,56 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
 }
 
 
-  ////////////////////////////////////////////////////////////////////////////
-  /// PARSE WORLD.XML FOR STATEKEEPER
-  ////////////////////////////////////////////////////////////////////////////
-  bool URDF_Parser::ParseWorldForInitRobotPose(
-        const char* filename,
-        vector<Eigen::Vector6d>& rvRobotInitPose){
+////////////////////////////////////////////////////////////////////////////
+/// PARSE WORLD.XML FOR STATEKEEPER
+////////////////////////////////////////////////////////////////////////////
+bool URDF_Parser::ParseWorldForInitRobotPose(
+    const char* filename,
+    vector<Eigen::Vector6d>& rvRobotInitPose){
 
-    // make sure the vector is empty
-    rvRobotInitPose.clear();
+  // make sure the vector is empty
+  rvRobotInitPose.clear();
 
-    // open xml document
-    XMLDocument doc;
-    if(doc.LoadFile(filename) !=0){
-      printf("Cannot open %s\n", filename);
-      return false;
-    }
-
-    XMLElement *pParent=doc.RootElement();
-    XMLElement *pElement=pParent->FirstChildElement();
-
-    // read high level parent (root parent)
-    while (pElement){
-      const char* sRootContent = pElement->Name();
-      if(strcmp(sRootContent,"robot")==0){
-        vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
-        Eigen::Vector6d ePose;
-        ePose<<vPose[0], vPose[1], vPose[2], vPose[3], vPose[4], vPose[5];
-        rvRobotInitPose.push_back(ePose);
-      }
-      pElement=pElement->NextSiblingElement();
-    }
-
-    return true;
+  // open xml document
+  XMLDocument doc;
+  if(doc.LoadFile(filename) !=0){
+    printf("Cannot open %s\n", filename);
+    return false;
   }
 
+  XMLElement *pParent=doc.RootElement();
+  XMLElement *pElement=pParent->FirstChildElement();
 
-
-  ////////////////////////////////////////////////////////////////////////////
-  /// HELPER FUNCTIONS
-  ////////////////////////////////////////////////////////////////////////////
-
-  std::vector<ModelNode*> URDF_Parser::GetModelNodes(
-        std::map<std::string, ModelNode*> mNodes){
-    std::vector<ModelNode*> Nodes;
-    for( std::map<string, ModelNode*>::iterator it = mNodes.begin();
-         it!=mNodes.end();it++){
-      Nodes.push_back(it->second);
+  // read high level parent (root parent)
+  while (pElement){
+    const char* sRootContent = pElement->Name();
+    if(strcmp(sRootContent,"robot")==0){
+      vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
+      Eigen::Vector6d ePose;
+      ePose<<vPose[0], vPose[1], vPose[2], vPose[3], vPose[4], vPose[5];
+      rvRobotInitPose.push_back(ePose);
     }
-    return Nodes;
+    pElement=pElement->NextSiblingElement();
   }
+
+  return true;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////
+/// HELPER FUNCTIONS
+////////////////////////////////////////////////////////////////////////////
+
+std::vector<ModelNode*> URDF_Parser::GetModelNodes(
+    std::map<std::string, ModelNode*> mNodes){
+  std::vector<ModelNode*> Nodes;
+  for( std::map<string, ModelNode*>::iterator it = mNodes.begin();
+       it!=mNodes.end();it++){
+    Nodes.push_back(it->second);
+  }
+  return Nodes;
+}
 
 
 

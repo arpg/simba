@@ -10,6 +10,8 @@
 #include <SimDevices/SimDevices.h>
 #include <SimRobots/SimRobot.h>
 #include <SimRobots/SimWorld.h>
+#include <PbMsgs/BVP.pb.h>
+#include <Node/Node.h>
 
 /////////////////////////////////
 /// URDF PARSER
@@ -71,6 +73,7 @@ public:
 
   std::map<std::string, ModelNode*> m_mModelNodes;
   std::map<std::string, ModelNode*> m_mWorldNodes;
+  hal::node node_;
 
 };
 

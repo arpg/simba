@@ -24,17 +24,6 @@ public:
     const double* Y = pMap->m_dYData;
     const double* Z = pMap->m_dZData;
 
-    //    if(max_ht<=1){
-    //      //Just make a flat plain
-    //      bulletShape = new btStaticPlaneShape(
-    //            btVector3(normal[0], normal[1], normal[2]), 0);
-    //      bulletMotionState = new btDefaultMotionState(btTransform::getIdentity());
-    //      btRigidBody::btRigidBodyConstructionInfo cInfo(0, bulletMotionState,
-    //                                                     bulletShape,
-    //                                                     btVector3(0, 0, 0));
-    //      bulletBody = new btRigidBody(cInfo);
-    //    }
-    //    else{
     //////////////
     //Algorithm for populating BVHTriangleMeshShape taken from VehicleDemo.cpp
 

@@ -135,6 +135,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     return;
   }
 
+  /////////////
+
+  if (!strcmp("SendHeightmap", cmd)) {
+    // This one command both sets the command and sends it to the Sim.
+    double* x_data = mxGetPr(prhs[2]);
+    double* y_data = mxGetPr(prhs[3]);
+    double* z_data = mxGetPr(prhs[4]);
+    double* row_count = mxGetPr(prhs[5]);
+    double* col_count = mxGetPr(prhs[6]);
+    Node_instance->SendHeightmap(x_data, y_data, z_data,
+                                 int(*row_count), int(*col_count));
+    return;
+  }
+
   /**************************/
 
   // Got here, so command not recognized

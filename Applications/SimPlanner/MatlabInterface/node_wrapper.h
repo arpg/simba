@@ -123,6 +123,27 @@ public:
     return policy;
   }
 
+  ////////////
+
+  // Used in URDF_Parser.cpp in SimBA
+  void SendHeightmap(double* x_data, double* y_data,
+                     double* z_data, int row_count, int col_count){
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    pb::Heightmap map;
+    for (int ii=0;ii<(row_count*col_count);ii++) {
+      map.add_x_data(x_data[ii]);
+      map.add_y_data(y_data[ii]);
+      map.add_z_data(z_data[ii]);
+    }
+    map.set_col_count(col_count);
+    map.set_row_count(row_count);
+    node_.advertise("Heightmap");
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    while (!node_.publish("Heightmap", map)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+  }
+
   ////////////////////////
   /// VECTOR MANIPULATORS
   /// #justmatlabthings

@@ -52,12 +52,12 @@ mesh.col_count = numel(mesh.xx(1,:));
 % For bullet -> ModelGraph/Bullet_shapes/bullet_heightmap.h
 % For SceneGraph -> Gotta figure that out...
 
-% xx = mesh.xx(:);
-% yy = mesh.yy(:);
-% zz = mesh.zz(:);
-% row_count = numel(mesh.xx(:,1));
-% col_count = numel(mesh.xx(1,:));
+mesh.xx(:) = scale*mesh.xx(:);
+mesh.yy(:) = scale*mesh.yy(:);
+zz = mesh.zz(:);
+row_count = numel(mesh.xx(:,1));
+col_count = numel(mesh.xx(1,:));
 % filename = ['Mesh-' num2str(tau)];
-% save([filename '.mat'],'xx', 'yy', 'zz','row_count','col_count');
+% save(filename,'xx', 'yy', 'zz','row_count','col_count', '-ascii', '-tabs');
 
 end
