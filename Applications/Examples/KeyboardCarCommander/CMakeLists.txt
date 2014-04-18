@@ -11,9 +11,11 @@ find_package( HAL 0.1 QUIET )
 find_package( Pangolin )
 find_package( Node )
 find_package( Calibu )
+find_package( MINIGLOG )
 include_directories( ${HAL_INCLUDE_DIRS} )
 include_directories( ${Pangolin_INCLUDE_DIRS} )
 include_directories( ${Node_INCLUDE_DIRS} )
+include_directories( ${MINIGLOG_INCLUDE_DIRS} )
 include_directories( ${Calibu_INCLUDE_DIRS})
 add_executable( ${PROJECT_NAME} main.cpp )
 target_link_libraries(
@@ -22,4 +24,5 @@ target_link_libraries(
   ${HAL_LIBRARIES}
   ${Node_LIBRARIES}
   ${Calibu_LIBRARIES}
+  ${MINIGLOG_LIBRARIES}
 )
