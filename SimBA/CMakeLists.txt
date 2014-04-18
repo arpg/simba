@@ -7,6 +7,9 @@ if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 OLD)
 endif(COMMAND cmake_policy)
 
+add_definitions(-DBT_USE_DOUBLE_PRECISION)
+add_definitions(-DBT_NO_PROFILE)
+
 ###################
 # LINK TO OUR LIBRARIES
 ###################
