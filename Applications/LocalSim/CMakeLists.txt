@@ -10,7 +10,7 @@ find_package( Pangolin )
 find_package( Node REQUIRED )
 find_package( Calibu )
 find_package( SimBA REQUIRED )
-find_package( miniglog )
+find_package( MINIGLOG )
 
 include_directories( ${Pangolin_INCLUDE_DIRS}
   ${SceneGraph_INCLUDE_DIRS}
