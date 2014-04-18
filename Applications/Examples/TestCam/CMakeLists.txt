@@ -12,6 +12,7 @@ find_package( HAL 0.1 QUIET)
 find_package( PbMsgs REQUIRED )
 find_package( SimBA )
 find_package( Node )
+find_package( MINIGLOG )
 #find_package( TinyXML2 REQUIRED )
 
 
@@ -19,6 +20,7 @@ include_directories( ${Pangolin_INCLUDE_DIRS})
 #include_directories( ${SceneGraph_INCLUDE_DIRS})
 include_directories( ${HAL_INCLUDE_DIRS})
 include_directories( ${PbMsgs_INCLUDE_DIRS})
+include_directories( ${MINIGLOG_INCLUDE_DIRS})
 #include_directories( ${TinyXML2_INCLUDE_DIRS})
 include_directories( ${SimBA_INCLUDE_DIRS})
 include_directories( ${Calibu_INCLUDE_DIRS})
@@ -34,5 +36,6 @@ target_link_libraries( TestCam
   ${Node_LIBRARIES}
   ${SimBA_LIBRARIES}
   ${Calibu_LIBRARIES}
+  #{MINIGLOG_LIBRARIES}
   SimMessages
  )
