@@ -38,13 +38,14 @@ bool PhysicsEngine::Init(double dGravity, double dTimeStep,
                                     m_pSolver.get(),
                                     &m_CollisionConfiguration
                                     ) );
-  m_pDynamicsWorld = DWorld;
-  m_pDynamicsWorld->setGravity( btVector3(0,0,m_dGravity) );
-  m_pDynamicsWorld->setDebugDrawer( &m_DebugDrawer );
-  m_pDynamicsWorld->getDebugDrawer()->
+  dynamics_world_ = DWorld;
+  dynamics_world_->setGravity( btVector3(0,0,m_dGravity) );
+  dynamics_world_->setDebugDrawer( &m_DebugDrawer );
+  dynamics_world_->getDebugDrawer()->
       setDebugMode(btIDebugDraw::DBG_DrawWireframe +
                    btIDebugDraw::DBG_FastWireframe +
                    btIDebugDraw::DBG_DrawConstraints);
+  vehicle_raycaster_ = new btDefaultVehicleRaycaster(dynamics_world_.get());
   return true;
 }
 
@@ -68,7 +69,8 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
        ************************************/
 
     if(dynamic_cast<SimRaycastVehicle*>(pNodeShape)!=NULL){
-      bullet_vehicle btRayVehicle( pItem, m_pDynamicsWorld.get());
+      bullet_vehicle btRayVehicle( pItem, dynamics_world_.get(),
+                                   vehicle_raycaster_);
       CollisionShapePtr pShape( btRayVehicle.getBulletShapePtr() );
       MotionStatePtr pMotionState( btRayVehicle.getBulletMotionStatePtr() );
       RigidBodyPtr body( btRayVehicle.getBulletBodyPtr() );
@@ -87,7 +89,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       CollisionShapePtr pShape( btBox.getBulletShapePtr() );
       MotionStatePtr pMotionState( btBox.getBulletMotionStatePtr() );
       RigidBodyPtr body( btBox.getBulletBodyPtr() );
-      m_pDynamicsWorld->addRigidBody( body.get() );
+      dynamics_world_->addRigidBody( body.get() );
 
       //Save the object; easier deconstruction this way.
       std::shared_ptr<Entity> pEntity( new Entity );
@@ -103,7 +105,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       CollisionShapePtr pShape( btCylinder.getBulletShapePtr() );
       MotionStatePtr pMotionState( btCylinder.getBulletMotionStatePtr() );
       RigidBodyPtr body( btCylinder.getBulletBodyPtr() );
-      m_pDynamicsWorld->addRigidBody( body.get() );
+      dynamics_world_->addRigidBody( body.get() );
 
       //Save the object; easier deconstruction this way.
       std::shared_ptr<Entity> pEntity( new Entity );
@@ -119,7 +121,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       CollisionShapePtr pShape( btPlane.getBulletShapePtr() );
       MotionStatePtr pMotionState( btPlane.getBulletMotionStatePtr() );
       RigidBodyPtr body( btPlane.getBulletBodyPtr() );
-      m_pDynamicsWorld->addRigidBody( body.get() );
+      dynamics_world_->addRigidBody( body.get() );
 
       //Save the object; easier deconstruction this way.
       std::shared_ptr<Entity> pEntity( new Entity );
@@ -135,7 +137,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       CollisionShapePtr pShape( btMap.getBulletShapePtr() );
       MotionStatePtr pMotionState( btMap.getBulletMotionStatePtr() );
       RigidBodyPtr body( btMap.getBulletBodyPtr() );
-      m_pDynamicsWorld->addRigidBody( body.get() );
+      dynamics_world_->addRigidBody( body.get() );
 
       //Save the object; easier deconstruction this way.
       std::shared_ptr<Entity> pEntity( new Entity );
@@ -151,7 +153,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       CollisionShapePtr pShape( btMesh.getBulletShapePtr() );
       MotionStatePtr pMotionState( btMesh.getBulletMotionStatePtr() );
       RigidBodyPtr body( btMesh.getBulletBodyPtr() );
-      m_pDynamicsWorld->addRigidBody( body.get() );
+      dynamics_world_->addRigidBody( body.get() );
 
       //Save the object; easier deconstruction this way.
       std::shared_ptr<Entity> pEntity( new Entity );
@@ -186,7 +188,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
           pCon->m_pivot_in_A[2]);
       btPoint2PointConstraint* PToP =
           new btPoint2PointConstraint(*RigidShape_A, pivot_A);
-      m_pDynamicsWorld->addConstraint(PToP);
+      dynamics_world_->addConstraint(PToP);
       m_mPtoP[pCon->GetName()] = PToP;
     }
 
@@ -217,7 +219,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       btPoint2PointConstraint* PToP =
           new btPoint2PointConstraint(*RigidShape_A, *RigidShape_B,
                                       pivot_A, pivot_B);
-      m_pDynamicsWorld->addConstraint(PToP);
+      dynamics_world_->addConstraint(PToP);
       m_mPtoP[pCon->GetName()] = PToP;
     }
 
@@ -242,7 +244,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
                                 axis_A, true);
       Hinge->setLimit(pCon->m_low_limit, pCon->m_high_limit, pCon->m_softness,
                       pCon->m_bias, pCon->m_relaxation);
-      m_pDynamicsWorld->addConstraint(Hinge);
+      dynamics_world_->addConstraint(Hinge);
       m_mHinge[pCon->GetName()] = Hinge;
     }
 
@@ -282,7 +284,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
                                 true);
       Hinge->setLimit(pCon->m_low_limit, pCon->m_high_limit, pCon->m_softness,
                       pCon->m_bias, pCon->m_relaxation);
-      m_pDynamicsWorld->addConstraint(Hinge);
+      dynamics_world_->addConstraint(Hinge);
       m_mHinge[pCon->GetName()] = Hinge;
     }
 
@@ -323,7 +325,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       Hinge->enableSpring(3, true);
       Hinge->setStiffness(3, pCon->m_stiffness);
       Hinge->setDamping(3, pCon->m_damping);
-      m_pDynamicsWorld->addConstraint(Hinge);
+      dynamics_world_->addConstraint(Hinge);
       m_mHinge2[pCon->GetName()] = Hinge;
     }
 
@@ -340,7 +342,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       SixDOF->setLinearUpperLimit(toBulletVec3(pCon->m_UpperLinLimit));
       SixDOF->setAngularLowerLimit(toBulletVec3(pCon->m_LowerAngLimit));
       SixDOF->setAngularUpperLimit(toBulletVec3(pCon->m_UpperAngLimit));
-      m_pDynamicsWorld->addConstraint(SixDOF);
+      dynamics_world_->addConstraint(SixDOF);
       m_mSixDOF[pCon->GetName()] = SixDOF;
     }
 
@@ -374,7 +376,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       SixDOF->setLinearUpperLimit(toBulletVec3(pCon->m_UpperLinLimit));
       SixDOF->setAngularLowerLimit(toBulletVec3(pCon->m_LowerAngLimit));
       SixDOF->setAngularUpperLimit(toBulletVec3(pCon->m_UpperAngLimit));
-      m_pDynamicsWorld->addConstraint(SixDOF);
+      dynamics_world_->addConstraint(SixDOF);
       m_mSixDOF[pCon->GetName()] = SixDOF;
     }
   }
@@ -407,7 +409,7 @@ bool PhysicsEngine::isVehicle(string Shape){
     **********************************************/
 
 void PhysicsEngine::DebugDrawWorld(){
-  m_pDynamicsWorld->debugDrawWorld();
+  dynamics_world_->debugDrawWorld();
 }
 
 
@@ -474,7 +476,7 @@ void PhysicsEngine::RunDevices(){
 ////////////////////////////////
 
 void PhysicsEngine::StepSimulation(){
-  m_pDynamicsWorld->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
+  dynamics_world_->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
   RunDevices();
   if(m_mRayVehicles.size()!=0){
     // Go through all of our vehicles and update their part poses.
@@ -569,7 +571,8 @@ Eigen::Vector6d PhysicsEngine::SwitchWheelYaw(Eigen::Vector6d bad_yaw){
 
 ///////////////////////////////////////////////////
 
-std::vector< Eigen::Matrix4d > PhysicsEngine::GetVehiclePoses( Vehicle_Entity* Vehicle ){
+std::vector< Eigen::Matrix4d > PhysicsEngine::GetVehiclePoses(
+    Vehicle_Entity* Vehicle ){
   std::vector<Eigen::Matrix4d> VehiclePoses;
   btTransform VehiclePose;
   VehiclePose.setIdentity();
@@ -589,7 +592,8 @@ std::vector< Eigen::Matrix4d > PhysicsEngine::GetVehiclePoses( Vehicle_Entity* V
 // to render; since we use five GLObjects for one Bullet object, we have
 // to perform some trickery.
 
-std::vector<Eigen::Matrix4d> PhysicsEngine::GetVehicleTransform(std::string sVehicleName){
+std::vector<Eigen::Matrix4d> PhysicsEngine::GetVehicleTransform(
+    std::string sVehicleName){
   std::shared_ptr<Vehicle_Entity> std_Vehicle =
       m_mRayVehicles.at(sVehicleName);
   Vehicle_Entity* Vehicle = std_Vehicle.get();
@@ -598,194 +602,97 @@ std::vector<Eigen::Matrix4d> PhysicsEngine::GetVehicleTransform(std::string sVeh
 }
 
 /////////////////////////////////////////////////////
+///
+///
+///
+///
+/// TODO: Fix GroundStates
 ///// Since we're usually starting above the mesh, we use this function
 ///// to set the car on the ground before we start simulation.
-/////
+//void PhysicsEngine::GroundStates(){
+//  // Ground the start point.
+//  Eigen::Vector3d dIntersect;
+//  Eigen::Vector3d normal;
+//  Sophus::SE3d pose = m_vsStart.m_dTwv;
+//  if(m_CarModel->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
+//                         dIntersect, true, 0)){
+//    pose.translation() = dIntersect;
+//    if(m_CarModel->RayCastNormal(pose.translation(),
+//                                 GetBasisVector(m_vsStart.m_dTwv,2),
+//                                 normal, 0)){
+//      normal = normal.normalized();
+//      Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
+//                                          m_vsStart.GetTheta(), normal));
+//      Eigen::Matrix3d rotMat = quatRot*m_vsStart.m_dTwv.rotationMatrix();
+//      m_vsStart.m_dTwv = Sophus::SE3d(rotMat, m_vsStart.m_dTwv.translation());
+//      cout<<"Setting start point to ground..."<<endl;
+//      cout<<m_vsStart.m_dTwv.matrix()<<endl;
+//    }
 
-//double* RaycastToGround(double id, double x, double y){
-
-//  for(std::map<string, std::shared_ptr<Vehicle_Entity> > ::iterator it =
-//      m_mRayVehicles.begin(); it!=m_mRayVehicles.end(); it++ ){
-//    // The MotionStatePointer holds the ModelNode, which holds the poses.
-//    Vehicle_Entity* eVehicle = it->second.get();
-//    NodeMotionState* mMotion = eVehicle->m_pMotionState.get();
-//    SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) &mMotion->object;
-//    std::vector<Eigen::Matrix4d> VehiclePoses =
-//        GetVehicleTransform(pVehicle->GetName());
-//  }
-
-//  double* pose = new double[3];
-//  VehiclePtr Vehicle = m_mRayVehicles[id]->m_pVehicle;
-
-//  // Move our vehicle out of the way...
-//  btVector3 point(x+50, y+50, -100);
-//  btMatrix3x3 rot = Vehicle->getChassisWorldTransform().getBasis();
-//  btTransform bullet_trans(rot, point);
-//  m_mRayVehicles[id]->m_pRigidBody->setCenterOfMassTransform(bullet_trans);
-
-//  // Now shoot our ray...
-//  btVector3 ray_start(x, y, 100);
-//  btVector3 ray_end(x, y, -100);
-//  btCollisionWorld::ClosestRayResultCallback ray_callback(ray_start,
-//                                                          ray_end);
-//  m_pDynamicsWorld->rayTest(ray_start, ray_end, ray_callback);
-//  btVector3 hitpoint = Vehicle->getChassisWorldTransform().getOrigin();
-//  if(ray_callback.hasHit()){
-//    hitpoint = ray_callback.m_hitPointWorld;
-//    btWheelInfo wheel = Vehicle->getWheelInfo(2);
-//    double radius = wheel.m_wheelsRadius;
-//    // Find a way to access the height of the car.
-//    hitpoint.setZ(hitpoint.getZ()+(3*radius));
-//  }
-
-//  // Now move our car!
-//  btTransform bullet_move(rot, hitpoint);
-//  m_mRayVehicles[id]->m_pRigidBody->setCenterOfMassTransform(bullet_move);
-
-//  //Now make sure none of our wheels are in the ground.
-//  //Kind of a nasty oop, but keep it for now.
-//  double hit = -1;
-//  double count = 0;
-//  while(hit==-1 && count<20){
-//    for(int i = 0; i<4; i++){
-//      hit = Vehicle->rayCast(Vehicle->getWheelInfo(i));
-//      if(hit!=-1){
-//        break;
+//    // Ground the goal point
+//    pose = m_vsGoal.m_dTwv;
+//    if(m_CarModel->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
+//                           dIntersect, true, 0)){
+//      pose.translation() = dIntersect;
+//      if(m_CarModel->RayCastNormal(pose.translation(),
+//                                   GetBasisVector(pose,2)*10,
+//                                   dIntersect, 0)){
+//        normal = normal.normalized();
+//        Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
+//                                            m_vsGoal.GetTheta(), normal));
+//        Eigen::Matrix3d rotMat = quatRot*m_vsGoal.m_dTwv.rotationMatrix();
+//        m_vsGoal.m_dTwv = Sophus::SE3d(rotMat, m_vsGoal.m_dTwv.translation());
+//        cout<<"Setting goal point to ground..."<<endl;
+//        cout<<m_vsGoal.m_dTwv.matrix()<<endl;
 //      }
 //    }
-//    //If we're still in the ground, lift us up!
-//    hitpoint.setZ(hitpoint.getZ()+.1);
-//    btTransform bullet_move(rot, hitpoint);
-//    m_mRayVehicles[id]->
-//        m_pRigidBody->setCenterOfMassTransform(bullet_move);
-//    if(hit!=-1){
-//      break;
-//    }
-//    count++;
-//    if(count==20){
-//      break;
-//    }
 //  }
-//  int on = false;
-//  btVector3 VehiclePose = Vehicle->getChassisWorldTransform().getOrigin();
-//  while(on == 0){
-//    on = OnTheGround(id);
-//    StepSimulation();
-//    VehiclePose = Vehicle->getChassisWorldTransform().getOrigin();
-//  }
-
-//  pose[0] = VehiclePose.getX();
-//  pose[1] =VehiclePose.getY();
-//  pose[2] = VehiclePose.getZ();
-//  return pose;
 
 //}
 
-/////////////////////////////////////////////////////
-//// This just drops us off on the surface...
+////////////////////////////////////////////////////////////////////////////////
+bool PhysicsEngine::RayCast(const Eigen::Vector3d& dSource,
+                            const Eigen::Vector3d& dRayVector,
+                            Eigen::Vector3d& dIntersect,
+                            const bool& biDirectional){
+  btVector3 source(dSource[0],dSource[1],dSource[2]);
+  btVector3 vec(dRayVector[0],dRayVector[1],dRayVector[2]);
+  btVector3 target = source + vec;
+  btVehicleRaycaster::btVehicleRaycasterResult results;
+  if( biDirectional ){
+    source = source - vec;
+  }
+  if(vehicle_raycaster_->castRay(source,target,results) == 0){
+    return false;
+  } else {
+    Eigen::Vector3d dNewSource(source[0],source[1],source[2]);
+    dIntersect = dNewSource + results.m_distFraction *
+        (biDirectional ? (Eigen::Vector3d)(dRayVector*2) : dRayVector);
+    return true;
+  }
+}
 
-//int OnTheGround(double id){
-//  VehiclePtr Vehicle = m_mRayVehicles[id]->m_pVehicle;
-//  int OnGround = 0;
-//  int hit = 0;
-//  for(int i = 0; i<4; i++){
-//    hit = hit + Vehicle->rayCast(Vehicle->getWheelInfo(i));
-//  }
-//  if(hit==0){
-//    OnGround = 1;
-//  }
-//  return OnGround;
-//}
-
-/////////////////////////////////////////////////////
-
-//void SetVehicleVels(double id, double* lin_vel, double* ang_vel){
-//  RigidBodyPtr VehicleBody = m_mRayVehicles[id]->m_pRigidBody;
-//  VehiclePtr Vehicle = m_mRayVehicles[id]->m_pVehicle;
-//  btVector3 Lin(lin_vel[0], lin_vel[1], lin_vel[2]);
-//  btVector3 Ang(ang_vel[0], ang_vel[1], ang_vel[2]);
-//  VehicleBody->setLinearVelocity(Lin);
-//  VehicleBody->setAngularVelocity(Ang);
-//  Vehicle->resetSuspension();
-//}
-
-/////////////////////////////////////////////////////
-///// This function resets the car to its initial start pose for the mesh
-///// we were just on (a set of poses we originally got from RaycastToGround.
-
-//void ResetVehicle(double id, double* start_pose, double* start_rot){
-//  // Move the vehicle into start position
-//  btMatrix3x3 rot(start_rot[0], start_rot[3], start_rot[6],
-//                  start_rot[1], start_rot[4], start_rot[7],
-//                  start_rot[2], start_rot[5], start_rot[8]);
-//  btVector3 pose(start_pose[0], start_pose[1], start_pose[2]);
-//  btTransform bullet_trans(rot, pose);
-//  // Reset our car to its initial state.
-//  m_mRayVehicles[id]->m_pRigidBody->setCenterOfMassTransform(bullet_trans);
-//}
-
-/////////////////////////////////////////////////////
-///// SPEED_COMMAND_SIM
-///// When we just need state information from a RaycastVehicle, and rendering
-///// is not an object, then we run the simulation as fast as possible. We can
-///// just grab intermediate states, along with the end state, once the
-///// simulation is finished.
-/////////////////////////////////////////////////////
-
-//double* SpeedSim(double id, double* start_pose, double* start_rot,
-//                 double* start_lin_vel, double* start_ang_vel,
-//                 double* forces, double* steering_angles,
-//                 double command_length){
-//  int state_size = (command_length*3)+22;
-//  double* states = new double[state_size];
-//  VehiclePtr Vehicle = m_mRayVehicles[id]->m_pVehicle;
-//  ResetVehicle(id, start_pose, start_rot);
-//  SetVehicleVels(id, start_lin_vel, start_ang_vel);
-
-//  // Run our commands through
-//  for(int i = 0; i < command_length; i++){
-//    CommandRaycastVehicle(id, steering_angles[i], forces[i]);
-//    StepSimulation();
-//    btVector3 VehiclePose =
-//        Vehicle->getChassisWorldTransform().getOrigin();
-//    states[3*i] = VehiclePose.getX();
-//    states[3*i+1] = VehiclePose.getY();
-//    states[3*i+2] = VehiclePose.getZ();
-
-//    // Get our whole state on the last step.
-
-//    if(i==command_length-1){
-//      btVector3 VehiclePose =
-//          Vehicle->getChassisWorldTransform().getOrigin();
-//      btMatrix3x3 VehicleRot =
-//          Vehicle->getChassisWorldTransform().getBasis();
-//      states[3*i+3] = VehiclePose.getX();
-//      states[3*i+4] = VehiclePose.getY();
-//      states[3*i+5] = VehiclePose.getZ();
-//      states[3*i+6] = VehicleRot[0].getX();
-//      states[3*i+7] = VehicleRot[1].getX();
-//      states[3*i+8] = VehicleRot[2].getX();
-//      states[3*i+9] = VehicleRot[0].getY();
-//      states[3*i+10] = VehicleRot[1].getY();
-//      states[3*i+11] = VehicleRot[2].getY();
-//      states[3*i+12] = VehicleRot[0].getZ();
-//      states[3*i+13] = VehicleRot[1].getZ();
-//      states[3*i+14] = VehicleRot[2].getZ();
-//      double* motionstate = GetRaycastMotionState( id );
-//      states[3*i+15] = motionstate[2];
-//      states[3*i+16] = motionstate[3];
-//      states[3*i+17] = motionstate[4];
-//      states[3*i+18] = motionstate[5];
-//      states[3*i+19] = motionstate[6];
-//      states[3*i+20] = motionstate[7];
-//      states[3*i+21] = motionstate[8];
-//    }
-//  }
-
-//  //Reset our vehicle again (just in case this is our last iteration)
-//  ResetVehicle(id, start_pose, start_rot);
-//  SetVehicleVels(id, start_lin_vel, start_ang_vel);
-//  CommandRaycastVehicle(id, 0, 0);
-//  return states;
-//}
+////////////////////////////////////////////////////////////////////////////////
+bool PhysicsEngine::RayCastNormal(const Eigen::Vector3d& dSource,
+                                  const Eigen::Vector3d& dRayVector,
+                                  Eigen::Vector3d& dNormal){
+  bool hit = false;
+  btVector3 source(dSource[0],dSource[1],dSource[2]);
+  btVector3 vec(dRayVector[0],dRayVector[1],dRayVector[2]);
+  source = source - vec*10;
+  btVector3 target = source + vec*20;
+  btCollisionWorld::ClosestRayResultCallback rayCallback(source, target);
+  dynamics_world_->rayTest(source, target, rayCallback);
+  //We need a default rotation... just make it the gravity vector, why not.
+  btVector3 dNewNorm = dynamics_world_->getGravity();
+  Eigen::Vector3d norm(dNewNorm[0], dNewNorm[1], dNewNorm[2]);
+  dNormal = norm;
+  if (rayCallback.hasHit()){
+    dNewNorm = rayCallback.m_hitNormalWorld;
+    Eigen::Vector3d norm(dNewNorm[0], dNewNorm[1], dNewNorm[2]);
+    dNormal = norm;
+    hit = true;
+  }
+  return hit;
+}
 

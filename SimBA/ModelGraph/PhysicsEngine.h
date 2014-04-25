@@ -57,6 +57,13 @@ public:
   Eigen::Vector6d SwitchWheelYaw(Eigen::Vector6d bad_yaw);
   std::vector<Eigen::Matrix4d> GetVehiclePoses( Vehicle_Entity* Vehicle );
   std::vector<Eigen::Matrix4d> GetVehicleTransform(std::string sVehicleName);
+  bool RayCast(const Eigen::Vector3d& dSource,
+               const Eigen::Vector3d& dRayVector,
+               Eigen::Vector3d& dIntersect, const bool& biDirectional);
+  bool RayCastNormal(const Eigen::Vector3d& dSource,
+                     const Eigen::Vector3d& dRayVector,
+                     Eigen::Vector3d& dNormal);
+
 
   /// PUBLIC MEMBER VARIABLES
   GLDebugDrawer	                                          m_DebugDrawer;
@@ -68,7 +75,8 @@ public:
   std::map<string, btGeneric6DofConstraint*>              m_mSixDOF;
   std::map<string, btPoint2PointConstraint*>              m_mPtoP;
   vector<SimDeviceInfo*>                                  m_mDevices;
-  std::shared_ptr<btDiscreteDynamicsWorld>              m_pDynamicsWorld;
+  std::shared_ptr<btDiscreteDynamicsWorld>              dynamics_world_;
+  btVehicleRaycaster* vehicle_raycaster_;
 
 private:
 

@@ -23,7 +23,8 @@ class bullet_vehicle{
 public:
 
   //constructor
-  bullet_vehicle(ModelNode* mnVehicle, btDynamicsWorld* m_pDynamicsWorld){
+  bullet_vehicle(ModelNode* mnVehicle, btDynamicsWorld* m_pDynamicsWorld,
+                 btVehicleRaycaster* VehicleRaycaster){
     SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) mnVehicle;
 
     std::vector<double> parameters = pVehicle->GetParameters();
@@ -66,8 +67,6 @@ public:
     tuning.m_suspensionDamping = parameters[ExpDamping];
     tuning.m_maxSuspensionForce = parameters[MaxSuspForce];
     tuning.m_maxSuspensionTravelCm = parameters[MaxSuspTravel]*100.0;
-    btVehicleRaycaster* VehicleRaycaster =
-        new btDefaultVehicleRaycaster(m_pDynamicsWorld);
     bulletVehicle = new btRaycastVehicle(tuning, bulletBody,
                                          VehicleRaycaster);
     // Never deactivate the vehicle
