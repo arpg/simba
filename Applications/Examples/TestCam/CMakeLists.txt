@@ -24,6 +24,7 @@ include_directories( ${MINIGLOG_INCLUDE_DIRS})
 #include_directories( ${TinyXML2_INCLUDE_DIRS})
 include_directories( ${SimBA_INCLUDE_DIRS})
 include_directories( ${Calibu_INCLUDE_DIRS})
+link_directories(${HAL_LINK_DIRS})
 
 add_executable( TestCam TestCam.cpp )
 

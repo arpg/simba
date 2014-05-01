@@ -17,6 +17,8 @@ include_directories( ${Pangolin_INCLUDE_DIRS} )
 include_directories( ${Node_INCLUDE_DIRS} )
 include_directories( ${MINIGLOG_INCLUDE_DIRS} )
 include_directories( ${Calibu_INCLUDE_DIRS})
+link_directories(${HAL_LINK_DIRS})
+
 add_executable( ${PROJECT_NAME} main.cpp )
 target_link_libraries(
   ${PROJECT_NAME}
