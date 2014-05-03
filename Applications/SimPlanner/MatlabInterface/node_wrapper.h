@@ -11,7 +11,7 @@
 #include <PbMsgs/BVP.pb.h>
 // This is hacky, but I couldn't get the MEX file to compile any other way.
 #include "/Users/Trystan/Code/rslam/build/CoreDev/HAL/PbMsgs/BVP.pb.cc"
-#include <Node/Node.h>
+#include "Node.h"
 #include <unistd.h>
 #include <cstdlib>
 
@@ -234,7 +234,7 @@ public:
   /// MEMBER VARIABLES
   //////////////
 
-  hal::node node_;
+  node::node node_;
   pb::BVP_params params_;
   pb::BVP_policy policy_;
 

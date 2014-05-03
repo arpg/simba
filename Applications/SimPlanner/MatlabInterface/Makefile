@@ -10,8 +10,8 @@
 PANGOLIN_DIR = /Users/Trystan/Code/rslam/rslam/build/CoreDev/Pangolin/
 HAL_SRC_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/HAL/
 HAL_DIR = /Users/Trystan/Code/rslam/build/CoreDev/HAL/
-NODE_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/HAL/Node/
-NODE_BUILD_DIR = /Users/Trystan/Code/rslam/build/CoreDev/HAL/Node/
+NODE_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/Node/
+NODE_BUILD_DIR = /Users/Trystan/Code/rslam/build/CoreDev/Node/
 PbMsgs_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/HAL/PbMsgs/
 PbMsgs_BUILD_DIR = /Users/Trystan/Code/rslam/build/CoreDev/HAL/PbMsgs/
 PROTOBUF_DIR = /usr/local/Cellar/protobuf/2.5.0/include/

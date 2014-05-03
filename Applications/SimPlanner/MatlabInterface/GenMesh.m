@@ -50,7 +50,6 @@ mesh.col_count = numel(mesh.xx(1,:));
 % xx, yy, and zz are going to be passed into the LocalSim, 
 % and will be what we use to create the mesh
 % For bullet -> ModelGraph/Bullet_shapes/bullet_heightmap.h
-% For SceneGraph -> Gotta figure that out...
 
 mesh.xx(:) = scale*mesh.xx(:);
 mesh.yy(:) = scale*mesh.yy(:);

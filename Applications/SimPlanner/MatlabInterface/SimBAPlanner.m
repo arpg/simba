@@ -52,7 +52,7 @@ classdef SimBAPlanner < handle
         mesh = GenMesh(tau, scale);
         this.cur_pol_ = 1;
         cur_goal_state = this.GetNextBVP(this.cur_pol_);
-        while this.cur_pol_ <  numel(this.goal_states_(1,:)),
+        while this.cur_pol_ <=  numel(this.goal_states_(1,:)),
           for ii=0:(this.num_sims_-1),
             % CheckSimStatus will return two values:
             % problem = 1: the Sim is ready to receive a problem
@@ -101,24 +101,27 @@ classdef SimBAPlanner < handle
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     function PopulateGoals(this)
-      for ii = 0:3,
-        x = .5 + (ii/2);
-        for jj = 0:3,
-          y = .5 + (jj/2);
-          for kk = 0:6,
-            yaw = (-pi/2) + (pi*(kk/6));
-            for ll = 1:6,
-              % vel => end velocity
-              vel = (2*ll);
-              new_goal(1) = x;
-              new_goal(2) = y;
-              new_goal(3) = yaw;
-              new_goal(4) = vel;
-              this.goal_states_ = [this.goal_states_, new_goal'];
-            end
-          end
-        end        
-      end
+%       for ii = 0:3,
+%         x = .5 + (ii/2);
+%         for jj = 0:3,
+%           y = .5 + (jj/2);
+%           for kk = 0:6,
+%             % We have to compensate for the way I stretched the mesh
+%             % ...I can fix it later. 
+%             yaw = (-pi/2) + (pi*(kk/6));
+%             for ll = 1:6,
+%               % vel => end velocity
+%               vel = (2*ll);
+%               new_goal(1) = x;
+%               new_goal(2) = y;
+%               new_goal(3) = yaw;
+%               new_goal(4) = vel;
+        this.goal_states_ = [10; 15; 0; 1]; 
+%               this.goal_states_ = [this.goal_states_, new_goal'];
+%             end
+%           end
+%         end        
+%       end
     end
     
     %%%% Get the next start/goal configuration for the next simulation.
