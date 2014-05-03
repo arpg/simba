@@ -45,6 +45,8 @@ set(USER_INC ${BULLET_INCLUDE_DIR}
 # Library directories
 include_directories( ${USER_INC} )
 
+link_directories(${HAL_LINK_DIRS})
+
 ################
 # HEADER FILES FOR SIMBA LIB
 ################
