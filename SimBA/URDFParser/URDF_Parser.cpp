@@ -10,8 +10,7 @@ URDF_Parser::URDF_Parser(){
 ////////////////////////////////////////////////////////////
 /// PARSE WORLD.XML IN LocalSim
 ////////////////////////////////////////////////////////////
-bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
-{
+bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
   XMLElement *pParent=pDoc.RootElement();
   XMLElement *pElement=pParent->FirstChildElement();
 
@@ -31,8 +30,8 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
           GenNumFromChar(pElement->Attribute("lightpose"));
       LightShape* pLight = new LightShape("Light", vLightPose);
       m_mWorldNodes[pLight->GetName()] = pLight;
-
-      // init world without mesh
+      //** There are several options for mesh design: **//
+      // 1. Init world without mesh. Creates a flat plane.
       if (mSimWorld.m_sMesh =="NONE"){
         // We can't just use a giant box here; the RaycastVehicle won't connect,
         // and will go straight through.
@@ -40,7 +39,7 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
                                              mSimWorld.m_vWorldPose);
         m_mWorldNodes[pGround->GetName()] = pGround;
       }
-      // init world from MATLAB height data.
+      // 2. Init world from MATLAB height data.
       else if ( mSimWorld.m_sMesh == "MATLAB") {
         node_.init("URDF");
         while(!node_.subscribe("MATLAB/Heightmap")){
@@ -52,25 +51,51 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
         while(!node_.receive("MATLAB/Heightmap", params)){
           std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        // Create our world mesh
         int row_count = params.row_count();
         int col_count = params.col_count();
-        // I think this should work?
-        double* X = new double[row_count*col_count];
-        double* Y = new double[row_count*col_count];
-        double* Z = new double[row_count*col_count];
+        std::vector<double> X, Y, Z;
+        X.resize(row_count*col_count);
+        Y.resize(row_count*col_count);
+        Z.resize(row_count*col_count);
         for (int ii=0; ii < params.x_data().size(); ii++) {
-          X[ii] = params.x_data().Get(ii);
-          Y[ii] = params.y_data().Get(ii);
-          Z[ii] = params.z_data().Get(ii);
+          X.at(ii) = params.x_data().Get(ii);
+          Y.at(ii) = params.y_data().Get(ii);
+          Z.at(ii) = params.z_data().Get(ii);
         }
         HeightmapShape* map_shape = new HeightmapShape("Map",
-                                                      row_count, col_count,
-                                                      X, Y, Z);
+                                                       row_count, col_count,
+                                                       X, Y, Z);
         m_mWorldNodes[map_shape->GetName()] = map_shape;
       }
-      // We actually have a mesh.
-      else {
+      // 3. Fill the .xml with all of the values for the mesh file. That way, we
+      // won't have to keep importing them from MATLAB every time, which really
+      // takes forever.
+      else if ( mSimWorld.m_sMesh == "CSV") {
+        double row_count = ::atof(pElement->Attribute("row_count"));
+        double col_count = ::atof(pElement->Attribute("col_count"));
+        std::cout<<row_count<<std::endl;
+        std::cout<<col_count<<std::endl;
+        vector<double> x_data = GenNumFromChar(
+            pElement->Attribute("x_data"));
+        vector<double> y_data = GenNumFromChar(
+            pElement->Attribute("y_data"));
+        vector<double> z_data = GenNumFromChar(
+            pElement->Attribute("z_data"));
+        std::vector<double> X, Y, Z;
+        X.resize(row_count*col_count);
+        Y.resize(row_count*col_count);
+        Z.resize(row_count*col_count);
+        for (int ii=0; ii < x_data.size(); ii++) {
+          X.at(ii) = x_data.at(ii);
+          Y.at(ii) = y_data.at(ii);
+          Z.at(ii) = z_data.at(ii);
+        }
+        HeightmapShape* map_shape = new HeightmapShape("Map",
+                                                       row_count, col_count,
+                                                       X, Y, Z);
+        m_mWorldNodes[map_shape->GetName()] = map_shape;
+      } else {
+        // 4. We actually have a mesh.
         MeshShape* pMesh = new MeshShape("Map", mSimWorld.m_sMesh,
                                          mSimWorld.m_vWorldPose);
         m_mWorldNodes[pMesh->GetName()] = pMesh;
@@ -82,6 +107,45 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld)
   mSimWorld.m_WorldNodes = GetModelNodes(m_mWorldNodes);
   return true;
 }
+
+// This function serves as a shortcut; maybe we don't want to
+// have everything, you know? Just the data.
+HeightmapShape* URDF_Parser::GetMeshData(XMLDocument& pDoc){
+  XMLElement *pParent=pDoc.RootElement();
+  XMLElement *pElement=pParent->FirstChildElement();
+  // read high level parent (root parent)
+  while (pElement){
+    const char* sRootContent = pElement->Name();
+    if(strcmp(sRootContent,"base")==0){
+      string sMesh(pElement->Attribute("mesh"));
+      if ( sMesh == "CSV") {
+        double row_count = ::atof(pElement->Attribute("row_count"));
+        double col_count = ::atof(pElement->Attribute("col_count"));
+        vector<double> x_data = GenNumFromChar(
+            pElement->Attribute("x_data"));
+        vector<double> y_data = GenNumFromChar(
+            pElement->Attribute("y_data"));
+        vector<double> z_data = GenNumFromChar(
+            pElement->Attribute("z_data"));
+        std::vector<double> X, Y, Z;
+        X.resize(row_count*col_count);
+        Y.resize(row_count*col_count);
+        Z.resize(row_count*col_count);
+        for (int ii=0; ii < x_data.size(); ii++) {
+          X.at(ii) = x_data.at(ii);
+          Y.at(ii) = y_data.at(ii);
+          Z.at(ii) = z_data.at(ii);
+        }
+        HeightmapShape* map_shape = new HeightmapShape("Map",
+                                                       row_count, col_count,
+                                                       X, Y, Z);
+        return map_shape;
+      }
+    }
+  }
+}
+
+
 
 ////////////////////////////////////////////////////////////
 /// PARSE ROBOT.XML FOR ROBOT PARTS AND BUILD INTO LocalSim
@@ -912,6 +976,3 @@ std::vector<ModelNode*> URDF_Parser::GetModelNodes(
   }
   return Nodes;
 }
-
-
-

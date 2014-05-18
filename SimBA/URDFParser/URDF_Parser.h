@@ -39,6 +39,8 @@ public:
   // Parses the world for the mesh and conditions.
   bool ParseWorld(XMLDocument& doc, SimWorld& mSimWorld);
 
+  HeightmapShape* GetMeshData(XMLDocument& pDoc);
+
   // ParseRobot really parses each of the robot parts, and then generates a set
   // of commands that the PhysicsEngine can use to create bullet objects.
   bool ParseRobot(XMLDocument &doc, SimRobot &m_SimRobot, string sProxyName);

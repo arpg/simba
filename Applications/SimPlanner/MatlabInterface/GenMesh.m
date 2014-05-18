@@ -51,12 +51,10 @@ mesh.col_count = numel(mesh.xx(1,:));
 % and will be what we use to create the mesh
 % For bullet -> ModelGraph/Bullet_shapes/bullet_heightmap.h
 
-mesh.xx(:) = scale*mesh.xx(:);
-mesh.yy(:) = scale*mesh.yy(:);
-zz = mesh.zz(:);
-row_count = numel(mesh.xx(:,1));
-col_count = numel(mesh.xx(1,:));
-% filename = ['Mesh-' num2str(tau)];
-% save(filename,'xx', 'yy', 'zz','row_count','col_count', '-ascii', '-tabs');
-
+mesh.xx(:) = scale*mesh.xx(:)
+mesh.yy(:) = scale*mesh.yy(:)
+% This is just to get a good .csv file. Revert afterwards. 
+% mesh.xx = mesh.xx(:)'
+% mesh.yy = mesh.yy(:)'
+% mesh.zz = mesh.zz(:)'
 end

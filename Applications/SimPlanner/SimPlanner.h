@@ -16,31 +16,33 @@
 
 #include <iostream>
 
-#include <PbMsgs/BVP.pb.h>
-#include <Node/Node.h>
+
 
 // Planning functions, from CarPlanner lib
 #include "CarPlannerCommon.h"
 #include "ApplyVelocitiesFunctor.h"
 #include "LocalPlanner.h"
 
+#include "Node/Node.h"
+#include "PbMsgs/BVP.pb.h"
+
 // for communicating between the Physics Engine and ModelGraph
 #include <ModelGraph/ModelGraphBuilder.h>
 
 class SimPlanner
 {
-public:
+ public:
 
   ///////////////////////////////////////////////////////////////////
   //member variables
   std::string           sim_planner_name_;
-  BulletCarModel*       m_CarModel;
+  BulletCarModel*       car_model_;
   LocalPlanner          m_snapper;
   CarParameterMap       m_VehicleParams;
-  VehicleState          m_vsStart;
-  VehicleState          m_vsGoal;
+  VehicleState          start_state_;
+  VehicleState          goal_state_;
   MotionSample          m_msFinalPath;
-  node::node             m_Node;
+  node::node            m_Node;
   pb::BVP_params        m_params;
   pb::BVP_policy        m_policy;
   int                   m_nTau; // Our bitstring that describes the map.
@@ -61,6 +63,8 @@ public:
   void CheckSolved();
   pb::BVP_policy StartPolicy(pb::BVP_params params);
   bool InitMesh(pb::BVP_params params);
+  double* RaycastToGround();
+  int OnTheGround(RaycastVehicle* vehicle);
   void GroundStates();
   double* RaycastToGround(double id, double x, double y);
   void InitGoals(pb::BVP_params params);

@@ -1,6 +1,6 @@
 project( SimBA )
 cmake_minimum_required(VERSION 2.8)
-
+set(PROJECT_NAME SimBA)
 set(LIBRARY_NAME ${PROJECT_NAME})
 
 if(COMMAND cmake_policy)
@@ -45,7 +45,7 @@ set(USER_INC ${BULLET_INCLUDE_DIR}
 # Library directories
 include_directories( ${USER_INC} )
 
-link_directories(${HAL_LINK_DIRS})
+link_directories(${USER_INC})
 
 ################
 # HEADER FILES FOR SIMBA LIB
@@ -194,7 +194,7 @@ endif()
 add_library(${PROJECT_NAME} ${SIMBA_SRCS} ${SIMBA_HDRS})
 
 # LINK ALL THE LIBRARIES!!!
-target_link_libraries( ${PROJECT_NAME}
+target_link_libraries( ${PROJECT_NAME} 
   ${BULLET_LIBRARIES}
   ${Pangolin_LIBRARIES}
   ${SceneGraph_LIBRARIES}

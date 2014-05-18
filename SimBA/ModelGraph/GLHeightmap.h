@@ -10,7 +10,8 @@ class GLHeightmap : public GLObject
 {
 public:
 
-  GLHeightmap(double* x_array, double* y_array, double* z_array,
+  GLHeightmap(std::vector<double> x_array, std::vector<double> y_array,
+              std::vector<double> z_array,
               double row_count, double col_count){
     X_ = x_array;
     Y_ = y_array;
@@ -57,9 +58,9 @@ public:
   }
 
 private:
-  double* X_;
-  double* Y_;
-  double* Z_;
+  std::vector<double> X_;
+  std::vector<double> Y_;
+  std::vector<double> Z_;
   double row_count_;
   double col_count_;
   bool render_;

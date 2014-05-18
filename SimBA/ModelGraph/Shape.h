@@ -152,30 +152,34 @@ class HeightmapShape : public Shape
 {
 public:
   HeightmapShape(std::string sName, int row_count, int col_count,
-                 double* X, double* Y, double* Z){
+                 std::vector<double> X, std::vector<double> Y,
+                 std::vector<double> Z){
     SetName(sName);
     SetMass(0);
     SetRestitution(0);
     std::vector<double> dPose;
-    dPose.push_back(0);
-    dPose.push_back(0);
-    dPose.push_back(0);
+    dPose.push_back(0.0);
+    dPose.push_back(0.0);
+    dPose.push_back(0.0);
+    dPose.push_back(0.0);
+    dPose.push_back(0.0);
+    dPose.push_back(0.0);
     SetPose(dPose);
     SetScale(1);
-    m_nColCount = col_count;
-    m_nRowCount = row_count;
-    m_dXData = X;
-    m_dYData = Y;
-    m_dZData = Z;
+    col_count_ = col_count;
+    row_count_ = row_count;
+    x_data_ = X;
+    y_data_ = Y;
+    z_data_ = Z;
   }
 
   // Because of the way the constructor is set in bullet_heightmap,
   // there are a lot of strange member variables here.
-  double* m_dXData;
-  double* m_dYData;
-  double* m_dZData;
-  int m_nRowCount;
-  int m_nColCount;
+  std::vector<double> x_data_;
+  std::vector<double> y_data_;
+  std::vector<double> z_data_;
+  int col_count_;
+  int row_count_;
 };
 
 //////////////////////
@@ -218,4 +222,3 @@ public:
 };
 
 #endif // SHAPE_H
-

@@ -1,39 +1,40 @@
-#include "SimPlanner.h"
+#include "PlannerLibTest.h"
 
 #include <thread>
 
-SimPlanner::SimPlanner(){
-  m_nTau = 8; //Something random, why not.
+PlannerLibTest::PlannerLibTest(){
   params_file_name_ =
       "/Users/Trystan/Code/simba/Applications/SimPlanner/raycast_params.csv";
-  need_BVP_ = true;
-  solved_BVP_ = false;
 }
 
 /////////////////////////////////////////////
 
 /// DESTRUCTOR
-SimPlanner::~SimPlanner(){
-
-}
-
-void SimPlanner::Init(){
-  m_Node.init(sim_planner_name_);
-  cout<<"-------------------"<<GetNumber(sim_planner_name_)<<endl;
-  while(!m_Node.subscribe("MATLAB/BVP"+GetNumber(sim_planner_name_))){
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    cout<<"->";
-  }
-  m_Node.advertise("CheckNeed");
-  m_Node.advertise("CheckSolved");
-  m_Node.advertise("Policy");
+PlannerLibTest::~PlannerLibTest(){
 }
 
 /////////////////////////////////////////////
 
-pb::BVP_policy SimPlanner::StartPolicy(pb::BVP_params params){
-  InitMesh(params);
-  InitGoals(params);
+void PlannerLibTest::Init(HeightmapShape* heightmap_data){
+  heightmap_data_ = heightmap_data;
+  // <x, y, theta, vel>
+  start_.push_back(10);
+  start_.push_back(-5);
+  start_.push_back(0);
+  start_.push_back(0);
+  goal_.push_back(10);
+  goal_.push_back(15);
+  goal_.push_back(0);
+  goal_.push_back(1);
+}
+
+/////////////////////////////////////////////
+// We've replaced what would be a call to a PbMsgs with
+// a call to the heightmap_data_ member variable.
+/////////TODO: Finish editing InitMesh, InitGoals, and SampleTrajectory
+pb::BVP_policy PlannerLibTest::StartPolicy(){
+  InitMesh();
+  InitGoals();
   pb::BVP_policy policy = SampleTrajectory();
   return policy;
 }
@@ -41,45 +42,21 @@ pb::BVP_policy SimPlanner::StartPolicy(pb::BVP_params params){
 /////////////////////////////////////////////
 
 ///INITIALIZERS
-bool SimPlanner::InitMesh(pb::BVP_params params){
+bool PlannerLibTest::InitMesh(){
   // We don't want to reinitialize if we have the same map, after all.
-  if(m_nTau!=params.tau()){
-    delete car_model_;
-    car_model_ = new BulletCarModel;
-    // Can I do this?
-    m_nTau = params.tau();
-    // Create our world mesh
-    int row_count = params.row_count();
-    int col_count = params.col_count();
-    std::vector<double> X, Y, Z;
-    X.resize(row_count*col_count);
-    Y.resize(row_count*col_count);
-    Z.resize(row_count*col_count);
-    for (int ii=0; ii < params.x_data().size(); ii++) {
-      X.at(ii) = params.x_data().Get(ii);
-      Y.at(ii) = params.y_data().Get(ii);
-      Z.at(ii) = params.z_data().Get(ii);
-    }
-    HeightmapShape* MapShape = new HeightmapShape("Map", row_count, col_count,
-                                                  X, Y, Z);
-    bullet_heightmap* map = new bullet_heightmap(MapShape);
-    btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
-    btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
-    CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
-    // MAKE SURE YOU ADD ENOUGH FREAKIN' WORLDS TO THE CAR MODEL.
-    // 11 should do it.
-    car_model_->Init(map->getBulletShapePtr(), dMin, dMax, m_VehicleParams, 11);
-    return true;
-  }
-  return false;
+  bullet_heightmap* map = new bullet_heightmap(heightmap_data_);
+  btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
+  btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
+  CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
+  // MAKE SURE YOU ADD ENOUGH FREAKIN' WORLDS TO THE CAR MODEL.
+  // 11 should do it.
+  car_model_ = new BulletCarModel();
+  car_model_->Init(map->getBulletShapePtr(), dMin, dMax, m_VehicleParams, 11);
 }
 
 /////////////////////////////////////////////
 
-double* SimPlanner::RaycastToGround(){
-
-  // TODO: Fix this representation.
-
+double* PlannerLibTest::RaycastToGround(){
   Sophus::SE3d Twv = start_state_.m_dTwv;
   double x = Twv.translation()(0);
   double y = Twv.translation()(1);
@@ -152,8 +129,10 @@ double* SimPlanner::RaycastToGround(){
 
 }
 
+///////////////////////////////////
+
 // This just drops us off on the surface...
-int SimPlanner::OnTheGround(RaycastVehicle* vehicle){
+int PlannerLibTest::OnTheGround(RaycastVehicle* vehicle){
   int OnGround = 0;
   int hit = 0;
   for(int i = 0; i<4; i++){
@@ -194,7 +173,7 @@ int SimPlanner::OnTheGround(RaycastVehicle* vehicle){
 
 /////////////////////////////////////////////
 
-void SimPlanner::GroundStates(){
+void PlannerLibTest::GroundStates(){
   // Ground the start point.
   Eigen::Vector3d dIntersect;
   Eigen::Vector3d normal;
@@ -239,26 +218,22 @@ void SimPlanner::GroundStates(){
 //////////////////
 
 // TODO : get GroundStates replaced with RaycastToGround process.
-
-void SimPlanner::InitGoals(pb::BVP_params params){
+void PlannerLibTest::InitGoals(){
   // Now populate the start and goal parameters.
   // X, Y, yaw, and velocity... that should be it.
-  const double* start = params.start_param().data();
-  const double* goal = params.goal_param().data();
-  for(int ii = 0; ii<4; ii++){
-    start_.push_back(start[ii]);
-    goal_.push_back(goal[ii]);
-  }
   Eigen::Matrix4d eigen_start;
   Eigen::Vector6d eigen_cart;
-  eigen_cart<<start[0], start[1], 0, 0, 0, start[2];
+  eigen_cart<<start_[0], start_[1], 0, 0, 0, start_[2];
   eigen_start = _Cart2T(eigen_cart);
   Eigen::Matrix4d eigen_goal;
-  eigen_cart<<goal[0], goal[1], 0, 0, 0, goal[2];
+  eigen_cart<<goal_[0], goal_[1], 0, 0, 0, goal_[2];
   eigen_goal = _Cart2T(eigen_cart);
   // Populate the VehicleStates
-  start_state_ = VehicleState(Sophus::SE3d(eigen_start), start[3], 0);
-  goal_state_ = VehicleState(Sophus::SE3d(eigen_goal), goal[3], 0);
+  start_state_ = VehicleState(Sophus::SE3d(eigen_start), start_[3], 0);
+  goal_state_ = VehicleState(Sophus::SE3d(eigen_goal), goal_[3], 0);
+  // TODO: Make sure that we get RaycastToGround working instead of
+  // GroundStates
+  // GroundStates();
   RaycastToGround();
   if (start_state_.IsAirborne()) {
     std::cout<<"Whaaaaaaaaaaat; we are airborne. That's no good.";
@@ -269,7 +244,7 @@ void SimPlanner::InitGoals(pb::BVP_params params){
 /////////////////////////////////////////////
 
 //Finds the fastest path between two
-pb::BVP_policy SimPlanner::SampleTrajectory(){
+pb::BVP_policy PlannerLibTest::SampleTrajectory(){
   bool success = false;
   int count = 0;
   ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
@@ -311,7 +286,7 @@ pb::BVP_policy SimPlanner::SampleTrajectory(){
   return policy;
 }
 
-std::string SimPlanner::GetNumber(std::string name){
+std::string PlannerLibTest::GetNumber(std::string name){
   std::size_t found = name.find("m");
   if(found!=std::string::npos){
     return name.substr(found+1);
@@ -320,47 +295,69 @@ std::string SimPlanner::GetNumber(std::string name){
 
 /***********************************
  * THE MAIN LOOP
- * Initializes SimPlanner, Runs the optimizer, and returns the path.
- * Never stops (though it does have a sleep time); instead, if it's done with
- * one path, it destructs the SimPlanner and creates a new one with the
- * new info it's fed.
+ * This is a test, so we're only going to do ONE path through
+ * the simplest type of a terrain, the flat plane. Get the commands
+ * back from this simulation, and start a separate Node process
+ * that sends these commands to LocalSim in SimBA. If that seems to
+ * work, then start the rest.
+ * Order of operations:
+ * 1. Start MATLAB and PlannerLibTest. Send mesh plan to MATLAB,
+ *    start the simulation, get a plan. Make the plan into an array
+ *    that can be easily passed piecemeal to SimBA [DONE]
+ * 2. Once we have this vector, start the Node connection. Through
+ *    a separate terminal, start SimBA's LocalSim. LocalSim is going
+ *    to grab the same mesh from MATLAB (maybe pass through PlannerLibTest?)
+ *    Once this is done, start the CarController. Once that is
+ *    connected to the Node in PlannerLibTest, then start sending commmands.
+ * You see why this is a hard thing to test. We need to start from MATLAB in
+ * case that's where the problem lies, like the mesh is created
+ * sideways or something.
  **********************************/
 
 int main(int argc, char** argv){
-  SimPlanner* sim = new SimPlanner();
+  ////// TODO
+  // We're going to import all of the mesh data from a .xml
+  // instead of going through MATLAB, just to show proof
+  // of concept. Look in URDF_Parser.cpp for this behavior; the data should
+  // all be kept in Robot.xml
+  // Once we do this, we should be able to get rid of most of the Node
+  // messiness up until this program connects with LocalSim.
+  PlannerLibTest* sim = new PlannerLibTest();
   std::string name = argv[1];
   sim->sim_planner_name_ = name;
   std::string number = sim->GetNumber(sim->sim_planner_name_);
-  cout<<"Sim planner name is "<<sim->sim_planner_name_<<endl;
-  sim->Init();
-  while(1){
-    int count = 0;
-    pb::BVP_check ineed_bvp;
-    ineed_bvp.set_need(true);
-    while(!sim->m_Node.publish("CheckNeed", ineed_bvp)){
-      ineed_bvp.set_need(true);
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-    pb::BVP_params params;
-    std::cout<<"Starting to receive parameters..."<<std::endl;
-    while(!sim->m_Node.receive("MATLAB/BVP"+number, params) && count<100){
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      count++;
-    }
-    pb::BVP_policy policy;
-    if (count<100) {
-      policy = sim->StartPolicy(params);
-      pb::BVP_check bvp_solved;
-      bvp_solved.set_need(true);
-      while (!sim->m_Node.publish("CheckSolved", bvp_solved) && count<10){
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      }
-      while(!sim->m_Node.publish("Policy", policy) && count<10){
-        std::cout<<"Sending policy..."<<std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        std::cout<<"Ready for the next plan!!"<<std::endl;
-      }
-    }
-    std::cout<<"False alarm; no plan here."<<std::endl;
+  URDF_Parser* parser = new URDF_Parser();
+  // 1. Read URDF files.
+  XMLDocument WorldURDF;
+  const string& sWorldURDFPath =
+      "/Users/Trystan/Code/simba/urdf/HeightmapWorld.xml";
+  GetXMLdoc(sWorldURDFPath, WorldURDF);
+  sim->heightmap_data_ = parser->GetMeshData(WorldURDF);
+  sim->Init(sim->heightmap_data_);
+  int count = 0;
+  // 2. Solve for the path using PlannerLib
+  pb::BVP_policy policy;
+  if (count<100) {
+    policy = sim->StartPolicy();
   }
+  // This is our solved policy, which we will send through this
+  // interwebs.
+  // 3. Start looking for the car (similar to KeyboardCommander)
+  KeyCarController KeyCar("NodeCar:[name=VehicleController]//",
+                          policy);
+  while(1){
+    // 4. Drive our car to the EDGE OF SPACE
+    KeyCar.ApplyCommands();
+    //  Send the commands to the car
+    // These are the parts of policy:
+    //   policy.add_force(Comm.m_dForce);
+    //   policy.add_phi(Comm.m_dPhi);
+    //   policy.add_time(Comm.m_dT);
+    // for(unsigned int jj=0; jj<4; jj++){
+    //   policy.add_start_param(start_.at(jj));
+    //   policy.add_goal_param(goal_.at(jj));
+    // }
+    // policy.set_tau(m_nTau);
+  }
+  std::cout<<"Done with all of our shenanigans!"<<std::endl;
 }

@@ -30,7 +30,7 @@
      <body name="mesh"
 	   path="/Users/Trystan/Code/Meshes/Herbie/Herbie.blend"
 	   dim="0.903,0.338,0.279"/>
-     <!-- That was kind of a hack, but it works for now -->
+     <!-- This was a scaling hack, for drawing, but it works for now -->
 
      <!--Wheel shape variables   -->
      <wheel name="radius"            value=".3"/>

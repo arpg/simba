@@ -15,7 +15,6 @@ set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules ${CMAKE_MODULE_
 
 set( BUILD_SIM_PLANNER false CACHE BOOL force )
 
-
 # We must create our protobuf headers first. A bit weird.
 add_subdirectory( SimBA/PB_Headers )
 

@@ -156,7 +156,8 @@ std::vector<double> CPPMaster::GetNextBVP(int cur_pol){
   return BVP;
 }
 
-bool CPPMaster::SavePolicyToMat(std::vector< std::vector<double> > policy, int tau){
+bool CPPMaster::SavePolicyToMat(std::vector< std::vector<double> > policy,
+                                int tau){
   // Command = force | pi | time
   // tau should also be saved, but it's included in the loop.
   // save a file:
@@ -207,8 +208,8 @@ int main(int argc, char** argv){
   CPPMaster* master = new CPPMaster(num_sims, dir_to_sim);
   int tau = 0;
   // TODO: Since we have a ton of meshes (2^18, to be exact)...
-  // start with 4 just to be safe.
-  for (tau=0; tau<(2^2 - 1); tau++) {
+  // start with 1 just to be safe.
+  for (tau=0; tau<1; tau++) {
     // Grab the mesh based off of the number tau.
     // aka tau = 1 means we grab Mesh-1.mat.
     std::string file_name =

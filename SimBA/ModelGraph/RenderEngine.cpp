@@ -182,9 +182,9 @@ void RenderEngine::AddNode( ModelNode *pNode){
     else if (dynamic_cast<HeightmapShape*>(pShape) != NULL){
       HeightmapShape* pbShape = (HeightmapShape *) pShape;
       SceneGraph::GLHeightmap* new_map =
-          new SceneGraph::GLHeightmap(pbShape->m_dXData, pbShape->m_dYData,
-                                      pbShape->m_dZData, pbShape->m_nRowCount,
-                                      pbShape->m_nColCount);
+          new SceneGraph::GLHeightmap(pbShape->x_data_, pbShape->y_data_,
+                                      pbShape->z_data_, pbShape->row_count_,
+                                      pbShape->col_count_);
       m_mSceneEntities[pNode] = new_map;
     }
   }

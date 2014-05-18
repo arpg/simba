@@ -30,6 +30,8 @@ add_executable( SimPlanner SimPlanner.cpp SimPlanner.h)
 
 add_executable( CPPMaster CPPMaster.cpp CPPMaster.h)
 
+add_executable( PlannerLibTest PlannerLibTest.cpp PlannerLibTest.h)
+
 target_link_libraries( SimPlanner
                        ${Node_LIBRARIES}
                        ${SimBA_LIBRARIES}
@@ -40,3 +42,11 @@ target_link_libraries( CPPMaster
                        ${Node_LIBRARIES}
                        ${SimBA_LIBRARIES}
                        ${MATLAB_LIBRARIES})
+		     
+target_link_libraries( PlannerLibTest
+                       ${Node_LIBRARIES}
+                       ${SimBA_LIBRARIES}
+                       ${CAR_PLANNER_LIBRARIES}
+                       ${Calibu_LIBRARIES})
+
+		     

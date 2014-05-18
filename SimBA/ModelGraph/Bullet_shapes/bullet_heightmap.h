@@ -18,11 +18,11 @@ public:
   //constructor
   bullet_heightmap(ModelNode* mnMap){
     HeightmapShape* pMap = (HeightmapShape*) mnMap;
-    int row_count = pMap->m_nRowCount;
-    int col_count = pMap->m_nColCount;
-    const double* X = pMap->m_dXData;
-    const double* Y = pMap->m_dYData;
-    const double* Z = pMap->m_dZData;
+    int row_count = pMap->row_count_;
+    int col_count = pMap->col_count_;
+    std::vector<double> X = pMap->x_data_;
+    std::vector<double> Y = pMap->y_data_;
+    std::vector<double> Z = pMap->z_data_;
 
     //////////////
     //Algorithm for populating BVHTriangleMeshShape taken from VehicleDemo.cpp
@@ -45,10 +45,8 @@ public:
     }
 
     int index=0;
-    for (int i=0;i<NUM_VERTS_X-1;i++)
-    {
-      for (int j=0;j<NUM_VERTS_Y-1;j++)
-      {
+    for (int i=0;i<NUM_VERTS_X-1;i++) {
+      for (int j=0;j<NUM_VERTS_Y-1;j++) {
         gIndices[index++] = j*NUM_VERTS_X+i;
         gIndices[index++] = j*NUM_VERTS_X+i+1;
         gIndices[index++] = (j+1)*NUM_VERTS_X+i+1;
@@ -65,7 +63,7 @@ public:
                                        indexStride,
                                        totalVerts,
                                        (btScalar*) &m_vertices[0].x(),
-        vertStride);
+                                       vertStride);
     /////////////
     bulletShape = new btBvhTriangleMeshShape(m_indexVertexArrays, true);
     bulletMotionState = new NodeMotionState(*mnMap);
@@ -74,7 +72,6 @@ public:
                                                    btVector3(0, 0, 0));
     bulletBody = new btRigidBody(cInfo);
   }
-  //  }
 
   //////////////////////////
 
@@ -97,8 +94,5 @@ private:
   NodeMotionState* bulletMotionState;
 
 };
-
-
-
 
 #endif // BULLET_HEIGHTMAP_H
