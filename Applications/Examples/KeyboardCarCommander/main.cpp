@@ -69,16 +69,11 @@ public:
 
 int main(){
   // This should do it...
-  KeyCarController KeyCar("NodeCar:[name=VehicleController]//");
-//  pangolin::RegisterKeyPressCallback(
-//        'w', boost::bind( &KeyCarController::GoForward, &KeyCar));
-//  pangolin::RegisterKeyPressCallback(
-//        's', boost::bind( &KeyCarController::GoBack, &KeyCar));
-//  pangolin::RegisterKeyPressCallback(
-//        'a', boost::bind( &KeyCarController::GoLeft, &KeyCar));
-//  pangolin::RegisterKeyPressCallback(
-//        'd', boost::bind( &KeyCarController::GoRight, &KeyCar));
-
+  // IMPORTANT: Make sure that you have the name of the sim that you want to
+  // connect with in the properties string (e.g. sim=LocalSim). Otherwise,
+  // when we have multiple sims on the same network, we won't be able to
+  // identify what to control
+  KeyCarController KeyCar("NodeCar:[name=VehicleController,sim=Ricky]//");
 
   while(1){
     KeyCar.GoForward();

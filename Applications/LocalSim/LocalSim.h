@@ -10,7 +10,7 @@
 /////////////////////////////////////////////
 #include <iostream>
 #include <Eigen/Eigen>                         // for vector math
-#include "Utils/CVarHelpers.h"                 // for parsing Eigen Vars as CVars
+#include "Utils/CVarHelpers.h"                 // for parsing Eigen as CVars
 #include <CVars/CVar.h>                        // for GLConsole
 #include <Utils/GetPot>                        // for command line parsing
 
@@ -25,7 +25,7 @@
 
 #include <SimRobots/SimRobot.h>                // for managing the User's robot
 #include "SimRobots/SimWorld.h"
-#include "SimDevices/SimDevices.h"             // for managing all the SimDevices
+#include "SimDevices/SimDevices.h"             // for managing the SimDevices
 
 // for communicating between the Physics Engine and ModelGraph
 #include <ModelGraph/ModelGraphBuilder.h>

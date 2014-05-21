@@ -1,8 +1,3 @@
-/*
-   LocalSim, By luma. 2013.03
-   Edited by bminortx.
- */
-
 #include "LocalSim.h"
 
 using namespace std;
@@ -42,7 +37,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
   // 4. We must decide the next actions based off of the Server Option.
   cout<<" The server option is set to "<<sServerOption<<"."<<endl;
 
-  m_NetworkManager.Init( m_sLocalSimName, sServerOption, 0);
+  m_NetworkManager.Init( m_sLocalSimName, sServerOption, 1);
   m_NetworkManager.RegisterRobot(&m_RobotManager);
   m_NetworkManager.RegisterDevices(&m_SimDevices);
 

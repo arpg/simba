@@ -2,35 +2,36 @@
 SimBA - Simulating 'Bots in Action
 ====================================
 
-SimBA is a Robotics Simulator that hopes to make virtual physical simulation easy-to-use. Hardware interfaces through HAL (see below) make it an easy-to-use state keeper as well, working as an interface between the real and virtual world. 
+SimBA is a Robotics Simulator that hopes to make virtual physical simulation easy-to-use. Hardware interfaces through HAL (see below) make it an easy-to-use state keeper as well, working as an interface between the real and virtual world.
 
 ====================================
 HOW TO BUILD
 ====================================
-1. Compile the above libraries in the order suggested:
+1. The below libraries are needed in order to install (provided in suggested order):
 >>	Protobuf
 >>	ZMQ - after installing this library, make sure that the .hpp file is also downloaded and added to your ZMQ directory (most likely at /usr/local/include). The .hpp can be found at _________________
 >>	TinyXML2
->>	HAL - build through CMake. Turn BUILD_NODE to ON, in order to install the required Node driver. If you want to test the Node driver, turn Node2Cam driver to ON in the Cmake.
+>> 	Bullet Physics
 >>	Pangolin
->>	SceneGraph
+>> 	SceneGraph
+>>	HAL (HAL and PbMsgs)
+>>	Node
+>>	Eigen 3
+>>	Miniglog
+>> 	Calibu
 
 2. Run cmake and make on SimBA. 
 
 3. You are now ready to test!
 
 ====================================
-HOW TO RUN
+APPLICATIONS
 ====================================
 
 NB - Remember to modify path relative settings in the URDF files used, e.g. Robot.xml. If you do not use mesh, just change camera model file path in .xml file.
 
-Make sure that your World.xml file is set to SIM in your local environment, if you're using a Simulation. You can do this by running the following: 
->>	SIM=SimWorld=[Path to world file]/World.xml
-There are some modifications to this line that will be covered below. 
-
 ===================
-(1) Run a RobotProxy
+(1) Loca
 ===================
 The RobotProxy object creates a network over which data about the robot and the world can be communicated. There are three slightly different ways to run a RobotProxy. 
 

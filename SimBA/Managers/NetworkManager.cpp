@@ -1,6 +1,5 @@
 #include <Managers/NetworkManager.h>
 
-
 /************************************************************
   *
   * INITIALIZER
@@ -15,18 +14,17 @@ bool NetworkManager::Init(string sProxyName, string sServerName, int verbosity){
                                "WithoutNetwork Mode"<<endl;}
     return true;
   }
-
   // If we do need it, Init Node connection in LocalSim and provide
   // relative RPC method.
   m_sLocalSimName  = sProxyName;
   m_iNodeClients   = 0;
-
-  m_Node.set_verbosity(m_verbosity); // make some noise on errors
-  bool worked = m_Node.init(m_sLocalSimName);
+  node_.set_verbosity(1); // make some noise on errors
+  bool worked = node_.init(m_sLocalSimName);
   if(!worked && m_verbosity!=0){
     cout<<"[NetworkManager] Init Node '"<<m_sLocalSimName<<"' failed..."<<endl;
     return false;
   }
+  cout<<"SUCCESS: Initialized node for "<<m_sLocalSimName<<endl;
   return true;
 }
 
@@ -92,12 +90,11 @@ string NetworkManager::CheckURI(string sURI){
         m_pSimDevices->m_vSimDevices["Depth_"+sDeviceName]->m_bDeviceOn = true;
       }
     }
-
     /// NodeCar controller
     if(uri_contents["device"]=="NodeCar"){
         m_pSimDevices->m_vSimDevices[sDeviceName]->m_bDeviceOn = true;
+        cout<<"Got a NodeCar Controller!"<<endl;
       }
-
     return sDeviceName;
   }
   return "FALSE";
@@ -131,7 +128,6 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
       Device->m_bDeviceOn = true;
     }
   }
-
   else{
     for(map<string, SimDeviceInfo*>::iterator it =
         m_pSimDevices->m_vSimDevices.begin();
@@ -149,7 +145,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
             m_pSimDevices->GetAllRelatedDevices(Device->GetBodyName());
         SimCamera* pCam = (SimCamera*) related_devices.at(0);
         // provide rpc method for camera to register
-        m_Node.provide_rpc("RegsiterSensorDevice",&_RegisterSensorDevice,this);
+        node_.provide_rpc("RegsiterSensorDevice",&_RegisterSensorDevice,this);
         for(unsigned int ii=0; ii<related_devices.size(); ii++){
           related_devices.at(ii)->m_bHasAdvertised = true;
         }
@@ -160,7 +156,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
 //            m_pSimDevices->GetAllRelatedDevices(Device->GetBodyName());
 //        SimGPS* pGPS = (SimGPS*) related_devices.at(0);
 //        pGPS->m_bDeviceOn = true;
-//        m_Node.advertise(pGPS->GetDeviceName());
+//        node_.advertise(pGPS->GetDeviceName());
 //      }
 //      /// VICON
 //      else if(static_cast<SimVicon*>(Device) != NULL){
@@ -176,7 +172,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
       else if(Device->m_sDeviceType=="CarController"
               && !Device->m_bHasAdvertised){
         CarController* pCarCon = (CarController*) Device;
-        m_Node.provide_rpc("RegisterControllerDevice",
+        node_.provide_rpc("RegisterControllerDevice",
                            &_RegisterControllerDevice, this);
         pCarCon->m_bHasAdvertised = true;
       }
@@ -213,7 +209,7 @@ void NetworkManager::RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
     mReply.set_height(pCam->m_nImgHeight);
     m_iNodeClients = m_iNodeClients + 1;
     string sServiceName = GetFirstName(pCam->GetBodyName());
-    if(m_Node.advertise(sServiceName)==true && m_verbosity!=0){
+    if(node_.advertise(sServiceName)==true && m_verbosity!=0){
       cout<<"[NetworkManager/RegisterDevices]"<<
             " Advertising "<<sServiceName<<" --> Success."<<endl;
     }
@@ -240,26 +236,21 @@ void NetworkManager::RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
 void NetworkManager::RegisterControllerDevice(
     pb::RegisterControllerReqMsg& mRequest,
     pb::RegisterControllerRepMsg & mReply){
-
-//  string sDeviceName = CheckURI(mRequest.uri());
-  string sDeviceName = CheckURI(mRequest.topic());
-
-  cout<<mRequest.topic()<<endl;
-
-  if(sDeviceName!="FALSE"){
-    // TODO: WHY DOES THIS NAME CHANGE HAPPEN
-    if( m_Node.subscribe(mRequest.topic()+"/"+mRequest.topic())==false ){
-      cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! "
-            "Cannot subscribe to "<<mRequest.topic()
-         <<". Please make sure service is running."<<endl;
+  string controller_name = CheckURI(mRequest.uri());
+  if (controller_name!="FALSE") {
+    cout<<"Attempting to subscribe to "<<
+        controller_name+"/"+controller_name<<endl;
+    int subscribe_try = 0;
+    while (node_.subscribe(controller_name+"/"+controller_name) != true &&
+           subscribe_try<500) {
+      cout<<".";
+      usleep(100);
+      subscribe_try++;
     }
-    if( m_Node.subscribe(m_sLocalSimName+"/"+mRequest.topic())==false ){
+    if(subscribe_try>=500){
       cout<<"[NetworkManager/RegisterControllerDevice] Fatal error! "
-            "Cannot subscribe to "<<mRequest.topic()
-         <<". Please make sure service is running."<<endl;
-    }
-
-    else{
+          "Cannot subscribe to "<<controller_name<<endl;
+    } else {
       cout<<"We subscribed!"<<endl;
       mReply.set_success(true);
     }
@@ -410,7 +401,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
   string sFirstName = GetFirstName(sCamBodyName);
   if(m_verbosity!=0){cout<<"Camera handle to puublish: "<<
                            sFirstName<<endl;}
-  bool bStatus = m_Node.publish(sFirstName, mCamImage);
+  bool bStatus = node_.publish(sFirstName, mCamImage);
   if(!bStatus){
     if(m_verbosity!=0){cout<<"["<<m_sLocalSimName<<
                              "/"<<sFirstName<<
@@ -430,24 +421,22 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName){
 bool NetworkManager::PublishGPS(string sDeviceName){
   Eigen::Vector3d pose;
   SimGPS* pGPS = (SimGPS*) m_pSimDevices->m_vSimDevices[sDeviceName];
+  pGPS->GetPose(pose);
 
   GPSMsg mGPSMSg;
   mGPSMSg.set_time_step(m_iTimeStep);
   mGPSMSg.set_x(pose[0]);
   mGPSMSg.set_y(pose[1]);
   mGPSMSg.set_y(pose[2]);
-
   string sFirstName = GetFirstName(sDeviceName);
-
   if(m_verbosity!=0){
     cout<<"[NodeGPS] Try to publish "<<sFirstName<< ". x="<<pose[0]<<
           " y="<<pose[1]<<" z="<<pose[2]<<
           ". Time step is "<<mGPSMSg.time_step()<<"."<<endl;
   }
-
   bool bStatus=false;
   while(bStatus==false){
-    bStatus=m_Node.publish(sFirstName, mGPSMSg);
+    bStatus=node_.publish(sFirstName, mGPSMSg);
     if( bStatus==false){
       printf("[NodeGPS] ERROR: publishing GPS fail. Try again.\n" );
     }
@@ -482,7 +471,7 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
     CarController* pCarController = (CarController*) pDevice;
     pb::VehicleMsg Command;
     int n = 0;
-    while(m_Node.receive(sServiceName, Command)==false
+    while(node_.receive(sServiceName, Command)==false
           && n < max_iter){
       if(m_verbosity!=0){cout<<".";}
       n++;
@@ -503,7 +492,7 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
   else if(pDevice->m_sDeviceType=="SimpleController"){
     SimpleController* pSimpController = (SimpleController*) pDevice;
     pb::PoseMsg Command;
-    if(m_Node.receive( sServiceName, Command)==true){
+    if(node_.receive( sServiceName, Command)==true){
       pSimpController->UpdateCommand(Command);
       return true;
     }
@@ -512,6 +501,7 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
       return false;
     }
   }
+  return true;
 }
 
 
@@ -536,7 +526,7 @@ bool NetworkManager::RegisterRobot(RobotsManager* pRobotsManager){
   // We have a StateKeeper! Go publish. Now.
   else if(m_sServerName == "WithStateKeeper"){
     m_pRobotsManager = pRobotsManager;
-    m_Node.advertise("RobotState");
+    node_.advertise("RobotState");
     bool bStatus = RegisterWithStateKeeper();
     if(bStatus == false){
       if(m_verbosity != 0){cout<<"[NetworkManager] Cannot register LocalSim '"<<
@@ -546,8 +536,8 @@ bool NetworkManager::RegisterRobot(RobotsManager* pRobotsManager){
       return false;
     }
     // TODO: Allow these methods; not sure if they work yet, though.
-    m_Node.provide_rpc("AddRobotByURDF",&_AddRobotByURDF, this);
-    m_Node.provide_rpc("DeleteRobot",&_DeleteRobot, this);
+    node_.provide_rpc("AddRobotByURDF",&_AddRobotByURDF, this);
+    node_.provide_rpc("DeleteRobot",&_DeleteRobot, this);
     if(m_verbosity != 0){cout<<"[NetworkManager] Init Robot Network "<<
                                m_sLocalSimName<<
                                " for statekeeper success."<<endl;}
@@ -566,7 +556,7 @@ bool NetworkManager::RegisterWithStateKeeper()
 {
   // 1. Subscribe to StateKeeper World state topic
   string sServiceName = m_sServerName+"/WorldState";
-  if( m_Node.subscribe(sServiceName) == false ){
+  if( node_.subscribe(sServiceName) == false ){
     cout<<"[NetworkManager/RegisterWithStateKeeper]"<<
           " Error subscribing to "<<sServiceName<<endl;
     return false;
@@ -588,7 +578,7 @@ bool NetworkManager::RegisterWithStateKeeper()
   // reply_msg. Reply message must be empty.
   RegisterLocalSimRepMsg mReply;
   sServiceName = m_sServerName + "/RegisterLocalSim";
-  if(m_Node.call_rpc(sServiceName, mRequest, mReply) == true &&
+  if(node_.call_rpc(sServiceName, mRequest, mReply) == true &&
      mReply.robot_name()==sRobotName){
     Vector6Msg  mInitRobotState = mReply.init_pose();
     cout<<"[NetworkManager/RegisterWithStateKeeper]"<<
@@ -677,8 +667,8 @@ void NetworkManager::AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
 
 void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
                                  LocalSimDeleteRobotRepMsg& mReply){
-  // don't let anyone touch the shared resource table...
-  mutex lock();
+  // Don't let anyone touch the shared resource table...
+  mtx_.lock();
 
   // set reply message for StateKeeper
   mReply.set_message("DeleteRobotSuccess");
@@ -688,7 +678,9 @@ void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
   m_pRobotsManager->DeleteRobot(sRobotName);
   cout<<"[NetworkManager/DeleteRobot] Delete Robot "<<
         sRobotName<<" success."<<endl;
+  mtx_.unlock();
 }
+
 
 ////////////////////////////////////////////////////////////////////////
 /// Sync WorldState by
@@ -698,7 +690,7 @@ void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
 /// pose, state, and current command.
 bool NetworkManager::PublishRobotToStateKeeper(){
   // don't let anyone touch the shared resource table...
-  mutex lock();
+  mtx_.lock();
 
   // 1. Set robot name and time step info
   RobotFullStateMsg mRobotFullState;
@@ -759,7 +751,7 @@ bool NetworkManager::PublishRobotToStateKeeper(){
   bool bStatus=false;
   while (bStatus==false)
   {
-    bStatus=m_Node.publish( "RobotState", mRobotFullState);
+    bStatus=node_.publish( "RobotState", mRobotFullState);
     if(bStatus==true)
     {
       if(m_verbosity!=0)
@@ -768,31 +760,31 @@ bool NetworkManager::PublishRobotToStateKeeper(){
               " State to Statekeeper success. Publish Timestep is "<<
               m_iTimeStep<<endl;
       }
+      mtx_.unlock();
       return true;
     }
     else
     {
       cout<< "[NetworkManager] ERROR: Publishing RobotState Fail."<<endl;
+      mtx_.unlock();
       return false;
     }
   }
+  mtx_.unlock();
   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 bool NetworkManager::ReceiveWorldFromStateKeeper(){
-  mutex lock();
-
+  mtx_.lock();
   WorldFullStateMsg ws;
-
   string sServiceName = m_sServerName + "/WorldState";
-
   // wait until we get the lastest world state
   int iMaxTry=50;
   bool bStatus=false;
   while(bStatus==false){
-    if(m_Node.receive(sServiceName, ws )==true && ws.time_step() >=
+    if(node_.receive(sServiceName, ws )==true && ws.time_step() >=
        m_pRobotsManager->m_WorldFullState.time_step()){
       // update world state in robots manager.
       m_pRobotsManager->UpdateWorldFullState(ws);
@@ -811,8 +803,10 @@ bool NetworkManager::ReceiveWorldFromStateKeeper(){
     }
     else{
       cout<<"[NetworkManager/WorldState] Update World state fail!"<<endl;
+      mtx_.unlock();
       return false;
     }
   }
+  mtx_.unlock();
   return true;
 }

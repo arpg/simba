@@ -38,6 +38,8 @@ class KeyCarController{
       phi = phi_.at(count_);
     }
     bool applied = car_->ApplyCommand(force, phi);
+    std::cout<<force<<std::endl;
+    std::cout<<phi<<std::endl;
     count_++;
   }
 

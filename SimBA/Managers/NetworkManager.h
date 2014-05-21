@@ -15,8 +15,6 @@
 #include <NodeCar.pb.h>
 #include <Network/WorldState.h>
 
-#include <boost/thread/mutex.hpp>
-
 using namespace std;
 
 /*****************************************************
@@ -84,8 +82,8 @@ public:
 
   //////////////////////////////
 
-  /// Register hal camera device in LocalSim. This RPC function is called by hal.
-  /// Once we register a cam device, we can use the recv and publish method.
+  // Register hal camera device in LocalSim. This RPC function is called by hal.
+  // Once we register a cam device, we can use the recv and publish method.
 
   static void _RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
                                  RegisterNodeCamRepMsg& mReply,
@@ -108,12 +106,12 @@ public:
 
 private:
 
-  node::node       m_Node;
+  node::node      node_;
   std::string     m_sLocalSimName;
   string          m_sServerName;
   int             m_verbosity;
   int             m_iTimeStep;
-  mutex           m_Mutex;
+  mutex           mtx_;
   SimDevices*     m_pSimDevices;
   RobotsManager*  m_pRobotsManager;
 
