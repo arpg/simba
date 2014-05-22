@@ -8,7 +8,7 @@ HOW TO BUILD
 
 The below libraries are needed in order to install (provided in suggested order):
 - Protobuf
-- ZMQ - after installing this library, make sure that the .hpp file is also downloaded and added to your ZMQ directory (most likely at /usr/local/include). The .hpp can be found at _________________
+- ZMQ - after installing this library, make sure that the .hpp file is also downloaded and added to your ZMQ directory (most likely at /usr/local/include). The .hpp can be found at https://github.com/zeromq/cppzmq/blob/master/zmq.hpp
 - TinyXML2
 - Bullet Physics
 - Pangolin
@@ -53,9 +53,7 @@ LocalSim is a wrapper for SimBA, and acts as our primary simulation tool. While 
   > WithoutStateKeeper: HAL devices can control vehicles and sensors described in the Robot.xml file
   > WithStateKeeper: LocalSim communicates with other LocalSims, all of which share a synchronization program between them called StateKeeper. This is a task for a future iteration of SimBA. 
 
-Just run
-	./LocalSim
-to get this list of options in appreviated form. As an example, from ./build:
+As an example, from ./build:
 	./Applications/LocalSim/LocalSim -n Ricky -r ../urdf/Robots/RaycastVehicle.xml -w ../urdf/Worlds/world_heightmap.xml -s WithoutStateKeeper
 ...starts a LocalSim named "Ricky", which runs the RaycastVehicle as described in its file, and the Heightmap data as described in its file. It also opens a Node connection, but does not attempt to interact with a StateKeeper. 
 
