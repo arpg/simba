@@ -13,8 +13,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
                    const string& sRobotURDFPath,
                    const string& sWorldURDFPath,
                    const string& sServerOption):
-  m_sLocalSimName(sLocalSimName)
-{
+    m_sLocalSimName(sLocalSimName) {
   // 1. Read URDF files.
   XMLDocument RobotURDF, WorldURDF;
   GetXMLdoc(sRobotURDFPath, RobotURDF);
@@ -35,9 +34,9 @@ LocalSim::LocalSim(const string& sLocalSimName,
   m_bRender = true;
 
   // 4. We must decide the next actions based off of the Server Option.
-  cout<<" The server option is set to "<<sServerOption<<"."<<endl;
+  LOG(INFO) << " The server option is set to " << sServerOption << ".";
 
-  m_NetworkManager.Init( m_sLocalSimName, sServerOption, 1);
+  m_NetworkManager.Init(m_sLocalSimName, sServerOption, 1);
   m_NetworkManager.RegisterRobot(&m_RobotManager);
   m_NetworkManager.RegisterDevices(&m_SimDevices);
 
@@ -46,7 +45,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
                sLocalSimName, debug, m_bRender, false);
 
   // TODO: What to do with StateKeeper option...?
-  cout<<"[LocalSim] Init Local Sim Success!"<<endl;
+  LOG(INFO) << "Init Local Sim Success!";
 
 }
 
@@ -75,44 +74,38 @@ void LocalSim::StepForward(){
 int main( int argc, char** argv )
 {
   // parse command line arguments
-  if(argc){
-    std::cout<<"USAGE: Robot -n <LocalSimName> -r <robot.xml directory>"<<
-               "-w <world.xml directory> -s <StateKeeper Option>"<<std::endl;
-    std::cout<<"Options:"<<std::endl;
-    std::cout<<"--LocalSimName, -n      ||   Name of this LocalSim."
-            <<std::endl;
-    std::cout<<"--Robot.xml, -r         ||   robot.xml's directory"
-            <<std::endl;
-    std::cout<<"--World.xml, -w         ||   world.xml's directory."
-            <<std::endl;
-    std::cout<<"--Statekeeper Option -s ||   input 'StateKeeperName',"<<
-               " 'WithoutStateKeeper', or 'WithoutNetwork'"<<std::endl;
+  if (argc != 9) {
+    LOG(INFO) << " Command Line Arguments: ";
+    LOG(INFO) << "   $ ./LocalSim -n <SimName> -r <Robot.xml>"
+              << " -w <World.xml> -s <StateKeeper Option>";
+    LOG(INFO) << " See the README for more info.";
   }
-
-  GetPot cl( argc, argv );
-  std::string sLocalSimName = cl.follow( "SimWorld", "-n" );
-  std::string sRobotURDF = cl.follow("", "-r");
-  std::string sWorldURDF = cl.follow( "", "-w" );
-  std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
-
-  // Initialize a LocalSim.
-  LocalSim mLocalSim(sLocalSimName, sRobotURDF, sWorldURDF, sServerOption);
-
-  // Are we rendering the world?
-  if(mLocalSim.m_bRender){
-    while( !pangolin::ShouldQuit() ){
-      glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-      // Swap frames and Process Events
-      pangolin::FinishFrame();
-      // Update Physics and ModelGraph
-      mLocalSim.StepForward();
-      usleep( 1E6 / 60 );
-    }
-  }
-
   else{
-    while(1){
-      mLocalSim.StepForward();
+    GetPot cl( argc, argv );
+    std::string sLocalSimName = cl.follow( "SimWorld", "-n" );
+    std::string sRobotURDF = cl.follow("", "-r");
+    std::string sWorldURDF = cl.follow( "", "-w" );
+    std::string sServerOption = cl.follow("WithoutStateKeeper", "-s");
+
+    // Initialize a LocalSim.
+    LocalSim mLocalSim(sLocalSimName, sRobotURDF, sWorldURDF, sServerOption);
+
+    // Are we rendering the world?
+    if(mLocalSim.m_bRender){
+      while( !pangolin::ShouldQuit() ){
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        // Swap frames and Process Events
+        pangolin::FinishFrame();
+        // Update Physics and ModelGraph
+        mLocalSim.StepForward();
+        usleep( 1E6 / 60 );
+      }
+    }
+
+    else{
+      while(1){
+        mLocalSim.StepForward();
+      }
     }
   }
   return 0;

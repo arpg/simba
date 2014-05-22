@@ -14,6 +14,7 @@
 #include <NodeCamMessage.pb.h>
 #include <NodeCar.pb.h>
 #include <Network/WorldState.h>
+#include <miniglog/logging.h>
 
 using namespace std;
 
@@ -107,6 +108,7 @@ public:
 private:
 
   node::node      node_;
+  int             debug_level_;
   std::string     m_sLocalSimName;
   string          m_sServerName;
   int             m_verbosity;

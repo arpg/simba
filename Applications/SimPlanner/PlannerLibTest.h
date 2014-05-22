@@ -9,6 +9,7 @@
 #include "CarPlannerCommon.h"
 #include "ApplyVelocitiesFunctor.h"
 #include "LocalPlanner.h"
+#include "miniglog/logging.h"
 
 #include "Node/Node.h"
 #include "URDFParser/URDF_Parser.h"
@@ -38,8 +39,8 @@ class KeyCarController{
       phi = phi_.at(count_);
     }
     bool applied = car_->ApplyCommand(force, phi);
-    std::cout<<force<<std::endl;
-    std::cout<<phi<<std::endl;
+    LOG(INFO) << force;
+    LOG(INFO) << phi;
     count_++;
   }
 

@@ -13,6 +13,7 @@
 #include "Utils/CVarHelpers.h"                 // for parsing Eigen as CVars
 #include <CVars/CVar.h>                        // for GLConsole
 #include <Utils/GetPot>                        // for command line parsing
+#include <miniglog/logging.h>
 
 // Node is used for communication between RP and any devices
 #include <Node/Node.h>
