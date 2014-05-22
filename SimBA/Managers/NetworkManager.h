@@ -113,7 +113,6 @@ private:
   string          m_sServerName;
   int             m_verbosity;
   int             m_iTimeStep;
-  mutex           mtx_;
   SimDevices*     m_pSimDevices;
   RobotsManager*  m_pRobotsManager;
 

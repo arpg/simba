@@ -645,7 +645,7 @@ void NetworkManager::AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
 void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
                                  LocalSimDeleteRobotRepMsg& mReply){
   // Don't let anyone touch the shared resource table...
-  mtx_.lock();
+  std::lock_guard<std::mutex>;
 
   // set reply message for StateKeeper
   mReply.set_message("DeleteRobotSuccess");
@@ -654,8 +654,7 @@ void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
   string sRobotName = mRequest.robot_name();
   m_pRobotsManager->DeleteRobot(sRobotName);
   cout<<"[NetworkManager/DeleteRobot] Delete Robot "<<
-        sRobotName<<" success."<<endl;
-  mtx_.unlock();
+      sRobotName<<" success."<<endl;
 }
 
 
@@ -667,7 +666,7 @@ void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
 /// pose, state, and current command.
 bool NetworkManager::PublishRobotToStateKeeper(){
   // don't let anyone touch the shared resource table...
-  mtx_.lock();
+  std::lock_guard<std::mutex>;
 
   // 1. Set robot name and time step info
   RobotFullStateMsg mRobotFullState;
@@ -737,24 +736,21 @@ bool NetworkManager::PublishRobotToStateKeeper(){
               " State to Statekeeper success. Publish Timestep is "<<
               m_iTimeStep<<endl;
       }
-      mtx_.unlock();
       return true;
     }
     else
     {
       cout<< "[NetworkManager] ERROR: Publishing RobotState Fail."<<endl;
-      mtx_.unlock();
       return false;
     }
   }
-  mtx_.unlock();
   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 bool NetworkManager::ReceiveWorldFromStateKeeper(){
-  mtx_.lock();
+  std::lock_guard<std::mutex>;
   WorldFullStateMsg ws;
   string sServiceName = m_sServerName + "/WorldState";
   // wait until we get the lastest world state
@@ -780,10 +776,8 @@ bool NetworkManager::ReceiveWorldFromStateKeeper(){
     }
     else{
       cout<<"[NetworkManager/WorldState] Update World state fail!"<<endl;
-      mtx_.unlock();
       return false;
     }
   }
-  mtx_.unlock();
   return true;
 }
