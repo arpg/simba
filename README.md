@@ -37,13 +37,12 @@ Directory: ./urdf/Worlds/
 ROBOTS
 ---------
 Directory: ./urdf/Robots/
-Though there are several provided, there is only one vehicle guaranteed to work. 
 - RaycastVehicle.xml: Describes the body, wheels, and action of a Bullet btRaycastVehicle. It can also import a .blend file for both the tires and the body of the car. 
 
 APPLICATIONS
 ====================================
 
-LocalSim
+LocalSim (Main Demo)
 ---------
 LocalSim is a wrapper for SimBA, and acts as our primary simulation tool. While running LocalSim, one can use Node and HAL in tandem to take simulated video, send commands to a vehicle, or track conditions using simulated GPS and IMU data (future versions, again). LocalSim requires several command line options to operate:
 - *-n <SimName>*: The name of the simulator (important for HAL and Node interactions)
@@ -56,13 +55,13 @@ LocalSim is a wrapper for SimBA, and acts as our primary simulation tool. While 
 
 Just run
 	./LocalSim
-to get this list of options in appreviated form. As an example:
-	./LocalSim -n Ricky -r ../urdf/RaycastVehicle.xml -w ../urdf/HeightmapWorld.xml -s WithoutStateKeeper
+to get this list of options in appreviated form. As an example, from ./build:
+	./Applications/LocalSim/LocalSim -n Ricky -r ../urdf/Robots/RaycastVehicle.xml -w ../urdf/Worlds/world_heightmap.xml -s WithoutStateKeeper
 ...starts a LocalSim named "Ricky", which runs the RaycastVehicle as described in its file, and the Heightmap data as described in its file. It also opens a Node connection, but does not attempt to interact with a StateKeeper. 
 
 StateKeeper
 ---------
-...for a later time :)
+Work in progress...
 
 Examples/KeyboardCarCommander
 ---------
@@ -78,12 +77,11 @@ Matlab_interface creates a Node connection between MATLAB and SimBA usig a MEX w
 
 SimPlanner
 ---------
-Work in progress
+Work in progress...
 
+******************************
 
-
-
-MAIN DEVELOPERS
-------------
+MAIN DEVELOPERS:
+----------
 * Brandon Minor
 * Lu Ma
