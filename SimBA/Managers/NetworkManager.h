@@ -64,7 +64,7 @@ public:
 
   //////////////////////////////////////
   // STATIC FUNCTIONS CALLED BY HAL AND STATEKEEPER
-  //////////////////////////////////////
+  //////////////////////////////////////\
 
   // add a new robot by URDF (Called by StateKeeper)
   static void _AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
@@ -115,6 +115,7 @@ private:
   int             m_iTimeStep;
   SimDevices*     m_pSimDevices;
   RobotsManager*  m_pRobotsManager;
+  std::mutex      statekeeper_mutex_;
 
 };
 

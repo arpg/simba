@@ -17,10 +17,10 @@ bool NetworkManager::Init(string sProxyName, string sServerName, int verbosity){
   // relative RPC method.
   m_sLocalSimName  = sProxyName;
   m_iNodeClients   = 0;
-  node_.set_verbosity(1);
+  node_.set_verbosity(0);
   bool worked = node_.init(m_sLocalSimName);
   if(!worked){
-    LOG(debug_level_) << "FAILURE: Initialized node for " << m_sLocalSimName;
+    LOG(debug_level_) << "FAILURE: No init for node " << m_sLocalSimName;
     return false;
   }
   LOG(debug_level_) << "SUCCESS: Initialized node for " << m_sLocalSimName;
@@ -533,7 +533,7 @@ bool NetworkManager::RegisterWithStateKeeper()
 {
   // 1. Subscribe to StateKeeper World state topic
   string sServiceName = m_sServerName+"/WorldState";
-  if( node_.subscribe(sServiceName) == false ){
+  if(node_.subscribe(sServiceName) == false){
     cout<<"[NetworkManager/RegisterWithStateKeeper]"<<
           " Error subscribing to "<<sServiceName<<endl;
     return false;
@@ -666,7 +666,7 @@ void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
 /// pose, state, and current command.
 bool NetworkManager::PublishRobotToStateKeeper(){
   // don't let anyone touch the shared resource table...
-  std::lock_guard<std::mutex>;
+  std::lock_guard<std::mutex> lock(statekeeper_mutex_);
 
   // 1. Set robot name and time step info
   RobotFullStateMsg mRobotFullState;
@@ -750,7 +750,7 @@ bool NetworkManager::PublishRobotToStateKeeper(){
 ////////////////////////////////////////////////////////////////////////
 
 bool NetworkManager::ReceiveWorldFromStateKeeper(){
-  std::lock_guard<std::mutex>;
+  std::lock_guard<std::mutex> lock(statekeeper_mutex_);
   WorldFullStateMsg ws;
   string sServiceName = m_sServerName + "/WorldState";
   // wait until we get the lastest world state
