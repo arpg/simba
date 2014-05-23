@@ -186,7 +186,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
 void NetworkManager::RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
                                           RegisterNodeCamRepMsg & mReply){
   LOG(debug_level_) << "NodeCam asking for register in timestep "
-                    << m_iTimeStep<<".";
+                    << m_iTimeStep << ".";
   string sDeviceName = CheckURI(mRequest.uri());
   if(sDeviceName!="FALSE"){
     vector<SimDeviceInfo*> pDevices =
@@ -231,7 +231,7 @@ void NetworkManager::RegisterControllerDevice(
     while (node_.subscribe(controller_name+"/"+controller_name) != true &&
            subscribe_try<500) {
       LOG(debug_level_) << ".";
-      usleep(100);
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
       subscribe_try++;
     }
     if (subscribe_try>=500) {
