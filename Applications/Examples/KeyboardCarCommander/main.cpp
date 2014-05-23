@@ -49,7 +49,7 @@ public:
   }
 
   void ApplyCommands(){
-    bool applied = car->ApplyCommand(torque, steering);
+    bool applied = car->ApplyCommand(20, 20);
     if(applied){
       // We don't want the engine to rev all the time...
 //      torque = 0;

@@ -44,7 +44,7 @@ public:
   SimDevices                  m_SimDevices;
   RobotsManager               m_RobotManager;
   NetworkManager              m_NetworkManager;
-  URDF_Parser                 m_Parser;
+  URDF_Parser*                parser_;
   bool                        m_bRender;
 
   /// Constructor

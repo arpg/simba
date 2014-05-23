@@ -4,7 +4,8 @@
 /// CONSTRUCTOR
 ////////////////////////////////////////////////////////////
 
-URDF_Parser::URDF_Parser(){
+URDF_Parser::URDF_Parser(int debug_level){
+  debug_level_ = debug_level;
 }
 
 ////////////////////////////////////////////////////////////
@@ -44,13 +45,13 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
         node_.init("URDF");
         while(!node_.subscribe("MATLAB/Heightmap")){
           std::this_thread::sleep_for(std::chrono::milliseconds(10));
-          std::cout<<"=>";
         }
+        LOG(debug_level_) << "SUCCESS: Subscribed to MATLAB/Heightmap";
         pb::Heightmap params;
-        std::cout<<"Starting to receive heightmap..."<<std::endl;
         while(!node_.receive("MATLAB/Heightmap", params)){
           std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+        LOG(debug_level_) << "SUCCESS: Received heightmap data from MATLAB";
         int row_count = params.row_count();
         int col_count = params.col_count();
         std::vector<double> X, Y, Z;
@@ -73,8 +74,6 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
       else if ( mSimWorld.m_sMesh == "CSV") {
         double row_count = ::atof(pElement->Attribute("row_count"));
         double col_count = ::atof(pElement->Attribute("col_count"));
-        std::cout<<row_count<<std::endl;
-        std::cout<<col_count<<std::endl;
         vector<double> x_data = GenNumFromChar(
             pElement->Attribute("x_data"));
         vector<double> y_data = GenNumFromChar(
@@ -157,7 +156,7 @@ HeightmapShape* URDF_Parser::GetMeshData(XMLDocument& pDoc){
 bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
                              SimRobot& rSimRobot,
                              string sProxyName){
-  cout<<"[ParseRobot] Starting to parse robot"<<endl;
+  LOG(debug_level_) << "Parsing robot";
   XMLElement *pParent=pDoc.RootElement();
   string sRobotName(GetAttribute(pParent, "name"));
   sRobotName = sProxyName;
@@ -185,9 +184,8 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
         // Raycast Car
         //////////////////////////////////////////
         SimRaycastVehicle* pVehicle = ParseRaycastCar(sBodyName, pElement);
-
         rSimRobot.SetBase(pVehicle);
-        cout<<"[ParseRobot] Successfully built car bodybase: "<<sBodyName<<endl;
+        LOG(debug_level_) << "Successfully built base for "<<sBodyName;
       }
       else{
         sBodyName = sBodyName+"@"+sRobotName;
@@ -200,7 +198,7 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
           BoxShape* pBox =new BoxShape(sBodyName, vDimension[0],vDimension[1],
               vDimension[2],iMass, 1, vPose);
           rSimRobot.SetBase( pBox );
-          cout<<"[ParseRobot] Successfully built bodybase: "<<sBodyName<<endl;
+          LOG(debug_level_) << "Successfully built base for "<<sBodyName;
           m_mModelNodes[pBox->GetName()] = pBox;
         }
       }
@@ -239,7 +237,6 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
 ////////////////////////////////////////////////////////////
 bool URDF_Parser::ParseCommandLineForPickSensor(string sCommandLine){
   // get scheme:
-  cout<<sCommandLine<<endl;
   return true;
 }
 
@@ -278,7 +275,7 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
   if(strcmp(sRootContent,"body")== 0)
   {
     string sBodyName = GetAttribute( pElement, "name")+"@"+sRobotName;
-    cout<<"[ParseShape] Trying to build "<<sBodyName<<endl;
+    LOG(debug_level_) << "Building "<< sBodyName;
     int iMass =::atoi( pElement->Attribute("mass"));
     vector<double> vPose = GenNumFromChar(pElement->Attribute("pose"));
     vector<double> vDimension =
@@ -315,7 +312,7 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
       m_mModelNodes[pMesh->GetName()] = pMesh;
     }
 
-    cout<<"[ParseShape] Successfully built "<<sBodyName<<endl;
+    LOG(debug_level_) << "SUCCESS: Built " << sBodyName;
   }
 }
 
@@ -336,7 +333,7 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
     // Hinge
     ////////////////
     if(sJointType == "HingeJoint"){
-      cout<<"[ParseJoint] Trying to build Hinge joint."<<endl;
+      LOG(debug_level_) << "Building Hinge";
       string sParentName;
       string sChildName;
       vector<double> vPivot;
@@ -397,14 +394,14 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
       pHinge->SetLimits(dLowerLimit, dUpperLimit,
                         dSoftness, dBias, dRelaxation);
       m_mModelNodes[pHinge->GetName()] = pHinge;
-      cout<<"[ParseJoint] Successfully built "<<sJointName<<endl;
+      LOG(debug_level_) << "SUCCESS: Built Hinge";
     }
 
     ///////////////
     // Hinge2
     ///////////////
     else if(sJointType=="Hinge2Joint"){
-      cout<<"[ParseJoint] Trying to build Hinge2 joint."<<endl;
+      LOG(debug_level_) << "Building Hinge2";
       string sParentName;
       string sChildName;
       vector<double> vAnchor;
@@ -475,8 +472,8 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
       pHinge2->SetLimits(1, 1, LowerLinearLimit, UpperLinearLimit,
                          LowerAngleLimit, UpperAngleLimit);
       m_mModelNodes[pHinge2->GetName()] = pHinge2;
-      std::cout<<"[ParseJoint] Successfully built Hinge2 between "<<
-                 sParentName<<" and "<<sChildName<<std::endl;
+      LOG(debug_level_) << "SUCCESS: Built Hinge2 between "
+                        << sParentName << " and " << sChildName;
     }
 
     ///////////////
@@ -595,8 +592,7 @@ void URDF_Parser::ParseJoint(string sRobotName, XMLElement *pElement){
 ////////////////////////////////////////////////////////////
 SimRaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
                                                 XMLElement *pElement){
-  cout<<"[URDF_Parser] Trying to build a RaycastVehicle"<<endl;
-
+  LOG(debug_level_) << "Building a RaycastVehicle";
   std::vector<double> vParameters;
   vParameters.resize(29);
   std::vector<double> pose;
@@ -723,6 +719,7 @@ SimRaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
       }
       if(!wheel.compare("mesh")){
         wheel_mesh = pChild->Attribute("path");
+        LOG(debug_level_) << "Path to Vehicle mesh is " << wheel_mesh;
         wheel_dim = GenNumFromChar(pChild->Attribute("dim"));
       }
     }
@@ -741,9 +738,7 @@ SimRaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
 
   /// Build the car here.
   m_mModelNodes[sRobotName] = pRaycastVehicle;
-
-  cout<<"[URDF_Parser] Parse Vehicle "<<sRobotName<<" Success."<<endl;
-
+  LOG(debug_level_) << "SUCCESS: Built RaycastVehicle " << sRobotName;
   return pRaycastVehicle;
 
 
@@ -761,7 +756,7 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement ){
     if(sParentName=="NONE"){
       return;
     }
-    cout<<"[ParseSensorShape] Trying to create a body for a Sensor"<<endl;
+    LOG(debug_level_) << "Building a sensor body";
     string sCameraName = GetAttribute( pElement, "Name")+"@"+sRobotName;
     sParentName = GetAttribute( pElement, "Parent")+"@"+sRobotName;
     vector<double> vPose = GenNumFromChar(pElement->Attribute("Pose"));
@@ -804,7 +799,7 @@ void URDF_Parser::ParseSensorShape(string sRobotName, XMLElement *pElement ){
                           vAxis, vAxis);
     pCameraHinge->SetLimits(-0.01, 0.01, 1, .1, 1);
     m_mModelNodes[pCameraHinge->GetName()] = pCameraHinge;
-    cout<<"[ParseSensorShape] Successfully init Sensor body."<<endl;
+    LOG(debug_level_) << "SUCCESS: Built sensor body";
   }
 }
 
@@ -823,7 +818,6 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
   // read high level parent (root parent)
   while (pElement){
     const char* sRootContent = pElement->Name();
-    cout<<sRootContent<<endl;
     if(strcmp(sRootContent,"Device")==0){
       string sType( pElement->Attribute("Type"));
 
@@ -834,6 +828,7 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
 
       /// CAMERAS
       if(sType == "Camera"){
+        LOG(debug_level_) << "Add device: Camera";
         string sMode = GetAttribute(pElement, "Mode");
         string sModel = GetAttribute(pElement, "Model");
         int iFPS = atoi( GetAttribute(pElement,"FPS").c_str());
@@ -876,10 +871,13 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
                             SceneGraph::eSimCamDepth, iFPS, vPose, sModel);
           m_SimDevices.AddDevice(DepthDevice);
         }
+        LOG(debug_level_) << "SUCCESS: SimCamera initialized.";
+        LOG(debug_level_) << "         Camera type: " << sMode;
       }
 
       /// GPS
       if(sType=="GPS"){
+        LOG(debug_level_) << "Add device: GPS";
         string sDeviceName = GetAttribute(pElement, "Name")+"@"+sRobotName;
         SimGPS* pGPS = new SimGPS(sDeviceName, sDeviceName, sRobotName);
         m_SimDevices.AddDevice(pGPS);
@@ -887,6 +885,7 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
 
       /// Vicon
       if(sType=="Vicon"){
+        LOG(debug_level_) << "Add device: Vicon";
         //        string sViconName = GetAttribute( pElement, "Name")+"@"+sRobotName;
         //        SimDeviceInfo* Device = new SimDeviceInfo();
         //        Device->m_sDeviceName = sViconName;
@@ -904,6 +903,7 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
       ////////////////////////////
 
       if(sType=="CarController"){
+        LOG(debug_level_) << "Add device: CarController";
         string sControllerName = GetAttribute(pElement, "Name")+"@"+sRobotName;
         string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
         CarController* CarDevice =
@@ -912,6 +912,7 @@ bool URDF_Parser::ParseDevices( XMLDocument& rDoc,
       }
 
       if(sType=="SimpleController"){
+        LOG(debug_level_) << "Add device: SimpleController";
         string sControllerName = GetAttribute(pElement, "Name")+"@"+sRobotName;
         string sBodyName= GetAttribute( pElement, "Body")+"@"+sRobotName;
         SimpleController* SimpleDevice =

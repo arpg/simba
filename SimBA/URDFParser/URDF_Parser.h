@@ -12,6 +12,7 @@
 #include <SimRobots/SimWorld.h>
 #include <PbMsgs/BVP.pb.h>
 #include <Node/Node.h>
+#include <miniglog/logging.h>
 
 /////////////////////////////////
 /// URDF PARSER
@@ -34,8 +35,7 @@ typedef Matrix<double, 6, 1> Vector6d;
 class URDF_Parser
 {
 public:
-  URDF_Parser();
-
+  URDF_Parser(int debug_level);
   // Parses the world for the mesh and conditions.
   bool ParseWorld(XMLDocument& doc, SimWorld& mSimWorld);
 
@@ -76,6 +76,7 @@ public:
   std::map<std::string, ModelNode*> m_mModelNodes;
   std::map<std::string, ModelNode*> m_mWorldNodes;
   node::node node_;
+  int debug_level_;
 
 };
 

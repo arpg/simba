@@ -34,7 +34,7 @@ public:
   int m_iNodeClients; // num of Node clients that subscribe to LocalSim
 
   /// INITIALIZE NETWORK
-  bool Init(string sLocalSimName, string sServerName, int verbosity=0);
+  bool Init(string sLocalSimName, string sServerName, int debug_level);
 
   /// URI PARSERS
   std::map<string, string> ParseURI(string sURI);

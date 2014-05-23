@@ -6,10 +6,11 @@
   *
   ***********************************************************/
 
-bool NetworkManager::Init(string sProxyName, string sServerName, int verbosity){
+bool NetworkManager::Init(string sProxyName, string sServerName,
+                          int debug_level){
   m_sServerName = sServerName;
-  debug_level_ = verbosity;
-  if(m_sServerName == "WithoutNetwork"){
+  debug_level_ = debug_level;
+  if (m_sServerName == "WithoutNetwork") {
     LOG(debug_level_) << "Skip Network due to WithoutNetwork Mode";
     return true;
   }
@@ -17,7 +18,7 @@ bool NetworkManager::Init(string sProxyName, string sServerName, int verbosity){
   // relative RPC method.
   m_sLocalSimName  = sProxyName;
   m_iNodeClients   = 0;
-  node_.set_verbosity(0);
+  node_.set_verbosity(1);
   bool worked = node_.init(m_sLocalSimName);
   if(!worked){
     LOG(debug_level_) << "FAILURE: No init for node " << m_sLocalSimName;
@@ -111,7 +112,6 @@ string NetworkManager::CheckURI(string sURI){
 
 void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
   m_pSimDevices = pSimDevices;
-
   // Check if we need to init devices in Node.
   if (m_sServerName=="WithoutNetwork") {
     LOG(debug_level_) << "Skip! Init LocalSim without Network.";
@@ -136,6 +136,7 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
 
       /// CAMERAS
       if (Device->m_sDeviceType=="Camera" && !Device->m_bHasAdvertised) {
+        LOG(INFO) << "Registering a Camera(s) with Node";
         vector<SimDeviceInfo*> related_devices =
             m_pSimDevices->GetAllRelatedDevices(Device->GetBodyName());
         SimCamera* pCam = (SimCamera*) related_devices.at(0);
@@ -164,8 +165,9 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
        * SimControllers
        ********************/
 
-      else if(Device->m_sDeviceType=="CarController"
-              && !Device->m_bHasAdvertised){
+      else if (Device->m_sDeviceType=="CarController"
+              && !Device->m_bHasAdvertised) {
+        LOG(INFO) << "Registering a CarController with Node";
         CarController* pCarCon = (CarController*) Device;
         node_.provide_rpc("RegisterControllerDevice",
                            &_RegisterControllerDevice, this);
@@ -223,24 +225,24 @@ void NetworkManager::RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
 void NetworkManager::RegisterControllerDevice(
     pb::RegisterControllerReqMsg& mRequest,
     pb::RegisterControllerRepMsg & mReply){
-  string controller_name = CheckURI(mRequest.uri());
+  string controller_name = GetFirstName(CheckURI(mRequest.uri()));
   if (controller_name!="FALSE") {
-    LOG(debug_level_) << "Attempting to subscribe to "
-                      << controller_name+"/"+controller_name;
     int subscribe_try = 0;
     while (node_.subscribe(controller_name+"/"+controller_name) != true &&
            subscribe_try<500) {
       LOG(debug_level_) << ".";
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
       subscribe_try++;
     }
     if (subscribe_try>=500) {
       LOG(debug_level_) << "FAILURE: Cannot subscribe to "<<controller_name;
     } else {
-      LOG(debug_level_) << "We subscribed!";
+      LOG(debug_level_) << "SUCCESS: Subcribed to " << controller_name;
       mReply.set_success(true);
     }
+  } else {
+    LOG(ERROR) << "FAILURE: Controller's URI could not be parsed";
   }
+  LOG(debug_level_) << "SUCCESS: Done adding CarController";
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -262,7 +264,6 @@ bool NetworkManager::UpdateNetwork(){
   ///         controller->GetDeviceName(). It doesn't have a physics body;
   ///         rather, it just controls one. It's purely a device.
   vector<SimDeviceInfo*> pDevices = m_pSimDevices->GetOnDevices();
-  LOG(debug_level_) << "Num. devices: " << pDevices.size();
   for(unsigned int ii=0; ii<pDevices.size(); ii++){
     SimDeviceInfo* Device = pDevices.at(ii);
     ////////////////////
@@ -449,7 +450,6 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName){
     int n = 0;
     while(node_.receive(sServiceName, Command)==false
           && n < max_iter){
-      LOG(debug_level_) << ".";
       n++;
     }
     if(n==max_iter){
@@ -590,7 +590,7 @@ bool NetworkManager::RegisterWithStateKeeper()
       doc.Parse(urdf.xml().c_str());
 
       // create previous robot
-      URDF_Parser* parse = new URDF_Parser();
+      URDF_Parser* parse = new URDF_Parser(debug_level_);
       SimRobot* robot = new SimRobot();
       parse->ParseRobot(doc, *robot, sLastName);
       m_pRobotsManager->ImportSimRobot(*robot);
@@ -630,7 +630,7 @@ void NetworkManager::AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
       mRequest.mutable_init_pose()->q(), mRequest.mutable_init_pose()->r();
 
   // add new robot in proxy
-  URDF_Parser* parse = new URDF_Parser();
+  URDF_Parser* parse = new URDF_Parser(debug_level_);
   SimRobot* robot = new SimRobot();
   parse->ParseRobot(doc, *robot, sProxyNameOfNewRobot);
   m_pRobotsManager->ImportSimRobot(*robot);
@@ -645,7 +645,7 @@ void NetworkManager::AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
 void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
                                  LocalSimDeleteRobotRepMsg& mReply){
   // Don't let anyone touch the shared resource table...
-  std::lock_guard<std::mutex>;
+  std::lock_guard<std::mutex> lock(statekeeper_mutex_);
 
   // set reply message for StateKeeper
   mReply.set_message("DeleteRobotSuccess");

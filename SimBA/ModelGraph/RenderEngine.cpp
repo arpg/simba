@@ -198,7 +198,6 @@ void RenderEngine::AddDevices(SimDevices& Devices){
       it != Devices.m_vSimDevices.end();
       it++){
     SimDeviceInfo* Device = it->second;
-    cout<<"[RenderEngine::AddDevices] "<<Device->m_sDeviceType<<endl;
     if(Device->m_sDeviceType=="Camera"){
       SimCamera* pSimCam = (SimCamera*) Device;
       // Initialize the cameras with SceneGraph
