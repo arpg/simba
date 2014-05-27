@@ -49,12 +49,8 @@ public:
   }
 
   void ApplyCommands(){
-    bool applied = car->ApplyCommand(20, 20);
-    if(applied){
-      // We don't want the engine to rev all the time...
-//      torque = 0;
-
-    }
+    // We must give a command_time (in this case, a 30th of a second)
+    bool applied = car->ApplyCommand(20, 20, 1.0/30.0);
   }
 
   hal::Car* car;
