@@ -48,7 +48,6 @@ void RenderEngine::AddNode( ModelNode *pNode){
       vWheelScale<<2*params[WheelRadius]/vWheelDim(1),
           2*params[WheelRadius]/vWheelDim(2),
           params[WheelWidth]/vWheelDim(0);
-      cout<<vWheelScale<<endl;
 
       // FL Wheel
       SceneGraph::GLMesh* FLWheel = new SceneGraph::GLMesh();
@@ -198,7 +197,6 @@ void RenderEngine::AddDevices(SimDevices& Devices){
       it != Devices.m_vSimDevices.end();
       it++){
     SimDeviceInfo* Device = it->second;
-    cout<<"[RenderEngine::AddDevices] "<<Device->m_sDeviceType<<endl;
     if(Device->m_sDeviceType=="Camera"){
       SimCamera* pSimCam = (SimCamera*) Device;
       // Initialize the cameras with SceneGraph

@@ -326,7 +326,7 @@ int main(int argc, char** argv){
   std::string name = argv[1];
   sim->sim_planner_name_ = name;
   std::string number = sim->GetNumber(sim->sim_planner_name_);
-  URDF_Parser* parser = new URDF_Parser();
+  URDF_Parser* parser = new URDF_Parser(1);
   // 1. Read URDF files.
   XMLDocument WorldURDF;
   const string& sWorldURDFPath =

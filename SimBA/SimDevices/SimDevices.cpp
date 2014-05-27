@@ -26,6 +26,7 @@ void SimDevices::UpdateSensors(){
     SimDeviceInfo* Device = it->second;
     // Cameras are taken care of in RenderEngine, so don't worry about
     // them here.
+    // TODO:GPS and Vicon
 //    if(Device->m_sDeviceType == "GPS"){
 //      SimGPS* pGPS = (SimGPS*) Device;
 //      pGPS->Update();
@@ -48,6 +49,12 @@ vector<SimDeviceInfo*> SimDevices::GetAllRelatedDevices(string sDeviceBodyName){
       it++){
     SimDeviceInfo* pDevice = it->second;
     if(pDevice->m_sDeviceType=="CarController"){
+      // cout<<"SimDevices::GetAllRelatedDevices: "<<
+      //     pDevice->GetDeviceName()<<endl;
+      // cout<<"SimDevices::GetAllRelatedDevices: "<<
+      //     pDevice->GetBodyName()<<endl;
+      // cout<<"SimDevices::GetAllRelatedDevices: "<<
+      //     sDeviceBodyName<<endl;
       if (pDevice->GetDeviceName()==sDeviceBodyName){
         related_devices.push_back(pDevice);
       }

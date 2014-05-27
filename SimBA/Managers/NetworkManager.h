@@ -14,8 +14,7 @@
 #include <NodeCamMessage.pb.h>
 #include <NodeCar.pb.h>
 #include <Network/WorldState.h>
-
-#include <boost/thread/mutex.hpp>
+#include <miniglog/logging.h>
 
 using namespace std;
 
@@ -35,7 +34,7 @@ public:
   int m_iNodeClients; // num of Node clients that subscribe to LocalSim
 
   /// INITIALIZE NETWORK
-  bool Init(string sLocalSimName, string sServerName, int verbosity=0);
+  bool Init(string sLocalSimName, string sServerName, int debug_level);
 
   /// URI PARSERS
   std::map<string, string> ParseURI(string sURI);
@@ -84,8 +83,8 @@ public:
 
   //////////////////////////////
 
-  /// Register hal camera device in LocalSim. This RPC function is called by hal.
-  /// Once we register a cam device, we can use the recv and publish method.
+  // Register hal camera device in LocalSim. This RPC function is called by hal.
+  // Once we register a cam device, we can use the recv and publish method.
 
   static void _RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
                                  RegisterNodeCamRepMsg& mReply,
@@ -108,14 +107,15 @@ public:
 
 private:
 
-  node::node       m_Node;
+  node::node      node_;
+  int             debug_level_;
   std::string     m_sLocalSimName;
   string          m_sServerName;
   int             m_verbosity;
   int             m_iTimeStep;
-  mutex           m_Mutex;
   SimDevices*     m_pSimDevices;
   RobotsManager*  m_pRobotsManager;
+  std::mutex      statekeeper_mutex_;
 
 };
 

@@ -8,26 +8,17 @@
 
 using namespace std;
 
+// SimWorld is just a struct, really, holding the info we pulled frem the
+// world.xml file
+
 class SimWorld
 {
-
-public:
-
-    vector<double>          m_vWorldPose;
-    vector<double>          m_vWorldNormal;
-    vector<double>          m_vRobotPose;
-    std::vector<ModelNode*> m_WorldNodes;
-    std::string             m_sMesh;
-
-
-    void PrintAll(){
-        cout<<"--------------------------------------------------------"<<endl<<
-              "Finished building world from world.XML"<<endl<<
-              "--------------------------------------------------------"<<endl;
-    }
-
-
-
+ public:
+  vector<double>          m_vWorldPose;
+  vector<double>          m_vWorldNormal;
+  vector<double>          m_vRobotPose;
+  std::vector<ModelNode*> m_WorldNodes;
+  std::string             m_sMesh;
 };
 
 #endif

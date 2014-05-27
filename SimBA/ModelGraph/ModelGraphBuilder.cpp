@@ -48,8 +48,6 @@ void ModelGraphBuilder::AssociateDevices(SimDevices& m_SimDevices){
       it++){
     SimDeviceInfo* pDevice = it->second;
     m_Phys.RegisterDevice(pDevice);
-    cout<<"[ModelGraphBuilder::AssociateDevices] Physics registered a "<<
-          pDevice->m_sDeviceType<<endl;
   }
 }
 
@@ -122,7 +120,3 @@ void ModelGraphBuilder::UpdateScene(){
     m_Render.UpdateScene();
   }
 }
-
-
-
-

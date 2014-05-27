@@ -49,12 +49,8 @@ public:
   }
 
   void ApplyCommands(){
-    bool applied = car->ApplyCommand(torque, steering);
-    if(applied){
-      // We don't want the engine to rev all the time...
-//      torque = 0;
-
-    }
+    // We must give a command_time (in this case, a 30th of a second)
+    bool applied = car->ApplyCommand(20, 20, 1.0/30.0);
   }
 
   hal::Car* car;
@@ -69,16 +65,11 @@ public:
 
 int main(){
   // This should do it...
-  KeyCarController KeyCar("NodeCar:[name=VehicleController]//");
-//  pangolin::RegisterKeyPressCallback(
-//        'w', boost::bind( &KeyCarController::GoForward, &KeyCar));
-//  pangolin::RegisterKeyPressCallback(
-//        's', boost::bind( &KeyCarController::GoBack, &KeyCar));
-//  pangolin::RegisterKeyPressCallback(
-//        'a', boost::bind( &KeyCarController::GoLeft, &KeyCar));
-//  pangolin::RegisterKeyPressCallback(
-//        'd', boost::bind( &KeyCarController::GoRight, &KeyCar));
-
+  // IMPORTANT: Make sure that you have the name of the sim that you want to
+  // connect with in the properties string (e.g. sim=LocalSim). Otherwise,
+  // when we have multiple sims on the same network, we won't be able to
+  // identify what to control
+  KeyCarController KeyCar("NodeCar:[name=VehicleController,sim=Ricky]//");
 
   while(1){
     KeyCar.GoForward();

@@ -9,6 +9,7 @@
 #include "CarPlannerCommon.h"
 #include "ApplyVelocitiesFunctor.h"
 #include "LocalPlanner.h"
+#include "miniglog/logging.h"
 
 #include "Node/Node.h"
 #include "URDFParser/URDF_Parser.h"
@@ -33,11 +34,16 @@ class KeyCarController{
   void ApplyCommands(){
     double force = 0;
     double phi = 0;
+    double command_time = 1.0/30.0;
     if (count_ < policy_.time_size()) {
       force = force_.at(count_);
       phi = phi_.at(count_);
+      command_time = time_.at(count_);
     }
-    bool applied = car_->ApplyCommand(force, phi);
+    bool applied = car_->ApplyCommand(force, phi, command_time);
+    LOG(INFO) << force;
+    LOG(INFO) << phi;
+    LOG(INFO) << command_time;
     count_++;
   }
 

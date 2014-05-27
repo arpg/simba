@@ -44,7 +44,6 @@ public:
 //    (CameraType==SceneGraph::eSim) ? m_nChannels = 2 : m_nChannels = 1;
     m_iFPS = FPS;
     m_iCamType = CameraType;
-    cout<<"[SimCamera] create camera type "<<m_iCamType<<" success."<<endl;
     m_sModel = sCameraModel;
     m_CameraRig = calibu::ReadXmlRig(sCameraModel);
     m_vPose = vInitPose;
@@ -56,13 +55,8 @@ public:
     calibu::CameraModel theCam = m_CameraRig.cameras[0].camera;
     m_nImgWidth = theCam.Width();
     m_nImgHeight = theCam.Height();
-
     m_Camera.Init(glGraph, _Cart2T(m_vPose), theCam.K(),
                   m_nImgWidth, m_nImgHeight, m_iCamType);
-
-    cout<<"[SimCamera] SimCamera initialization success."<<endl;
-    cout<<"[SimCamera] Camera Type is "<<m_iCamType<<". ";
-    cout<<"Width is:"<<m_nImgWidth <<". Height is: "<<m_nImgHeight<<endl;
     return true;
   }
 
