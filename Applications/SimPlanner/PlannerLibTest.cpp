@@ -323,16 +323,19 @@ int main(int argc, char** argv){
   // Once we do this, we should be able to get rid of most of the Node
   // messiness up until this program connects with LocalSim.
   PlannerLibTest* sim = new PlannerLibTest();
-  std::string name = argv[1];
+  std::string name = "Sim0";
+  if (argc==2) {
+    name = argv[1];
+  }
   sim->sim_planner_name_ = name;
   std::string number = sim->GetNumber(sim->sim_planner_name_);
   URDF_Parser* parser = new URDF_Parser(1);
   // 1. Read URDF files.
-  XMLDocument WorldURDF;
-  const string& sWorldURDFPath =
-      "/Users/Trystan/Code/simba/urdf/HeightmapWorld.xml";
-  GetXMLdoc(sWorldURDFPath, WorldURDF);
-  sim->heightmap_data_ = parser->GetMeshData(WorldURDF);
+  XMLDocument world_xml;
+  const string& world_urdf_path =
+      "/Users/Trystan/Code/simba/urdf/Worlds/world_heightmap.xml";
+  GetXMLdoc(world_urdf_path, world_xml);
+  sim->heightmap_data_ = parser->GetMeshData(world_xml);
   sim->Init(sim->heightmap_data_);
   int count = 0;
   // 2. Solve for the path using PlannerLib
@@ -340,24 +343,23 @@ int main(int argc, char** argv){
   if (count<100) {
     policy = sim->StartPolicy();
   }
-  // This is our solved policy, which we will send through this
+  // This is our solved policy, which we will send through the
   // interwebs.
   // 3. Start looking for the car (similar to KeyboardCommander)
-  KeyCarController KeyCar("NodeCar:[name=VehicleController]//",
+  KeyCarController KeyCar("NodeCar:[name=VehicleController,sim=Ricky]//",
                           policy);
-  while(1){
-    // 4. Drive our car to the EDGE OF SPACE
-    KeyCar.ApplyCommands();
-    //  Send the commands to the car
-    // These are the parts of policy:
-    //   policy.add_force(Comm.m_dForce);
-    //   policy.add_phi(Comm.m_dPhi);
-    //   policy.add_time(Comm.m_dT);
-    // for(unsigned int jj=0; jj<4; jj++){
+  while (KeyCar.ApplyCommands()){
+    // 4. Drive our car to the EDGE OF SPACE!!!!!!!1!!
     //   policy.add_start_param(start_.at(jj));
     //   policy.add_goal_param(goal_.at(jj));
-    // }
-    // policy.set_tau(m_nTau);
   }
+  // 5. Measure the delta between the where the vehicle is and where
+  //    it's supposed to be. The policy holds the destination already.
+  std::vector<double> start_param, goal_param;
+  for (int ii=0; ii<policy.start_param_size(); ii++) {
+    start_param.push_back(policy.start_param(ii));
+    goal_param.push_back(policy.goal_param(ii));
+  }
+
   std::cout<<"Done with all of our shenanigans!"<<std::endl;
 }

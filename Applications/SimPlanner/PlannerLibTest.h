@@ -31,20 +31,24 @@ class KeyCarController{
     count_ = 0;
   }
 
-  void ApplyCommands(){
+  bool ApplyCommands(){
     double force = 0;
     double phi = 0;
     double command_time = 1.0/30.0;
+    bool cont = true;
     if (count_ < policy_.time_size()) {
       force = force_.at(count_);
       phi = phi_.at(count_);
       command_time = time_.at(count_);
+    } else {
+      cont = false;
     }
-    bool applied = car_->ApplyCommand(force, phi, command_time);
+    car_->ApplyCommand(force, phi, command_time);
     LOG(INFO) << force;
     LOG(INFO) << phi;
     LOG(INFO) << command_time;
     count_++;
+    return cont;
   }
 
   void TurnPolicyIntoVector(pb::BVP_policy policy){
@@ -97,6 +101,8 @@ class PlannerLibTest
   std::vector<double> goal_;
   std::string params_file_name_;
   HeightmapShape* heightmap_data_;
+  // This is what we compare to our desired goal_param, from our policy
+  std::vector<double> end_param_;
 
   /// CONSTRUCTOR
   PlannerLibTest();
