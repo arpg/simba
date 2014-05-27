@@ -102,7 +102,7 @@ class PlannerLibTest
   std::string params_file_name_;
   HeightmapShape* heightmap_data_;
   // This is what we compare to our desired goal_param, from our policy
-  std::vector<double> end_param_;
+  std::vector<double> last_pose_;
 
   /// CONSTRUCTOR
   PlannerLibTest();

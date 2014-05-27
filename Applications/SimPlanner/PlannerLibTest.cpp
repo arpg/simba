@@ -21,7 +21,7 @@ void PlannerLibTest::Init(HeightmapShape* heightmap_data){
   start_.push_back(10);
   start_.push_back(-5);
   start_.push_back(0);
-  start_.push_back(0);
+  start_.push_back(0.1);
   goal_.push_back(10);
   goal_.push_back(15);
   goal_.push_back(0);
@@ -268,6 +268,8 @@ pb::BVP_policy PlannerLibTest::SampleTrajectory(){
     m_snapper.CalculateTorqueCoefficients(problem,&sample);
     m_snapper.SimulateTrajectory(sample,problem,0,true);
   }
+  VehicleState last_vehicle_state = sample.GetLastPose();
+
   pb::BVP_policy policy;
   // We have to get all of the commands over the time period described.
   // And the start/ goal state. That's helpful too.
