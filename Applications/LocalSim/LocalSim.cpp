@@ -35,7 +35,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
 
 
   // 4. We must decide the next actions based off of the Server Option.
-  LOG(INFO) << " The server option is set to " << sServerOption << ".";
+  LOG(debug_level) << " The server option is set to " << sServerOption << ".";
 
   m_NetworkManager.Init(m_sLocalSimName, sServerOption, debug_level);
   m_NetworkManager.RegisterRobot(&m_RobotManager);
@@ -46,7 +46,7 @@ LocalSim::LocalSim(const string& sLocalSimName,
                sLocalSimName, false, m_bRender, false);
 
   // TODO: What to do with StateKeeper option...?
-  LOG(INFO) << "Init Local Sim Success!";
+  LOG(debug_level) << "Init Local Sim Success!";
 
 }
 

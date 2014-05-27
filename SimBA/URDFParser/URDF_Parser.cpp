@@ -34,6 +34,7 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
       //** There are several options for mesh design: **//
       // 1. Init world without mesh. Creates a flat plane.
       if (mSimWorld.m_sMesh =="NONE"){
+        LOG(debug_level_) << "World's mesh type: " << mSimWorld.m_sMesh;
         // We can't just use a giant box here; the RaycastVehicle won't connect,
         // and will go straight through.
         PlaneShape* pGround = new PlaneShape("Ground", mSimWorld.m_vWorldNormal,
@@ -42,6 +43,7 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
       }
       // 2. Init world from MATLAB height data.
       else if ( mSimWorld.m_sMesh == "MATLAB") {
+        LOG(debug_level_) << "World's mesh type: " << mSimWorld.m_sMesh;
         node_.init("URDF");
         while(!node_.subscribe("MATLAB/Heightmap")){
           std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -72,6 +74,7 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
       // won't have to keep importing them from MATLAB every time, which really
       // takes forever.
       else if ( mSimWorld.m_sMesh == "CSV") {
+        LOG(debug_level_) << "World's mesh type: " << mSimWorld.m_sMesh;
         double row_count = ::atof(pElement->Attribute("row_count"));
         double col_count = ::atof(pElement->Attribute("col_count"));
         vector<double> x_data = GenNumFromChar(
@@ -95,6 +98,8 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
         m_mWorldNodes[map_shape->GetName()] = map_shape;
       } else {
         // 4. We actually have a mesh.
+        LOG(debug_level_) << "World's mesh type: mesh";
+        LOG(debug_level_) << "Mesh directory: " << mSimWorld.m_sMesh;
         MeshShape* pMesh = new MeshShape("Map", mSimWorld.m_sMesh,
                                          mSimWorld.m_vWorldPose);
         m_mWorldNodes[pMesh->GetName()] = pMesh;
@@ -102,7 +107,7 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
     }
     pElement=pElement->NextSiblingElement();
   }
-  mSimWorld.PrintAll();
+  LOG(debug_level_) << "SUCCESS: World initialized";
   mSimWorld.m_WorldNodes = GetModelNodes(m_mWorldNodes);
   return true;
 }
@@ -156,7 +161,7 @@ HeightmapShape* URDF_Parser::GetMeshData(XMLDocument& pDoc){
 bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
                              SimRobot& rSimRobot,
                              string sProxyName){
-  LOG(debug_level_) << "Parsing robot";
+  LOG(debug_level_) << "Parsing robot body:";
   XMLElement *pParent=pDoc.RootElement();
   string sRobotName(GetAttribute(pParent, "name"));
   sRobotName = sProxyName;
@@ -185,7 +190,7 @@ bool URDF_Parser::ParseRobot(XMLDocument& pDoc,
         //////////////////////////////////////////
         SimRaycastVehicle* pVehicle = ParseRaycastCar(sBodyName, pElement);
         rSimRobot.SetBase(pVehicle);
-        LOG(debug_level_) << "Successfully built base for "<<sBodyName;
+        LOG(debug_level_) << "SUCCESS: built base for "<<sBodyName;
       }
       else{
         sBodyName = sBodyName+"@"+sRobotName;

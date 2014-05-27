@@ -136,7 +136,8 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
 
       /// CAMERAS
       if (Device->m_sDeviceType=="Camera" && !Device->m_bHasAdvertised) {
-        LOG(INFO) << "Registering a Camera(s) with Node";
+        LOG(debug_level_) << "SUCCESS: rpc call for Camera(s) "
+                          << "registered with Node";
         vector<SimDeviceInfo*> related_devices =
             m_pSimDevices->GetAllRelatedDevices(Device->GetBodyName());
         SimCamera* pCam = (SimCamera*) related_devices.at(0);
@@ -167,7 +168,8 @@ void NetworkManager::RegisterDevices(SimDevices* pSimDevices){
 
       else if (Device->m_sDeviceType=="CarController"
               && !Device->m_bHasAdvertised) {
-        LOG(INFO) << "Registering a CarController with Node";
+        LOG(debug_level_) << "SUCCESS: rpc call for CarController"
+                          << " registered with Node";
         CarController* pCarCon = (CarController*) Device;
         node_.provide_rpc("RegisterControllerDevice",
                            &_RegisterControllerDevice, this);
@@ -533,7 +535,7 @@ bool NetworkManager::RegisterWithStateKeeper()
 {
   // 1. Subscribe to StateKeeper World state topic
   string sServiceName = m_sServerName+"/WorldState";
-  if(node_.subscribe(sServiceName) == false){
+  if (!node_.subscribe(sServiceName)) {
     cout<<"[NetworkManager/RegisterWithStateKeeper]"<<
           " Error subscribing to "<<sServiceName<<endl;
     return false;

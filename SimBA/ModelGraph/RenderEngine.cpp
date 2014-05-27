@@ -48,7 +48,6 @@ void RenderEngine::AddNode( ModelNode *pNode){
       vWheelScale<<2*params[WheelRadius]/vWheelDim(1),
           2*params[WheelRadius]/vWheelDim(2),
           params[WheelWidth]/vWheelDim(0);
-      cout<<vWheelScale<<endl;
 
       // FL Wheel
       SceneGraph::GLMesh* FLWheel = new SceneGraph::GLMesh();

@@ -64,7 +64,7 @@ public:
 
   //////////////////////////////////////
   // STATIC FUNCTIONS CALLED BY HAL AND STATEKEEPER
-  //////////////////////////////////////\
+  //////////////////////////////////////
 
   // add a new robot by URDF (Called by StateKeeper)
   static void _AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
