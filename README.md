@@ -52,10 +52,10 @@ LocalSim is a wrapper for SimBA, and acts as our primary simulation tool. While 
   > WithoutNetwork: nothing is connecting to the LocalSim
   > WithoutStateKeeper: HAL devices can control vehicles and sensors described in the Robot.xml file
   > WithStateKeeper: LocalSim communicates with other LocalSims, all of which share a synchronization program between them called StateKeeper. This is a task for a future iteration of SimBA. 
-
+- *-debug*: Add this flag to the end to print logging info while LocalSim initializes.
 As an example, from ./build:
 	./Applications/LocalSim/LocalSim -n Ricky -r ../urdf/Robots/RaycastVehicle.xml -w ../urdf/Worlds/world_heightmap.xml -s WithoutStateKeeper
-...starts a LocalSim named "Ricky", which runs the RaycastVehicle as described in its file, and the Heightmap data as described in its file. It also opens a Node connection, but does not attempt to interact with a StateKeeper. 
+...starts a LocalSim named "Ricky", which runs the RaycastVehicle as described in its file, and the Heightmap data as described in its file. It also opens a Node connection, but does not attempt to interact with a StateKeeper. Adding -debug at the end of this command line would print the startup process. 
 
 StateKeeper
 ---------

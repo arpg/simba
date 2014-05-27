@@ -37,21 +37,22 @@ public:
 
   ///////////////////////////////////////////////////////////////////
   //member variables
-  std::string                 m_sLocalSimName;
-  ModelGraphBuilder           m_Scene;
-  SimRobot                    m_SimRobot;
-  SimWorld                    m_SimWorld;
-  SimDevices                  m_SimDevices;
-  RobotsManager               m_RobotManager;
-  NetworkManager              m_NetworkManager;
+  std::string                 local_sim_name_;
+  ModelGraphBuilder           scene_;
+  SimRobot                    sim_robot_;
+  SimWorld                    sim_world_;
+  SimDevices                  sim_devices_;
+  RobotsManager               robot_manager_;
+  NetworkManager              network_manager_;
   URDF_Parser*                parser_;
-  bool                        m_bRender;
+  bool                        render_option_;
 
   /// Constructor
-  LocalSim( const string &sLocalSimName,
+  LocalSim( const string& local_sim_name,
             const string& sRobotURDF,
             const string& sWorldURDF,
-            const string& sServerName);
+            const string& sServerName,
+            int debug_level);
 
   ///Functions
   void StepForward();
