@@ -21,7 +21,6 @@ bool PhysicsEngine::Init(double dGravity, double dTimeStep,
   // Physics stuff
   // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
-
   std::shared_ptr<btCollisionDispatcher> Dispatcher(
         new btCollisionDispatcher(&m_CollisionConfiguration) );
   m_pDispatcher = Dispatcher;
@@ -36,8 +35,7 @@ bool PhysicsEngine::Init(double dGravity, double dTimeStep,
         new btDiscreteDynamicsWorld(m_pDispatcher.get(),
                                     m_pBroadphase.get(),
                                     m_pSolver.get(),
-                                    &m_CollisionConfiguration
-                                    ) );
+                                    &m_CollisionConfiguration) );
   dynamics_world_ = DWorld;
   dynamics_world_->setGravity( btVector3(0,0,m_dGravity) );
   dynamics_world_->setDebugDrawer( &m_DebugDrawer );
@@ -695,4 +693,3 @@ bool PhysicsEngine::RayCastNormal(const Eigen::Vector3d& dSource,
   }
   return hit;
 }
-

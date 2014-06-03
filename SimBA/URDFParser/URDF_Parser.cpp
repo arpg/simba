@@ -131,18 +131,9 @@ HeightmapShape* URDF_Parser::GetMeshData(XMLDocument& pDoc){
             pElement->Attribute("y_data"));
         vector<double> z_data = GenNumFromChar(
             pElement->Attribute("z_data"));
-        std::vector<double> X, Y, Z;
-        X.resize(row_count*col_count);
-        Y.resize(row_count*col_count);
-        Z.resize(row_count*col_count);
-        for (int ii=0; ii < x_data.size(); ii++) {
-          X.at(ii) = x_data.at(ii);
-          Y.at(ii) = y_data.at(ii);
-          Z.at(ii) = z_data.at(ii);
-        }
         HeightmapShape* map_shape = new HeightmapShape("Map",
                                                        row_count, col_count,
-                                                       X, Y, Z);
+                                                       x_data, y_data, z_data);
         return map_shape;
       }
     }
@@ -679,6 +670,8 @@ SimRaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
     // Vehicle body parameters
     else if(!sAttrName.compare("body")){
       std::string body = pChild->Attribute("name");
+      // TODO: Switch length and width throughout
+      // right now, one is the other.
       if(!body.compare("length")){
         vParameters[0] = GenNumFromChar(pChild->Attribute("value")).front();
       }

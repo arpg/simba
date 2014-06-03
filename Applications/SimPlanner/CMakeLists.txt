@@ -15,6 +15,7 @@ set(MATLAB_LIBRARIES "/Applications/MATLAB_R2013a.app/bin/maci64/libmex.dylib"
                      "/Applications/MATLAB_R2013a.app/bin/maci64/libmat.dylib")
 
 find_package( Node REQUIRED )
+find_package( MVL REQUIRED )
 find_package( SimBA REQUIRED )
 find_package( CarPlanner REQUIRED )
 find_package( Calibu REQUIRED )
@@ -23,6 +24,7 @@ include_directories(
   ${Node_INCLUDE_DIRS}
   ${SimBA_INCLUDE_DIRS}
   ${CAR_PLANNER_INCLUDE_DIRS}
+  ${MVL_INCLUDE_DIRS}
   ${Calibu_INCLUDE_DIRS}
   ${MATLAB_INCLUDE_DIR})
 
@@ -30,7 +32,13 @@ add_executable( SimPlanner SimPlanner.cpp SimPlanner.h)
 
 add_executable( CPPMaster CPPMaster.cpp CPPMaster.h)
 
-add_executable( PlannerLibTest PlannerLibTest.cpp PlannerLibTest.h)
+add_executable( PlannerLibTest PlannerLibTest.cpp
+  PlannerGui.cpp
+  GLBulletDebugDrawer.cpp
+  PlannerLibTest.h
+  PlannerGui.h
+  GLBulletDebugDrawer.h
+  ClickHandler.h)
 
 target_link_libraries( SimPlanner
                        ${Node_LIBRARIES}
@@ -47,6 +55,7 @@ target_link_libraries( PlannerLibTest
                        ${Node_LIBRARIES}
                        ${SimBA_LIBRARIES}
                        ${CAR_PLANNER_LIBRARIES}
+		       ${MVL_LIBRARIES}
                        ${Calibu_LIBRARIES})
 
 		     

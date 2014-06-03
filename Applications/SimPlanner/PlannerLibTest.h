@@ -10,6 +10,9 @@
 #include "ApplyVelocitiesFunctor.h"
 #include "LocalPlanner.h"
 #include "miniglog/logging.h"
+// GUI to debug the LocalPlanner
+#include "PlannerGui.h"
+#include "GLBulletDebugDrawer.h"
 
 #include "Node/Node.h"
 #include "URDFParser/URDF_Parser.h"
@@ -85,6 +88,8 @@ class PlannerLibTest
   //member variables
   std::string           sim_planner_name_;
   BulletCarModel*       car_model_;
+  PlannerGui            planner_gui_;
+  GLBulletDebugDrawer   m_GLDebugDrawer;
   LocalPlanner          m_snapper;
   CarParameterMap       m_VehicleParams;
   VehicleState          start_state_;
@@ -114,8 +119,6 @@ class PlannerLibTest
   void CheckSolved();
   pb::BVP_policy StartPolicy();
   bool InitMesh();
-  double* RaycastToGround();
-  int OnTheGround(RaycastVehicle* vehicle);
   void GroundStates();
   double* RaycastToGround(double id, double x, double y);
   void InitGoals();

@@ -9,7 +9,7 @@ Mass,30
 WheelRadius,.3
 WheelWidth,.25
 TractionFriction,1000.000000000
-SuspConnectionHeight,-0.300000000
+SuspConnectionHeight,-.300000000
 Stiffness,120.000000000
 MaxSuspForce,5812.356330000
 MaxSuspTravel,0.025000000
