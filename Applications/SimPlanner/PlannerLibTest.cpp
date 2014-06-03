@@ -32,14 +32,14 @@ pb::BVP_policy PlannerLibTest::StartPolicy(){
 
 void PlannerLibTest::InitGoals(){
   // <x, y, theta, vel>
-  start_.push_back(1);
   start_.push_back(-.5);
+  start_.push_back(1);
   start_.push_back(0);
   start_.push_back(1);
+  goal_.push_back(2);
   goal_.push_back(1);
   goal_.push_back(0);
-  goal_.push_back(0);
-  goal_.push_back(2);
+  goal_.push_back(1);
   // Now populate the start and goal parameters.
   // X, Y, yaw, and velocity... that should be it.
   Eigen::Matrix4d eigen_start;
@@ -85,8 +85,8 @@ bool PlannerLibTest::InitMesh(){
                                   heightmap_data_->row_count_,
                                   heightmap_data_->col_count_);
   planner_gui_.Init( new_map );
-  // m_GLDebugDrawer.Init(car_model_);
-  // planner_gui_.AddGLObject(&m_GLDebugDrawer);
+  m_GLDebugDrawer.Init(car_model_);
+  planner_gui_.AddGLObject(&m_GLDebugDrawer);
   // Setting the scale of our car
   // Eigen::Vector3d vBodyDim, vWheelDim, vWheelScale, vBodyScale;
   // vBodyDim << 0.901 ,0.338, 0.279;
@@ -97,7 +97,7 @@ bool PlannerLibTest::InitMesh(){
   // vBodyScale<<m_VehicleParams[CarParameters::WheelBase]/vBodyDim(1),
   //     1.5*m_VehicleParams[CarParameters::Width]/vBodyDim(0),
   //     m_VehicleParams[CarParameters::Height]/vBodyDim(2);
-  // // planner_gui_.AddCar(vBodyScale, vWheelScale);
+  // planner_gui_.AddCar(vBodyScale, vWheelScale);
   planner_gui_.AddCar(m_VehicleParams[CarParameters::WheelBase],
                       m_VehicleParams[CarParameters::Width],
                       m_VehicleParams[CarParameters::Height],
@@ -165,17 +165,6 @@ pb::BVP_policy PlannerLibTest::SampleTrajectory(){
   func.SetNoDelay(true);
   MotionSample sample;
   car_model_->SetState(0, start_state_);
-  // while(1){
-  //   VehicleState state;
-  //   Eigen::Vector3d torques;
-  //   torques<<0,0,0;
-  //   ControlCommand command(1, 0, torques, 1.0/30.0, 1.7);
-  //   // car_model_->UpdateState(0, command);
-  //   car_model_->GetVehicleState(0, state);
-  //   planner_gui_.SetCarState(0, state, true);
-  //   planner_gui_.Render();
-  //   std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  // }
   // TODO: Get the waypoints working.
   // It's the easiest way to plan
 
@@ -188,14 +177,16 @@ pb::BVP_policy PlannerLibTest::SampleTrajectory(){
   while(!success && count<20){
     success = m_snapper.Iterate(problem);
     m_snapper.SimulateTrajectory(sample,problem,0,true);
-
     // Render what we see
     for (int ii=0; ii<sample.m_vStates.size(); ii++){
+      car_model_->SetState(0, sample.m_vStates.at(ii));
       planner_gui_.SetCarState(0, sample.m_vStates.at(ii), true);
       LOG(INFO) << std::endl
                 << sample.m_vStates.at(ii).m_dTwv.matrix();
+      // while(1){
       planner_gui_.Render();
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      // }
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     count++;

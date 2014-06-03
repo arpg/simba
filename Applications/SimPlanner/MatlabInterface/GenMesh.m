@@ -19,7 +19,7 @@ z21 = bi2de(bitget(tau, 15:16), 'left-msb');
 z22 = bi2de(bitget(tau, 17:18), 'left-msb');
 zsmooth = bi2de(bitget(tau, 19:20), 'left-msb');
 Z = real([z00 z01 z02; z10 z11 z12; z20 z21 z22]);
-[xx, yy] =  meshgrid(0:1/granularity:2, 0:1/granularity:2);
+[yy, xx] =  meshgrid(0:1/granularity:2, 0:1/granularity:2);
 a = size(xx, 1)/size(Z, 2);
 zz = imresize(Z, a, 'bilinear');
 
@@ -39,8 +39,8 @@ mesh.xx = xx;
 mesh.yy = yy;
 mesh.zz = zz;
 % Extend the end of the mesh out so that the car has a place to set down.
-x_extend = repmat(mesh.xx(1,:), 10, 1);
-y_extend = repmat((-1:.1:-.1)', 1, numel(mesh.yy(1,:)));
+y_extend = repmat(mesh.yy(1,:), 10, 1);
+x_extend = repmat((-1:.1:-.1)', 1, numel(mesh.xx(1,:)));
 z_extend = repmat(mesh.zz(1,:), 10, 1);
 mesh.xx = [x_extend; mesh.xx];
 mesh.yy = [y_extend; mesh.yy];
@@ -54,7 +54,7 @@ mesh.col_count = numel(mesh.xx(1,:));
 mesh.xx(:) = scale*mesh.xx(:)
 mesh.yy(:) = scale*mesh.yy(:)
 % This is just to get a good .csv file. Revert afterwards. 
-mesh.xx = mesh.xx(:)'
-mesh.yy = mesh.yy(:)'
-mesh.zz = mesh.zz(:)'
+% mesh.xx = mesh.xx(:)'
+% mesh.yy = mesh.yy(:)'
+% mesh.zz = mesh.zz(:)'
 end

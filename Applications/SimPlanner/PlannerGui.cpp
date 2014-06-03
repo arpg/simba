@@ -290,10 +290,10 @@ int PlannerGui::AddWaypoint(const VehicleState &state){
   Waypoint *pWaypoint = m_vWaypoints.back();
   Sophus::SE3d axisPose = state.m_dTwv;
   Eigen::Vector3d vel = state.m_dV;
-  pWaypoint->m_Waypoint.SetPose(GLT2Cart(axisPose.matrix()));
+  pWaypoint->m_Waypoint.SetPose(T2Cart(axisPose.matrix()));
   pWaypoint->m_Waypoint.SetVelocity(vel.norm());
   pWaypoint->m_Waypoint.SetDirty(true);
-  pWaypoint->m_Waypoint.SetScale(sqrt(vel.norm()));
+  pWaypoint->m_Waypoint.SetScale(vel.norm()/6);
   m_SceneGraph.AddChild(&pWaypoint->m_Waypoint);
   return m_vWaypoints.size()-1;
 }
