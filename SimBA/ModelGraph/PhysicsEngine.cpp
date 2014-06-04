@@ -475,18 +475,8 @@ void PhysicsEngine::RunDevices(){
 ////////////////////////////////
 
 void PhysicsEngine::StepSimulation(){
-  // for(std::map<string, std::shared_ptr<Vehicle_Entity> > ::iterator it =
-  //         m_mRayVehicles.begin(); it!=m_mRayVehicles.end(); it++ ){
-  //   // if(pCarCon->GetBodyName()==it->first){
-  //   Vehicle_Entity* eVehicle = it->second.get();
-  //   VehiclePtr pVeh = eVehicle->m_pVehicle;
-  //   pVeh->setSteeringValue(-.7, 0);
-  //   pVeh->setSteeringValue(-.7, 1);
-  //   pVeh->applyEngineForce(1, 2);
-  //   pVeh->applyEngineForce(1, 3);
-  // }
   dynamics_world_->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
-  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  // std::this_thread::sleep_for(std::chrono::milliseconds(50));
   RunDevices();
   if(m_mRayVehicles.size()!=0){
     // Go through all of our vehicles and update their part poses.

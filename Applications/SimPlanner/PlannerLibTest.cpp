@@ -35,8 +35,8 @@ void PlannerLibTest::InitGoals(){
   start_.push_back(1);
   goal_.push_back(1);
   goal_.push_back(1);
-  goal_.push_back(0);
-  goal_.push_back(2);
+  goal_.push_back(1.0);
+  goal_.push_back(1);
   // Now populate the start and goal parameters.
   // X, Y, yaw, and velocity... that should be it.
   Eigen::Matrix4d eigen_start;
