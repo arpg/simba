@@ -40,7 +40,7 @@ public:
                                            parameters[Height]/2));
     btTransform startTransform;
     startTransform.setIdentity();
-    startTransform.setOrigin(btVector3(0,0,1));
+    startTransform.setOrigin(btVector3(0,0,0));
     bool isDynamic = (parameters[Mass] != 0.f);
     btVector3 localInertia(0,0,0);
     if (isDynamic){
@@ -60,7 +60,7 @@ public:
     ///////
 
     btVector3 vWheelDirectionCS0(0,0,-1);
-    btVector3 vWheelAxleCS(0,-1,0);
+    btVector3 vWheelAxleCS(0,1,0);
     btRaycastVehicle::btVehicleTuning	tuning;
     tuning.m_frictionSlip = parameters[TractionFriction];
     tuning.m_suspensionCompression = parameters[CompDamping];
