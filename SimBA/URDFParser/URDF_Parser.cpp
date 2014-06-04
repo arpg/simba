@@ -140,8 +140,6 @@ HeightmapShape* URDF_Parser::GetMeshData(XMLDocument& pDoc){
   }
 }
 
-
-
 ////////////////////////////////////////////////////////////
 /// PARSE ROBOT.XML FOR ROBOT PARTS AND BUILD INTO LocalSim
 /// The robot name format: robotname@proxyname. e.g. robot1@proxy1.
@@ -672,10 +670,10 @@ SimRaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
       std::string body = pChild->Attribute("name");
       // TODO: Switch length and width throughout
       // right now, one is the other.
-      if(!body.compare("length")){
+      if(!body.compare("width")){
         vParameters[0] = GenNumFromChar(pChild->Attribute("value")).front();
       }
-      if(!body.compare("width")){
+      if(!body.compare("length")){
         vParameters[1] = GenNumFromChar(pChild->Attribute("value")).front();
       }
       if(!body.compare("height")){

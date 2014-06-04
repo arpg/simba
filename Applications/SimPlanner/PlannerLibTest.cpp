@@ -6,9 +6,6 @@
 PlannerLibTest::PlannerLibTest(){
   params_file_name_ =
       "/Users/Trystan/Code/CarPlanner/MochaGui/gui_params.csv";
-      // "/Users/Trystan/Code/simba/Applications/SimPlanner/raycast_params.csv";
-
-
 }
 
 /// DESTRUCTOR
@@ -36,10 +33,10 @@ void PlannerLibTest::InitGoals(){
   start_.push_back(1);
   start_.push_back(0);
   start_.push_back(1);
-  goal_.push_back(2);
+  goal_.push_back(1);
   goal_.push_back(1);
   goal_.push_back(0);
-  goal_.push_back(1);
+  goal_.push_back(2);
   // Now populate the start and goal parameters.
   // X, Y, yaw, and velocity... that should be it.
   Eigen::Matrix4d eigen_start;
@@ -68,16 +65,7 @@ bool PlannerLibTest::InitMesh(){
   Eigen::Vector6d eigen_cart;
   eigen_cart<<start_[0], start_[1], 2, 0, start_[2], 0;
   eigen_start = _Cart2T(eigen_cart);
-  car_model_ = new BulletCarModel();
-  btTransform localTrans;
-  localTrans.setIdentity();
-  localTrans.setOrigin(btVector3(1,.5,.9));
-  car_model_->Init(heightmap_data_->row_count_,
-                   heightmap_data_->col_count_,
-                   heightmap_data_->x_data_,
-                   heightmap_data_->y_data_,
-                   heightmap_data_->z_data_,
-                   localTrans, dMin, dMax, m_VehicleParams, 11);
+  // Set up our mesh
   SceneGraph::GLHeightmap* new_map =
       new SceneGraph::GLHeightmap(heightmap_data_->x_data_,
                                   heightmap_data_->y_data_,
@@ -85,8 +73,27 @@ bool PlannerLibTest::InitMesh(){
                                   heightmap_data_->row_count_,
                                   heightmap_data_->col_count_);
   planner_gui_.Init( new_map );
-  m_GLDebugDrawer.Init(car_model_);
-  planner_gui_.AddGLObject(&m_GLDebugDrawer);
+  LOG(INFO) << "Init our mesh!";
+  // Set up our car
+  car_model_ = new BulletCarModel();
+  btTransform localTrans;
+  localTrans.setIdentity();
+  localTrans.setOrigin(btVector3(0,0,0));
+  car_model_->Init(heightmap_data_->row_count_,
+                   heightmap_data_->col_count_,
+                   heightmap_data_->x_data_,
+                   heightmap_data_->y_data_,
+                   heightmap_data_->z_data_,
+                   localTrans, dMin, dMax, m_VehicleParams, 11);
+  GroundStates();
+  LOG(INFO) << start_state_.m_dTwv.matrix();
+  LOG(INFO) << goal_state_.m_dTwv.matrix();
+  planner_gui_.AddWaypoint(start_state_);
+  planner_gui_.AddWaypoint(goal_state_);
+
+
+  // m_GLDebugDrawer.Init(car_model_);
+  // planner_gui_.AddGLObject(&m_GLDebugDrawer);
   // Setting the scale of our car
   // Eigen::Vector3d vBodyDim, vWheelDim, vWheelScale, vBodyScale;
   // vBodyDim << 0.901 ,0.338, 0.279;
@@ -103,14 +110,6 @@ bool PlannerLibTest::InitMesh(){
                       m_VehicleParams[CarParameters::Height],
                       m_VehicleParams[CarParameters::WheelRadius],
                       m_VehicleParams[CarParameters::WheelWidth]);
-  /////
-  LOG(INFO) << "Init our mesh!";
-  GroundStates();
-  LOG(INFO) << start_state_.m_dTwv.matrix();
-  LOG(INFO) << goal_state_.m_dTwv.matrix();
-  // Render what we see
-  planner_gui_.AddWaypoint(start_state_);
-  planner_gui_.AddWaypoint(goal_state_);
 }
 
 //////////////////////////////////////////////////
@@ -121,7 +120,7 @@ void PlannerLibTest::GroundStates(){
   Sophus::SE3d pose = start_state_.m_dTwv;
   if(car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
                          dIntersect, true, 0)){
-    dIntersect(2) = dIntersect(2)+.15;
+    dIntersect(2) = dIntersect(2)+.12;
     start_state_.m_dTwv.translation() = dIntersect;
     LOG(INFO) << pose.translation();
     if(car_model_->RayCastNormal(pose.translation(),
@@ -139,6 +138,7 @@ void PlannerLibTest::GroundStates(){
     pose = goal_state_.m_dTwv;
     if(car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*30,
                            dIntersect, true, 0)){
+      dIntersect(2) = dIntersect(2)+.12;
       goal_state_.m_dTwv.translation() = dIntersect;
       if(car_model_->RayCastNormal(pose.translation(),
                                    GetBasisVector(pose,2)*10,
@@ -186,9 +186,8 @@ pb::BVP_policy PlannerLibTest::SampleTrajectory(){
       // while(1){
       planner_gui_.Render();
       // }
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
-
     count++;
   }
   if (problem.m_bInertialControlActive) {

@@ -3,7 +3,7 @@
 
 void RenderEngine::Init(std::string sLocalSimName){
   //Start our SceneGraph interface
-  pangolin::CreateGlutWindowAndBind(sLocalSimName,640,480);
+  pangolin::CreateGlutWindowAndBind(sLocalSimName, 1024, 768);
   SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
   glClearColor(0, 0, 0, 1);
   glewInit();
@@ -323,7 +323,9 @@ void RenderEngine::CompleteScene(bool bEnableCameraView=false)
 
   // Define Camera Render Object (for view / scene browsing)
   pangolin::OpenGlRenderState stacks(
-      pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
+      pangolin::ProjectionMatrix(1024, 768, 420, 420,
+                                 1024/2, 768/2, 0.1, 1000),
+      // pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
       pangolin::ModelViewLookAt(center(0), center(1) + 7,
                                 center(2) + 6,
                                 center(0), center(1), center(2),

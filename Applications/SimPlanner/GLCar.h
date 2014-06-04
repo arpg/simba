@@ -129,8 +129,9 @@ public:
   Eigen::Vector6d SwitchWheelYaw(Eigen::Vector6d bad_yaw){
     Eigen::Vector6d good_yaw;
     good_yaw<<bad_yaw(0), bad_yaw(1), bad_yaw(2),
-        bad_yaw(4), -bad_yaw(3), bad_yaw(5);
+        bad_yaw(3), -bad_yaw(4), bad_yaw(5);
     Eigen::Vector6d temp;
+    // temp<<0,0,0,0,0,0;
     temp<<0,0,0,M_PI/2,0,0;
     good_yaw = good_yaw+temp;
     return good_yaw;

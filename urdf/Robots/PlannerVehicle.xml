@@ -1,0 +1,115 @@
+<robot name="Robot">
+  <!--This configuration is based off of Nima's gui_params.csv,
+      used in his LocalPlanner program, MochaGui -->
+<bodybase name="RaycastVehicle">
+     <!--Set the parameters for the car.  -->
+     <param name="control delay"      value="0"/>
+     <!-- control delay is only applicable in real life -->
+     <param name="stiffness"          value="130"/>
+     <param name="susp conn height"   value="-.05"/>
+     <param name="max susp force"     value="5812.4"/>
+     <param name="damp factor"        value="10"/>
+     <param name="exp damp factor"    value="0"/>
+     <param name="roll influence"     value="1"/>
+     <param name="steering coeff"     value="-1.5"/>
+     <param name="max steering"       value=".7"/> <!-- In radians -->
+     <param name="max steering rate"  value="13"/>
+     <param name="accel offset"       value="0"/> <!-- .463 -->
+     <param name="steering offset"    value="0"/> <!-- .450 -->
+     <param name="stall torque coeff" value=".13"/>
+     <param name="torque speed slope" value="1.2685"/>
+
+     <!--Body shape variables  -->
+     <body name="length"      value=".27"/>
+     <body name="width"       value=".21"/>
+     <body name="height"      value="0.09"/>
+     <body name="mass"        value="1"/>
+     <body name="base height" value="1"/>
+     <body name="restitution" value="0"/>
+     <!-- NB: The pose of the robot is set in World.xml  -->
+     <body name="pose"    value="0,0,0,0,0,0"/>
+     <!-- <body name="mesh" -->
+     <body name="mesh"
+	   path="/Users/Trystan/Code/Meshes/Herbie/Herbie.blend"
+	   dim="0.903,0.338,0.279"/>
+     <!-- This was a scaling hack, for drawing, but it works for now -->
+
+     <!--Wheel shape variables   -->
+     <wheel name="radius"            value=".04"/>
+     <wheel name="width"             value=".05"/>
+     <wheel name="dyn friction"      value="0.247"/>
+     <wheel name="slip coeff"        value="0"/>
+     <wheel name="traction friction" value="1000"/>
+     <wheel name="side friction"     value="1.56"/>
+          <!-- <wheel name="mesh" -->
+     <wheel name="mesh"
+	    path="/Users/Trystan/Code/Meshes/Herbie/Wheel.blend"
+	    dim="0.04313,0.145,0.145"/>
+
+     <!--Parameters dependent on other parts  -->
+     <param name="susp rest length" value=".02"/>
+     <param name="max susp travel"  value=".03"/>
+     <param name="Magic B"          value="5"/>
+     <param name="Magic C"          value="1.65"/>
+     <param name="Magic E"          value="-5"/>
+ </bodybase>
+
+<!-- 
+     HOW TO DESCRIBE SIM_DEVICES
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     Every device should start and end with <Device ...... />. This is in
+     contrast to the separate designations we used to have for sensors and
+     controllers; no more of that.
+     Name = The name of the device. This is the string that Node picks up
+       on, if you're using the network; therefore, a device should always
+       have a unique name.
+     Type = the kind of simulated device it is. Look under SimBA/SimDevices
+       for a complete listing. For sensors, it's described as the Sensor
+       filename without "Sim-" at the beginning. Put the full filename
+       for Controllers. Ex: Type="Camera" | Type="CarController"
+       ~~~~~~~~~~
+     Sensor Parameters [specifics are in brackets]:
+       Mode = [Camera] Kind of Camera (i.e "RGB"|"RGBD"|"Depth"|"Grey")
+       Size = [Camera] The size of the window
+       FPS = [Camera] frames per second
+       Align = [Camera] "true"|"false"
+       Parent = What body in the scene the sensor is attached to.
+       Physical properties are Mass=, Dimension=, Pose=, [Camera] Baseline=,
+       Model = The .xml file that describes other parameters for the sensor.
+       ~~~~~~~~~~
+     Controller Parameters:
+       Body = What body we're controlling. For CarControllers, this should
+         be a RaycastVehicle. For a SimpleController, it could be another
+         object...
+       Parent = Should always be set to "NONE" for a controller. Must be
+         included.
+       Controllers do not need physical properties, since they directly
+       connect to a physical body already. 
+--> 
+
+<!-- <Device Name="LCamera" -->
+<!--   Type="Camera" -->
+<!--   Size="512*384" -->
+<!--   Mode="RGBD" -->
+<!--   FPS="30" -->
+<!--   Align="true" -->
+<!--   Parent="RaycastVehicle" -->
+<!--   Mass="0.01" -->
+<!--   Dimension="0.2, 0.5, 0.2" -->
+<!--   Pose="0,0,2,0,0,0" -->
+<!--   Baseline="0.1" -->
+<!--   Model="/Users/Trystan/Code/simba/SimBA/SimDevices/Sensor/cameras.xml"/> -->
+
+<!-- <Device Name="MahGPS" -->
+<!--   Type="GPS" -->
+<!--   Parent="RaycastVehicle" -->
+<!--   Mass="0.001" -->
+<!--   Dimension="0.01, 0.01, 0.01" -->
+<!--   Pose="0,0,0,0,0,0"/> -->
+
+<Device Name="VehicleController"
+  Type="CarController"
+  Body="RaycastVehicle"
+  Parent="NONE"/>
+
+</robot>
