@@ -8,15 +8,18 @@
  * commands to SimBA.
  */
 
-#include <PbMsgs/BVP.pb.h>
-// This is hacky, but I couldn't get the MEX file to compile any other way.
-#include "/Users/Trystan/Code/rslam/build/CoreDev/HAL/PbMsgs/BVP.pb.cc"
-#include "Node.h"
 #include <unistd.h>
 #include <cstdlib>
+#include "Node.h"
+// Our protobuf sources - I couldn't find a successful way to import these
+// using the makefile, so #includes had to do.
+#include <PbMsgs/BVP.pb.h>
+#include "/Users/Trystan/Code/rslam/build/CoreDev/HAL/PbMsgs/BVP.pb.cc"
+
+
 
 class NodeWrapper{
-public:
+ public:
 
   /// CONSTRUCTOR
   NodeWrapper(){
@@ -43,7 +46,7 @@ public:
         std::cout<<"=>";
       }
       std::cout<<std::endl<<"MATLAB is subscribed to '"+sim_name+
-                 "/Policy'"<<std::endl;
+          "/Policy'"<<std::endl;
     }
   }
 
@@ -60,7 +63,7 @@ public:
     pb::BVP_check sim_solved;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if(node_.receive("Sim"+std::to_string(sim_number)+"/CheckNeed",
-                             sim_needs_bvp)){
+                     sim_needs_bvp)){
       bool give = sim_needs_bvp.need();
       if(give==true){
         status[0] = 1;
@@ -68,7 +71,7 @@ public:
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if(node_.receive("Sim"+std::to_string(sim_number)+"/CheckSolved",
-                             sim_solved)){
+                     sim_solved)){
       bool take = sim_needs_bvp.need();
       if(take==true){
         status[1] = 1;

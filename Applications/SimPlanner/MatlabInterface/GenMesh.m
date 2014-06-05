@@ -53,8 +53,8 @@ mesh.col_count = numel(mesh.xx(1,:));
 
 mesh.xx(:) = scale*mesh.xx(:)
 mesh.yy(:) = scale*mesh.yy(:)
-% This is just to get a good .csv file. Revert afterwards. 
-% mesh.xx = mesh.xx(:)'
-% mesh.yy = mesh.yy(:)'
-% mesh.zz = mesh.zz(:)'
+% This is just to get a good .csv file, if we needed it.
+mesh.xx = mesh.xx(:)'
+mesh.yy = mesh.yy(:)'
+mesh.zz = mesh.zz(:)'
 end

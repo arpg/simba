@@ -8,7 +8,6 @@ classdef SimBAPlanner < handle
   properties (SetAccess = public)
     sims_;         % Handle to the node instance
     num_sims_;
-    dir_to_SimPlanner_;
     goal_states_;   % Holds all possible combos of start/goal
     cur_pol_;
   end
@@ -44,12 +43,12 @@ classdef SimBAPlanner < handle
       % start with 4 just to be safe.
       disp('[MATLAB] Starting Sim connections...');
       node_mex('StartConnections', this.sims_, this.num_sims_);
-      scale = 10;
-      for tau = 0:2^2,
-        
-        % TODO: Put scale in as part of the tau bits.
-        
-        mesh = GenMesh(tau, scale);
+      % Parameters for GenMesh
+      granularity = 15;
+      scale = 1;      
+      
+      for tau = 0:2^2,  
+        mesh = GenMesh(tau, granularity, scale);
         this.cur_pol_ = 1;
         cur_goal_state = this.GetNextBVP(this.cur_pol_);
         while this.cur_pol_ <=  numel(this.goal_states_(1,:)),
@@ -82,12 +81,12 @@ classdef SimBAPlanner < handle
               disp('[MATLAB] We can get a policy now!');
               [force, phi, time, start_params, goal_params] = ...
                 node_mex('ReceivePolicy', this.sims_, ii);
-              force
-              phi
-              time
-              tau
-              start_params
-              goal_params
+%               force;
+%               phi;
+%               time;
+%               tau;
+%               start_params;
+%               goal_params;
               this.SavePolicy(force, phi, time, tau, ...
                 start_params, goal_params, mesh.X, mesh.Y, mesh.Z); 
             end
@@ -116,7 +115,7 @@ classdef SimBAPlanner < handle
 %               new_goal(2) = y;
 %               new_goal(3) = yaw;
 %               new_goal(4) = vel;
-        this.goal_states_ = [10; 15; 0; 1]; 
+        this.goal_states_ = [1; 1.5; 0; 1]; 
 %               this.goal_states_ = [this.goal_states_, new_goal'];
 %             end
 %           end
@@ -148,13 +147,11 @@ classdef SimBAPlanner < handle
         '-ascii', '-double', '-tabs');
     end
     
-    
-    function SendHeightmap(this, tau)
-      mesh = GenMesh(tau, 10);
+    function SendHeightmap(this, tau, granularity, scale)
+      mesh = GenMesh(tau, granularity, scale);
       node_mex('SendHeightmap', this.sims_, mesh.xx, mesh.yy, mesh.zz, ...
                 mesh.row_count, mesh.col_count);
-    end
-    
+    end    
     
   end
 end

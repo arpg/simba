@@ -5,10 +5,10 @@
      <!--Set the parameters for the car.  -->
      <param name="control delay"      value="0"/>
      <!-- control delay is only applicable in real life -->
-     <param name="stiffness"          value="130"/>
+     <param name="stiffness"          value="140"/>
      <param name="susp conn height"   value="-.05"/>
      <param name="max susp force"     value="5812.4"/>
-     <param name="damp factor"        value="10"/>
+     <param name="damp factor"        value="5"/>
      <param name="exp damp factor"    value="0"/>
      <param name="roll influence"     value="1"/>
      <param name="steering coeff"     value="-1.5"/>
@@ -28,27 +28,27 @@
      <body name="restitution" value="0"/>
      <!-- NB: The pose of the robot is set in World.xml  -->
      <body name="pose"    value="0,0,0,0,0,0"/>
-     <!-- <body name="mesh" -->
+     <!-- <body name="none" for basic shape representation -->
      <body name="mesh"
 	   path="/Users/Trystan/Code/Meshes/Herbie/Herbie.blend"
 	   dim="0.903,0.338,0.279"/>
      <!-- This was a scaling hack, for drawing, but it works for now -->
 
      <!--Wheel shape variables   -->
-     <wheel name="radius"            value=".04"/>
-     <wheel name="width"             value=".05"/>
+     <wheel name="radius"            value=".025"/>
+     <wheel name="width"             value=".03"/>
      <wheel name="dyn friction"      value="0.247"/>
      <wheel name="slip coeff"        value="0"/>
      <wheel name="traction friction" value="1000"/>
      <wheel name="side friction"     value="1.56"/>
-          <!-- <wheel name="mesh" -->
+          <!-- <wheel name="none" for basic shape representation -->
      <wheel name="mesh"
 	    path="/Users/Trystan/Code/Meshes/Herbie/Wheel.blend"
 	    dim="0.04313,0.145,0.145"/>
 
      <!--Parameters dependent on other parts  -->
-     <param name="susp rest length" value=".02"/>
-     <param name="max susp travel"  value=".03"/>
+     <param name="susp rest length" value=".045"/>
+     <param name="max susp travel"  value=".045"/>
      <param name="Magic B"          value="5"/>
      <param name="Magic C"          value="1.65"/>
      <param name="Magic E"          value="-5"/>
