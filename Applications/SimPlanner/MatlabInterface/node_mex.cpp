@@ -9,8 +9,7 @@
  *
  **********************************************************************/
 
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-{
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   // Get the command string
   char cmd[64];
   if (nrhs < 1 || mxGetString(prhs[0], cmd, sizeof(cmd)))
@@ -41,7 +40,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     return;
   }
 
-  // Get the class instance pointer from the second input
+  // Get The Class Instance Pointer From The Second Input
   NodeWrapper *Node_instance = convertMat2Ptr<NodeWrapper>(prhs[1]);
 
   /*********************************************************************

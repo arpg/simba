@@ -1,5 +1,5 @@
-#ifndef PLANNERLIBTEST_H
-#define PLANNERLIBTEST_H
+#ifndef PATHPLANNERTEST_H
+#define PATHPLANNERTEST_H
 
 #include <iostream>
 
@@ -81,7 +81,7 @@ class KeyCarController{
 
 //////////////////////////////////////////////////
 
-class PlannerLibTest
+class PathPlannerTest
 {
  public:
 
@@ -110,8 +110,8 @@ class PlannerLibTest
   std::vector<double> last_pose_;
 
   /// CONSTRUCTOR
-  PlannerLibTest();
-  ~PlannerLibTest();
+  PathPlannerTest();
+  ~PathPlannerTest();
 
   /// FUNCTIONS
   void Init(HeightmapShape* heightmap_data);
@@ -127,4 +127,4 @@ class PlannerLibTest
 
 };
 
-#endif // PLANNERLIBTEST_H
+#endif // PATHPLANNERTEST_H

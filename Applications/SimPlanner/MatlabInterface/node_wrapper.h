@@ -2,7 +2,7 @@
 #define __NODE_WRAPPER_
 
 /*
- * File:   node_wrapper.h
+ * File:   PlannerMaster.h
  * Author: bminortx
  * This wrapper is designed to facilitate the use of Node, in otder to pass
  * commands to SimBA.

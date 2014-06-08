@@ -1,33 +1,33 @@
-#include "PlannerLibTest.h"
+#include "PathPlannerTest.h"
 
 #include <thread>
 
 /// CONSTRUCTOR
-PlannerLibTest::PlannerLibTest(){
+PathPlannerTest::PathPlannerTest(){
   params_file_name_ =
-      "/Users/Trystan/Code/CarPlanner/MochaGui/gui_params.csv";
+      "/Users/Trystan/Code/simba/Applications/Examples/PathPlannerTest/gui_params.csv";
 }
 
 /// DESTRUCTOR
-PlannerLibTest::~PlannerLibTest(){
+PathPlannerTest::~PathPlannerTest(){
 }
 
 /////////////////////////////////////////////
 
-void PlannerLibTest::Init(HeightmapShape* heightmap_data){
+void PathPlannerTest::Init(HeightmapShape* heightmap_data){
   heightmap_data_ = heightmap_data;
   InitGoals();
   InitMesh();
 }
 
 /////////////////////////////////////////////
-pb::BVP_policy PlannerLibTest::StartPolicy(){
+pb::BVP_policy PathPlannerTest::StartPolicy(){
   pb::BVP_policy policy = SampleTrajectory();
   return policy;
 }
 /////////////////////////////////////////////
 
-void PlannerLibTest::InitGoals(){
+void PathPlannerTest::InitGoals(){
   // <x, y, theta, vel>
   start_.push_back(-.5);
   start_.push_back(1);
@@ -53,7 +53,7 @@ void PlannerLibTest::InitGoals(){
 
 //////////////////
 
-bool PlannerLibTest::InitMesh(){
+bool PathPlannerTest::InitMesh(){
   // We don't want to reinitialize if we have the same map, after all.
   bullet_heightmap* map = new bullet_heightmap(heightmap_data_);
   btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
@@ -103,7 +103,7 @@ bool PlannerLibTest::InitMesh(){
 
 //////////////////////////////////////////////////
 
-void PlannerLibTest::GroundStates(){
+void PathPlannerTest::GroundStates(){
   // Ground the start point.
   Eigen::Vector3d dIntersect, normal;
   Sophus::SE3d pose = start_state_.m_dTwv;
@@ -147,7 +147,7 @@ void PlannerLibTest::GroundStates(){
 /////////////////////////////////////////////
 
 //Finds the fastest path between two
-pb::BVP_policy PlannerLibTest::SampleTrajectory(){
+pb::BVP_policy PathPlannerTest::SampleTrajectory(){
   bool success = false;
   int count = 0;
   ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
@@ -209,7 +209,7 @@ pb::BVP_policy PlannerLibTest::SampleTrajectory(){
 
 //////////////////
 
-std::string PlannerLibTest::GetNumber(std::string name){
+std::string PathPlannerTest::GetNumber(std::string name){
   std::size_t found = name.find("m");
   if(found!=std::string::npos){
     return name.substr(found+1);
@@ -224,14 +224,14 @@ std::string PlannerLibTest::GetNumber(std::string name){
  * that sends these commands to LocalSim in SimBA. If that seems to
  * work, then start the rest.
  * Order of operations:
- * 1. Start MATLAB and PlannerLibTest. Send mesh plan to MATLAB,
+ * 1. Start MATLAB and PathPlannerTest. Send mesh plan to MATLAB,
  *    start the simulation, get a plan. Make the plan into an array
  *    that can be easily passed piecemeal to SimBA [DONE]
  * 2. Once we have this vector, start the Node connection. Through
  *    a separate terminal, start SimBA's LocalSim. LocalSim is going
- *    to grab the same mesh from MATLAB (maybe pass through PlannerLibTest?)
+ *    to grab the same mesh from MATLAB (maybe pass through PathPlannerTest?)
  *    Once this is done, start the CarController. Once that is
- *    connected to the Node in PlannerLibTest, then start sending commmands.
+ *    connected to the Node in PathPlannerTest, then start sending commmands.
  * You see why this is a hard thing to test. We need to start from MATLAB in
  * case that's where the problem lies, like the mesh is created
  * sideways or something.
@@ -241,7 +241,7 @@ int main(int argc, char** argv){
 
   // Put a PlannerGui here, so that we can see what we're doing.
 
-  PlannerLibTest* sim = new PlannerLibTest();
+  PathPlannerTest* sim = new PathPlannerTest();
   std::string name = "Sim0";
   if (argc==2) {
     name = argv[1];

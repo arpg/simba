@@ -19,6 +19,7 @@ find_package( MVL REQUIRED )
 find_package( SimBA REQUIRED )
 find_package( CarPlanner REQUIRED )
 find_package( Calibu REQUIRED )
+find_package( MINIGLOG REQUIRED )
 
 include_directories(
   ${Node_INCLUDE_DIRS}
@@ -26,36 +27,22 @@ include_directories(
   ${CAR_PLANNER_INCLUDE_DIRS}
   ${MVL_INCLUDE_DIRS}
   ${Calibu_INCLUDE_DIRS}
-  ${MATLAB_INCLUDE_DIR})
+  ${MATLAB_INCLUDE_DIR}
+  ${MINIGLOG_INCLUDE_DIRS})
 
 add_executable( SimPlanner SimPlanner.cpp SimPlanner.h)
 
-add_executable( CPPMaster CPPMaster.cpp CPPMaster.h)
-
-add_executable( PlannerLibTest PlannerLibTest.cpp
-  PlannerGui.cpp
-  GLBulletDebugDrawer.cpp
-  PlannerLibTest.h
-  PlannerGui.h
-  GLBulletDebugDrawer.h
-  ClickHandler.h)
+add_executable( MatlabMaster MatlabMaster.cpp MatlabMaster.h)
 
 target_link_libraries( SimPlanner
                        ${Node_LIBRARIES}
                        ${SimBA_LIBRARIES}
                        ${CAR_PLANNER_LIBRARIES}
-                       ${Calibu_LIBRARIES})
+                       ${Calibu_LIBRARIES}
+		       miniglog)
 
-target_link_libraries( CPPMaster
+target_link_libraries( MatlabMaster
                        ${Node_LIBRARIES}
                        ${SimBA_LIBRARIES}
-                       ${MATLAB_LIBRARIES})
-		     
-target_link_libraries( PlannerLibTest
-                       ${Node_LIBRARIES}
-                       ${SimBA_LIBRARIES}
-                       ${CAR_PLANNER_LIBRARIES}
-		       ${MVL_LIBRARIES}
-                       ${Calibu_LIBRARIES})
-
-		     
+                       ${MATLAB_LIBRARIES}
+		       miniglog)

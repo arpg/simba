@@ -38,7 +38,7 @@ classdef SimBAPlanner < handle
     %%%% It's a big operation.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    function Run(this)
+    function CreateTable(this)
       % Since we have a ton of meshes (2^18, to be exact)...
       % start with 4 just to be safe.
       disp('[MATLAB] Starting Sim connections...');
@@ -46,7 +46,6 @@ classdef SimBAPlanner < handle
       % Parameters for GenMesh
       granularity = 15;
       scale = 1;      
-      
       for tau = 0:2^2,  
         mesh = GenMesh(tau, granularity, scale);
         this.cur_pol_ = 1;
@@ -63,7 +62,7 @@ classdef SimBAPlanner < handle
               start_point = [1; -.5; 0; 0];
               start_point(1:2) = start_point(1:2) * scale;
               % This sends the BVP until it's passed. 
-              disp('[MATLAB] start_state: ');
+              disp('[MATLAB] start_state: '); 
               start_point
               disp('[MATLAB] goal_state: ');
               cur_goal_state

@@ -1,34 +1,29 @@
-#include "CPPMaster.h"
+#include "MatlabMaster.h"
 
 //////////////////
 /// CONSTRUCTOR
+/// Creates all of our sims, and then assigns them all names.
 //////////////////
-CPPMaster::CPPMaster(int num_sims, std::string dir_to_sim){
+MatlabMaster::MatlabMaster(int num_sims){
   node_.init("MATLAB");
-  cout<<"MATLAB is successfully advertizing 'BVP'"<<endl;
+  LOG(INFO) << "MATLAB is successfully advertizing 'BVP'";
   /// I think this should work...
   for(int i = 0; i<num_sims; i++){
     std::string sim_name = "Sim"+std::to_string(i);
-    std::string new_proc_name = dir_to_sim+" "+sim_name;
     node_.advertise("BVP"+std::to_string(i));
-    // Spawn our own processes.
-    //    int child = fork();
-    //    if(child==0){
-    //      int did_it_work = system(sim_name.c_str());
-    //    }
     while(!node_.subscribe(sim_name+"/CheckNeed")){
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      cout<<"=>";
+      LOG(INFO)<<"=>";
     }
     while(!node_.subscribe(sim_name+"/CheckSolved")){
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      cout<<"=>";
+      LOG(INFO)<<"=>";
     }
     while(!node_.subscribe(sim_name+"/Policy")){
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      cout<<"=>";
+      LOG(INFO)<<"=>";
     }
-    cout<<endl<<"MATLAB is subscribed to '"+sim_name+"/Policy'"<<endl;
+    LOG(INFO)<<"MATLAB is subscribed to '"+sim_name+"/Policy'";
   }
   // Populate our goal commands.
   // Our grid goes from x(0:2), y(0:2). Keep goals between .5 and 1.5?
@@ -54,16 +49,15 @@ CPPMaster::CPPMaster(int num_sims, std::string dir_to_sim){
       }
     }
   }
-  cout<<"Done with goals"<<endl;
-
+  LOG(INFO)<<"Done with goals";
 }
 
 ////////////////////////
 /// SETTING OUR GOAL
 ////////////////////////
 
-bool CPPMaster::CreateBVP(int tau, std::string file_name,
-                        std::vector<double> goal_pt){
+bool MatlabMaster::CreateBVP(int tau, std::string file_name,
+                          std::vector<double> goal_pt){
   double* x_data;
   double* y_data;
   double* z_data;
@@ -109,7 +103,7 @@ bool CPPMaster::CreateBVP(int tau, std::string file_name,
 ////////////////////////
 /// SENDING/RECEIVING COMMANDS
 ////////////////////////
-std::vector< std::vector<double> > CPPMaster::ReceiveCommands(int sim_num){
+std::vector< std::vector<double> > MatlabMaster::ReceiveCommands(int sim_num){
   std::vector< std::vector<double> > policy;
   policy.clear();  // Just to make sure that it returns empty.
   pb::RegisterBVPReqMsg req;
@@ -119,7 +113,7 @@ std::vector< std::vector<double> > CPPMaster::ReceiveCommands(int sim_num){
   if (check_need==true) {
     while (!node_.receive("Sim"+std::to_string(sim_num)+"/Policy", policy_)) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      cout<<"<-";
+      LOG(INFO)<<"<-";
       // Keep trying!
     }
     policy = TurnPolicyIntoVector(policy_);
@@ -127,7 +121,7 @@ std::vector< std::vector<double> > CPPMaster::ReceiveCommands(int sim_num){
   return policy;
 }
 
-std::vector< std::vector<double> > CPPMaster::TurnPolicyIntoVector(
+std::vector< std::vector<double> > MatlabMaster::TurnPolicyIntoVector(
     pb::BVP_policy buffer){
   std::vector< std::vector<double> > policy;
   std::vector<double> force;
@@ -151,12 +145,12 @@ std::vector< std::vector<double> > CPPMaster::TurnPolicyIntoVector(
   return policy;
 }
 
-std::vector<double> CPPMaster::GetNextBVP(int cur_pol){
+std::vector<double> MatlabMaster::GetNextBVP(int cur_pol){
   std::vector<double> BVP = goal_states_.at(cur_pol);
   return BVP;
 }
 
-bool CPPMaster::SavePolicyToMat(std::vector< std::vector<double> > policy,
+bool MatlabMaster::SavePolicyToMat(std::vector< std::vector<double> > policy,
                                 int tau){
   // Command = force | pi | time
   // tau should also be saved, but it's included in the loop.
@@ -168,8 +162,8 @@ bool CPPMaster::SavePolicyToMat(std::vector< std::vector<double> > policy,
   std::vector<double> phi = policy.at(1);
   std::vector<double> time = policy.at(2);
   double* d_forces = forces.data();
-  double* d_phi = forces.data();
-  double* d_time = forces.data();
+  double* d_phi = phi.data();
+  double* d_time = time.data();
 
   // The below code is a modification from an example given by MATLAB:
   // http://bit.ly/1dvUEGF
@@ -196,19 +190,14 @@ bool CPPMaster::SavePolicyToMat(std::vector< std::vector<double> > policy,
   return true;
 }
 
-
 /********************
  * OUR MAIN LOOP
  * *****************/
 
 int main(int argc, char** argv){
   int num_sims = 2;
-  std::string dir_to_sim =
-      "/Users/Trystan/Code/simba/build/Applications/SimPlanner/SimPlanner";
-  CPPMaster* master = new CPPMaster(num_sims, dir_to_sim);
+  MatlabMaster* master = new MatlabMaster(num_sims);
   int tau = 0;
-  // TODO: Since we have a ton of meshes (2^18, to be exact)...
-  // start with 1 just to be safe.
   for (tau=0; tau<1; tau++) {
     // Grab the mesh based off of the number tau.
     // aka tau = 1 means we grab Mesh-1.mat.
@@ -231,7 +220,7 @@ int main(int argc, char** argv){
           std::this_thread::sleep_for(std::chrono::seconds(1));
           if(master->node_.receive("Sim"+std::to_string(ii)+"/CheckNeed",
                                    sim_needs_bvp)){
-            cout<<"We have need!"<<endl;
+            LOG(INFO)<<"We have need!";
             give = sim_needs_bvp.need();
           }
           std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -243,7 +232,7 @@ int main(int argc, char** argv){
         // If we're out of the loop, it means that Sim(ii) needs to do...
         // something.
         if (give==true) {
-          cout<<"Starting to give new parameters now..."<<endl;
+          LOG(INFO)<<"Starting to give new parameters now...";
           master->CreateBVP(tau, file_name, cur_goal_state);
           while (!master->node_.publish("BVP"+std::to_string(ii),
                                         master->params_)) {
