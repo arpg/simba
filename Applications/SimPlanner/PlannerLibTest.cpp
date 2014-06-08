@@ -90,21 +90,10 @@ bool PlannerLibTest::InitMesh(){
   LOG(INFO) << goal_state_.m_dTwv.matrix();
   planner_gui_.AddWaypoint(start_state_);
   planner_gui_.AddWaypoint(goal_state_);
-
-
+  // In case we suspect discrepancy between the car physics and rendering
+  // (usually around the wheel axes)
   // m_GLDebugDrawer.Init(car_model_);
   // planner_gui_.AddGLObject(&m_GLDebugDrawer);
-  // Setting the scale of our car
-  // Eigen::Vector3d vBodyDim, vWheelDim, vWheelScale, vBodyScale;
-  // vBodyDim << 0.901 ,0.338, 0.279;
-  // vWheelDim << 0.4313, 0.145, 0.145;
-  // vWheelScale<<2*m_VehicleParams[CarParameters::WheelRadius]/vWheelDim(1),
-  //     2*m_VehicleParams[CarParameters::WheelRadius]/vWheelDim(2),
-  //     m_VehicleParams[CarParameters::WheelWidth]/vWheelDim(0);
-  // vBodyScale<<m_VehicleParams[CarParameters::WheelBase]/vBodyDim(1),
-  //     1.5*m_VehicleParams[CarParameters::Width]/vBodyDim(0),
-  //     m_VehicleParams[CarParameters::Height]/vBodyDim(2);
-  // planner_gui_.AddCar(vBodyScale, vWheelScale);
   planner_gui_.AddCar(m_VehicleParams[CarParameters::WheelBase],
                       m_VehicleParams[CarParameters::Width],
                       m_VehicleParams[CarParameters::Height],

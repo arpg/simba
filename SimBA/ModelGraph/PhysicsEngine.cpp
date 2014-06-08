@@ -440,6 +440,8 @@ void PhysicsEngine::RunDevices(){
           pVeh->setSteeringValue(vehicle_shape->wheel_angles.at(1), 1);
           pVeh->applyEngineForce(vehicle_shape->driving_force, 2);
           pVeh->applyEngineForce(vehicle_shape->driving_force, 3);
+          // OPTION: Update the world only if we have commands.
+          // dynamics_world_->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
         }
       }
     }
@@ -600,55 +602,6 @@ std::vector<Eigen::Matrix4d> PhysicsEngine::GetVehicleTransform(
   std::vector<Eigen::Matrix4d> Eig_transforms = GetVehiclePoses(Vehicle);
   return Eig_transforms;
 }
-
-/////////////////////////////////////////////////////
-///
-///
-///
-///
-/// TODO: Fix GroundStates
-///// Since we're usually starting above the mesh, we use this function
-///// to set the car on the ground before we start simulation.
-//void PhysicsEngine::GroundStates(){
-//  // Ground the start point.
-//  Eigen::Vector3d dIntersect;
-//  Eigen::Vector3d normal;
-//  Sophus::SE3d pose = m_vsStart.m_dTwv;
-//  if(m_CarModel->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
-//                         dIntersect, true, 0)){
-//    pose.translation() = dIntersect;
-//    if(m_CarModel->RayCastNormal(pose.translation(),
-//                                 GetBasisVector(m_vsStart.m_dTwv,2),
-//                                 normal, 0)){
-//      normal = normal.normalized();
-//      Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-//                                          m_vsStart.GetTheta(), normal));
-//      Eigen::Matrix3d rotMat = quatRot*m_vsStart.m_dTwv.rotationMatrix();
-//      m_vsStart.m_dTwv = Sophus::SE3d(rotMat, m_vsStart.m_dTwv.translation());
-//      cout<<"Setting start point to ground..."<<endl;
-//      cout<<m_vsStart.m_dTwv.matrix()<<endl;
-//    }
-
-//    // Ground the goal point
-//    pose = m_vsGoal.m_dTwv;
-//    if(m_CarModel->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
-//                           dIntersect, true, 0)){
-//      pose.translation() = dIntersect;
-//      if(m_CarModel->RayCastNormal(pose.translation(),
-//                                   GetBasisVector(pose,2)*10,
-//                                   dIntersect, 0)){
-//        normal = normal.normalized();
-//        Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-//                                            m_vsGoal.GetTheta(), normal));
-//        Eigen::Matrix3d rotMat = quatRot*m_vsGoal.m_dTwv.rotationMatrix();
-//        m_vsGoal.m_dTwv = Sophus::SE3d(rotMat, m_vsGoal.m_dTwv.translation());
-//        cout<<"Setting goal point to ground..."<<endl;
-//        cout<<m_vsGoal.m_dTwv.matrix()<<endl;
-//      }
-//    }
-//  }
-
-//}
 
 ////////////////////////////////////////////////////////////////////////////////
 bool PhysicsEngine::RayCast(const Eigen::Vector3d& dSource,
