@@ -1,4 +1,4 @@
-project( SimPlanner )
+project( PathPlanner )
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -30,11 +30,11 @@ include_directories(
   ${MATLAB_INCLUDE_DIR}
   ${MINIGLOG_INCLUDE_DIRS})
 
-add_executable( SimPlanner SimPlanner.cpp SimPlanner.h)
+add_executable( PathPlanner PathPlanner.cpp PathPlanner.h)
 
 add_executable( MatlabMaster MatlabMaster.cpp MatlabMaster.h)
 
-target_link_libraries( SimPlanner
+target_link_libraries( PathPlanner
                        ${Node_LIBRARIES}
                        ${SimBA_LIBRARIES}
                        ${CAR_PLANNER_LIBRARIES}

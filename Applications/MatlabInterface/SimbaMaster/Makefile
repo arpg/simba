@@ -34,7 +34,7 @@ MINIGLOG_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/miniglog/
 MINIGLOG_BUILD_DIR = /Users/Trystan/Code/rslam/build/CoreDev/miniglog/
 ZMQ_DIR = /usr/local/include/
 GENERAL_HDR = /usr/include/
-PROJECT_DIR = /Users/Trystan/Code/simba_tests/MatlabInterface/
+PROJECT_DIR = /Users/Trystan/Code/simba/Applications/MatlabInterface/SimbaMaster/
 
 CXXFLAGS = -std=c++11 -O -I$(MATLAB_DIR)\
   -I$(HAL_DIR) -I$(HAL_BUILD_DIR) -I$(NODE_DIR) -I$(NODE_BUILD_DIR)\
@@ -64,8 +64,8 @@ MXXLIBS = -L$(PROTOBUF_LIB_DIR) -lprotobuf\
 # Notice that the PbMsgs header must be included here as well. 
 #---------------------------------#
 
-HDRS = class_handle.hpp node_wrapper.h BVP.pb.h
-TARGET = node_mex
+HDRS = class_handle.hpp SimbaMaster.h BVP.pb.h
+TARGET = SimbaMaster_mex
 
 #---------------------------------#
 # 3. ARCHITECTURE VARIABLES

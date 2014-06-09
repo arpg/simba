@@ -10,6 +10,7 @@ MatlabMaster::MatlabMaster(int num_sims){
   /// I think this should work...
   for(int i = 0; i<num_sims; i++){
     std::string sim_name = "Sim"+std::to_string(i);
+    
     node_.advertise("BVP"+std::to_string(i));
     while(!node_.subscribe(sim_name+"/CheckNeed")){
       std::this_thread::sleep_for(std::chrono::milliseconds(10));

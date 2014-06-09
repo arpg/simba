@@ -1,11 +1,11 @@
-#ifndef __NODE_WRAPPER_
-#define __NODE_WRAPPER_
+#ifndef _PLANNERMASTER_H
+#define _PLANNERMASTER_H
 
 /*
  * File:   PlannerMaster.h
  * Author: bminortx
  * This wrapper is designed to facilitate the use of Node, in otder to pass
- * commands to SimBA.
+ * commands to PlannerLib
  */
 
 #include <unistd.h>
@@ -13,16 +13,16 @@
 #include "Node.h"
 // Our protobuf sources - I couldn't find a successful way to import these
 // using the makefile, so #includes had to do.
-#include <PbMsgs/BVP.pb.h>
+#include <BVP.pb.h>
 #include "/Users/Trystan/Code/rslam/build/CoreDev/HAL/PbMsgs/BVP.pb.cc"
 
 
 
-class NodeWrapper{
+class PlannerMaster{
  public:
 
   /// CONSTRUCTOR
-  NodeWrapper(){
+  PlannerMaster(){
     node_.init("MATLAB");
   }
 
@@ -67,6 +67,8 @@ class NodeWrapper{
       bool give = sim_needs_bvp.need();
       if(give==true){
         status[0] = 1;
+        status[1] = 0;
+        return status;
       }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -74,7 +76,9 @@ class NodeWrapper{
                      sim_solved)){
       bool take = sim_needs_bvp.need();
       if(take==true){
+        status[0] = 0;
         status[1] = 1;
+        return status;
       }
     }
     return status;
@@ -243,4 +247,4 @@ class NodeWrapper{
 
 };
 
-#endif // __NODE_WRAPPER_
+#endif // _PLANNERMASTER_H

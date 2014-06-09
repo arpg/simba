@@ -1,12 +1,10 @@
 #include "mex.h"
 #include "class_handle.hpp"
 #include "iostream"
-#include "node_wrapper.h"
+#include "PlannerMaster.h"
 
 /*********************************************************************
- *
- *CONSTRUCTION AND DESTRUCTION OF BULLET POINTERS
- *
+ * CONSTRUCTOR/DESTRUCTOR OF POINTERS
  **********************************************************************/
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
@@ -20,8 +18,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Check parameters
     if (nlhs != 1)
       mexErrMsgTxt("New: One output expected.");
-    NodeWrapper* node_wrap = new NodeWrapper;
-    plhs[0] = convertPtr2Mat<NodeWrapper>(node_wrap);
+    PlannerMaster* node_wrap = new PlannerMaster;
+    plhs[0] = convertPtr2Mat<PlannerMaster>(node_wrap);
     void mexUnlock(void);
     return;
   }
@@ -33,7 +31,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   // Delete
   if (!strcmp("delete", cmd)) {
     // Destroy the C++ object
-    destroyObject<NodeWrapper>(prhs[1]);
+    destroyObject<PlannerMaster>(prhs[1]);
     // Warn if other commands were ignored
     if (nlhs != 0 || nrhs != 2)
       mexWarnMsgTxt("Delete: Unexpected arguments ignored.");
@@ -41,7 +39,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
 
   // Get The Class Instance Pointer From The Second Input
-  NodeWrapper *Node_instance = convertMat2Ptr<NodeWrapper>(prhs[1]);
+  PlannerMaster *planner_ptr = convertMat2Ptr<PlannerMaster>(prhs[1]);
 
   /*********************************************************************
    * CHECK STATUS OF SIMS
@@ -54,14 +52,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     //    mxGetString(prhs[3], dir_to_sim, sizeof(dir_to_sim));
     // This "a" is just a placeholder until I can get that
     // system call working.
-    Node_instance->StartConnections(int(*num_sims), "a");
+    planner_ptr->StartConnections(int(*num_sims), "a");
     return;
   }
 
   if (!strcmp("CheckSimStatus", cmd)) {
     std::cout<<"[node.mex] Checking Sim Status..."<<std::endl;
     double* sim_num = mxGetPr(prhs[2]);
-    double* status = Node_instance->CheckSimStatus(int(*sim_num));
+    double* status = planner_ptr->CheckSimStatus(int(*sim_num));
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
     plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL);
     double* problem = mxGetPr(plhs[0]);
@@ -86,7 +84,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double* col_count = mxGetPr(prhs[8]);
     double* start_point = mxGetPr(prhs[9]);
     double* goal_point = mxGetPr(prhs[10]);
-    Node_instance->SendBVP(int(*sim_num), int(*tau),
+    planner_ptr->SendBVP(int(*sim_num), int(*tau),
                            x_data, y_data, z_data,
                            int(*row_count), int(*col_count),
                            start_point, goal_point);
@@ -95,9 +93,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   ///////////
 
-  if (!strcmp("ReceivePolicy", cmd)) {
+  if (!strcmp("GetPolicy", cmd)) {
     double* sim_num = mxGetPr(prhs[2]);
-    double* commands = Node_instance->ReceivePolicy(int(*sim_num));
+    double* commands = planner_ptr->ReceivePolicy(int(*sim_num));
     // The first element of 'commands' has the length of all command
     // vectors.
     plhs[0] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
@@ -143,7 +141,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double* z_data = mxGetPr(prhs[4]);
     double* row_count = mxGetPr(prhs[5]);
     double* col_count = mxGetPr(prhs[6]);
-    Node_instance->SendHeightmap(x_data, y_data, z_data,
+    planner_ptr->SendHeightmap(x_data, y_data, z_data,
                                  int(*row_count), int(*col_count));
     return;
   }

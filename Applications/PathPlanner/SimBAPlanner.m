@@ -1,4 +1,4 @@
-classdef SimBAPlanner < handle
+classdef PlannerMaster < handle
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%% MATLAB class wrapper to the Node C++ architecture.
   %%%% Any method with 'node_mex(...)'
@@ -22,7 +22,7 @@ classdef SimBAPlanner < handle
     %%%% CONSTRUCTOR/DESTRUCTOR
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    function this = SimBAPlanner(num_sims, dir_to_SimPlanner)
+    function this = PlannerMaster(num_sims, dir_to_SimPlanner)
       this.sims = node_mex('new', num_sims, dir_to_SimPlanner);
       % TODO: Init all possible start/goal configurations
       this.num_sims = num_sims;
@@ -48,10 +48,9 @@ classdef SimBAPlanner < handle
       %Since we have a ton of meshes (2^18, to be exact)...
       for tau = 0:2^18
         mesh = GenMesh(tau);
-        
         % Now iterate through all start/goal configs
         while this.cur_pol<numel(this.s_g_config(1, :)),
-          % Check to see which Sims are available.          
+          % Check to see which Sims are available.
           for ii = 1:numel(this.num_sims),
             sent = node_mex('SendBVP', this.sims, ii, this.bvp.start,...
               this.bvp.goal, size(mesh.xx), size(mesh.yy), tau, mesh.xx,...

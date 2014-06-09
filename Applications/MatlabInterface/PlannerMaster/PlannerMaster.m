@@ -1,4 +1,4 @@
-classdef SimBAPlanner < handle
+classdef PlannerMaster < handle
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%% MATLAB class wrapper to the Node C++ architecture.
   %%%% Any method with 'node_mex(...)'
@@ -6,8 +6,8 @@ classdef SimBAPlanner < handle
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   properties (SetAccess = public)
-    sims_;         % Handle to the node instance
-    num_sims_;
+    planners_;         % Handle to the node instance
+    num_planners_;
     goal_states_;   % Holds all possible combos of start/goal
     cur_pol_;
   end
@@ -17,16 +17,16 @@ classdef SimBAPlanner < handle
     %%%% CONSTRUCTOR/DESTRUCTOR
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    function this = SimBAPlanner(num_sims)
-      this.sims_ = node_mex('new', num_sims);
+    function this = PlannerMaster(planner_nums)
+      this.planners_ = PlannerMaster_mex('new', num_planners);
       % TODO: Init all possible start/goal configurations
       this.PopulateGoals();
-      this.num_sims_ = num_sims;
+      this.num_planners_ = num_planners;
       this.cur_pol_ = 1;
     end
     
     function delete(this)
-      node_mex('delete', this.sims_);
+      PlannerMaster_mex('delete', this.planners_);
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,14 +35,13 @@ classdef SimBAPlanner < handle
     %%%% a series of small heightmaps. Each of these heightmaps is passed
     %%%% to a series of simulator instances, which produce commands for a
     %%%% specified set of start/goal configurations.
-    %%%% It's a big operation.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     function CreateTable(this)
       % Since we have a ton of meshes (2^18, to be exact)...
       % start with 4 just to be safe.
       disp('[MATLAB] Starting Sim connections...');
-      node_mex('StartConnections', this.sims_, this.num_sims_);
+      PlannerMaster_mex('StartConnections', this.planners_, this.num_planners_);
       % Parameters for GenMesh
       granularity = 15;
       scale = 1;      
@@ -51,23 +50,19 @@ classdef SimBAPlanner < handle
         this.cur_pol_ = 1;
         cur_goal_state = this.GetNextBVP(this.cur_pol_);
         while this.cur_pol_ <=  numel(this.goal_states_(1,:)),
-          for ii=0:(this.num_sims_-1),
+          for ii=0:(this.num_planners_-1),
             % CheckSimStatus will return two values:
             % problem = 1: the Sim is ready to receive a problem
             % policy = 1: the Sim is ready to provide a solved policy
             disp(['[MATLAB] Checking sim status for sim ', num2str(ii)]);
-            [problem, policy] = node_mex('CheckSimStatus', this.sims_, ii);
+            [problem, policy] = this.GetStatus(ii);
             if problem == 1,
               disp('[MATLAB] We can send a problem now!');
               start_point = [1; -.5; 0; 0];
               start_point(1:2) = start_point(1:2) * scale;
-              % This sends the BVP until it's passed. 
-              disp('[MATLAB] start_state: '); 
-              start_point
-              disp('[MATLAB] goal_state: ');
-              cur_goal_state
               cur_goal_state(1:2) = cur_goal_state(1:2) * scale;
-              node_mex('SendBVP', this.sims_, ii, tau, mesh.xx, mesh.yy, mesh.zz, ...
+              % This sends the BVP until it's passed. 
+              PlannerMaster_mex('SendBVP', this.planners_, ii, tau, mesh.xx, mesh.yy, mesh.zz, ...
                 mesh.row_count, mesh.col_count, start_point, cur_goal_state);
               this.cur_pol_ = this.cur_pol_+1;
               if this.cur_pol_ == numel(this.goal_states_(1,:)),
@@ -79,7 +74,7 @@ classdef SimBAPlanner < handle
             if policy == 1,
               disp('[MATLAB] We can get a policy now!');
               [force, phi, time, start_params, goal_params] = ...
-                node_mex('ReceivePolicy', this.sims_, ii);
+                PlannerMaster_mex('ReceivePolicy', this.planners_, ii);
 %               force;
 %               phi;
 %               time;
@@ -114,19 +109,64 @@ classdef SimBAPlanner < handle
 %               new_goal(2) = y;
 %               new_goal(3) = yaw;
 %               new_goal(4) = vel;
-        this.goal_states_ = [1; 1.5; 0; 1]; 
+    this.goal_states_ = [1; 1.5; 0; 1]; 
 %               this.goal_states_ = [this.goal_states_, new_goal'];
 %             end
 %           end
 %         end        
 %       end
-    end
-    
+end
+
     %%%% Get the next start/goal configuration for the next simulation.
-    
+
     function BVP = GetNextBVP(this, cur_pol)
       BVP = this.goal_states_(:, cur_pol);
     end
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%% SETTERS AND GETTERS
+    %%%% All of these send with the node name "MATLAB"
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+    
+    function SetConfiguration(this, planner_num, start_state, ...
+                              goal_state)
+        PlannerMaster_mex('SetConfiguration', this.planners_, planner_num, start_state, ...
+                          goal_state);
+    end
+    
+    function SetHeightmap(this, planner_num, mesh)
+        PlannerMaster_mex('SetHeightmap', this.planners_, planner_num, mesh.xx, mesh.yy, mesh.zz, ...
+                          mesh.row_count, mesh.col_count);
+    end    
+    
+    function SetPolicy(this, planner_num, policy)
+        PlannerMaster_mex('SetPolicy', this.planners_, planner_num, policy.forces, policy.phi, ...
+                          policy.duration);
+    end
+    
+    function [need_problem, need_policy] = GetStatus(this, planner_num)
+        [need_problem, need_policy] = PlannerMaster_mex('CheckSimStatus', this.planners_, ii);        
+    end
+    
+    function [policy] = GetPolicy(this, planner_num)
+        [force, phi, time, start_params, goal_params] = ...
+            PlannerMaster_mex('GetPolicy', this.planners_, planner_num);
+        policy.force = force;
+        policy.phi = phi;
+        policy.duration = time;
+    end
+    
+    function [motion_sample] = GetMotionSample(this, planner_num)
+        [x, y, z, r, p, q] = PlannerMaster_mex('GetMotionSample', this.planners_, ...
+                                               planner_num);
+        motion_sample.x = x;
+        motion_sample.y = y;
+        motion_sample.z = z;
+        motion_sample.r = r;
+        motion_sample.p = p;        
+        motion_sample.q = q;
+    end        
     
     %%% Save our Policy
     
@@ -145,12 +185,6 @@ classdef SimBAPlanner < handle
         'start_params', 'goal_params', 'meshX', 'meshY', 'meshZ', '-append',...
         '-ascii', '-double', '-tabs');
     end
-    
-    function SendHeightmap(this, tau, granularity, scale)
-      mesh = GenMesh(tau, granularity, scale);
-      node_mex('SendHeightmap', this.sims_, mesh.xx, mesh.yy, mesh.zz, ...
-                mesh.row_count, mesh.col_count);
-    end    
     
   end
 end

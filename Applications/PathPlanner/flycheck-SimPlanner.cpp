@@ -44,21 +44,22 @@ pb::BVP_policy SimPlanner::StartPolicy(pb::BVP_params params){
 bool SimPlanner::InitMesh(pb::BVP_params params){
   // We don't want to reinitialize if we have the same map, after all.
   if(m_nTau!=params.tau()){
-    delete car_model_;
-    car_model_ = new BulletCarModel;
+    delete m_CarModel;
+    m_CarModel = new BulletCarModel;
     // Can I do this?
     m_nTau = params.tau();
     // Create our world mesh
     int row_count = params.row_count();
     int col_count = params.col_count();
-    std::vector<double> X, Y, Z;
-    X.resize(row_count*col_count);
-    Y.resize(row_count*col_count);
-    Z.resize(row_count*col_count);
+
+    // I think this should work?
+    double* X = new double[row_count*col_count];
+    double* Y = new double[row_count*col_count];
+    double* Z = new double[row_count*col_count];
     for (int ii=0; ii < params.x_data().size(); ii++) {
-      X.at(ii) = params.x_data().Get(ii);
-      Y.at(ii) = params.y_data().Get(ii);
-      Z.at(ii) = params.z_data().Get(ii);
+      X[ii] = params.x_data().Get(ii);
+      Y[ii] = params.y_data().Get(ii);
+      Z[ii] = params.z_data().Get(ii);
     }
     HeightmapShape* MapShape = new HeightmapShape("Map", row_count, col_count,
                                                   X, Y, Z);
@@ -77,12 +78,11 @@ bool SimPlanner::InitMesh(pb::BVP_params params){
 /////////////////////////////////////////////
 
 double* SimPlanner::RaycastToGround(){
-
+  
   // TODO: Fix this representation.
 
-  Sophus::SE3d Twv = start_state_.m_dTwv;
-  double x = Twv.translation()(0);
-  double y = Twv.translation()(1);
+  double x = start_state_.m_Twv().;
+  double y = start_state_(1);
   BulletWorldInstance* world = car_model_->GetWorldInstance(0);
   RaycastVehicle* Vehicle = world->m_pVehicle;
 
@@ -104,9 +104,9 @@ double* SimPlanner::RaycastToGround(){
     WheelInfo wheel = Vehicle->getWheelInfo(2);
     double radius = wheel.m_wheelsRadius;
     hitpoint.setZ(hitpoint.getZ() +
-                  m_VehicleParams.at(CarParameters::SuspConnectionHeight) +
-                  m_VehicleParams.at(CarParameters::WheelRadius) +
-                  0.5); // Just for good measure.
+                  m_VehicleParams(CarParameters::SuspConnectionHeight) +
+                  m_VehicleParams(CarParameters::WheelRadius) +
+                  0.5; // Just for good measure.
   }
 
   // Now move our car!
@@ -145,10 +145,8 @@ double* SimPlanner::RaycastToGround(){
     VehiclePose = Vehicle->getChassisWorldTransform().getOrigin();
   }
 
-  start_state_.m_dTwv.translation()<<VehiclePose.getX(),
-      VehiclePose.getY(), VehiclePose.getZ();
-  // return pose
-  ;
+  start_state_<<VehiclePose.getX(), VehiclePose.getY(), VehiclePose.getZ();
+  return pose;
 
 }
 
@@ -207,7 +205,7 @@ void SimPlanner::GroundStates(){
                                  normal, 0)){
       normal = normal.normalized();
       Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-          start_state_.GetTheta(), normal));
+                                          start_state_.GetTheta(), normal));
       Eigen::Matrix3d rotMat = quatRot*start_state_.m_dTwv.rotationMatrix();
       start_state_.m_dTwv =
           Sophus::SE3d(rotMat, start_state_.m_dTwv.translation());
@@ -225,7 +223,7 @@ void SimPlanner::GroundStates(){
                                    dIntersect, 0)){
         normal = normal.normalized();
         Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-            goal_state_.GetTheta(), normal));
+                                            goal_state_.GetTheta(), normal));
         Eigen::Matrix3d rotMat = quatRot*goal_state_.m_dTwv.rotationMatrix();
         goal_state_.m_dTwv =
             Sophus::SE3d(rotMat, goal_state_.m_dTwv.translation());

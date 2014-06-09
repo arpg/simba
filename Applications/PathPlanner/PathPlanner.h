@@ -1,5 +1,5 @@
-#ifndef SIMPLANNER_H
-#define SIMPLANNER_H
+#ifndef PATHPLANNER_H
+#define PATHPLANNER_H
 
 ////////////////////////////////////////////
 /// SIMPLANNER
@@ -11,7 +11,7 @@
 ///      Z_array]
 /// All of this data comes from the MATLAB wrapper program, and is
 /// passed through Node. The network connection here is key; it allows
-/// us to start several intsances of SimPlanner, and get more done, faster.
+/// us to start several intsances of PathPlanner, and get more done, faster.
 /////////////////////////////////////////////
 
 #include <iostream>
@@ -29,7 +29,7 @@
 // for communicating between the Physics Engine and ModelGraph
 #include <ModelGraph/ModelGraphBuilder.h>
 
-class SimPlanner
+class PathPlanner
 {
  public:
 
@@ -54,8 +54,8 @@ class SimPlanner
   std::string params_file_name_;
 
   /// CONSTRUCTOR
-  SimPlanner();
-  ~SimPlanner();
+  PathPlanner();
+  ~PathPlanner();
 
   /// FUNCTIONS
   void Init();
@@ -73,4 +73,4 @@ class SimPlanner
 
 };
 
-#endif // SIMPLANNER_H
+#endif // PATHPLANNER_H

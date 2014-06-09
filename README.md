@@ -19,7 +19,11 @@ The below libraries are needed in order to install (provided in suggested order)
 - Miniglog
 - Calibu
 
-Run cmake and make on SimBA. You are now ready to test!
+CMake Options:
+- BUILD CAR PLANNER: Builds the sections of SimBA that only work with the PlannerLib repo. Check it out from the RPG github, ssh://bminortx@robotics.gwu.edu/home/rpg/git/CarPlanner
+- BUILD MATLAB INTERFACE: Makes the MATLAB interface files, PlannerMaster and SimbaMaster. *Before switching this option to ON, change the Makefiles included in their directories (./Applications/MatlabInterface/---Planner)*.
+
+After these options are set, run cmake and make on SimBA. You are now ready to do some sweet simulation!
 
 URDF FILES
 ====================================
@@ -64,6 +68,15 @@ StateKeeper
 ---------
 Work in progress...
 
+MatlabInterface
+---------
+
+The MatlabInterface is actually a set of programs: SimbaMaster and PlannerMaster. SimbaMaster is a basic interaction tool with LocalSim (see Applications->LocalSim below), and has its own commands for building and testing RaycastVehicle performance in LocalSim.
+
+PlannerMaster interacts directly with PlannerLib, and as such will only build if BUILD CAR PLANNER is set to ON. PlannerMaster takes commands found from PlannerLib and passes them to MATLAB, where they can then be transferred to LocalSim for plotting.
+
+There will be an example .m file in the future demonstrating these programs in more detail, but they are currently still in development. 
+
 Examples/KeyboardCarCommander
 ---------
 Despite its name, KeyboardCarCommander does not use the keyboard at all; rather, it serves as an example of the HAL device <-> LocalSim connection. Running KeyboardCarCommander and LocalSim simultaneously creates a Node connection between them; the main loop in KCC then sends torque and steering commands to the RaycastVehicle (go slow, and turn to the left). It's easy to build the interactivity from here.
@@ -74,9 +87,9 @@ Examples/TestCam
 ---------
 With a LocalSim started and a camera initiated, TestCam allows the user to see through that camera. It gathers simulated video/photo data and sends it through Node to a separate window. It just serves as another example of the HAL<->LocalSim connection.
 
-Examples/Matlab_interface
+Examples/PathPlannerTest
 ---------
-Matlab_interface creates a Node connection between MATLAB and SimBA usig a MEX wrapper. It's a tricky beast, solely due to the programming restrictions brought on by MATLAB... but it does well. The MATLAB World above starts the Node connection on the LocalSim side in order to grab heightmap data from the MATLAB side.
+*Must have BUILD CAR PLANNER switched ON.* This program currently takes a start and goal configuration, along with a mesh, and uses them to calculate the optimum control policy to get from start to goal. The program then starts a node instance and passes the commands to LocalSim (assuming it's up and running already)
 
 SimPlanner
 ---------
