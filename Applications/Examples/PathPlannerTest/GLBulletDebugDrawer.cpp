@@ -1,12 +1,10 @@
 #include "GLBulletDebugDrawer.h"
 
-GLBulletDebugDrawer::GLBulletDebugDrawer()
-{
+GLBulletDebugDrawer::GLBulletDebugDrawer(){
 }
 
-
 void GLBulletDebugDrawer::Init(BulletCarModel* pModel){
-    m_pModel = pModel;
+  m_pModel = pModel;
 }
 
 void GLBulletDebugDrawer::DrawCanonicalObject(){

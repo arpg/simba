@@ -16,7 +16,7 @@ using namespace pangolin;
 // TODO: FIX GL_CAR TO SEE WHAT CAR IS DOING.
 
 class GLCar {
-public:
+ public:
 
   GLCar() {
     draw_scheme_ = "lines";

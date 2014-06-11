@@ -5,18 +5,17 @@
 #include "pangolin/pangolin.h"
 #include "SceneGraph/SceneGraph.h"
 
-
 using namespace SceneGraph;
 
 class GLBulletDebugDrawer : public GLObject
 {
-public:
-    GLBulletDebugDrawer();
-    void Init(BulletCarModel* pModel);
-    virtual void DrawCanonicalObject();
+ public:
+  GLBulletDebugDrawer();
+  void Init(BulletCarModel* pModel);
+  virtual void DrawCanonicalObject();
 
-private:
-    BulletCarModel* m_pModel;
+ private:
+  BulletCarModel* m_pModel;
 };
 
 #endif // GLBULLETDEBUGDRAWER_H
