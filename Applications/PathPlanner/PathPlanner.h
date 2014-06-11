@@ -24,7 +24,7 @@
 #include "LocalPlanner.h"
 
 #include "Node/Node.h"
-#include "PbMsgs/BVP.pb.h"
+#include "PB_Headers/BVP.pb.h"
 
 // for communicating between the Physics Engine and ModelGraph
 #include <ModelGraph/ModelGraphBuilder.h>

@@ -81,13 +81,13 @@ public:
 private:
 
   /// PRIVATE MEMBER VARIABLES
-  btDefaultCollisionConfiguration                        m_CollisionConfiguration;
-  std::shared_ptr<btCollisionDispatcher>               m_pDispatcher;
-  std::shared_ptr<btDbvtBroadphase>                    m_pBroadphase;
+  btDefaultCollisionConfiguration  m_CollisionConfiguration;
+  std::shared_ptr<btCollisionDispatcher> m_pDispatcher;
+  std::shared_ptr<btDbvtBroadphase> m_pBroadphase;
   std::shared_ptr<btSequentialImpulseConstraintSolver> m_pSolver;
-  double                                                 m_dTimeStep;
-  double                                                 m_dGravity;
-  int                                                    m_nMaxSubSteps;
+  double m_dTimeStep;
+  double m_dGravity;
+  int m_nMaxSubSteps;
 
 };
 

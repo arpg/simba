@@ -23,6 +23,7 @@ class SimRobot
 public:
 
   SimRobot(){
+    new_parts_bit_ = 0;
     m_bStateKeeperOn = false;
   }
 
@@ -39,7 +40,19 @@ public:
   }
 
   void SetParts(std::vector<ModelNode*> vParts){
-    m_vParts = vParts;
+    if(m_vParts.size()==0){
+      std::cout<<"No parts...";
+      m_vParts = vParts;
+    } else {
+      int size = m_vParts.size();
+      SetNewPartsBit(size);
+      std::cout<<"Part size: "<<size;
+      m_vParts.insert( m_vParts.end(), vParts.begin(), vParts.end() );
+    }
+  }
+
+  void SetNewPartsBit(int bit){
+    new_parts_bit_ = bit;
   }
 
   void SetProxyName(std::string sProxyName){
@@ -93,6 +106,10 @@ public:
     return m_vParts;
   }
 
+  int GetNewPartsBit(){
+    return new_parts_bit_;
+  }
+
   bool GetStateKeeperStatus(){
     return m_bStateKeeperOn;
   }
@@ -106,8 +123,11 @@ private:
   bool                        m_bStateKeeperOn;
   ModelNode*                  m_Base;
   XMLDocument*                m_pRobotURDF;           // robot URDF file
-  Eigen::Vector6d             m_eRobotInitPose;       // actual pose that init robot
-  Eigen::Vector6d             m_eRobotInitPoseInURDF; // init pose in robot urdf file.
+  // actual pose that init robot
+  Eigen::Vector6d             m_eRobotInitPose;
+  // init pose in robot urdf file.
+  Eigen::Vector6d             m_eRobotInitPoseInURDF;
+  int new_parts_bit_;
 };
 
 #endif

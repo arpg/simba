@@ -8,10 +8,10 @@ bool RobotsManager::Init(string& sProxyName, ModelGraphBuilder& Scene,
                          SimRobot& mSimRobot, const string& sServerOption){
   m_Scene      = Scene;
   m_sProxyName = sProxyName;
-  if(sServerOption == "WithoutStateKeeper" || sServerOption =="WithoutNetwork"){
+  if(sServerOption == "WithoutStateKeeper" ||
+     sServerOption =="WithoutNetwork"){
     m_bStateKeeperOn = false;
-  }
-  else{
+  } else {
     m_bStateKeeperOn = true;
   }
   return ImportSimRobot(mSimRobot);
@@ -19,17 +19,12 @@ bool RobotsManager::Init(string& sProxyName, ModelGraphBuilder& Scene,
 
 
 bool RobotsManager::ImportSimRobot( SimRobot& mSimRobot ){
-
   if(mSimRobot.GetStateKeeperStatus() == true){
-    // TODO: Add pose from StateKeeper
-    // If this is not on, the World pose is automatically known.
   }
-
   // check if we should save name of this robot as save main robot name
   if(m_mSimRobotsList.size()==0){
     m_sMainRobotName = mSimRobot.GetRobotName();
   }
-
   m_mSimRobotsList.insert(pair<string, SimRobot*>(mSimRobot.GetRobotName(),
                                                   &mSimRobot));
   return true;
@@ -195,10 +190,8 @@ void RobotsManager::GenPoseAxis(Eigen::Vector6d &Pose, Eigen::Vector6d &AxisX, E
 /// Get the pointer of the main robot. Notice that if Simba runs with StateKeeper
 /// There will be more than one robot in Simba. The main robot is the robot that
 /// we can control.
-SimRobot* RobotsManager::GetMainRobot()
-{
-  string sRobotName = m_sMainRobotName;
-  SimRobot* pSimRobot = m_mSimRobotsList.find(sRobotName)->second;
+SimRobot* RobotsManager::GetMainRobot(){
+  SimRobot* pSimRobot = m_mSimRobotsList.find(m_sMainRobotName)->second;
   return pSimRobot;
 }
 

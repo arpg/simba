@@ -214,11 +214,32 @@ public:
 
 class LightShape : public Shape
 {
-public:
+ public:
   LightShape(std::string sName, std::vector<double> position){
     SetName(sName);
     SetPosition(position[0], position[1], position[2]);
   }
+};
+
+
+// Waypoint is used for plotting trajectories
+class WaypointShape : public Shape
+{
+ public:
+  WaypointShape(std::string sName, std::vector<double> pose,
+                double velocity){
+    SetName(sName);
+    SetPose(pose);
+    velocity_ = velocity;
+  }
+
+  double GetVelocity(){
+    return velocity_;
+  }
+
+  // Scales the waypoint
+  double velocity_;
+
 };
 
 #endif // SHAPE_H

@@ -15,7 +15,7 @@
 // Our protobuf sources - I couldn't find a successful way to import these
 // using the makefile, so #includes had to do.
 #include "BVP.pb.h"
-#include "/Users/Trystan/Code/rslam/build/CoreDev/HAL/PbMsgs/BVP.pb.cc"
+#include "/Users/Trystan/Code/simba/build/SimBA/PB_Headers/BVP.pb.cc"
 
 class SimbaMaster{
  public:

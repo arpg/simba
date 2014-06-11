@@ -23,13 +23,6 @@ class RobotsManager
 
 public:
 
-  map<string, SimRobot*>            m_mSimRobotsList;  // the first robot join the list will be user's robot.
-  WorldFullStateMsg                 m_WorldFullState;  // world state (pose, velocity) message. inlude the state of bodies.
-  ModelGraphBuilder                 m_Scene;
-  string                            m_sProxyName;
-  string                            m_sMainRobotName;  // Name of Main Robot. This is actually the robot we can contorl
-  bool                              m_bStateKeeperOn;
-
   bool Init(string& sProxyName, ModelGraphBuilder& Scene,
             SimRobot& mSimRobot, const string &sServerOption);
   bool ImportSimRobot( SimRobot& mSimRobot );
@@ -38,9 +31,22 @@ public:
   void ApplyWorldFullStateOnAllPlayers();
   void ApplyWorldFullState();
   void DrawAllRobotsPoseAxis();
-  void GenPoseAxis(Eigen::Vector6d &Pose, Eigen::Vector6d &AxisX, Eigen::Vector6d &AxisY, Eigen::Vector6d &AxisZ);
+  void GenPoseAxis(Eigen::Vector6d &Pose, Eigen::Vector6d &AxisX,
+                   Eigen::Vector6d &AxisY, Eigen::Vector6d &AxisZ);
   SimRobot* GetMainRobot();
   SimRobot* GetRobot(string sRobotName);
+
+  // MEMBER VARIABLES
+
+  // the first robot join the list will be user's robot.
+  map<string, SimRobot*> m_mSimRobotsList;
+  // world state (pose, velocity) message. inlude the state of bodies.
+  WorldFullStateMsg m_WorldFullState;
+  ModelGraphBuilder m_Scene;
+  string m_sProxyName;
+  // Name of Main Robot. This is actually the robot we can control
+  string m_sMainRobotName;
+  bool m_bStateKeeperOn;
 
 };
 

@@ -1,6 +1,8 @@
 #ifndef MODELGRAPHBUILDER_H
 #define MODELGRAPHBUILDER_H
 
+#include <mutex>
+
 #include <ModelGraph/RenderEngine.h>
 #include <ModelGraph/PhysicsEngine.h>
 #include <SimRobots/SimRobot.h>
@@ -16,7 +18,8 @@ public:
 
   void Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
             SimDevices& m_SimDevices,
-            std::string sSimName, bool debug, bool render, bool bEnableCameraView);
+            std::string sSimName, bool debug,
+            bool render, bool bEnableCameraView);
 
   /////////////////////////////////////////
   /// PHYSICS_ENGINE CONSTRUCTORS
@@ -44,12 +47,16 @@ public:
   /// UPDATE THE SCENE
   /////////////////////////////////////////
 
+  void CheckForNewShapes();
+
   void UpdateScene();
 
   /// MEMBER VARIABLES
   Eigen::Vector6d m_PoseRW;
   PhysicsEngine m_Phys;
   RenderEngine m_Render;
+  SimWorld* world_model_;
+  SimRobot* sim_robot_;
   bool m_debug;
   bool m_render;
 

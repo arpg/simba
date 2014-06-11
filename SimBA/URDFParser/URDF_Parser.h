@@ -10,7 +10,7 @@
 #include <SimDevices/SimDevices.h>
 #include <SimRobots/SimRobot.h>
 #include <SimRobots/SimWorld.h>
-#include <PbMsgs/BVP.pb.h>
+#include <PB_Headers/BVP.pb.h>
 #include <Node/Node.h>
 #include <miniglog/logging.h>
 

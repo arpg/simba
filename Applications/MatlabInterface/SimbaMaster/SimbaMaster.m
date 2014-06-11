@@ -2,7 +2,6 @@
 %%%% MATLAB class wrapper to the Node C++ architecture.
 %%%% Any method with 'SimbaMaster_mex(...)'
 %%%% represents a call to the Node wrapper for MATLAB.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 classdef SimbaMaster < handle
 

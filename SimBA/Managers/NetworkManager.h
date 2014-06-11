@@ -3,18 +3,24 @@
 
 #include <stdlib.h>
 #include <iostream>
+
 #include <Node/Node.h>
+#include <miniglog/logging.h>
+
 #include <SimDevices/SimDevices.h>
 #include <URDFParser/URDF_Parser.h>
 #include <Managers/RobotsManager.h>
+#include <Network/WorldState.h>
+#include <ModelGraph/Shape.h>
 
 /// Node messages for our controllers
 #include <NodeMessages.pb.h>
 #include <Camera.pb.h>
 #include <NodeCamMessage.pb.h>
 #include <NodeCar.pb.h>
-#include <Network/WorldState.h>
-#include <miniglog/logging.h>
+// To add shapes to our scenegraph in real-time
+#include "PB_Headers/RenderShapes.pb.h"
+
 
 using namespace std;
 
@@ -29,7 +35,7 @@ using namespace std;
 
 class NetworkManager
 {
-public:
+ public:
 
   int m_iNodeClients; // num of Node clients that subscribe to LocalSim
 
@@ -43,9 +49,11 @@ public:
   /// NODE FUNCTIONS
   void RegisterDevices(SimDevices* pSimDevices);
   void RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
-                         RegisterNodeCamRepMsg & mReply);
+                            RegisterNodeCamRepMsg & mReply);
   void RegisterControllerDevice(pb::RegisterControllerReqMsg& mRequest,
                                 pb::RegisterControllerRepMsg & mReply);
+  void AddRenderObject(pb::RegisterRenderReqMsg& mRequest,
+                       pb::RegisterRenderRepMsg & mReply);
   bool UpdateNetwork();
   bool ReceiveControllerInfo(string sDeviceName);
   bool PublishSimCamBySensor(string sCamBodyName);
@@ -63,7 +71,7 @@ public:
   bool ReceiveWorldFromStateKeeper();
 
   //////////////////////////////////////
-  // STATIC FUNCTIONS CALLED BY HAL AND STATEKEEPER
+  // RPC FUNCTIONS CALLED BY HAL AND STATEKEEPER
   //////////////////////////////////////
 
   // add a new robot by URDF (Called by StateKeeper)
@@ -82,18 +90,16 @@ public:
   }
 
   //////////////////////////////
-
   // Register hal camera device in LocalSim. This RPC function is called by hal.
   // Once we register a cam device, we can use the recv and publish method.
 
   static void _RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
-                                 RegisterNodeCamRepMsg& mReply,
-                                 void* pUserData){
+                                    RegisterNodeCamRepMsg& mReply,
+                                    void* pUserData){
     ((NetworkManager*)pUserData)->RegisterSensorDevice(mRequest, mReply);
   }
 
   //////////////////////////////
-
   // Register controller device in LocalSim. This RPC function is called by hal.
   // Once we register a controller, LocalSim will need to subscribe to it and
   // then we can use recv and publish method to sync command between
@@ -105,7 +111,16 @@ public:
     ((NetworkManager*)pUserData)->RegisterControllerDevice(mRequest, mReply);
   }
 
-private:
+  //////////////////////////////
+  // Register controller device in LocalSim. This RPC function is called by hal.
+
+  static void _AddRenderObject(pb::RegisterRenderReqMsg& mRequest,
+                               pb::RegisterRenderRepMsg& mReply,
+                               void* pUserData){
+    ((NetworkManager*)pUserData)->AddRenderObject(mRequest, mReply);
+  }
+
+ private:
 
   node::node      node_;
   int             debug_level_;
@@ -114,7 +129,7 @@ private:
   int             m_verbosity;
   int             m_iTimeStep;
   SimDevices*     m_pSimDevices;
-  RobotsManager*  m_pRobotsManager;
+  RobotsManager*  robot_manager_;
   std::mutex      statekeeper_mutex_;
 
 };

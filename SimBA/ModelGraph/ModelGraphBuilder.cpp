@@ -1,7 +1,7 @@
 #include <ModelGraph/ModelGraphBuilder.h>
 
 /////////////////////////////////////////
-/// FUNCTIONS
+/// PHYSICS FUNCTIONS
 /////////////////////////////////////////
 
 void ModelGraphBuilder::AssociateWorldPhysics(SimWorld m_SimWorld){
@@ -52,6 +52,8 @@ void ModelGraphBuilder::AssociateDevices(SimDevices& m_SimDevices){
 }
 
 /////////////////////////////////////////
+/// RENDER FUNCTIONS
+/////////////////////////////////////////
 
 void ModelGraphBuilder::RenderWorldGraph(SimWorld m_SimWorld){
   for(unsigned int ii=0; ii<m_SimWorld.m_WorldNodes.size(); ii++){
@@ -67,9 +69,35 @@ void ModelGraphBuilder::RenderRobotGraph(SimRobot m_SimRobot){
     Eigen::Vector6d ChildWorldPose;
     for (unsigned int ii = 0; ii < part->NumChildren(); ii++ ) {
       ChildWorldPose = _T2Cart(
-            part->GetPoseMatrix() * part->m_vChildren[ii]->GetPoseMatrix());
+          part->GetPoseMatrix() * part->m_vChildren[ii]->GetPoseMatrix());
       part->SetPose(ChildWorldPose);
     }
+  }
+}
+
+/////////////////////////////////////////
+/// UPDATE FUNCTIONS
+/// This just adds to the RenderGraph right now.
+/// I'll worry about the Physics later
+/////////////////////////////////////////
+
+void ModelGraphBuilder::CheckForNewShapes(){
+  std::mutex modelgraph_mutex;
+  std::lock_guard<std::mutex> lock(modelgraph_mutex);
+  int new_parts = sim_robot_->GetNewPartsBit();
+  if(new_parts>0){
+    for(unsigned int ii = new_parts; ii<sim_robot_->GetParts().size(); ii++){
+      ModelNode* part = sim_robot_->GetParts().at(ii);
+      SceneGraph::GLObject* object = m_Render.AddNode(part);
+      m_Render.AddNewShape(object);
+      Eigen::Vector6d ChildWorldPose;
+      for (unsigned int ii = 0; ii < part->NumChildren(); ii++ ) {
+        ChildWorldPose = _T2Cart(
+            part->GetPoseMatrix() * part->m_vChildren[ii]->GetPoseMatrix());
+        part->SetPose(ChildWorldPose);
+      }
+    }
+    sim_robot_->SetNewPartsBit(0);
   }
 }
 
@@ -81,6 +109,8 @@ void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
                              bool bEnableCameraView=false){
   m_debug = debug;
   m_render = render;
+  world_model_ = &m_WorldModel;
+  sim_robot_ = &m_SimRobot;
   m_Phys.Init();
   if(m_render){
     m_Render.Init(sSimName);
@@ -108,7 +138,10 @@ void ModelGraphBuilder::Init(SimWorld& m_WorldModel, SimRobot& m_SimRobot,
   }
 }
 
+//////////
+
 void ModelGraphBuilder::UpdateScene(){
+  CheckForNewShapes();
   m_Phys.StepSimulation();
   if(m_debug){
     m_Phys.DebugDrawWorld();

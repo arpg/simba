@@ -278,20 +278,20 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
 
     if(strcmp(sType, "Box") == 0){
       BoxShape* pBox =new BoxShape(sBodyName, vDimension[0], vDimension[1],
-          vDimension[2], iMass, 1, vPose);
+                                   vDimension[2], iMass, 1, vPose);
       m_mModelNodes[pBox->GetName()] = pBox;
     }
 
     else if(strcmp(sType,"Cylinder")== 0){
       CylinderShape* pCylinder =new CylinderShape(sBodyName, vDimension[0],
-          vDimension[1], iMass,1,
-          vPose);
+                                                  vDimension[1], iMass,1,
+                                                  vPose);
       m_mModelNodes[pCylinder->GetName()] = pCylinder;
     }
 
     else if(strcmp(sType, "Sphere") == 0){
       SphereShape* pSphere =new SphereShape(sBodyName, vDimension[0],
-          iMass, 1, vPose);
+                                            iMass, 1, vPose);
       m_mModelNodes[pSphere->GetName()] = pSphere;
     }
 

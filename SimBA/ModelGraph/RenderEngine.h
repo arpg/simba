@@ -24,7 +24,7 @@ public:
   ///////////////////////
 
   // Add to our list of SceneEntities
-  void AddNode( ModelNode *pNode);
+  SceneGraph::GLObject* AddNode(ModelNode *pNode);
 
   ///////////////////////////////////////
 
@@ -38,6 +38,7 @@ public:
   // Pass all SceneEntities (and RaycastWheels) at one time into
   // the Scene
   void AddToScene();
+  void AddNewShape(SceneGraph::GLObject* object);
 
   // Complete the SceneGraph and Pangolin initialization
   void CompleteScene(bool bEnableCameraView);

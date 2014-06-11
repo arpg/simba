@@ -38,5 +38,5 @@ target_link_libraries( TestCam
   ${SimBA_LIBRARIES}
   ${Calibu_LIBRARIES}
   #{MINIGLOG_LIBRARIES}
-  SimMessages
+  NodeMessages
  )

@@ -16,7 +16,7 @@
 
 #include "Node/Node.h"
 #include "URDFParser/URDF_Parser.h"
-#include "PbMsgs/BVP.pb.h"
+#include "PB_Headers/BVP.pb.h"
 #include <HAL/Car/CarDevice.h>
 
 // for communicating between the Physics Engine and ModelGraph

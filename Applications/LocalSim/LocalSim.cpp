@@ -42,7 +42,8 @@ LocalSim::LocalSim(const string& local_sim_name,
               local_sim_name_, false, render_option_, false);
 
   // TODO: What to do with StateKeeper option...?
-  LOG(debug_level) << "Init Local Sim Success!";
+  LOG(debug_level) << std::endl
+                   << "-------> SUCCESS: Initialized LocalSim! <-------";
 
 }
 
