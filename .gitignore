@@ -9,6 +9,8 @@ build
 *.user.*
 .#*
 #*
+*#
+flycheck*
 /SimBA/#CMakeLists.txt#
 /SimBA/.#CMakeLists.txt
 /Unnamed_coqscript_1.crashcoqide
