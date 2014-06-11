@@ -88,7 +88,7 @@ class NetworkManager
                            void* pUserData){
     ((NetworkManager*)pUserData)->DeleteRobot(mRequest, mReply);
   }
-
+  
   //////////////////////////////
   // Register hal camera device in LocalSim. This RPC function is called by hal.
   // Once we register a cam device, we can use the recv and publish method.

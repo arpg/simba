@@ -32,7 +32,7 @@ include_directories(
 
 add_executable( PathPlanner PathPlanner.cpp PathPlanner.h)
 
-add_executable( MatlabMaster MatlabMaster.cpp MatlabMaster.h)
+# add_executable( MatlabMaster MatlabMaster.cpp MatlabMaster.h)
 
 target_link_libraries( PathPlanner
                        ${Node_LIBRARIES}
@@ -41,8 +41,8 @@ target_link_libraries( PathPlanner
                        ${Calibu_LIBRARIES}
 		       miniglog)
 
-target_link_libraries( MatlabMaster
-                       ${Node_LIBRARIES}
-                       ${SimBA_LIBRARIES}
-                       ${MATLAB_LIBRARIES}
-		       miniglog)
+# target_link_libraries( MatlabMaster
+#                        ${Node_LIBRARIES}
+#                        ${SimBA_LIBRARIES}
+#                        ${MATLAB_LIBRARIES}
+# 		       miniglog)

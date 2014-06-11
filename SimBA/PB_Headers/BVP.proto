@@ -1,42 +1,27 @@
 package pb;
 
-
-// TODO: Make each of our matrix terms into a different class,
-// then call that. Ex:
-// message DoubleMatrix {
-//   required uint32 rows = 1;
-//   required uint32 cols = 2;
-//   repeated double data = 3 [packed=true];
-// }
-
-message BVP_params
+// x, y, theta, vel
+message PlannerConfigMsg
 {
     repeated double          start_param         =1 [packed=true];
     repeated double          goal_param          =2 [packed=true];
-    required int32           row_count           =3;
-    required int32           col_count           =4;
-    repeated double          x_data              =5 [packed=true];
-    repeated double          y_data              =6 [packed=true];
-    repeated double          z_data              =7 [packed=true];
-    required uint32           tau                 =8;
 }
 
-message BVP_policy
+message PlannerPolicyMsg
 {
     repeated double          force               =1 [packed=true];
-    repeated double          time                =2 [packed=true];
-    repeated double          phi                 =3 [packed=true];
-    repeated double          start_param         =4 [packed=true];
-    repeated double          goal_param          =5 [packed=true];
-    required int32           tau                 =6;
+    repeated double          phi                 =2 [packed=true];
+    repeated double          time                =3 [packed=true];
 }
 
-message BVP_check
+message PlannerStatusMsg
 {
-    required bool            need                =1;
+    required bool config_set =1;
+    required bool mesh_set =2;
+    required bool policy_set =3;
 }
 
-message Heightmap
+message PlannerHeightmapMsg
 {
     required int32           row_count           =1;
     required int32           col_count           =2;
@@ -45,13 +30,47 @@ message Heightmap
     repeated double          z_data              =5 [packed=true];
 }
 
-message RegisterBVPReqMsg
+message PlannerMotionSampleMsg
 {
-    optional bytes          topic        	       =1;
-    optional string         uri     		   =2;
+    repeated double x =1 [packed=true];
+    repeated double y =2 [packed=true];
+    repeated double z =3 [packed=true];
+    repeated double r =4 [packed=true];
+    repeated double p =5 [packed=true];
+    repeated double q =6 [packed=true];
+    repeated double velocity =7 [packed=true];
 }
 
-message RegisterBVPRepMsg
+message PlannerSplineMsg
 {
-    optional bool           success              = 1;
+    repeated double a =1 [packed=true];
+    repeated double b =2 [packed=true];
+    repeated double c =3 [packed=true];
+    repeated double d =4 [packed=true];
+    repeated double e =5 [packed=true];
+}
+
+// I care not
+
+message RegisterPlannerReqMsg
+{
+    optional PlannerConfigMsg config = 1;
+    optional PlannerPolicyMsg policy = 2;
+    optional PlannerStatusMsg status = 3;
+    optional PlannerHeightmapMsg heightmap = 4;
+    optional PlannerMotionSampleMsg motion_sample = 5;
+    optional PlannerSplineMsg spline = 6;
+    optional uint32 tau =7;
+}
+
+message RegisterPlannerRepMsg
+{
+    optional PlannerConfigMsg config = 1;
+    optional PlannerPolicyMsg policy = 2;
+    optional PlannerStatusMsg status = 3;
+    optional PlannerHeightmapMsg heightmap = 4;
+    optional PlannerMotionSampleMsg motion_sample = 5;
+    optional PlannerSplineMsg spline = 6;
+    optional bool success = 7;
+    optional uint32 tau =8;
 }

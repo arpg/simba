@@ -57,7 +57,7 @@ classdef SimbaMaster < handle
                             motion_sample.x, motion_sample.y, ...
                             motion_sample.z, motion_sample.r, ...
                             motion_sample.p, motion_sample.q);
-        end    
+        end
         
         function SavePolicy(this, policy, mesh, start_params, goal_params)
             force = policy.force;

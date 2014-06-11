@@ -2,7 +2,7 @@
 #define PATHPLANNER_H
 
 ////////////////////////////////////////////
-/// SIMPLANNER
+/// PATH PLANNER
 /// This function acts as a data wrapper for the LocalPlanner.
 /// It takes three data structures:
 ///   1. The start configuration of the vehicle [x, y, yaw, vel].
@@ -16,61 +16,107 @@
 
 #include <iostream>
 
-
-
 // Planning functions, from CarPlanner lib
 #include "CarPlannerCommon.h"
 #include "ApplyVelocitiesFunctor.h"
 #include "LocalPlanner.h"
 
+#include "miniglog/logging.h"
 #include "Node/Node.h"
 #include "PB_Headers/BVP.pb.h"
-
 // for communicating between the Physics Engine and ModelGraph
 #include <ModelGraph/ModelGraphBuilder.h>
 
 class PathPlanner
 {
- public:
+public:
 
-  ///////////////////////////////////////////////////////////////////
-  //member variables
-  std::string           sim_planner_name_;
-  BulletCarModel*       car_model_;
-  LocalPlanner          m_snapper;
-  CarParameterMap       m_VehicleParams;
-  VehicleState          start_state_;
-  VehicleState          goal_state_;
-  MotionSample          m_msFinalPath;
-  node::node            m_Node;
-  pb::BVP_params        m_params;
-  pb::BVP_policy        m_policy;
-  int                   m_nTau; // Our bitstring that describes the map.
-  bool                  need_BVP_;
-  bool                  solved_BVP_;
-  bool reset_;
-  std::vector<double> start_;
-  std::vector<double> goal_;
-  std::string params_file_name_;
+/// CONSTRUCTOR
+PathPlanner();
+~PathPlanner();
 
-  /// CONSTRUCTOR
-  PathPlanner();
-  ~PathPlanner();
+/// FUNCTIONS
+void InitNode();
+void SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
+                        pb::RegisterPlannerRepMsg& mReply);
+void SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
+                    pb::RegisterPlannerRepMsg& mReply);
+void GetStatus(pb::RegisterPlannerReqMsg& mRequest,
+                 pb::RegisterPlannerRepMsg& mReply);
+void GetPolicy(pb::RegisterPlannerReqMsg& mRequest,
+                 pb::RegisterPlannerRepMsg& mReply);
+void GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
+                       pb::RegisterPlannerRepMsg& mReply);
+void GetSpline(pb::RegisterPlannerReqMsg& mRequest,
+                 pb::RegisterPlannerRepMsg& mReply);
 
-  /// FUNCTIONS
-  void Init();
-  void CheckNeed();
-  void CheckSolved();
-  pb::BVP_policy StartPolicy(pb::BVP_params params);
-  bool InitMesh(pb::BVP_params params);
-  double* RaycastToGround();
-  int OnTheGround(RaycastVehicle* vehicle);
-  void GroundStates();
-  double* RaycastToGround(double id, double x, double y);
-  void InitGoals(pb::BVP_params params);
-  pb::BVP_policy SampleTrajectory();
-  std::string GetNumber(std::string name);
+void GroundStates();
+void SolveBVP(pb::PlannerPolicyMsg& policy);
+std::string GetNumber(std::string name);
+void ResetBooleans();
 
+// NODE RPC FUNCTIONS
+// These correspond to functions in PlannerMaster.h
+static void _SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
+                                pb::RegisterPlannerRepMsg& mReply,
+                                void* pUserData){
+((PathPlanner*)pUserData)->SetConfiguration(mRequest, mReply);
+}
+
+static void _SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
+                            pb::RegisterPlannerRepMsg& mReply,
+                            void* pUserData){
+((PathPlanner*)pUserData)->SetHeightmap(mRequest, mReply);
+}
+
+static void _GetStatus(pb::RegisterPlannerReqMsg& mRequest,
+                         pb::RegisterPlannerRepMsg& mReply,
+                         void* pUserData){
+((PathPlanner*)pUserData)->GetStatus(mRequest, mReply);
+}
+
+static void _GetPolicy(pb::RegisterPlannerReqMsg& mRequest,
+                         pb::RegisterPlannerRepMsg& mReply,
+                         void* pUserData){
+((PathPlanner*)pUserData)->GetPolicy(mRequest, mReply);
+}
+
+static void _GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
+                               pb::RegisterPlannerRepMsg& mReply,
+                               void* pUserData){
+((PathPlanner*)pUserData)->GetMotionSample(mRequest, mReply);
+}
+
+static void _GetSpline(pb::RegisterPlannerReqMsg& mRequest,
+                         pb::RegisterPlannerRepMsg& mReply,
+                         void* pUserData){
+((PathPlanner*)pUserData)->GetSpline(mRequest, mReply);
+}
+
+/// MEMBER VARIABLES
+// PlannerLib things
+std::string planner_name_;
+BulletCarModel* car_model_;
+LocalPlanner m_snapper;
+CarParameterMap m_VehicleParams;
+VehicleState start_state_;
+VehicleState goal_state_;
+MotionSample final_motion_sample_;
+std::string params_file_name_;
+//Node things
+node::node node_;
+pb::PlannerPolicyMsg policy_;
+int debug_level_;
+std::vector<double> start_;
+std::vector<double> goal_;
+
+// Our bitstring that describes the map.
+int  map_tau_;
+// booleans
+bool config_set_;
+bool mesh_set_;
+bool policy_set_;
+bool policy_delivered_;
 };
 
 #endif // PATHPLANNER_H

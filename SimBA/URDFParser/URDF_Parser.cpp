@@ -49,7 +49,7 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
           std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
         LOG(debug_level_) << "SUCCESS: Subscribed to MATLAB/Heightmap";
-        pb::Heightmap params;
+        pb::PlannerHeightmapMsg params;
         while(!node_.receive("MATLAB/Heightmap", params)){
           std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
