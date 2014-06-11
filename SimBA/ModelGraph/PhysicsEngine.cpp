@@ -8,38 +8,38 @@
 //////////////////////////////////////////////////////////
 
 PhysicsEngine::PhysicsEngine(){
-  m_dTimeStep = 1.0/30.0;
-  m_dGravity = -9.8;
-  m_nMaxSubSteps = 10; // bullet -- for stepSimulation
+  timestep_ = 1.0/30.0;
+  gravity_acc_ = -9.8;
+  time_max_substeps_ = 10; // bullet -- for stepSimulation
 }
 
 bool PhysicsEngine::Init(double dGravity, double dTimeStep,
                          double nMaxSubSteps){
-  m_dTimeStep    = dTimeStep;
-  m_dGravity     = dGravity;
-  m_nMaxSubSteps = nMaxSubSteps;
+  timestep_    = dTimeStep;
+  gravity_acc_     = dGravity;
+  time_max_substeps_ = nMaxSubSteps;
 
   // Physics stuff
   // See http://bulletphysics.org/mediawiki-1.5.8/index.php/Hello_World
 
   std::shared_ptr<btCollisionDispatcher> Dispatcher(
-        new btCollisionDispatcher(&m_CollisionConfiguration) );
-  m_pDispatcher = Dispatcher;
+      new btCollisionDispatcher(&collision_configuration_) );
+  bt_dispatcher_ = Dispatcher;
 
   std::shared_ptr<btDbvtBroadphase> Broadphase( new btDbvtBroadphase );
-  m_pBroadphase = Broadphase;
+  bt_broadphase_ = Broadphase;
 
   std::shared_ptr<btSequentialImpulseConstraintSolver> Solver(
-        new btSequentialImpulseConstraintSolver );
-  m_pSolver = Solver;
+      new btSequentialImpulseConstraintSolver );
+  bt_solver_ = Solver;
   std::shared_ptr<btDiscreteDynamicsWorld> DWorld(
-        new btDiscreteDynamicsWorld(m_pDispatcher.get(),
-                                    m_pBroadphase.get(),
-                                    m_pSolver.get(),
-                                    &m_CollisionConfiguration) );
+      new btDiscreteDynamicsWorld(bt_dispatcher_.get(),
+                                  bt_broadphase_.get(),
+                                  bt_solver_.get(),
+                                  &collision_configuration_) );
   dynamics_world_ = DWorld;
-  dynamics_world_->setGravity( btVector3(0,0,m_dGravity) );
-  dynamics_world_->setDebugDrawer( &m_DebugDrawer );
+  dynamics_world_->setGravity( btVector3(0, 0,  gravity_acc_) );
+  dynamics_world_->setDebugDrawer( &debug_drawer_ );
   dynamics_world_->getDebugDrawer()->
       setDebugMode(btIDebugDraw::DBG_DrawWireframe +
                    btIDebugDraw::DBG_FastWireframe +
@@ -58,14 +58,14 @@ bool PhysicsEngine::Init(double dGravity, double dTimeStep,
 void PhysicsEngine::RegisterObject(ModelNode *pItem){
 
   /*********************************************************************
-     *ADDING SHAPES
-     **********************************************************************/
+   *ADDING SHAPES
+   **********************************************************************/
   if (dynamic_cast<Shape*>(pItem) != NULL) {
     Shape* pNodeShape = (Shape*) pItem;
 
     /************************************
-       *ADDING A RAYCAST VEHICLE
-       ************************************/
+     *ADDING A RAYCAST VEHICLE
+     ************************************/
 
     if(dynamic_cast<SimRaycastVehicle*>(pNodeShape)!=NULL){
       bullet_vehicle btRayVehicle( pItem, dynamics_world_.get(),
@@ -79,7 +79,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
       pEntity->m_pVehicle = vehicle;
-      m_mRayVehicles[pItem->GetName()] = pEntity;
+      ray_vehicles_map_[pItem->GetName()] = pEntity;
     }
 
     //Box
@@ -95,7 +95,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
-      m_mShapes[pItem->GetName()] = pEntity;
+      shapes_map_[pItem->GetName()] = pEntity;
     }
 
     //Cylinder
@@ -111,7 +111,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
-      m_mShapes[pItem->GetName()] = pEntity;
+      shapes_map_[pItem->GetName()] = pEntity;
     }
 
     //Plane
@@ -127,7 +127,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
-      m_mShapes[pItem->GetName()] = pEntity;
+      shapes_map_[pItem->GetName()] = pEntity;
     }
 
     //Heightmap
@@ -143,7 +143,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
-      m_mShapes[pItem->GetName()] = pEntity;
+      shapes_map_[pItem->GetName()] = pEntity;
     }
 
     //Mesh
@@ -159,15 +159,15 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       pEntity->m_pRigidBody = body;
       pEntity->m_pShape = pShape;
       pEntity->m_pMotionState = pMotionState;
-      m_mShapes[pItem->GetName()] = pEntity;
+      shapes_map_[pItem->GetName()] = pEntity;
     }
   }
 
 
 
   /*********************************************************************
-     *ADDING CONSTRAINTS
-     **********************************************************************/
+   *ADDING CONSTRAINTS
+   **********************************************************************/
 
   else if (dynamic_cast<Constraint*>(pItem) != NULL) {
     Constraint* pNodeCon = (Constraint*) pItem;
@@ -176,19 +176,19 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       PToPOne* pCon = (PToPOne*) pNodeCon;
       btRigidBody* RigidShape_A;
       if(isVehicle(pCon->m_Shape_A)){
-        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = ray_vehicles_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = shapes_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
-          pCon->m_pivot_in_A[2]);
+                        pCon->m_pivot_in_A[2]);
       btPoint2PointConstraint* PToP =
           new btPoint2PointConstraint(*RigidShape_A, pivot_A);
       dynamics_world_->addConstraint(PToP);
-      m_mPtoP[pCon->GetName()] = PToP;
+      ptop_map_[pCon->GetName()] = PToP;
     }
 
     else if(dynamic_cast<PToPTwo*>( pNodeCon ) != NULL) {
@@ -196,30 +196,30 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       btRigidBody* RigidShape_A;
       btRigidBody* RigidShape_B;
       if(isVehicle(pCon->m_Shape_A)){
-        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = ray_vehicles_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = shapes_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       if(isVehicle(pCon->m_Shape_B)){
-        std::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+        std::shared_ptr<Vehicle_Entity> Shape_B = ray_vehicles_map_.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        std::shared_ptr<Entity> Shape_B = shapes_map_.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
-          pCon->m_pivot_in_A[2]);
+                        pCon->m_pivot_in_A[2]);
       btVector3 pivot_B(pCon->m_pivot_in_B[0], pCon->m_pivot_in_B[1],
-          pCon->m_pivot_in_B[2]);
+                        pCon->m_pivot_in_B[2]);
       btPoint2PointConstraint* PToP =
           new btPoint2PointConstraint(*RigidShape_A, *RigidShape_B,
                                       pivot_A, pivot_B);
       dynamics_world_->addConstraint(PToP);
-      m_mPtoP[pCon->GetName()] = PToP;
+      ptop_map_[pCon->GetName()] = PToP;
     }
 
     //Hinge
@@ -227,24 +227,24 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       HingeOnePivot* pCon = (HingeOnePivot*) pNodeCon;
       btRigidBody* RigidShape_A;
       if(isVehicle(pCon->m_Shape_A)){
-        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = ray_vehicles_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = shapes_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
-          pCon->m_pivot_in_A[2]);
+                        pCon->m_pivot_in_A[2]);
       btVector3 axis_A(pCon->m_axis_in_A[0], pCon->m_axis_in_A[1],
-          pCon->m_axis_in_A[2]);
+                       pCon->m_axis_in_A[2]);
       btHingeConstraint* Hinge =
           new btHingeConstraint(*RigidShape_A, pivot_A,
                                 axis_A, true);
       Hinge->setLimit(pCon->m_low_limit, pCon->m_high_limit, pCon->m_softness,
                       pCon->m_bias, pCon->m_relaxation);
       dynamics_world_->addConstraint(Hinge);
-      m_mHinge[pCon->GetName()] = Hinge;
+      hinge_map_[pCon->GetName()] = Hinge;
     }
 
     else if(dynamic_cast<HingeTwoPivot*>( pNodeCon ) != NULL) {
@@ -252,29 +252,29 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       btRigidBody* RigidShape_A;
       btRigidBody* RigidShape_B;
       if(isVehicle(pCon->m_Shape_A)){
-        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = ray_vehicles_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = shapes_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       if(isVehicle(pCon->m_Shape_B)){
-        std::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+        std::shared_ptr<Vehicle_Entity> Shape_B = ray_vehicles_map_.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        std::shared_ptr<Entity> Shape_B = shapes_map_.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       btVector3 pivot_A(pCon->m_pivot_in_A[0], pCon->m_pivot_in_A[1],
-          pCon->m_pivot_in_A[2]);
+                        pCon->m_pivot_in_A[2]);
       btVector3 axis_A(pCon->m_axis_in_A[0], pCon->m_axis_in_A[1],
-          pCon->m_axis_in_A[2]);
+                       pCon->m_axis_in_A[2]);
       btVector3 pivot_B(pCon->m_pivot_in_B[0], pCon->m_pivot_in_B[1],
-          pCon->m_pivot_in_B[2]);
+                        pCon->m_pivot_in_B[2]);
       btVector3 axis_B(pCon->m_axis_in_B[0], pCon->m_axis_in_B[1],
-          pCon->m_axis_in_B[2]);
+                       pCon->m_axis_in_B[2]);
       btHingeConstraint* Hinge =
           new btHingeConstraint(*RigidShape_A,
                                 *RigidShape_B,
@@ -284,7 +284,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       Hinge->setLimit(pCon->m_low_limit, pCon->m_high_limit, pCon->m_softness,
                       pCon->m_bias, pCon->m_relaxation);
       dynamics_world_->addConstraint(Hinge);
-      m_mHinge[pCon->GetName()] = Hinge;
+      hinge_map_[pCon->GetName()] = Hinge;
     }
 
     //Hinge2
@@ -293,27 +293,27 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       btRigidBody* RigidShape_A;
       btRigidBody* RigidShape_B;
       if(isVehicle(pCon->m_Shape_A)){
-        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = ray_vehicles_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = shapes_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       if(isVehicle(pCon->m_Shape_B)){
-        std::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+        std::shared_ptr<Vehicle_Entity> Shape_B = ray_vehicles_map_.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        std::shared_ptr<Entity> Shape_B = shapes_map_.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       btVector3 btAnchor(pCon->m_Anchor[0], pCon->m_Anchor[1],
-          pCon->m_Anchor[2]);
+                         pCon->m_Anchor[2]);
       btVector3 btAxis_1(pCon->m_Axis_1[0], pCon->m_Axis_1[1],
-          pCon->m_Axis_1[2]);
+                         pCon->m_Axis_1[2]);
       btVector3 btAxis_2(pCon->m_Axis_2[0], pCon->m_Axis_2[1],
-          pCon->m_Axis_2[2]);
+                         pCon->m_Axis_2[2]);
       btHinge2Constraint* Hinge =
           new btHinge2Constraint(*RigidShape_A, *RigidShape_B,
                                  btAnchor, btAxis_1, btAxis_2);
@@ -325,13 +325,13 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       Hinge->setStiffness(3, pCon->m_stiffness);
       Hinge->setDamping(3, pCon->m_damping);
       dynamics_world_->addConstraint(Hinge);
-      m_mHinge2[pCon->GetName()] = Hinge;
+      hinge2_map_[pCon->GetName()] = Hinge;
     }
 
     //SixDOF
     else if(dynamic_cast<SixDOFOne*>( pNodeCon ) != NULL) {
       SixDOFOne* pCon = (SixDOFOne*) pNodeCon;
-      std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+      std::shared_ptr<Entity> Shape_A = shapes_map_.at(pCon->m_Shape_A);
       btTransform trans_A = toBullet(_Cart2T(pCon->m_Transform_A));
       btGeneric6DofConstraint* SixDOF =
           new btGeneric6DofConstraint(*Shape_A->m_pRigidBody.get(),
@@ -342,7 +342,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       SixDOF->setAngularLowerLimit(toBulletVec3(pCon->m_LowerAngLimit));
       SixDOF->setAngularUpperLimit(toBulletVec3(pCon->m_UpperAngLimit));
       dynamics_world_->addConstraint(SixDOF);
-      m_mSixDOF[pCon->GetName()] = SixDOF;
+      sixdof_map_[pCon->GetName()] = SixDOF;
     }
 
     else if(dynamic_cast<SixDOFTwo*>( pNodeCon ) != NULL) {
@@ -350,19 +350,19 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       btRigidBody* RigidShape_A;
       btRigidBody* RigidShape_B;
       if(isVehicle(pCon->m_Shape_A)){
-        std::shared_ptr<Vehicle_Entity> Shape_A = m_mRayVehicles.at(pCon->m_Shape_A);
+        std::shared_ptr<Vehicle_Entity> Shape_A = ray_vehicles_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_A = m_mShapes.at(pCon->m_Shape_A);
+        std::shared_ptr<Entity> Shape_A = shapes_map_.at(pCon->m_Shape_A);
         RigidShape_A = Shape_A->m_pRigidBody.get();
       }
       if(isVehicle(pCon->m_Shape_B)){
-        std::shared_ptr<Vehicle_Entity> Shape_B = m_mRayVehicles.at(pCon->m_Shape_B);
+        std::shared_ptr<Vehicle_Entity> Shape_B = ray_vehicles_map_.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       else{
-        std::shared_ptr<Entity> Shape_B = m_mShapes.at(pCon->m_Shape_B);
+        std::shared_ptr<Entity> Shape_B = shapes_map_.at(pCon->m_Shape_B);
         RigidShape_B = Shape_B->m_pRigidBody.get();
       }
       btTransform trans_A = toBullet(_Cart2T(pCon->m_Transform_A));
@@ -376,7 +376,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
       SixDOF->setAngularLowerLimit(toBulletVec3(pCon->m_LowerAngLimit));
       SixDOF->setAngularUpperLimit(toBulletVec3(pCon->m_UpperAngLimit));
       dynamics_world_->addConstraint(SixDOF);
-      m_mSixDOF[pCon->GetName()] = SixDOF;
+      sixdof_map_[pCon->GetName()] = SixDOF;
     }
   }
 
@@ -387,7 +387,7 @@ void PhysicsEngine::RegisterObject(ModelNode *pItem){
 ///////////////////////////////////////////////////////
 
 void PhysicsEngine::RegisterDevice(SimDeviceInfo* pDevice){
-  m_mDevices.push_back(pDevice);
+  sim_devices_.push_back(pDevice);
 }
 
 ///////////////////////////////////////////////////////
@@ -402,10 +402,10 @@ bool PhysicsEngine::isVehicle(string Shape){
 }
 
 /***********************************************
-    *
-    * RUNNING THE SIMULATION
-    *
-    **********************************************/
+ *
+ * RUNNING THE SIMULATION
+ *
+ **********************************************/
 
 void PhysicsEngine::DebugDrawWorld(){
   dynamics_world_->debugDrawWorld();
@@ -413,16 +413,16 @@ void PhysicsEngine::DebugDrawWorld(){
 
 
 void PhysicsEngine::RunDevices(){
-  for(unsigned int ii=0; ii<m_mDevices.size(); ii++){
+  for(unsigned int ii=0; ii<sim_devices_.size(); ii++){
     ///////////////
     // CAR CONTROLLER
     ///////////////
-    SimDeviceInfo* Device = m_mDevices.at(ii);
+    SimDeviceInfo* Device = sim_devices_.at(ii);
     if(Device->m_sDeviceType=="CarController"){
       // We have to check all controllers.
-      CarController* pCarCon = (CarController*) m_mDevices.at(ii);
+      CarController* pCarCon = (CarController*) sim_devices_.at(ii);
       for(std::map<string, std::shared_ptr<Vehicle_Entity> > ::iterator it =
-              m_mRayVehicles.begin(); it!=m_mRayVehicles.end(); it++ ){
+              ray_vehicles_map_.begin(); it!=ray_vehicles_map_.end(); it++ ){
         if(pCarCon->GetBodyName()==it->first){
           //This controller goes to this car.
           Vehicle_Entity* eVehicle = it->second.get();
@@ -441,7 +441,7 @@ void PhysicsEngine::RunDevices(){
           pVeh->applyEngineForce(vehicle_shape->driving_force, 2);
           pVeh->applyEngineForce(vehicle_shape->driving_force, 3);
           // OPTION: Update the world only if we have commands.
-          // dynamics_world_->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
+          // dynamics_world_->stepSimulation( timestep_,  time_max_substeps_ );
         }
       }
     }
@@ -450,9 +450,9 @@ void PhysicsEngine::RunDevices(){
     // GPS (TODO)
     ///////////////
     else if(Device->m_sDeviceType=="GPS"){
-      SimGPS* pGPS = (SimGPS*) m_mDevices.at(ii);
+      SimGPS* pGPS = (SimGPS*) sim_devices_.at(ii);
       for(std::map<string, std::shared_ptr<Entity> > ::iterator it =
-          m_mShapes.begin(); it!=m_mShapes.end(); it++ ){
+              shapes_map_.begin(); it!=shapes_map_.end(); it++ ){
         if(pGPS->GetBodyName()==it->first){
           //This controller goes to this car.
           Entity* eEntity = it->second.get();
@@ -477,13 +477,13 @@ void PhysicsEngine::RunDevices(){
 ////////////////////////////////
 
 void PhysicsEngine::StepSimulation(){
-  dynamics_world_->stepSimulation( m_dTimeStep,  m_nMaxSubSteps );
+  dynamics_world_->stepSimulation( timestep_,  time_max_substeps_ );
   // std::this_thread::sleep_for(std::chrono::milliseconds(50));
   RunDevices();
-  if(m_mRayVehicles.size()!=0){
+  if(ray_vehicles_map_.size()!=0){
     // Go through all of our vehicles and update their part poses.
     for(std::map<string, std::shared_ptr<Vehicle_Entity> > ::iterator it =
-        m_mRayVehicles.begin(); it!=m_mRayVehicles.end(); it++ ){
+            ray_vehicles_map_.begin(); it!=ray_vehicles_map_.end(); it++ ){
       // The MotionStatePointer holds the ModelNode, which holds the poses.
       Vehicle_Entity* eVehicle = it->second.get();
       NodeMotionState* mMotion = eVehicle->m_pMotionState.get();
@@ -507,7 +507,7 @@ void PhysicsEngine::StepSimulation(){
 
 void PhysicsEngine::PrintAllShapes(){
   for(std::map<string, std::shared_ptr<Entity> > ::iterator it =
-      m_mShapes.begin(); it!=m_mShapes.end(); it++ ){
+          shapes_map_.begin(); it!=shapes_map_.end(); it++ ){
     std::cout<<it->first<<std::endl;
   }
 }
@@ -519,14 +519,14 @@ void PhysicsEngine::PrintAllShapes(){
 //////////////////////////////////////////////////////////
 
 btHinge2Constraint* PhysicsEngine::getHinge2Constraint(string name){
-  std::map<string, btHinge2Constraint*>::iterator iter = m_mHinge2.find(name);
-  if(iter!=m_mHinge2.end()){
-    btHinge2Constraint* pHJ2 = m_mHinge2.find(name)->second;
+  std::map<string, btHinge2Constraint*>::iterator iter = hinge2_map_.find(name);
+  if(iter!=hinge2_map_.end()){
+    btHinge2Constraint* pHJ2 = hinge2_map_.find(name)->second;
     return pHJ2;
   }
   else{
     cout<<"Fatal Error! Cannot get Hinge2joint "<<name<<endl;
-    btHinge2Constraint* pHJ2 = m_mHinge2.find(name)->second;
+    btHinge2Constraint* pHJ2 = hinge2_map_.find(name)->second;
     return pHJ2;
   }
 }
@@ -534,8 +534,8 @@ btHinge2Constraint* PhysicsEngine::getHinge2Constraint(string name){
 ///////////////////////////////////////////////////////////////////
 
 btHingeConstraint* PhysicsEngine::getHingeConstraint(string name){
-  std::map<string, btHingeConstraint*>::iterator iter = m_mHinge.find(name);
-  if(iter!=m_mHinge.end()){
+  std::map<string, btHingeConstraint*>::iterator iter = hinge_map_.find(name);
+  if(iter!=hinge_map_.end()){
     btHingeConstraint* pHJ = iter->second;
     return pHJ;
   }
@@ -562,6 +562,14 @@ Eigen::Vector6d PhysicsEngine::SwitchYaw(Eigen::Vector6d bad_yaw){
 }
 
 Eigen::Vector6d PhysicsEngine::SwitchWheelYaw(Eigen::Vector6d bad_yaw){
+  // Eigen::Vector6d good_yaw;
+  // good_yaw<<bad_yaw(0), bad_yaw(1), bad_yaw(2),
+  //     bad_yaw(3), -bad_yaw(4), bad_yaw(5);
+  // Eigen::Vector6d temp;
+  // // temp<<0,0,0,0,0,0;
+  // temp<<0,0,0,M_PI/2,0,0;
+  // good_yaw = good_yaw+temp;
+  // return good_yaw;
   Eigen::Vector6d good_yaw;
   good_yaw<<bad_yaw(0), bad_yaw(1), bad_yaw(2),
       bad_yaw(4), -bad_yaw(3), bad_yaw(5);
@@ -597,7 +605,7 @@ std::vector< Eigen::Matrix4d > PhysicsEngine::GetVehiclePoses(
 std::vector<Eigen::Matrix4d> PhysicsEngine::GetVehicleTransform(
     std::string sVehicleName){
   std::shared_ptr<Vehicle_Entity> std_Vehicle =
-      m_mRayVehicles.at(sVehicleName);
+      ray_vehicles_map_.at(sVehicleName);
   Vehicle_Entity* Vehicle = std_Vehicle.get();
   std::vector<Eigen::Matrix4d> Eig_transforms = GetVehiclePoses(Vehicle);
   return Eig_transforms;

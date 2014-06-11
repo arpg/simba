@@ -9,7 +9,6 @@
 
 struct PlannerHandler : public SceneGraph::HandlerSceneGraph
 {
-
   PlannerHandler(SceneGraph::GLSceneGraph& graph,
                  pangolin::OpenGlRenderState& cam_state,
                  pangolin::AxisDirection enforce_up=pangolin::AxisNone,
@@ -59,7 +58,6 @@ struct PlannerHandler : public SceneGraph::HandlerSceneGraph
 
 struct ActivateScissorBlendedDrawFunctor
 {
-
   ActivateScissorBlendedDrawFunctor(
       SceneGraph::GLObject& glObject,
       const pangolin::OpenGlRenderState& renderState)
@@ -92,27 +90,5 @@ struct Waypoint
   SceneGraph::GLWayPoint m_Waypoint;
   WaypointType m_eType;
 };
-
-// // Writing waypoints to file
-
-// inline std::ostream& operator<<( std::ostream& Stream, Waypoint& waypoint ){
-//   //write the waypoint to file
-//   Eigen::MatrixXd pose = waypoint.m_Waypoint.GetPose();
-//   Stream << pose << "," << (int)waypoint.m_eType;
-//   return Stream;
-// }
-
-// inline std::istream& operator>>( std::istream& Stream, Waypoint& waypoint ){
-//   //read the waypoiint from file
-//   Eigen::MatrixXd pose;
-//   Stream >> pose;
-//   Eigen::Vector6d vecPose = pose;
-//   waypoint.m_Waypoint.SetPose(vecPose);
-
-//   //now read the type
-//   char str[256];
-//   Stream.getline(str,255);
-//   waypoint.m_eType = (WaypointType)std::strtol(str,NULL,10);
-// }
 
 #endif // UICOMMON_H

@@ -124,11 +124,10 @@ class NetworkManager
 
   node::node      node_;
   int             debug_level_;
-  std::string     m_sLocalSimName;
-  string          m_sServerName;
-  int             m_verbosity;
-  int             m_iTimeStep;
-  SimDevices*     m_pSimDevices;
+  std::string     local_sim_name_;
+  string          server_name_;
+  int             timestep_;
+  SimDevices*     sim_devices_;
   RobotsManager*  robot_manager_;
   std::mutex      statekeeper_mutex_;
 

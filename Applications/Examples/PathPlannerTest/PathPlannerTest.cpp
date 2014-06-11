@@ -72,7 +72,7 @@ bool PathPlannerTest::InitMesh(){
                                   heightmap_data_->z_data_,
                                   heightmap_data_->row_count_,
                                   heightmap_data_->col_count_);
-  planner_gui_.Init( new_map );
+  planner_gui_.Init(new_map);
   LOG(INFO) << "Init our mesh!";
   // Set up our car
   car_model_ = new BulletCarModel();
@@ -243,7 +243,7 @@ int main(int argc, char** argv){
 
   PathPlannerTest* sim = new PathPlannerTest();
   std::string name = "Sim0";
-  if (argc==2) {
+  if (argc == 2) {
     name = argv[1];
   }
   sim->sim_planner_name_ = name;
@@ -272,7 +272,7 @@ int main(int argc, char** argv){
   // 5. Measure the delta between the where the vehicle is and where
   //    it's supposed to be. The policy holds the destination already.
   std::vector<double> start_param, goal_param;
-  for (int ii=0; ii<policy.start_param_size(); ii++) {
+  for (int ii = 0; ii < policy.start_param_size(); ii++) {
     start_param.push_back(policy.start_param(ii));
     goal_param.push_back(policy.goal_param(ii));
   }

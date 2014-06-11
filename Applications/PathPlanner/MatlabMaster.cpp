@@ -4,42 +4,41 @@
 /// CONSTRUCTOR
 /// Creates all of our sims, and then assigns them all names.
 //////////////////
-MatlabMaster::MatlabMaster(int num_sims){
+MatlabMaster::MatlabMaster(int num_sims) {
   node_.init("MATLAB");
   LOG(INFO) << "MATLAB is successfully advertizing 'BVP'";
   /// I think this should work...
-  for(int i = 0; i<num_sims; i++){
-    std::string sim_name = "Sim"+std::to_string(i);
-    
-    node_.advertise("BVP"+std::to_string(i));
-    while(!node_.subscribe(sim_name+"/CheckNeed")){
+  for (int i = 0; i < num_sims; i++) {
+    std::string sim_name = "Sim" + std::to_string(i);
+    node_.advertise("BVP" + std::to_string(i));
+    while (!node_.subscribe(sim_name + "/CheckNeed")) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      LOG(INFO)<<"=>";
+      LOG(INFO) << "=>";
     }
-    while(!node_.subscribe(sim_name+"/CheckSolved")){
+    while (!node_.subscribe(sim_name + "/CheckSolved")) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      LOG(INFO)<<"=>";
+      LOG(INFO) << "=>";
     }
-    while(!node_.subscribe(sim_name+"/Policy")){
+    while (!node_.subscribe(sim_name + "/Policy")) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      LOG(INFO)<<"=>";
+      LOG(INFO) << "=>";
     }
-    LOG(INFO)<<"MATLAB is subscribed to '"+sim_name+"/Policy'";
+    LOG(INFO) << "MATLAB is subscribed to '" + sim_name + "/Policy'";
   }
   // Populate our goal commands.
   // Our grid goes from x(0:2), y(0:2). Keep goals between .5 and 1.5?
   double x = .5;
   double y = .5;
-  double yaw = -PI/6;
+  double yaw = -PI / 6;
   double vel = 0;
-  for(int ii=0; ii<13; ii++){
-    x = x + (ii/12);
-    for(int jj=0; jj<13; jj++){
-      y = y + (jj/12);
-      for(int kk=0; kk<13; kk++){
-        yaw = yaw + (kk/6);
-        for(int ll=1; ll<6; ll++){
-          vel = vel + (2*ll);
+  for (int ii = 0; ii < 13; ii++) {
+    x = x + (ii / 12);
+    for (int jj = 0; jj < 13; jj++) {
+      y = y + (jj / 12);
+      for (int kk = 0; kk < 13; kk++) {
+        yaw = yaw + (kk / 6);
+        for (int ll = 1; ll < 6; ll++) {
+          vel = vel + (2 * ll);
           std::vector<double> new_goal;
           new_goal.push_back(x);
           new_goal.push_back(y);
@@ -50,7 +49,7 @@ MatlabMaster::MatlabMaster(int num_sims){
       }
     }
   }
-  LOG(INFO)<<"Done with goals";
+  LOG(INFO) << "Done with goals";
 }
 
 ////////////////////////
@@ -58,7 +57,7 @@ MatlabMaster::MatlabMaster(int num_sims){
 ////////////////////////
 
 bool MatlabMaster::CreateBVP(int tau, std::string file_name,
-                          std::vector<double> goal_pt){
+                             std::vector<double> goal_pt) {
   double* x_data;
   double* y_data;
   double* z_data;
@@ -82,16 +81,16 @@ bool MatlabMaster::CreateBVP(int tau, std::string file_name,
   double* start_point = new double[4];
   start_point[0] = 1;
   start_point[1] = -.5;
-  start_point[2] = PI/2;
+  start_point[2] = PI / 2;
   start_point[3] = 0;
   double* goal_point = goal_pt.data();
   // I don't know how else to do this, 'cause I'm ig'nant.
   params_.Clear();
-  for (int ii=0; ii<4;ii++) {
+  for (int ii = 0; ii < 4; ii++) {
     params_.add_start_param(start_point[ii]);
     params_.add_goal_param(goal_point[ii]);
   }
-  for (int ii=0;ii<(row_count*col_count);ii++) {
+  for (int ii = 0; ii < (row_count * col_count); ii++) {
     params_.add_x_data(x_data[ii]);
     params_.add_y_data(y_data[ii]);
     params_.add_z_data(z_data[ii]);
@@ -104,17 +103,18 @@ bool MatlabMaster::CreateBVP(int tau, std::string file_name,
 ////////////////////////
 /// SENDING/RECEIVING COMMANDS
 ////////////////////////
-std::vector< std::vector<double> > MatlabMaster::ReceiveCommands(int sim_num){
+std::vector< std::vector<double> > MatlabMaster::ReceiveCommands(int sim_num) {
   std::vector< std::vector<double> > policy;
   policy.clear();  // Just to make sure that it returns empty.
   pb::RegisterBVPReqMsg req;
   pb::RegisterBVPRepMsg rep;
-  node_.call_rpc("Sim"+std::to_string(sim_num), "CheckSolved", req, rep);
+  node_.call_rpc("Sim" + std::to_string(sim_num), "CheckSolved", req, rep);
   bool check_need = rep.success();
   if (check_need==true) {
-    while (!node_.receive("Sim"+std::to_string(sim_num)+"/Policy", policy_)) {
+    while (!node_.receive("Sim" + std::to_string(sim_num) + "/Policy",
+                          policy_)) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      LOG(INFO)<<"<-";
+      LOG(INFO) << "<-";
       // Keep trying!
     }
     policy = TurnPolicyIntoVector(policy_);
@@ -123,21 +123,21 @@ std::vector< std::vector<double> > MatlabMaster::ReceiveCommands(int sim_num){
 }
 
 std::vector< std::vector<double> > MatlabMaster::TurnPolicyIntoVector(
-    pb::BVP_policy buffer){
+    pb::BVP_policy buffer) {
   std::vector< std::vector<double> > policy;
   std::vector<double> force;
   std::vector<double> phi;
   std::vector<double> time;
   // Force
-  for (int ii=0; ii<buffer.force_size(); ii++) {
+  for (int ii = 0; ii < buffer.force_size(); ii++) {
     force.push_back(buffer.force(ii));
   }
   // Phi
-  for (int ii=0; ii<buffer.phi_size(); ii++) {
+  for (int ii = 0; ii < buffer.phi_size(); ii++) {
     phi.push_back(buffer.phi(ii));
   }
   // Time
-  for (int ii=0; ii<buffer.time_size(); ii++) {
+  for (int ii = 0; ii < buffer.time_size(); ii++) {
     time.push_back(buffer.time(ii));
   }
   policy.push_back(force);
@@ -146,13 +146,13 @@ std::vector< std::vector<double> > MatlabMaster::TurnPolicyIntoVector(
   return policy;
 }
 
-std::vector<double> MatlabMaster::GetNextBVP(int cur_pol){
+std::vector<double> MatlabMaster::GetNextBVP(int cur_pol) {
   std::vector<double> BVP = goal_states_.at(cur_pol);
   return BVP;
 }
 
 bool MatlabMaster::SavePolicyToMat(std::vector< std::vector<double> > policy,
-                                int tau){
+                                   int tau) {
   // Command = force | pi | time
   // tau should also be saved, but it's included in the loop.
   // save a file:
@@ -171,7 +171,7 @@ bool MatlabMaster::SavePolicyToMat(std::vector< std::vector<double> > policy,
 
   MATFile *pmat;
   mxArray *pa_forces, *pa_phi, *pa_time;
-  std::string name = "Policy-"+std::to_string(tau)+".mat";
+  std::string name = "Policy-" + std::to_string(tau) + ".mat";
   const char *file = name.c_str();
   pmat = matOpen(file, "w");
   int status;  // This is just for debugging purposes.
@@ -195,16 +195,16 @@ bool MatlabMaster::SavePolicyToMat(std::vector< std::vector<double> > policy,
  * OUR MAIN LOOP
  * *****************/
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
   int num_sims = 2;
   MatlabMaster* master = new MatlabMaster(num_sims);
   int tau = 0;
-  for (tau=0; tau<1; tau++) {
+  for (tau = 0; tau < 1; tau++) {
     // Grab the mesh based off of the number tau.
     // aka tau = 1 means we grab Mesh-1.mat.
     std::string file_name =
-        "/Users/Trystan/Code/simba_tests/MatlabInterface/MeshData/Mesh-"+
-        std::to_string(tau)+".mat";
+        "/Users/Trystan/Code/simba_tests/MatlabInterface/MeshData/Mesh-"
+        + std::to_string(tau) + ".mat";
     std::vector<double> cur_goal_state;
     int cur_pol = 0; //What goal we're on now.
     cur_goal_state = master->GetNextBVP(cur_pol);
@@ -218,26 +218,26 @@ int main(int argc, char** argv){
         pb::BVP_check sim_solved;
         while (give==false && take==false) {
           // give and take should never both be true.
-          std::this_thread::sleep_for(std::chrono::seconds(1));
-          if(master->node_.receive("Sim"+std::to_string(ii)+"/CheckNeed",
-                                   sim_needs_bvp)){
-            LOG(INFO)<<"We have need!";
+          std::this_thread::sleep_for (std::chrono::seconds(1));
+          if (master->node_.receive("Sim" + std::to_string(ii) + "/CheckNeed",
+                                    sim_needs_bvp)) {
+            LOG(INFO) << "We have need!";
             give = sim_needs_bvp.need();
           }
-          std::this_thread::sleep_for(std::chrono::seconds(1));
-          if(master->node_.receive("Sim"+std::to_string(ii)+"/CheckSolved",
-                                   sim_solved)){
+          std::this_thread::sleep_for (std::chrono::seconds(1));
+          if (master->node_.receive("Sim" + std::to_string(ii) + "/CheckSolved",
+                                    sim_solved)) {
             take = sim_solved.need();
           }
         }
         // If we're out of the loop, it means that Sim(ii) needs to do...
         // something.
-        if (give==true) {
-          LOG(INFO)<<"Starting to give new parameters now...";
+        if (give == true) {
+          LOG(INFO) << "Starting to give new parameters now...";
           master->CreateBVP(tau, file_name, cur_goal_state);
-          while (!master->node_.publish("BVP"+std::to_string(ii),
+          while (!master->node_.publish("BVP" + std::to_string(ii),
                                         master->params_)) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for (std::chrono::seconds(1));
           }
           cur_pol++;
           if (cur_pol==master->goal_states_.size()) {
@@ -246,15 +246,14 @@ int main(int argc, char** argv){
           cur_goal_state = master->GetNextBVP(cur_pol);
           give = false;
         }
-        if (take==true) {
+        if (take == true) {
           int count = 0;
-          while (!master->node_.receive("Sim"+std::to_string(ii)+
-                                        "/Policy",
+          while (!master->node_.receive("Sim" + std::to_string(ii) + "/Policy",
                                         master->policy_) && count<5) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for (std::chrono::seconds(1));
             count++;
           }
-          if(count<5){
+          if (count < 5) {
             auto policy = master->TurnPolicyIntoVector(master->policy_);
             master->SavePolicyToMat(policy, tau);
           }

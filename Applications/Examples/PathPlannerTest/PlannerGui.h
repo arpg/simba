@@ -19,7 +19,6 @@
 #include "UiCommon.h"
 
 
-
 class PlannerGui
 {
  public:
@@ -49,14 +48,12 @@ class PlannerGui
     Eigen::Vector2d m_dPos2D;
   };
 
-  struct Car /*: boost::mutex*/
+  struct Car
   {
     SceneGraph::GLLineStrip m_CarLineSegments;
     GLCar m_GLCar;
     GLAxis m_Axis;
   };
-
-
 
   PlannerGui();
   ~PlannerGui();

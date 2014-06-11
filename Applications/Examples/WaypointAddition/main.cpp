@@ -29,7 +29,7 @@ int main(){
   start_point[3] = 0;
   start_point[4] = 0;
   start_point[5] = 0;
-  for (int ii=0; ii<6;ii++) {
+  for (int ii = 0; ii < 6; ii++) {
     waypoint.add_pose(start_point[ii]);
   }
   graph.set_allocated_waypoint(&waypoint);

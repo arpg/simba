@@ -26,7 +26,7 @@
 class KeyCarController{
  public:
 
-  KeyCarController(std::string parameters, pb::BVP_policy policy){
+  KeyCarController(std::string parameters, const pb::BVP_policy& policy){
     car_ = new hal::Car(parameters);
     // Keep the BVP_policy with us, just in case
     policy_ = policy;
@@ -54,17 +54,17 @@ class KeyCarController{
     return cont;
   }
 
-  void TurnPolicyIntoVector(pb::BVP_policy policy){
+  void TurnPolicyIntoVector(const pb::BVP_policy& policy){
     // Force
-    for (int ii=0; ii<policy.force_size(); ii++) {
+    for (int ii = 0; ii<policy.force_size(); ii++) {
       force_.push_back(policy.force(ii));
     }
     // Phi
-    for (int ii=0; ii<policy.phi_size(); ii++) {
+    for (int ii = 0; ii<policy.phi_size(); ii++) {
       phi_.push_back(policy.phi(ii));
     }
     // Time
-    for (int ii=0; ii<policy.time_size(); ii++) {
+    for (int ii = 0; ii<policy.time_size(); ii++) {
       time_.push_back(policy.time(ii));
     }
   }
@@ -84,6 +84,22 @@ class KeyCarController{
 class PathPlannerTest
 {
  public:
+
+  /// CONSTRUCTOR
+  PathPlannerTest();
+  ~PathPlannerTest();
+
+  /// FUNCTIONS
+  void Init(HeightmapShape* heightmap_data);
+  void CheckNeed();
+  void CheckSolved();
+  pb::BVP_policy StartPolicy();
+  bool InitMesh();
+  void GroundStates();
+  double* RaycastToGround(double id, double x, double y);
+  void InitGoals();
+  pb::BVP_policy SampleTrajectory();
+  std::string GetNumber(std::string name);
 
   //member variables
   std::string           sim_planner_name_;
@@ -108,22 +124,6 @@ class PathPlannerTest
   HeightmapShape* heightmap_data_;
   // This is what we compare to our desired goal_param, from our policy
   std::vector<double> last_pose_;
-
-  /// CONSTRUCTOR
-  PathPlannerTest();
-  ~PathPlannerTest();
-
-  /// FUNCTIONS
-  void Init(HeightmapShape* heightmap_data);
-  void CheckNeed();
-  void CheckSolved();
-  pb::BVP_policy StartPolicy();
-  bool InitMesh();
-  void GroundStates();
-  double* RaycastToGround(double id, double x, double y);
-  void InitGoals();
-  pb::BVP_policy SampleTrajectory();
-  std::string GetNumber(std::string name);
 
 };
 

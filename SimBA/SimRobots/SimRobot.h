@@ -24,7 +24,7 @@ public:
 
   SimRobot(){
     new_parts_bit_ = 0;
-    m_bStateKeeperOn = false;
+    statekeeper_status_ = false;
   }
 
   /********************
@@ -32,22 +32,20 @@ public:
    ********************/
 
   void SetName(std::string sName){
-    m_sRobotName = sName;
+    robot_name_ = sName;
   }
 
   void SetBase(ModelNode* Base){
-    m_Base = Base;
+    base_part_ = Base;
   }
 
   void SetParts(std::vector<ModelNode*> vParts){
-    if(m_vParts.size()==0){
-      std::cout<<"No parts...";
-      m_vParts = vParts;
+    if (parts_list_.size() == 0) {
+      parts_list_ = vParts;
     } else {
-      int size = m_vParts.size();
+      int size = parts_list_.size();
       SetNewPartsBit(size);
-      std::cout<<"Part size: "<<size;
-      m_vParts.insert( m_vParts.end(), vParts.begin(), vParts.end() );
+      parts_list_.insert( parts_list_.end(), vParts.begin(), vParts.end() );
     }
   }
 
@@ -56,36 +54,36 @@ public:
   }
 
   void SetProxyName(std::string sProxyName){
-    m_sProxyName = sProxyName;
+    sim_name_ = sProxyName;
   }
 
   void SetRobotURDF(XMLDocument* pRobotURDF){
-    m_pRobotURDF = pRobotURDF;
+    robot_urdf_ = pRobotURDF;
   }
 
   /********************
    * GETTERS
    ********************/
 
-  string GetRobotName(){
-    return m_sRobotName;
+  string GetRobotName() const {
+    return robot_name_;
   }
 
   XMLDocument* GetRobotURDF(){
-    return m_pRobotURDF;
+    return robot_urdf_;
   }
 
   std::vector<std::string> GetAllEntityNames(){
     std::vector<std::string> parts;
-    for(unsigned int ii = 0; ii<m_vParts.size(); ii++){
-      parts.push_back(m_vParts.at(ii)->GetName());
+    for (unsigned int ii = 0; ii < parts_list_.size(); ii++) {
+      parts.push_back(parts_list_.at(ii)->GetName());
     }
     return parts;
   }
 
   // get the pose of robot base from model node
   Eigen::Vector6d GetRobotBasePose(){
-    Eigen::Vector6d pose= m_Base->GetPose();
+    Eigen::Vector6d pose= base_part_->GetPose();
     return pose;
   }
 
@@ -93,9 +91,9 @@ public:
   vector<string> GetAllBodyName(){
     vector<string>  vBodyName;
     vector<string>  vAllBodyNameList = GetAllEntityNames();
-    for(unsigned int i=0;i!=vAllBodyNameList.size();i++){
+    for (unsigned int i = 0; i != vAllBodyNameList.size(); i++) {
       string sFullName= vAllBodyNameList[i];
-      if(GetRobotNameFromFullName(sFullName)== m_sRobotName ){
+      if (GetRobotNameFromFullName(sFullName) == robot_name_ ) {
         vBodyName.push_back(sFullName);
       }
     }
@@ -103,30 +101,28 @@ public:
   }
 
   std::vector<ModelNode*> GetParts(){
-    return m_vParts;
+    return parts_list_;
   }
 
   int GetNewPartsBit(){
     return new_parts_bit_;
   }
 
-  bool GetStateKeeperStatus(){
-    return m_bStateKeeperOn;
+  bool GetStateKeeperStatus() const {
+    return statekeeper_status_;
   }
 
   /*****************************/
 
 private:
-  string                      m_sRobotName;
-  string                      m_sProxyName;
-  std::vector<ModelNode*>     m_vParts;
-  bool                        m_bStateKeeperOn;
-  ModelNode*                  m_Base;
-  XMLDocument*                m_pRobotURDF;           // robot URDF file
-  // actual pose that init robot
-  Eigen::Vector6d             m_eRobotInitPose;
-  // init pose in robot urdf file.
-  Eigen::Vector6d             m_eRobotInitPoseInURDF;
+  string robot_name_;
+  string sim_name_;
+  std::vector<ModelNode*> parts_list_;
+  bool statekeeper_status_;
+  ModelNode* base_part_;
+  XMLDocument*  robot_urdf_;
+  Eigen::Vector6d initial_pose_;
+  Eigen::Vector6d urdf_pose_;
   int new_parts_bit_;
 };
 
