@@ -56,10 +56,10 @@ void PathPlanner::SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
   // X, Y, yaw, and velocity... that should be it.
   Eigen::Matrix4d eigen_start;
   Eigen::Vector6d eigen_cart;
-  eigen_cart << start_[0], start_[1], .5, 0, 0, start_[2];
+  eigen_cart << start_[0], start_[1], .5, 0, start_[2], 0;
   eigen_start = _Cart2T(eigen_cart);
   Eigen::Matrix4d eigen_goal;
-  eigen_cart << goal_[0], goal_[1], .5, 0, 0, goal_[2];
+  eigen_cart << goal_[0], goal_[1], .5, 0, goal_[2], 0;
   eigen_goal = _Cart2T(eigen_cart);
   // Populate the VehicleStates
   start_state_ = VehicleState(Sophus::SE3d(eigen_start), start_[3], 0);

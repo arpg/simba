@@ -21,11 +21,6 @@ void PathPlannerTest::Init(HeightmapShape* heightmap_data){
 }
 
 /////////////////////////////////////////////
-pb::BVP_policy PathPlannerTest::StartPolicy(){
-  pb::BVP_policy policy = SampleTrajectory();
-  return policy;
-}
-/////////////////////////////////////////////
 
 void PathPlannerTest::InitGoals(){
   // <x, y, theta, vel>
@@ -35,7 +30,7 @@ void PathPlannerTest::InitGoals(){
   start_.push_back(1);
   goal_.push_back(1);
   goal_.push_back(1);
-  goal_.push_back(1.0);
+  goal_.push_back(1);
   goal_.push_back(1);
   // Now populate the start and goal parameters.
   // X, Y, yaw, and velocity... that should be it.
@@ -147,16 +142,13 @@ void PathPlannerTest::GroundStates(){
 /////////////////////////////////////////////
 
 //Finds the fastest path between two
-pb::BVP_policy PathPlannerTest::SampleTrajectory(){
+void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy){
   bool success = false;
   int count = 0;
   ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
   func.SetNoDelay(true);
   MotionSample sample;
   car_model_->SetState(0, start_state_);
-  // TODO: Get the waypoints working.
-  // It's the easiest way to plan
-
   GLWayPoint* a = &planner_gui_.GetWaypoint(0)->m_Waypoint;
   GLWayPoint* b = &planner_gui_.GetWaypoint(1)->m_Waypoint;
   VehicleState st(Sophus::SE3d(a->GetPose4x4_po()),a->GetVelocity(),0);
@@ -172,9 +164,7 @@ pb::BVP_policy PathPlannerTest::SampleTrajectory(){
       planner_gui_.SetCarState(0, sample.m_vStates.at(ii), true);
       LOG(INFO) << std::endl
                 << sample.m_vStates.at(ii).m_dTwv.matrix();
-      // while(1){
       planner_gui_.Render();
-      // }
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     count++;
@@ -184,27 +174,23 @@ pb::BVP_policy PathPlannerTest::SampleTrajectory(){
     m_snapper.SimulateTrajectory(sample,problem,0,true);
   }
   VehicleState last_vehicle_state = sample.GetLastPose();
-  pb::BVP_policy policy;
-  // We have to get all of the commands over the time period described.
-  // And the start/ goal state. That's helpful too.
   for(unsigned int ii=0; ii<sample.m_vCommands.size(); ii++){
     ControlCommand Comm = sample.m_vCommands.at(ii);
-    policy.add_force(Comm.m_dForce);
-    policy.add_phi(Comm.m_dPhi);
-    policy.add_time(Comm.m_dT);
+    policy->add_force(Comm.m_dForce);
+    policy->add_phi(Comm.m_dPhi);
+    policy->add_time(Comm.m_dT);
   }
-  for(unsigned int jj=0; jj<4; jj++){
-    policy.add_start_param(start_.at(jj));
-    policy.add_goal_param(goal_.at(jj));
-  }
+  // Print forces here to verify results with PathPlanner program
+  // for(unsigned int ii=0; ii<sample.m_vCommands.size(); ii++){
+  //   ControlCommand Comm = sample.m_vCommands.at(ii);
+  //   LOG(INFO) << Comm.m_dForce;
+  // }
   if(count==100){
     LOG(INFO) << "We're done with our policy search!!";
     LOG(INFO) << "We hit the maximum number of iterations...";
   } else {
     LOG(INFO) << "We're done with our policy search!!";
   }
-  policy.set_tau(m_nTau);
-  return policy;
 }
 
 //////////////////
@@ -221,20 +207,7 @@ std::string PathPlannerTest::GetNumber(std::string name){
  * This is a test, so we're only going to do ONE path through
  * the simplest type of a terrain, the flat plane. Get the commands
  * back from this simulation, and start a separate Node process
- * that sends these commands to LocalSim in SimBA. If that seems to
- * work, then start the rest.
- * Order of operations:
- * 1. Start MATLAB and PathPlannerTest. Send mesh plan to MATLAB,
- *    start the simulation, get a plan. Make the plan into an array
- *    that can be easily passed piecemeal to SimBA [DONE]
- * 2. Once we have this vector, start the Node connection. Through
- *    a separate terminal, start SimBA's LocalSim. LocalSim is going
- *    to grab the same mesh from MATLAB (maybe pass through PathPlannerTest?)
- *    Once this is done, start the CarController. Once that is
- *    connected to the Node in PathPlannerTest, then start sending commmands.
- * You see why this is a hard thing to test. We need to start from MATLAB in
- * case that's where the problem lies, like the mesh is created
- * sideways or something.
+ * that sends these commands to LocalSim in SimBA.
  **********************************/
 
 int main(int argc, char** argv){
@@ -257,24 +230,11 @@ int main(int argc, char** argv){
   HeightmapShape* heightmap_data = parser->GetMeshData(world_xml);
   sim->Init(heightmap_data);
   // 2. Solve for the path using PlannerLib
-  pb::BVP_policy policy;
-  policy = sim->StartPolicy();
-  // This is our solved policy, which we will send through the
-  // interwebs.
+  pb::PlannerPolicyMsg* policy = new pb::PlannerPolicyMsg();
+  sim->SampleTrajectory(policy);
   // 3. Start looking for the car (similar to KeyboardCommander)
   KeyCarController KeyCar("NodeCar:[name=VehicleController,sim=Ricky]//",
                           policy);
-  while (KeyCar.ApplyCommands()){
-    // 4. Drive our car to the EDGE OF SPACE!!!!!!!1!!
-    //   policy.add_start_param(start_.at(jj));
-    //   policy.add_goal_param(goal_.at(jj));
-  }
-  // 5. Measure the delta between the where the vehicle is and where
-  //    it's supposed to be. The policy holds the destination already.
-  std::vector<double> start_param, goal_param;
-  for (int ii = 0; ii < policy.start_param_size(); ii++) {
-    start_param.push_back(policy.start_param(ii));
-    goal_param.push_back(policy.goal_param(ii));
-  }
-  std::cout<<"Done with all of our shenanigans!"<<std::endl;
+  KeyCar.ApplyCommands();
+  LOG(INFO) << "Done with all of our shenanigans!";
 }

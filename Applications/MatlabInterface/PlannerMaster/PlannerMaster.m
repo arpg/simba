@@ -10,6 +10,7 @@ classdef PlannerMaster < handle
         planners_;         % Handle to the node instance
         num_planners_;
         goal_states_;   % Holds all possible combos of start/goal
+        bvp_solutions_;
         cur_pol_;
     end
     
@@ -34,7 +35,6 @@ classdef PlannerMaster < handle
         function FindSinglePolicy(this)
         % This function only uses the PathPlanner called Sim0, 
         % and only tests one path on one mesh. 
-            this.ConnectNode();
             % Parameters for GenMesh
             granularity = 15;
             scale = 1;      
@@ -154,18 +154,21 @@ classdef PlannerMaster < handle
         
         %%% Save our Policy to a .mat file
         function SavePolicy(this, tau, start_point, goal_point, mesh, policy)
-            force = policy.force;
-            phi = policy.phi;
-            duration = policy.duration;
-            meshX = mesh.X;
-            meshY = mesh.Y;
-            meshZ = mesh.Z;
-            start_config = start_point;
-            goal_config = goal_point;
-            map_bit = tau;
-            filename = ['Mesh-' num2str(tau)];
-            save(filename,'map_bit','start_config','goal_config', 'meshX', ...
-                 'meshY', 'meshZ', 'force','phi', 'duration', '-append','-ascii', '-double', '-tabs');
+            BVPSolution.force = policy.force;
+            BVPSolution.phi = policy.phi;
+            BVPSolution.duration = policy.duration;
+            BVPSolution.meshX = mesh.X;
+            BVPSolution.meshY = mesh.Y;
+            BVPSolution. meshZ = mesh.Z;
+            BVPSolution.start_config = start_point;
+            BVPSolution.goal_config = goal_point;
+            BVPSolution.map_bit = tau;
+            this.bvp_solutions_ = [this.bvp_solutions_, ...
+                                BVPSolution];
+            % Saving is a pain in the ass
+            bvpsol = this.bvp_solutions_;
+            filename = ['BVPSolution-' num2str(tau) '.mat'];
+            save(filename, 'bvpsol');
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
