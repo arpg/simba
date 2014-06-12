@@ -20,7 +20,7 @@ The below libraries are needed in order to install (provided in suggested order)
 - Calibu
 
 CMake Options:
-- BUILD CAR PLANNER: Builds the sections of SimBA that only work with the PlannerLib repo. Check it out from the RPG github, ssh://bminortx@robotics.gwu.edu/home/rpg/git/CarPlanner
+- BUILD CAR PLANNER: Builds the sections of SimBA that only work with the PlannerLib repo. Check it out from the RPG github, ssh://rpg@robotics.gwu.edu/home/rpg/git/CarPlanner
 - BUILD MATLAB INTERFACE: Makes the MATLAB interface files, PlannerMaster and SimbaMaster. *Before switching this option to ON, change the Makefiles included in their directories (./Applications/MatlabInterface/---Planner)*.
 
 After these options are set, run cmake and make on SimBA. You are now ready to do some sweet simulation!
