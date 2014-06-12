@@ -33,8 +33,7 @@ using namespace std;
   * If either one of these systems is disconnected, we just skip 'em.
   ****************************************************/
 
-class NetworkManager
-{
+class NetworkManager {
  public:
 
   int m_iNodeClients; // num of Node clients that subscribe to LocalSim
@@ -88,7 +87,7 @@ class NetworkManager
                            void* pUserData){
     ((NetworkManager*)pUserData)->DeleteRobot(mRequest, mReply);
   }
-  
+
   //////////////////////////////
   // Register hal camera device in LocalSim. This RPC function is called by hal.
   // Once we register a cam device, we can use the recv and publish method.

@@ -1,6 +1,7 @@
 #include "PathPlanner.h"
 
 #include <thread>
+#include <iostream>
 
 PathPlanner::PathPlanner() {
   map_tau_ = 0; //Something random, why not.
@@ -26,6 +27,7 @@ void PathPlanner::InitNode() {
   node_.provide_rpc("GetPolicy", &_GetPolicy, this);
   node_.provide_rpc("GetMotionSample", &_GetMotionSample, this);
   node_.provide_rpc("GetSpline", &_GetSpline, this);
+  ResetBooleans();
 
   // cout<<"-------------------"<<GetNumber(planner_name_)<<endl;
   // while (!node_.subscribe("MATLAB/BVP"+GetNumber(planner_name_))) {
@@ -43,24 +45,26 @@ void PathPlanner::InitNode() {
 void PathPlanner::SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
                                    pb::RegisterPlannerRepMsg& mReply){
   // Get the configurations from the request
+  master_node_name_ = mRequest.req_node_name();
   pb::PlannerConfigMsg config = mRequest.config();
   start_.resize(config.start_param().size());
   goal_.resize(config.goal_param().size());
-  for (int ii=0; ii < config.start_param().size(); ii++) {
+  for (int ii = 0; ii < config.start_param().size(); ii++) {
     start_.at(ii) = config.start_param().Get(ii);
     goal_.at(ii) = config.goal_param().Get(ii);
   }
   // X, Y, yaw, and velocity... that should be it.
   Eigen::Matrix4d eigen_start;
   Eigen::Vector6d eigen_cart;
-  eigen_cart << start_[0], start_[1], .5, 0, start_[2], 0;
+  eigen_cart << start_[0], start_[1], .5, 0, 0, start_[2];
   eigen_start = _Cart2T(eigen_cart);
   Eigen::Matrix4d eigen_goal;
-  eigen_cart << goal_[0], goal_[1], .5, 0, goal_[2], 0;
+  eigen_cart << goal_[0], goal_[1], .5, 0, 0, goal_[2];
   eigen_goal = _Cart2T(eigen_cart);
   // Populate the VehicleStates
   start_state_ = VehicleState(Sophus::SE3d(eigen_start), start_[3], 0);
   goal_state_ = VehicleState(Sophus::SE3d(eigen_goal), goal_[3], 0);
+  mReply.set_success(1);
   config_set_ = true;
 }
 
@@ -104,6 +108,7 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
                    heightmap_data->z_data_,
                    localTrans, dMin, dMax, m_VehicleParams, 11);
   GroundStates();
+  mReply.set_success(1);
   mesh_set_ = true;
 }
 
@@ -111,23 +116,28 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
 
 void PathPlanner::GetStatus(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply){
-  pb::PlannerStatusMsg status;
-  status.set_config_set(config_set_);
-  status.set_mesh_set(mesh_set_);
-  status.set_policy_set(policy_set_);
-  mReply.set_allocated_status(&status);
+  pb::PlannerStatusMsg* status = new pb::PlannerStatusMsg();
+  status->set_config_set(config_set_);
+  status->set_mesh_set(mesh_set_);
+  status->set_policy_set(policy_set_);
+  mReply.set_allocated_status(status);
+  mReply.set_rep_node_name(planner_name_);
 }
 
 void PathPlanner::GetPolicy(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply){
   if(policy_set_){
-    mReply.set_allocated_policy(&policy_);
+    mReply.set_allocated_policy(policy_);
+    mReply.set_rep_node_name(planner_name_);
   }
+  // All of our booleans are true, so to reset, reset them first.
+  ResetBooleans();
 }
 
 void PathPlanner::GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
                                   pb::RegisterPlannerRepMsg& mReply){
   if(policy_set_){
+    mReply.set_rep_node_name(planner_name_);
     //TODO
   }
 }
@@ -135,6 +145,7 @@ void PathPlanner::GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
 void PathPlanner::GetSpline(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply){
   if(policy_set_){
+    mReply.set_rep_node_name(planner_name_);
     //TODO
   }
 }
@@ -184,7 +195,7 @@ void PathPlanner::GroundStates() {
 // TODO: arguments here might have to be modified to accept different things.
 
 //Finds the fastest path between two
-void PathPlanner::SolveBVP(pb::PlannerPolicyMsg& policy) {
+void PathPlanner::SolveBVP(){
   bool success = false;
   int count = 0;
   ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
@@ -212,9 +223,9 @@ void PathPlanner::SolveBVP(pb::PlannerPolicyMsg& policy) {
   // And the start/ goal state. That's helpful too.
   for(unsigned int ii=0; ii<sample.m_vCommands.size(); ii++) {
     ControlCommand Comm = sample.m_vCommands.at(ii);
-    policy.add_force(Comm.m_dForce);
-    policy.add_phi(Comm.m_dPhi);
-    policy.add_time(Comm.m_dT);
+    policy_->add_force(Comm.m_dForce);
+    policy_->add_phi(Comm.m_dPhi);
+    policy_->add_time(Comm.m_dT);
   }
   LOG(debug_level_) << "SUCCESS: Planned this configuration";
   policy_set_ = true;
@@ -234,6 +245,7 @@ void PathPlanner::ResetBooleans(){
   mesh_set_ = false;
   policy_set_ = false;
   policy_delivered_ = false;
+  policy_ = new pb::PlannerPolicyMsg();
 }
 
 /***********************************
@@ -251,46 +263,17 @@ int main(int argc, char** argv) {
   std::string number = planner->GetNumber(planner->planner_name_);
   planner->InitNode();
   //We're planning forever, so never break this cycle
-  while(1){
-    while (!planner->config_set_ && !planner->mesh_set_) {
-      // Just wait
-      // Once these are set, we're ready to solve
-    }
-    planner->SolveBVP(planner->policy_);
-    while(!planner->policy_delivered_){
-      // Don't do nuffin
-    }
-    // All of our booleans are true, so to reset, reset them first.
-    planner->ResetBooleans();
+  while (!planner->config_set_ || !planner->mesh_set_) {
+    // Just wait
+    // Once these are set, we're ready to solve
   }
-  // while (1) {
-  //   int count = 0;
-  //   pb::BVP_check ineed_bvp;
-  //   ineed_bvp.set_need(true);
-  //   while (!planner->node_.publish("CheckNeed", ineed_bvp)) {
-  //     ineed_bvp.set_need(true);
-  //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  //   }
-  //   pb::BVP_params params;
-  //   std::cout<<"Starting to receive parameters..."<<std::endl;
-  //   while (!planner->node_.receive("MATLAB/BVP"+number, params) && count<100) {
-  //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  //     count++;
-  //   }
-  //   pb::BVP_policy policy;
-  //   if (count<100) {
-  //     policy = planner->StartPolicy(params);
-  //     pb::BVP_check bvp_solved;
-  //     bvp_solved.set_need(true);
-  //     while (!planner->node_.publish("CheckSolved", bvp_solved) && count<10) {
-  //       std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  //     }
-  //     while (!planner->node_.publish("Policy", policy) && count<10) {
-  //       std::cout<<"Sending policy..."<<std::endl;
-  //       std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  //       std::cout<<"Ready for the next plan!!"<<std::endl;
-  //     }
-  //   }
-  //   std::cout<<"False alarm; no plan here."<<std::endl;
-  // }
+  planner->SolveBVP();
+  while(!planner->policy_set_){
+    // Just wait again
+  }
+  while (planner->policy_set_
+         || planner->config_set_
+         || planner->mesh_set_) {
+    // Just wait again for a reset
+  }
 }

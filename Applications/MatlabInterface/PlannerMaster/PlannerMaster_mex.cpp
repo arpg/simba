@@ -44,16 +44,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /*********************************************************************
    * NODE FUNCTIONS
    **********************************************************************/
-
-  if (!strcmp("ConnectNode", cmd)) {
-    double* num_planners = mxGetPr(prhs[2]);
-    //    char dir_to_planner[80];
-    //    mxGetString(prhs[3], dir_to_planner, sizeof(dir_to_planner));
-    // This "a" is just a placeholder until I can get that
-    // system call working.
-    planner_ptr->ConnectNode(int(*num_planners));
-    return;
-  }
+  
 
   /*********************************************************************
    * SETTERS AND GETTERS
@@ -64,20 +55,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double* planner_num = mxGetPr(prhs[2]);
     double* start_state = mxGetPr(prhs[3]);
     double* goal_state = mxGetPr(prhs[4]);
-    planner_ptr->SetConfiguration(start_state, goal_state);
+    int success = planner_ptr->SetConfiguration(int(*planner_num),
+                                                start_state, goal_state);
+    plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
+    double* success_status = mxGetPr(plhs[0]);
+    *success_status = success;
     return;
   }
 
   if (!strcmp("SetHeightmap", cmd)) {
     // This one command both sets the command and sends it to the Planner.
     double* planner_num = mxGetPr(prhs[2]);
-    double* x_data = mxGetPr(prhs[2]);
-    double* y_data = mxGetPr(prhs[3]);
-    double* z_data = mxGetPr(prhs[4]);
-    double* row_count = mxGetPr(prhs[5]);
-    double* col_count = mxGetPr(prhs[6]);
-    planner_ptr->SetHeightmap(x_data, y_data, z_data,
-                              int(*row_count), int(*col_count));
+    double* x_data = mxGetPr(prhs[3]);
+    double* y_data = mxGetPr(prhs[4]);
+    double* z_data = mxGetPr(prhs[5]);
+    double* row_count = mxGetPr(prhs[6]);
+    double* col_count = mxGetPr(prhs[7]);
+    int success = planner_ptr->SetHeightmap(int(*planner_num),
+                                            x_data, y_data, z_data,
+                                            int(*row_count), int(*col_count));
+    plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
+    double* success_status = mxGetPr(plhs[0]);
+    *success_status = success;
     return;
   }
 
@@ -88,10 +87,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double* status = planner_ptr->GetStatus(int(*planner_num));
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
     plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL);
-    double* need_problem = mxGetPr(plhs[0]);
-    double* need_policy = mxGetPr(plhs[1]);
-    *need_problem = status[0];
-    *need_policy = status[1];
+    plhs[2] = mxCreateDoubleMatrix(1, 1, mxREAL);
+    double* config_status = mxGetPr(plhs[0]);
+    double* mesh_status = mxGetPr(plhs[1]);
+    double* policy_status = mxGetPr(plhs[2]);
+    *config_status = status[0];
+    *mesh_status = status[1];
+    *policy_status = status[2];
     return;
   }
 
@@ -103,14 +105,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     plhs[0] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
     plhs[1] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
     plhs[2] = mxCreateDoubleMatrix(commands[0], 1, mxREAL);
-    plhs[3] = mxCreateDoubleMatrix(4, 1, mxREAL);
-    plhs[4] = mxCreateDoubleMatrix(4, 1, mxREAL);
     int counter = 1;
     double* force = mxGetPr(plhs[0]);
     double* phi = mxGetPr(plhs[1]);
     double* time = mxGetPr(plhs[2]);
-    double* start_params = mxGetPr(plhs[3]);
-    double* goal_params = mxGetPr(plhs[4]);
     for (int ii = 0; ii < commands[0]; ii++) {
       force[ii] = commands[counter];
       counter++;
@@ -121,14 +119,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
     for (int ii = 0; ii<commands[0]; ii++) {
       time[ii] = commands[counter];
-      counter++;
-    }
-    for (int ii = 0; ii < 4; ii++) {
-      start_params[ii] = commands[counter];
-      counter++;
-    }
-    for (int ii = 0; ii < 4; ii++) {
-      goal_params[ii] = commands[counter];
       counter++;
     }
     return;

@@ -61,6 +61,7 @@ message RegisterPlannerReqMsg
     optional PlannerMotionSampleMsg motion_sample = 5;
     optional PlannerSplineMsg spline = 6;
     optional uint32 tau =7;
+    required string req_node_name =8;
 }
 
 message RegisterPlannerRepMsg
@@ -71,6 +72,7 @@ message RegisterPlannerRepMsg
     optional PlannerHeightmapMsg heightmap = 4;
     optional PlannerMotionSampleMsg motion_sample = 5;
     optional PlannerSplineMsg spline = 6;
-    optional bool success = 7;
+    optional uint32 success = 7;
     optional uint32 tau =8;
+    optional string rep_node_name =9;
 }

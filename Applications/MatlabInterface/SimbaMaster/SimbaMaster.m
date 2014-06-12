@@ -14,6 +14,8 @@ classdef SimbaMaster < handle
         %%%% CONSTRUCTOR/DESTRUCTOR
         
         function this = SimbaMaster(num_sims)
+        % This gives us the global methods we need. 
+            addpath('../');
             this.node_ = SimbaMaster_mex('new', num_sims);
             PlannerMaster_mex('StartConnections', this.planners_, this.num_planners_);
         end
