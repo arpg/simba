@@ -112,11 +112,31 @@ class PlannerMaster{
 
 
   double* GetSpline(int planner_num) {
-    // This first 'policy' is a fail case
-    // It returns -1 when we don't get a policy.
-    double* policy = new double[1];
-    policy[0] = -1;
-    return policy;
+    pb::RegisterPlannerReqMsg req;
+    pb::RegisterPlannerRepMsg rep;
+    req.set_req_node_name(node_name_);
+    node_.call_rpc("Sim" + std::to_string(planner_num)
+                   + "/GetSpline", req, rep);
+    pb::PlannerSplineMsg spline_msg = rep.spline();
+    // x and y points, and then a [x,y,th,v] goal pose.
+    int spline_size = spline_msg.x_values().size();
+    int array_size = (2 * spline_size) + 5;
+    double* spline_params = new double[array_size];
+    int counter = 1;
+    spline_params[0] = spline_size;
+    for (int ii = 0; ii < spline_size; ii++) {
+      spline_params[counter] = spline_msg.x_values(ii);
+      counter++;
+    }
+    for (int ii = 0; ii < spline_size; ii++) {
+      spline_params[counter] = spline_msg.y_values(ii);
+      counter++;
+    }
+    for (int ii = 0; ii < 4; ii++) {
+      spline_params[counter] = spline_msg.solved_goal_pose(ii);
+      counter++;
+    }
+    return spline_params;
   }
 
 

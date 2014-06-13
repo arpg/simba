@@ -28,22 +28,13 @@ void PathPlanner::InitNode() {
   node_.provide_rpc("GetMotionSample", &_GetMotionSample, this);
   node_.provide_rpc("GetSpline", &_GetSpline, this);
   ResetBooleans();
-
-  // cout<<"-------------------"<<GetNumber(planner_name_)<<endl;
-  // while (!node_.subscribe("MATLAB/BVP"+GetNumber(planner_name_))) {
-  //   std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  //   cout<<"->";
-  // }
-  // node_.advertise("CheckNeed");
-  // node_.advertise("CheckSolved");
-  // node_.advertise("Policy");
 }
 
 /////////////////////////////////////////////
 /// SETTERS AND GETTERS FOR PATH PLANNER
 
 void PathPlanner::SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
-                                   pb::RegisterPlannerRepMsg& mReply){
+                                   pb::RegisterPlannerRepMsg& mReply) {
   // Get the configurations from the request
   master_node_name_ = mRequest.req_node_name();
   pb::PlannerConfigMsg config = mRequest.config();
@@ -56,10 +47,10 @@ void PathPlanner::SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
   // X, Y, yaw, and velocity... that should be it.
   Eigen::Matrix4d eigen_start;
   Eigen::Vector6d eigen_cart;
-  eigen_cart << start_[0], start_[1], .5, 0, start_[2], 0;
+  eigen_cart << start_[0], start_[1], .5, 0, 0, start_[2];
   eigen_start = _Cart2T(eigen_cart);
   Eigen::Matrix4d eigen_goal;
-  eigen_cart << goal_[0], goal_[1], .5, 0, goal_[2], 0;
+  eigen_cart << goal_[0], goal_[1], .5, 0, 0, goal_[2];
   eigen_goal = _Cart2T(eigen_cart);
   // Populate the VehicleStates
   start_state_ = VehicleState(Sophus::SE3d(eigen_start), start_[3], 0);
@@ -71,7 +62,7 @@ void PathPlanner::SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
 ///////////
 
 void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
-                               pb::RegisterPlannerRepMsg& mReply){
+                               pb::RegisterPlannerRepMsg& mReply) {
   // TODO : Change so that we grab parameters from mRequest
   pb::PlannerHeightmapMsg heightmap = mRequest.heightmap();
   // Create our world mesh
@@ -81,7 +72,7 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
   X.resize(row_count*col_count);
   Y.resize(row_count*col_count);
   Z.resize(row_count*col_count);
-  for (int ii=0; ii < heightmap.x_data().size(); ii++) {
+  for (int ii = 0; ii < heightmap.x_data().size(); ii++) {
     X.at(ii) = heightmap.x_data().Get(ii);
     Y.at(ii) = heightmap.y_data().Get(ii);
     Z.at(ii) = heightmap.z_data().Get(ii);
@@ -115,7 +106,7 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
 ///////////
 
 void PathPlanner::GetStatus(pb::RegisterPlannerReqMsg& mRequest,
-                            pb::RegisterPlannerRepMsg& mReply){
+                            pb::RegisterPlannerRepMsg& mReply) {
   pb::PlannerStatusMsg* status = new pb::PlannerStatusMsg();
   status->set_config_set(config_set_);
   status->set_mesh_set(mesh_set_);
@@ -125,28 +116,44 @@ void PathPlanner::GetStatus(pb::RegisterPlannerReqMsg& mRequest,
 }
 
 void PathPlanner::GetPolicy(pb::RegisterPlannerReqMsg& mRequest,
-                            pb::RegisterPlannerRepMsg& mReply){
-  if(policy_set_){
-    mReply.set_allocated_policy(policy_);
+                            pb::RegisterPlannerRepMsg& mReply) {
+  if (policy_set_) {
+    pb::PlannerPolicyMsg* policy = new pb::PlannerPolicyMsg();
+    for (unsigned int ii = 0; ii < trajectory_->m_vCommands.size(); ii++) {
+      ControlCommand comm = trajectory_->m_vCommands.at(ii);
+      policy->add_force(comm.m_dForce);
+      policy->add_phi(comm.m_dPhi);
+      policy->add_time(comm.m_dT);
+    }
+    mReply.set_allocated_policy(policy);
     mReply.set_rep_node_name(planner_name_);
   }
   // All of our booleans are true, so to reset, reset them first.
-  ResetBooleans();
+  // ResetBooleans();
 }
 
 void PathPlanner::GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
-                                  pb::RegisterPlannerRepMsg& mReply){
-  if(policy_set_){
+                                  pb::RegisterPlannerRepMsg& mReply) {
+  if (policy_set_) {
     mReply.set_rep_node_name(planner_name_);
     //TODO
   }
 }
 
 void PathPlanner::GetSpline(pb::RegisterPlannerReqMsg& mRequest,
-                            pb::RegisterPlannerRepMsg& mReply){
-  if(policy_set_){
-    mReply.set_rep_node_name(planner_name_);
-    //TODO
+                            pb::RegisterPlannerRepMsg& mReply) {
+  if (policy_set_) {
+    pb::PlannerSplineMsg* spline_msg = new pb::PlannerSplineMsg();
+    BezierBoundaryProblem* spline = local_problem_->GetBezierProblem();
+    for (unsigned int ii = 0; ii < spline->x_values_.size(); ii++) {
+      spline_msg->add_x_values(spline->x_values_(ii));
+      spline_msg->add_y_values(spline->y_values_(ii));
+    }
+    for (unsigned int ii = 0; ii < 4; ii++) {
+      spline_msg->add_solved_goal_pose(spline->solved_goal_pose_(ii));
+    }
+    mReply.set_allocated_spline(spline_msg);
+    mReply.set_rep_node_name(planner_name_); // in case we implement a queue
   }
 }
 
@@ -160,34 +167,34 @@ void PathPlanner::GroundStates() {
                          dIntersect, true, 0)) {
     dIntersect(2) = dIntersect(2)+.12;
     start_state_.m_dTwv.translation() = dIntersect;
-    if (car_model_->RayCastNormal(pose.translation(),
-                                 GetBasisVector(start_state_.m_dTwv,2),
-                                 normal, 0)) {
-      Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-          start_state_.GetTheta(), normal));
-      Eigen::Matrix3d rotMat = quatRot*start_state_.m_dTwv.rotationMatrix();
-      start_state_.m_dTwv =
-          Sophus::SE3d(rotMat, start_state_.m_dTwv.translation());
-      LOG(debug_level_) << "Setting start point to ground...";
-    }
+    // if (car_model_->RayCastNormal(pose.translation(),
+    //                              GetBasisVector(start_state_.m_dTwv,2),
+    //                              normal, 0)) {
+    //   Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
+    //       start_state_.GetTheta(), normal));
+    //   Eigen::Matrix3d rotMat = quatRot*start_state_.m_dTwv.rotationMatrix();
+    //   start_state_.m_dTwv =
+    //       Sophus::SE3d(rotMat, start_state_.m_dTwv.translation());
+    //   LOG(debug_level_) << "Setting start point to ground...";
+  }
     // Ground the goal point
     pose = goal_state_.m_dTwv;
     if (car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*30,
                            dIntersect, true, 0)) {
       dIntersect(2) = dIntersect(2)+.12;
       goal_state_.m_dTwv.translation() = dIntersect;
-      if (car_model_->RayCastNormal(pose.translation(),
-                                   GetBasisVector(pose,2)*10,
-                                   dIntersect, 0)) {
-        normal = normal.normalized();
-        Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-            goal_state_.GetTheta(), normal));
-        Eigen::Matrix3d rotMat = quatRot*goal_state_.m_dTwv.rotationMatrix();
-        goal_state_.m_dTwv =
-            Sophus::SE3d(rotMat, goal_state_.m_dTwv.translation());
-        LOG(debug_level_) << "Setting goal point to ground...";
-      }
-    }
+      // if (car_model_->RayCastNormal(pose.translation(),
+      //                              GetBasisVector(pose,2)*10,
+      //                              dIntersect, 0)) {
+      //   normal = normal.normalized();
+      //   Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
+      //       goal_state_.GetTheta(), normal));
+      //   Eigen::Matrix3d rotMat = quatRot*goal_state_.m_dTwv.rotationMatrix();
+      //   goal_state_.m_dTwv =
+      //       Sophus::SE3d(rotMat, goal_state_.m_dTwv.translation());
+      //   LOG(debug_level_) << "Setting goal point to ground...";
+      // }
+      // }
   }
 }
 
@@ -195,7 +202,7 @@ void PathPlanner::GroundStates() {
 // TODO: arguments here might have to be modified to accept different things.
 
 //Finds the fastest path between two
-void PathPlanner::SolveBVP(){
+void PathPlanner::SolveBVP() {
   bool success = false;
   int count = 0;
   ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
@@ -208,26 +215,20 @@ void PathPlanner::SolveBVP(){
   MotionSample sample;
   //Initialize the problem
   LocalProblem problem(&func, start_state_, goal_state_, 1.0/30.0);
-  m_snapper.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
+  local_planner_.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
   while (!success && count<100) {
     // Problem: the car is in the air. Hmm.
-    success = m_snapper.Iterate(problem);
-    m_snapper.SimulateTrajectory(sample,problem,0,true);
+    success = local_planner_.Iterate(problem);
+    local_planner_.SimulateTrajectory(sample,problem,0,true);
     count++;
   }
-  if (problem.m_bInertialControlActive) {
-    m_snapper.CalculateTorqueCoefficients(problem,&sample);
-    m_snapper.SimulateTrajectory(sample,problem,0,true);
-  }
-  // We have to get all of the commands over the time period described.
-  // And the start/ goal state. That's helpful too.
-  for(unsigned int ii=0; ii<sample.m_vCommands.size(); ii++) {
-    ControlCommand Comm = sample.m_vCommands.at(ii);
-    policy_->add_force(Comm.m_dForce);
-    policy_->add_phi(Comm.m_dPhi);
-    policy_->add_time(Comm.m_dT);
+  if (problem.is_inertial_control_active_) {
+    local_planner_.CalculateTorqueCoefficients(problem,&sample);
+    local_planner_.SimulateTrajectory(sample,problem,0,true);
   }
   LOG(debug_level_) << "SUCCESS: Planned this configuration";
+  local_problem_ = &problem;
+  trajectory_ = &sample;
   policy_set_ = true;
 }
 
@@ -240,12 +241,11 @@ std::string PathPlanner::GetNumber(std::string name) {
   }
 }
 
-void PathPlanner::ResetBooleans(){
+void PathPlanner::ResetBooleans() {
   config_set_ = false;
   mesh_set_ = false;
   policy_set_ = false;
   policy_delivered_ = false;
-  policy_ = new pb::PlannerPolicyMsg();
 }
 
 /***********************************
@@ -268,7 +268,7 @@ int main(int argc, char** argv) {
     // Once these are set, we're ready to solve
   }
   planner->SolveBVP();
-  while(!planner->policy_set_){
+  while (!planner->policy_set_) {
     // Just wait again
   }
   while (planner->policy_set_

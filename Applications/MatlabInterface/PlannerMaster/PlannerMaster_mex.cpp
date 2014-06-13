@@ -44,7 +44,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /*********************************************************************
    * NODE FUNCTIONS
    **********************************************************************/
-  
+
 
   /*********************************************************************
    * SETTERS AND GETTERS
@@ -145,12 +145,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     double* planner_num = mxGetPr(prhs[2]);
     double* spline = planner_ptr->GetSpline(int(*planner_num));
-    // plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
-    // plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL);
-    // double* problem = mxGetPr(plhs[0]);
-    // double* policy = mxGetPr(plhs[1]);
-    // *problem = status[0];
-    // *policy = status[1];
+    // The first element of 'commands' has the length of all command
+    // vectors.
+    plhs[0] = mxCreateDoubleMatrix(spline[0], 1, mxREAL);
+    plhs[1] = mxCreateDoubleMatrix(spline[0], 1, mxREAL);
+    plhs[2] = mxCreateDoubleMatrix(4, 1, mxREAL);
+    double* x_values = mxGetPr(plhs[0]);
+    double* y_values = mxGetPr(plhs[1]);
+    double* solved_goal_pose = mxGetPr(plhs[2]);
+    int counter = 1;
+    for (int ii = 0; ii < spline[0]; ii++) {
+      x_values[ii] = spline[counter];
+      counter++;
+    }
+    for (int ii = 0; ii < spline[0]; ii++) {
+      y_values[ii] = spline[counter];
+      counter++;
+    }
+    for (int ii = 0; ii<4; ii++) {
+      solved_goal_pose[ii] = spline[counter];
+      counter++;
+    }
     return;
   }
 

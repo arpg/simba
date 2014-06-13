@@ -43,11 +43,9 @@ message PlannerMotionSampleMsg
 
 message PlannerSplineMsg
 {
-    repeated double a =1 [packed=true];
-    repeated double b =2 [packed=true];
-    repeated double c =3 [packed=true];
-    repeated double d =4 [packed=true];
-    repeated double e =5 [packed=true];
+    repeated double x_values =1 [packed=true];
+    repeated double y_values =2 [packed=true];
+    repeated double solved_goal_pose =3 [packed=true];
 }
 
 // I care not

@@ -11,6 +11,7 @@ classdef PlannerMaster < handle
         num_planners_;
         goal_states_;   % Holds all possible combos of start/goal
         bvp_solutions_;
+        bvp_splines_;
         cur_pol_;
     end
     
@@ -53,7 +54,10 @@ classdef PlannerMaster < handle
                 elseif policy_stat == 1, 
                     disp('Getting Policy'); 
                     [policy] = this.GetPolicy(0);
-                    this.SavePolicy(tau, start_point, goal_point, mesh, policy);
+                    [spline] = this.GetSpline(0);
+                    this.SavePolicy(tau, start_point, goal_point, ...
+                                    mesh, policy);
+                    this.SaveSpline(tau, start_point, goal_point, mesh, spline);
                     break;
                 end
             end
@@ -171,6 +175,23 @@ classdef PlannerMaster < handle
             save(filename, 'bvpsol');
         end
         
+        %%% Save our spline function to a .mat file
+        function SaveSpline(this, tau, start_point, goal_point, mesh, spline)
+            BVPSolution.spline = spline;
+            BVPSolution.meshX = mesh.X;
+            BVPSolution.meshY = mesh.Y;
+            BVPSolution. meshZ = mesh.Z;
+            BVPSolution.start_config = start_point;
+            BVPSolution.goal_config = goal_point;
+            BVPSolution.map_bit = tau;
+            this.bvp_splines_ = [this.bvp_splines_, ...
+                                BVPSolution];
+            % Saving is a pain in the ass
+            bvp_splines = this.bvp_splines_;
+            filename = ['BVPSplines-' num2str(tau) '.mat'];
+            save(filename, 'bvp_splines');
+        end
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%% NODE FUNCTIONS
         
@@ -232,13 +253,12 @@ classdef PlannerMaster < handle
         end        
         
         function [spline] = GetSpline(this, planner_num)
-            [a, b, c, d, e] = PlannerMaster_mex('GetSpline', this.planners_, ...
-                                                planner_num);
-            spline.a = a;
-            spline.b = b;
-            spline.c = c;
-            spline.d = d;
-            spline.e = e;
+            [x_values, y_values, solved_goal_pose] = ...
+                PlannerMaster_mex('GetSpline', this.planners_, ...
+                              planner_num);
+            spline.x_values = x_values;
+            spline.y_values = y_values;
+            spline.solved_goal_pose = solved_goal_pose;
         end        
         
     end

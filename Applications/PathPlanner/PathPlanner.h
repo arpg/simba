@@ -93,17 +93,17 @@ class PathPlanner {
   /// MEMBER VARIABLES
   // PlannerLib things
   BulletCarModel* car_model_;
-  LocalPlanner m_snapper;
+  LocalPlanner local_planner_;
+  LocalProblem* local_problem_;
   CarParameterMap m_VehicleParams;
   VehicleState start_state_;
   VehicleState goal_state_;
-  MotionSample final_motion_sample_;
+  MotionSample* trajectory_;
   std::string params_file_name_;
   //Node things
   node::node node_;
   std::string planner_name_;
   std::string master_node_name_;
-  pb::PlannerPolicyMsg* policy_;
   int debug_level_;
   std::vector<double> start_;
   std::vector<double> goal_;

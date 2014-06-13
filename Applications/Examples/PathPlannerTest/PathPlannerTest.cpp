@@ -28,18 +28,18 @@ void PathPlannerTest::InitGoals(){
   start_.push_back(1);
   start_.push_back(0);
   start_.push_back(1);
-  goal_.push_back(1);
-  goal_.push_back(1);
-  goal_.push_back(1);
+  goal_.push_back(1.8);
+  goal_.push_back(1.5);
+  goal_.push_back(.5);
   goal_.push_back(1);
   // Now populate the start and goal parameters.
   // X, Y, yaw, and velocity... that should be it.
   Eigen::Matrix4d eigen_start;
   Eigen::Vector6d eigen_cart;
-  eigen_cart << start_[0], start_[1], .5, 0, start_[2], 0;
+  eigen_cart << start_[0], start_[1], .5, 0, 0, start_[2];
   eigen_start = _Cart2T(eigen_cart);
   Eigen::Matrix4d eigen_goal;
-  eigen_cart << goal_[0], goal_[1], .5, 0, goal_[2], 0;
+  eigen_cart << goal_[0], goal_[1], .5, 0, 0, goal_[2];
   eigen_goal = _Cart2T(eigen_cart);
   // Populate the VehicleStates
   start_state_ = VehicleState(Sophus::SE3d(eigen_start), start_[3], 0);
@@ -54,12 +54,6 @@ bool PathPlannerTest::InitMesh(){
   btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
   btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
   CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
-  // MAKE SURE YOU ADD ENOUGH FREAKIN' WORLDS TO THE CAR MODEL.
-  // 11 should do it.
-  Eigen::Matrix4d eigen_start;
-  Eigen::Vector6d eigen_cart;
-  eigen_cart << start_[0], start_[1], 2, 0, start_[2], 0;
-  eigen_start = _Cart2T(eigen_cart);
   // Set up our mesh
   SceneGraph::GLHeightmap* new_map =
       new SceneGraph::GLHeightmap(heightmap_data_->x_data_,
@@ -74,6 +68,8 @@ bool PathPlannerTest::InitMesh(){
   btTransform localTrans;
   localTrans.setIdentity();
   localTrans.setOrigin(btVector3(0,0,0));
+  // MAKE SURE YOU ADD ENOUGH FREAKIN' WORLDS TO THE CAR MODEL.
+  // 11 should do it.
   car_model_->Init(heightmap_data_->row_count_,
                    heightmap_data_->col_count_,
                    heightmap_data_->x_data_,
@@ -106,16 +102,16 @@ void PathPlannerTest::GroundStates(){
                          dIntersect, true, 0)){
     dIntersect(2) = dIntersect(2)+.12;
     start_state_.m_dTwv.translation() = dIntersect;
-    LOG(INFO) << pose.translation();
-    if(car_model_->RayCastNormal(pose.translation(),
-                                 GetBasisVector(start_state_.m_dTwv,2),
-                                 normal, 0)){
-      Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-          start_state_.GetTheta(), normal));
-      Eigen::Matrix3d rotMat = quatRot*start_state_.m_dTwv.rotationMatrix();
-      start_state_.m_dTwv =
-          Sophus::SE3d(rotMat, start_state_.m_dTwv.translation());
-      LOG(INFO) << "Setting start point to ground...";
+    // LOG(INFO) << pose.translation();
+    // if(car_model_->RayCastNormal(pose.translation(),
+    //                              GetBasisVector(start_state_.m_dTwv,2),
+    //                              normal, 0)){
+    //   Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
+    //       start_state_.GetTheta(), normal));
+    //   Eigen::Matrix3d rotMat = quatRot*start_state_.m_dTwv.rotationMatrix();
+    //   start_state_.m_dTwv =
+    //       Sophus::SE3d(rotMat, start_state_.m_dTwv.translation());
+    //   LOG(INFO) << "Setting start point to ground...";
     }
 
     // Ground the goal point
@@ -124,20 +120,20 @@ void PathPlannerTest::GroundStates(){
                            dIntersect, true, 0)){
       dIntersect(2) = dIntersect(2)+.12;
       goal_state_.m_dTwv.translation() = dIntersect;
-      if(car_model_->RayCastNormal(pose.translation(),
-                                   GetBasisVector(pose,2)*10,
-                                   dIntersect, 0)){
-        normal = normal.normalized();
-        Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-            goal_state_.GetTheta(), normal));
-        Eigen::Matrix3d rotMat = quatRot*goal_state_.m_dTwv.rotationMatrix();
-        goal_state_.m_dTwv =
-            Sophus::SE3d(rotMat, goal_state_.m_dTwv.translation());
-        LOG(INFO) << "Setting goal point to ground...";
+      // if(car_model_->RayCastNormal(pose.translation(),
+      //                              GetBasisVector(pose,2)*10,
+      //                              dIntersect, 0)){
+      //   normal = normal.normalized();
+      //   Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
+      //       goal_state_.GetTheta(), normal));
+      //   Eigen::Matrix3d rotMat = quatRot*goal_state_.m_dTwv.rotationMatrix();
+      //   goal_state_.m_dTwv =
+      //       Sophus::SE3d(rotMat, goal_state_.m_dTwv.translation());
+      //   LOG(INFO) << "Setting goal point to ground...";
       }
     }
-  }
-}
+//   }
+// }
 
 /////////////////////////////////////////////
 
@@ -169,10 +165,14 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy){
     }
     count++;
   }
-  if (problem.m_bInertialControlActive) {
+  if (problem.is_inertial_control_active_) {
     m_snapper.CalculateTorqueCoefficients(problem, &sample);
     m_snapper.SimulateTrajectory(sample,problem,0,true);
   }
+  // We should have a good plan now
+  // We can easily grab the bezier_boundary_problem from here.
+  BezierBoundaryProblem* spline = problem.GetBezierProblem();
+
   VehicleState last_vehicle_state = sample.GetLastPose();
   for(unsigned int ii=0; ii<sample.m_vCommands.size(); ii++){
     ControlCommand Comm = sample.m_vCommands.at(ii);
@@ -181,10 +181,10 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy){
     policy->add_time(Comm.m_dT);
   }
   // Print forces here to verify results with PathPlanner program
-  // for(unsigned int ii=0; ii<sample.m_vCommands.size(); ii++){
-  //   ControlCommand Comm = sample.m_vCommands.at(ii);
-  //   LOG(INFO) << Comm.m_dForce;
-  // }
+  LOG(INFO) << "X values: ";
+  LOG(INFO) << std::endl << spline->x_values_;
+  LOG(INFO) << "Y vaules: ";
+  LOG(INFO) << std::endl << spline->y_values_;
   if(count==100){
     LOG(INFO) << "We're done with our policy search!!";
     LOG(INFO) << "We hit the maximum number of iterations...";
