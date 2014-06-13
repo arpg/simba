@@ -22,15 +22,15 @@ public:
 
   void GoForward(){
     torque = torque + .2;
-    if(torque>15){
-      torque = 15;
+    if(torque>1){
+      torque = 1;
     }
   }
 
   void GoBack(){
     torque = torque - .2;
-    if(torque<-15){
-      torque = -15;
+    if(torque<-1){
+      torque = -1;
     }
   }
 
@@ -50,7 +50,10 @@ public:
 
   void ApplyCommands(){
     // We must give a command_time (in this case, a 30th of a second)
-    bool applied = car->ApplyCommand(20, 20, 1.0/30.0);
+    bool applied = car->ApplyCommand(1, 20, 1.0/30.0);
+    if(applied){
+      std::cout<<"sent command!";
+    }
   }
 
   hal::Car* car;

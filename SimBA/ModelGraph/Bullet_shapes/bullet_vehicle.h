@@ -60,7 +60,7 @@ public:
     ///////
 
     btVector3 vWheelDirectionCS0(0,0,-1);
-    btVector3 vWheelAxleCS(0,1,0);
+    btVector3 vWheelAxleCS(0,-1,0);
     btRaycastVehicle::btVehicleTuning	tuning;
     tuning.m_frictionSlip = parameters[TractionFriction];
     tuning.m_suspensionCompression = parameters[CompDamping];

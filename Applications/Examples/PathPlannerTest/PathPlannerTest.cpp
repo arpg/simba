@@ -151,15 +151,13 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy){
   VehicleState gl(Sophus::SE3d(b->GetPose4x4_po()),b->GetVelocity(),0);
   LocalProblem problem(&func, st, gl, 1.0/30.0);
   m_snapper.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
-  while(!success && count<20){
+  while(!success && count<1000 && count % 10 == 0){
     success = m_snapper.Iterate(problem);
     m_snapper.SimulateTrajectory(sample,problem,0,true);
     // Render what we see
     for (int ii=0; ii<sample.m_vStates.size(); ii++){
       car_model_->SetState(0, sample.m_vStates.at(ii));
       planner_gui_.SetCarState(0, sample.m_vStates.at(ii), true);
-      LOG(INFO) << std::endl
-                << sample.m_vStates.at(ii).m_dTwv.matrix();
       planner_gui_.Render();
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }

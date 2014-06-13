@@ -478,7 +478,6 @@ void PhysicsEngine::RunDevices(){
 
 void PhysicsEngine::StepSimulation(){
   dynamics_world_->stepSimulation( timestep_,  time_max_substeps_ );
-  // std::this_thread::sleep_for(std::chrono::milliseconds(50));
   RunDevices();
   if(ray_vehicles_map_.size()!=0){
     // Go through all of our vehicles and update their part poses.
