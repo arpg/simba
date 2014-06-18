@@ -140,9 +140,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
 
   if (!strcmp("GetSpline", cmd)) {
-
-    // TODO
-
     double* planner_num = mxGetPr(prhs[2]);
     double* spline = planner_ptr->GetSpline(int(*planner_num));
     // The first element of 'commands' has the length of all command

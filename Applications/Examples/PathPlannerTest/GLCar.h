@@ -63,6 +63,7 @@ class GLCar {
       wheel_meshes_[i] = new GLMesh();
       wheel_meshes_[i]->Init(wheel_mesh_dir_);
       wheel_meshes_[i]->SetPerceptable(true);
+      wheel_meshes_[i]->SetVisible(true);
       scenegraph.AddChild(wheel_meshes_[i]);
     }
   }
@@ -93,7 +94,7 @@ class GLCar {
   void SetVisible(bool visible){
     if (draw_scheme_=="mesh") {
       body_mesh_->SetVisible(visible);
-      for (size_t i = 0; i < wheel_meshes_.size(); i++) {
+      for (size_t i = 0; i < wheel_meshes_.size()-1; i++) {
         wheel_meshes_[i]->SetVisible(visible);
       }
     }

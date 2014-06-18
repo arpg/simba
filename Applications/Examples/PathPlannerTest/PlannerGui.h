@@ -126,6 +126,13 @@ class PlannerGui
   void ClearCarTrajectory(const int& id) {
     m_vCars[id]->m_CarLineSegments.ClearLines();
   }
+
+  /// Doing stuff with our spline
+  void AddSplinePoints(const Eigen::Vector6d &pose,
+                       const double &number);
+  void MoveSplinePoints(const Eigen::Vector6d &pose,
+                        const double &number);
+
   /// Sets the dirty flag on all waypoints to true
   void SetWaypointDirtyFlag(bool bFlag);
   std::vector<double> GetClickPose(){ return m_Handler->WPose; }
@@ -160,6 +167,7 @@ class PlannerGui
 
   //vector of text objects
   std::vector<Waypoint*> m_vWaypoints;
+  std::vector<Waypoint*> m_vSplinePoints;
 
   std::vector<StatusLine*> m_vStatusLines;
   std::vector<Car*> m_vCars;

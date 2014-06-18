@@ -24,14 +24,14 @@ void PathPlannerTest::Init(HeightmapShape* heightmap_data){
 
 void PathPlannerTest::InitGoals(){
   // <x, y, theta, vel>
-  start_.push_back(-.5);
-  start_.push_back(1);
   start_.push_back(0);
-  start_.push_back(1);
-  goal_.push_back(1.8);
-  goal_.push_back(1.5);
+  start_.push_back(0);
+  start_.push_back(0);
+  start_.push_back(.5);
+  goal_.push_back(5);
+  goal_.push_back(2);
+  goal_.push_back(.78);
   goal_.push_back(.5);
-  goal_.push_back(1);
   // Now populate the start and goal parameters.
   // X, Y, yaw, and velocity... that should be it.
   Eigen::Matrix4d eigen_start;
@@ -77,8 +77,6 @@ bool PathPlannerTest::InitMesh(){
                    heightmap_data_->z_data_,
                    localTrans, dMin, dMax, m_VehicleParams, 11);
   GroundStates();
-  LOG(INFO) << start_state_.m_dTwv.matrix();
-  LOG(INFO) << goal_state_.m_dTwv.matrix();
   planner_gui_.AddWaypoint(start_state_);
   planner_gui_.AddWaypoint(goal_state_);
   // In case we suspect discrepancy between the car physics and rendering
@@ -100,40 +98,18 @@ void PathPlannerTest::GroundStates(){
   Sophus::SE3d pose = start_state_.m_dTwv;
   if(car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
                          dIntersect, true, 0)){
-    dIntersect(2) = dIntersect(2)+.12;
+    dIntersect(2) = dIntersect(2)+.15;
     start_state_.m_dTwv.translation() = dIntersect;
-    // LOG(INFO) << pose.translation();
-    // if(car_model_->RayCastNormal(pose.translation(),
-    //                              GetBasisVector(start_state_.m_dTwv,2),
-    //                              normal, 0)){
-    //   Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-    //       start_state_.GetTheta(), normal));
-    //   Eigen::Matrix3d rotMat = quatRot*start_state_.m_dTwv.rotationMatrix();
-    //   start_state_.m_dTwv =
-    //       Sophus::SE3d(rotMat, start_state_.m_dTwv.translation());
-    //   LOG(INFO) << "Setting start point to ground...";
-    }
+  }
 
-    // Ground the goal point
-    pose = goal_state_.m_dTwv;
-    if(car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*30,
-                           dIntersect, true, 0)){
-      dIntersect(2) = dIntersect(2)+.12;
-      goal_state_.m_dTwv.translation() = dIntersect;
-      // if(car_model_->RayCastNormal(pose.translation(),
-      //                              GetBasisVector(pose,2)*10,
-      //                              dIntersect, 0)){
-      //   normal = normal.normalized();
-      //   Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-      //       goal_state_.GetTheta(), normal));
-      //   Eigen::Matrix3d rotMat = quatRot*goal_state_.m_dTwv.rotationMatrix();
-      //   goal_state_.m_dTwv =
-      //       Sophus::SE3d(rotMat, goal_state_.m_dTwv.translation());
-      //   LOG(INFO) << "Setting goal point to ground...";
-      }
-    }
-//   }
-// }
+  // Ground the goal point
+  pose = goal_state_.m_dTwv;
+  if(car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*30,
+                         dIntersect, true, 0)){
+    dIntersect(2) = dIntersect(2)+.15;
+    goal_state_.m_dTwv.translation() = dIntersect;
+  }
+}
 
 /////////////////////////////////////////////
 
@@ -141,6 +117,7 @@ void PathPlannerTest::GroundStates(){
 void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy){
   bool success = false;
   int count = 0;
+  int max_count = 1000;
   ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
   func.SetNoDelay(true);
   MotionSample sample;
@@ -151,15 +128,33 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy){
   VehicleState gl(Sophus::SE3d(b->GetPose4x4_po()),b->GetVelocity(),0);
   LocalProblem problem(&func, st, gl, 1.0/30.0);
   m_snapper.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
-  while(!success && count<1000 && count % 10 == 0){
+
+  BezierBoundaryProblem* spline = problem.GetBezierProblem();
+  Eigen::Vector6d spline_vec;
+  for (int ii = 0; ii<6; ii++) {
+    spline_vec<<spline->x_values_(ii), spline->y_values_(ii), 0, 0, 0, 0;
+    planner_gui_.AddSplinePoints(spline_vec, ii);
+  }
+  for (int ii = 0; ii<500; ii++) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    planner_gui_.Render();
+  }
+  while (!success && count < max_count) {
     success = m_snapper.Iterate(problem);
     m_snapper.SimulateTrajectory(sample,problem,0,true);
-    // Render what we see
-    for (int ii=0; ii<sample.m_vStates.size(); ii++){
-      car_model_->SetState(0, sample.m_vStates.at(ii));
-      planner_gui_.SetCarState(0, sample.m_vStates.at(ii), true);
+    for (int ii = 0; ii<6; ii++) {
+      spline_vec<<spline->x_values_(ii), spline->y_values_(ii), 0, 0, 0, 0;
+      planner_gui_.MoveSplinePoints(spline_vec, ii);
       planner_gui_.Render();
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    // Render what we see
+    if (count % 5 == 0) {
+      for (int ii=0; ii<sample.m_vStates.size(); ii++){
+        car_model_->SetState(0, sample.m_vStates.at(ii));
+        planner_gui_.SetCarState(0, sample.m_vStates.at(ii), true);
+        planner_gui_.Render();
+      }
     }
     count++;
   }
@@ -169,7 +164,7 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy){
   }
   // We should have a good plan now
   // We can easily grab the bezier_boundary_problem from here.
-  BezierBoundaryProblem* spline = problem.GetBezierProblem();
+  // BezierBoundaryProblem* spline = problem.GetBezierProblem();
 
   VehicleState last_vehicle_state = sample.GetLastPose();
   for(unsigned int ii=0; ii<sample.m_vCommands.size(); ii++){
@@ -179,11 +174,7 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy){
     policy->add_time(Comm.m_dT);
   }
   // Print forces here to verify results with PathPlanner program
-  LOG(INFO) << "X values: ";
-  LOG(INFO) << std::endl << spline->x_values_;
-  LOG(INFO) << "Y vaules: ";
-  LOG(INFO) << std::endl << spline->y_values_;
-  if(count==100){
+  if (count >= max_count) {
     LOG(INFO) << "We're done with our policy search!!";
     LOG(INFO) << "We hit the maximum number of iterations...";
   } else {

@@ -164,37 +164,16 @@ void PathPlanner::GroundStates() {
   Eigen::Vector3d dIntersect, normal;
   Sophus::SE3d pose = start_state_.m_dTwv;
   if (car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
-                         dIntersect, true, 0)) {
+                          dIntersect, true, 0)) {
     dIntersect(2) = dIntersect(2)+.12;
     start_state_.m_dTwv.translation() = dIntersect;
-    // if (car_model_->RayCastNormal(pose.translation(),
-    //                              GetBasisVector(start_state_.m_dTwv,2),
-    //                              normal, 0)) {
-    //   Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-    //       start_state_.GetTheta(), normal));
-    //   Eigen::Matrix3d rotMat = quatRot*start_state_.m_dTwv.rotationMatrix();
-    //   start_state_.m_dTwv =
-    //       Sophus::SE3d(rotMat, start_state_.m_dTwv.translation());
-    //   LOG(debug_level_) << "Setting start point to ground...";
   }
-    // Ground the goal point
-    pose = goal_state_.m_dTwv;
-    if (car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*30,
-                           dIntersect, true, 0)) {
-      dIntersect(2) = dIntersect(2)+.12;
-      goal_state_.m_dTwv.translation() = dIntersect;
-      // if (car_model_->RayCastNormal(pose.translation(),
-      //                              GetBasisVector(pose,2)*10,
-      //                              dIntersect, 0)) {
-      //   normal = normal.normalized();
-      //   Eigen::Quaternion<double> quatRot(Eigen::AngleAxis<double>(
-      //       goal_state_.GetTheta(), normal));
-      //   Eigen::Matrix3d rotMat = quatRot*goal_state_.m_dTwv.rotationMatrix();
-      //   goal_state_.m_dTwv =
-      //       Sophus::SE3d(rotMat, goal_state_.m_dTwv.translation());
-      //   LOG(debug_level_) << "Setting goal point to ground...";
-      // }
-      // }
+  // Ground the goal point
+  pose = goal_state_.m_dTwv;
+  if (car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*30,
+                          dIntersect, true, 0)) {
+    dIntersect(2) = dIntersect(2)+.12;
+    goal_state_.m_dTwv.translation() = dIntersect;
   }
 }
 

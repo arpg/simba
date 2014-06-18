@@ -299,6 +299,24 @@ int PlannerGui::AddWaypoint(const VehicleState &state){
 }
 
 ///////////////////////////////////////////
+void PlannerGui::AddSplinePoints(const Eigen::Vector6d &pose,
+                                 const double &number){
+  m_vWaypoints.push_back(new Waypoint());
+  Waypoint *pWaypoint = m_vWaypoints.back();
+  pWaypoint->m_Waypoint.SetPose(pose);
+  pWaypoint->m_Waypoint.SetVelocity(.8);
+  pWaypoint->m_Waypoint.SetScale(1);
+  m_SceneGraph.AddChild(&pWaypoint->m_Waypoint);
+}
+
+///////////////////////////////////////////
+void PlannerGui::MoveSplinePoints(const Eigen::Vector6d &pose,
+                                  const double &number){
+  Waypoint *pWaypoint = m_vWaypoints.at(number);
+  pWaypoint->m_Waypoint.SetPose(pose);
+}
+
+///////////////////////////////////////////
 void PlannerGui::ClearWaypoints(){
   //remove all waypoints from the vector and from the scenegraph
   for(size_t ii = 0 ; ii < m_vWaypoints.size() ; ii++){
