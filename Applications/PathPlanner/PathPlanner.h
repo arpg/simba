@@ -93,8 +93,8 @@ class PathPlanner {
   /// MEMBER VARIABLES
   // PlannerLib things
   BulletCarModel* car_model_;
-  LocalPlanner local_planner_;
   LocalProblem* local_problem_;
+  //  LocalPlanner* local_planner_;
   CarParameterMap m_VehicleParams;
   VehicleState start_state_;
   VehicleState goal_state_;

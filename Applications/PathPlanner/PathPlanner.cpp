@@ -38,6 +38,8 @@ void PathPlanner::SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
   // Get the configurations from the request
   master_node_name_ = mRequest.req_node_name();
   pb::PlannerConfigMsg config = mRequest.config();
+  start_.clear();
+  goal_.clear();
   start_.resize(config.start_param().size());
   goal_.resize(config.goal_param().size());
   for (int ii = 0; ii < config.start_param().size(); ii++) {
@@ -85,7 +87,9 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
   btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
   CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
   LOG(debug_level_) << "Init our mesh!";
-  // Set up our car
+  if (car_model_) {
+    delete car_model_;
+  }
   car_model_ = new BulletCarModel();
   btTransform localTrans;
   localTrans.setIdentity();
@@ -154,6 +158,7 @@ void PathPlanner::GetSpline(pb::RegisterPlannerReqMsg& mRequest,
     }
     mReply.set_allocated_spline(spline_msg);
     mReply.set_rep_node_name(planner_name_); // in case we implement a queue
+    ResetBooleans();
   }
 }
 
@@ -187,25 +192,21 @@ void PathPlanner::SolveBVP() {
   ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
   VehicleState state;
   car_model_->GetVehicleState(0, state);
-  if (state.IsAirborne()) {
-    LOG(debug_level_) << "We are airborne. That's no good.";
-  }
   func.SetNoDelay(true);
   MotionSample sample;
   //Initialize the problem
   LocalProblem problem(&func, start_state_, goal_state_, 1.0/30.0);
-  local_planner_.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
+  LocalPlanner local_planner;
+  local_planner.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
   while (!success && count<100) {
-    // Problem: the car is in the air. Hmm.
-    success = local_planner_.Iterate(problem);
-    local_planner_.SimulateTrajectory(sample,problem,0,true);
+    success = local_planner.Iterate(problem);
+    local_planner.SimulateTrajectory(sample,problem,0,true);
     count++;
   }
-  if (problem.is_inertial_control_active_) {
-    local_planner_.CalculateTorqueCoefficients(problem,&sample);
-    local_planner_.SimulateTrajectory(sample,problem,0,true);
-  }
   LOG(debug_level_) << "SUCCESS: Planned this configuration";
+  if(local_problem_){
+    delete local_problem_;
+  }
   local_problem_ = &problem;
   trajectory_ = &sample;
   policy_set_ = true;
@@ -225,6 +226,7 @@ void PathPlanner::ResetBooleans() {
   mesh_set_ = false;
   policy_set_ = false;
   policy_delivered_ = false;
+  local_problem_ = new LocalProblem();
 }
 
 /***********************************
@@ -236,23 +238,26 @@ void PathPlanner::ResetBooleans() {
  **********************************/
 
 int main(int argc, char** argv) {
-  PathPlanner* planner = new PathPlanner();
   std::string name = argv[1];
+  int count = 0;
+  PathPlanner* planner = new PathPlanner();
   planner->planner_name_ = name;
   std::string number = planner->GetNumber(planner->planner_name_);
   planner->InitNode();
-  //We're planning forever, so never break this cycle
-  while (!planner->config_set_ || !planner->mesh_set_) {
-    // Just wait
-    // Once these are set, we're ready to solve
-  }
-  planner->SolveBVP();
-  while (!planner->policy_set_) {
-    // Just wait again
-  }
-  while (planner->policy_set_
-         || planner->config_set_
-         || planner->mesh_set_) {
-    // Just wait again for a reset
+  while (1) {
+    // Reset the system every 500 plans
+    while (!planner->config_set_ || !planner->mesh_set_) {
+      // Just wait
+      // Once these are set, we're ready to solve
+    }
+    planner->SolveBVP();
+    while (!planner->policy_set_) {
+      // Just wait again
+    }
+    while (planner->policy_set_
+           || planner->config_set_
+           || planner->mesh_set_) {
+      // Just wait again for a reset
+    }
   }
 }

@@ -25,15 +25,15 @@ classdef PlannerMaster < handle
             this.planners_ = PlannerMaster_mex('new', num_planners);
             % TODO: Init all possible start/goal configurations
             this.num_planners_ = num_planners;
-            available_sims_ = [0:1:num_planners_];
-            busy_sims_ = [];
+            this.available_sims_ = [0:1:num_planners-1]
+            this.busy_sims_ = [];
         end
         
         function delete(this)
             PlannerMaster_mex('delete', this.planners_);
         end
         
-        function CreateLookupTable
+        function CreateLookupTable(this, ii_num)
             tau = 0;             
             granularity = 10; % creates a 31 x 21 matrix
             scale = 3;
@@ -42,70 +42,89 @@ classdef PlannerMaster < handle
             mesh = GenMesh(tau, granularity, scale, smoothness, is_recorded);
             % make an array of start and goal points
             start_theta = [-.4 : .2 : .4]; % 5 possible thetas
-            start_vel = [.5: .5 : 2.5]; % 5 possible start velocities
+            start_vel = [.6: .2 : 1.4]; % 5 possible start velocities
             [starts] = combvec(start_theta, start_vel);
             start_x_y = repmat([0;0], 1, numel(starts(1, :))); 
-            start_point = [start_x_y; pairs];
-            goal_x = [3 : 1 : 6]; % 4 x values
+            start_point = [start_x_y; starts];
+            goal_x = [4 : .5 : 5]; % 4 x values
             goal_y = [-2 : 1 : 2]; % 5 y values
             goal_theta = [-.4 : .2 : .4]; % 5 theta values
-            goal_vel = [1 : 1 : 3]; % 3 vel values
-            
-            %% Starting with something simple
-            start_theta = [-.4 : .2 : -.4]; % 5 possible thetas
-            start_vel = [.5: .5 : .5]; % 5 possible start velocities
-            [starts] = combvec(start_theta, start_vel);
-            start_x_y = repmat([0;0], 1, numel(starts(1, :))); 
-            start_point = [start_x_y; pairs];
-            goal_x = [3 : 1 : 3]; % 4 x values
-            goal_y = [-2 : 1 : 2]; % 5 y values
-            goal_theta = [-.4 : .2 : -.4]; % 5 theta values
-            goal_vel = [1 : 1 : 3]; % 3 vel values
-            
-            
-            [goals] = combvec(goal_x, goal_y, goal_theta, goal_vel);
+            goal_vel = [.5 : .5 : 3]; % 3 vel values
+            goal_point = combvec(goal_x, goal_y, goal_theta, goal_vel)            
             % We have a lot of policies to go through; about 7500, 
             % in fact. We can do it!
-            for ii = 0:numel(start_point(:,1)), 
-                for jj = 0:numel(start_point(:,1)), 
-                    avail_sim = this.GetAvailableSim();
-                    while avail_sim == -1, 
-                        avail_sim = this.GetAvailableSim();
+            ii = ii_num;
+            jj = 1;
+            while 1, 
+                for kk = 0:this.num_planners_-1,
+                    if this.IsAvailable(kk) == true, 
+                        % Print where we are
+                        (ii-1)*numel(goal_point(1,:)) + (jj-1)
+                        is_found = this.FindSinglePolicy(start_point(:, ii), ...
+                                                         goal_point(:, ...
+                                                                    jj), mesh, kk);
+                        if is_found == false, 
+                           disp('Skipping goal; it didnt converge'); 
+                        end
+                        % wacky boolean stuff. 
+                        if jj == numel(goal_point(1,:)),
+                            if ii == numel(start_point(1,:)),
+                                this.SaveAll(ii);
+                                return;
+                            else 
+                                this.SaveAll(ii);
+                                ii = ii + 1
+                                return;
+                            end
+                            jj = 1;
+                        else
+                            jj = jj+1; 
+                        end
+                    else
+                        disp('Nothing is available');
                     end
-                    is_found = this.FindSinglePolicy(start_point(:, ii), ...
-                                                     goal_point(:, jj), ...                                                     
-                                                     mesh, ...
-                                                     avail_sim);
                 end
             end
             % We should have a huge matrix of all of our solutions now
-            filename = ['PathSolutions'];
-            save(filename, this.bvp_splines_, ' ');
+
         end 
         
-        function [is_found] = FindSinglePolicy(start_point, goal_point, ...
-                                               mesh, sim_num)
-            % This function only uses the PathPlanner called Sim0, 
-            % and only tests one path on one mesh. 
-            % Parameters for GenMesh
+        function SaveAll(this, num_sol)
+        % Save and clear the spline matrix
+            filename = ['PathSolutions', num2str(num_sol), '.txt'];
+            dlmwrite(filename, this.bvp_splines_, ' ');
+            this.bvp_splines_ = [];
+        end
+        
+        function [is_found] = FindSinglePolicy(this, start_point, goal_point, mesh, sim_num)
+        % This function only uses the PathPlanner called Sim0, 
+        % and only tests one path on one mesh. 
+        % Parameters for GenMesh
+            t = cputime;
             this.SetBusy(sim_num);
             is_found = false;
             while 1, 
+                pause(.2);
                 [config_stat, mesh_stat, policy_stat] = this.GetStatus(sim_num); 
                 if config_stat == 0 && mesh_stat == 0, 
                     disp('Sending BVP Now');
                     success = this.SetBVP(sim_num, start_point, goal_point, ...
                                           mesh);
                 elseif policy_stat == 1, 
-                    disp('Getting Policy'); 
-                    [policy] = this.GetPolicy(sim_num);
+                    disp('Getting Spline'); 
                     [spline] = this.GetSpline(sim_num);
-                    this.SaveSpline(tau, start_point, goal_point, ...
-                                    mesh, spline);
-                    is_found = true; 
                     this.SetAvailable(sim_num);
+                    is_found = true; 
+                    this.SaveBVPSpline(start_point, goal_point, ...
+                                       mesh, spline);
                     break;
                 end
+                e = cputime-t;
+                if e > 10, 
+                    is_found = false;
+                    this.SetAvailable(sim_num);
+                    break;
+                end;
             end
         end
         
@@ -150,14 +169,14 @@ classdef PlannerMaster < handle
         end
         
         
-        %%% Save our spline function to a .txt file
-        function SaveSpline(this, tau, start_point, goal_point, mesh, spline)
-            BVPSolution.spline = spline;
-            % Each solution takes up one row in this
-            % space-delimited file. The order of variables: 
-            % mesh.zz (31x21), start (theta, vel), goal (x, y, th,
-            % vel), spline (6 x,y coordinates in order. This should
-            % make a row of 669 elements           
+        %%% Save our spline function to our member variable
+        function SaveBVPSpline(this, start_point, goal_point, mesh, spline)
+        % Each solution takes up one row in this
+        % space-delimited file. The order of variables: 
+        % mesh.zz (31x21), start (theta, vel), goal (x, y, th,
+        % vel), spline (6 x,y coordinates in order. This should
+        % make a row of 669 elements           
+            BVPSolution = [];
             BVPSolution = [BVPSolution, mesh.zz_row];
             BVPSolution = [BVPSolution, start_point(3)];
             BVPSolution = [BVPSolution, start_point(4)];
@@ -169,7 +188,7 @@ classdef PlannerMaster < handle
                 BVPSolution = [BVPSolution, spline.x_values(ii)];
                 BVPSolution = [BVPSolution, spline.y_values(ii)];
             end        
-            this.bvp_splines_ = [this.bvp_splines; BVPSolution];
+            this.bvp_splines_ = [this.bvp_splines_; BVPSolution];
         end
         
         %% SetBusy and SetAvailable create a ring buffer of available
@@ -192,7 +211,7 @@ classdef PlannerMaster < handle
             busy = find(this.busy_sims_ == sim_num);
             if isempty(busy), 
                 if isempty(avail), 
-                    this.available_sims_ = [this.avaliable_sims_, sim_num];
+                    this.available_sims_ = [this.available_sims_, sim_num];
                 end
             else
                 this.busy_sims_(busy) = []; % removes them
@@ -200,11 +219,20 @@ classdef PlannerMaster < handle
             end
         end
         
+        function [is_avail] = IsAvailable(this, sim_num)
+            avail = find(this.available_sims_ == sim_num);
+            if isempty(avail),
+                is_avail = false; 
+            else
+                is_avail = true;
+            end
+        end
+        
         function [sim_num] = GetAvailableSim(this)
             if isempty(this.available_sims_), 
-                return -1; 
+                sim_num = -1; 
             else
-                return this.available_sims_(0);
+                sim_num = this.available_sims_(0);
             end
         end
         
@@ -235,10 +263,10 @@ classdef PlannerMaster < handle
             disp('Setting Configuration');
             config_success = this.SetConfiguration(planner_num, start_state, ...
                                                    goal_state);
-            pause(2);
+            pause(.2);
             disp('Setting Mesh');
             mesh_success = this.SetHeightmap(planner_num, mesh);
-            pause(2);
+            pause(.2);
             success = 0;
             if config_success == 1 && mesh_success == 1, 
                 success = 1;
