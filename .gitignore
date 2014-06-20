@@ -7,8 +7,10 @@ build
 *.autosave
 *.cmake
 *.user.*
-/#CMakeLists.txt#
-/.#CMakeLists.txt
+.#*
+#*
+*#
+flycheck*
 /SimBA/#CMakeLists.txt#
 /SimBA/.#CMakeLists.txt
 /Unnamed_coqscript_1.crashcoqide

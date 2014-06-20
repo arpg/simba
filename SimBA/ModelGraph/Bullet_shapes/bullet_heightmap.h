@@ -92,6 +92,7 @@ private:
   btCollisionShape* bulletShape;
   btRigidBody* bulletBody;
   NodeMotionState* bulletMotionState;
+  bool setup;
 
 };
 

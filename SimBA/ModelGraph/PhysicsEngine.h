@@ -66,28 +66,28 @@ public:
 
 
   /// PUBLIC MEMBER VARIABLES
-  GLDebugDrawer	                                          m_DebugDrawer;
-  std::map<string, std::shared_ptr<Vehicle_Entity> >    m_mRayVehicles;
-  std::map<string, std::shared_ptr<Entity> >            m_mShapes;
-  std::map<string, std::shared_ptr<Compound_Entity> >   m_mCompounds;
-  std::map<string, btHingeConstraint*>                    m_mHinge;
-  std::map<string, btHinge2Constraint*>                   m_mHinge2;
-  std::map<string, btGeneric6DofConstraint*>              m_mSixDOF;
-  std::map<string, btPoint2PointConstraint*>              m_mPtoP;
-  vector<SimDeviceInfo*>                                  m_mDevices;
+  GLDebugDrawer debug_drawer_;
+  std::map<string, std::shared_ptr<Vehicle_Entity> >    ray_vehicles_map_;
+  std::map<string, std::shared_ptr<Entity> >            shapes_map_;
+  std::map<string, std::shared_ptr<Compound_Entity> >   compounds_map_;
+  std::map<string, btHingeConstraint*>                  hinge_map_;
+  std::map<string, btHinge2Constraint*>                 hinge2_map_;
+  std::map<string, btGeneric6DofConstraint*>            sixdof_map_;
+  std::map<string, btPoint2PointConstraint*>            ptop_map_;
+  vector<SimDeviceInfo*>                                sim_devices_;
   std::shared_ptr<btDiscreteDynamicsWorld>              dynamics_world_;
   btVehicleRaycaster* vehicle_raycaster_;
 
 private:
 
   /// PRIVATE MEMBER VARIABLES
-  btDefaultCollisionConfiguration                        m_CollisionConfiguration;
-  std::shared_ptr<btCollisionDispatcher>               m_pDispatcher;
-  std::shared_ptr<btDbvtBroadphase>                    m_pBroadphase;
-  std::shared_ptr<btSequentialImpulseConstraintSolver> m_pSolver;
-  double                                                 m_dTimeStep;
-  double                                                 m_dGravity;
-  int                                                    m_nMaxSubSteps;
+  btDefaultCollisionConfiguration  collision_configuration_;
+  std::shared_ptr<btCollisionDispatcher> bt_dispatcher_;
+  std::shared_ptr<btDbvtBroadphase> bt_broadphase_;
+  std::shared_ptr<btSequentialImpulseConstraintSolver> bt_solver_;
+  double timestep_;
+  double gravity_acc_;
+  int time_max_substeps_;
 
 };
 

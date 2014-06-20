@@ -23,24 +23,30 @@ class RobotsManager
 
 public:
 
-  map<string, SimRobot*>            m_mSimRobotsList;  // the first robot join the list will be user's robot.
-  WorldFullStateMsg                 m_WorldFullState;  // world state (pose, velocity) message. inlude the state of bodies.
-  ModelGraphBuilder                 m_Scene;
-  string                            m_sProxyName;
-  string                            m_sMainRobotName;  // Name of Main Robot. This is actually the robot we can contorl
-  bool                              m_bStateKeeperOn;
-
-  bool Init(string& sProxyName, ModelGraphBuilder& Scene,
-            SimRobot& mSimRobot, const string &sServerOption);
-  bool ImportSimRobot( SimRobot& mSimRobot );
-  void DeleteRobot(string sRobotName);
+  bool Init(const string& sim_name, const ModelGraphBuilder& scene,
+            SimRobot& sim_robot, const string &statekeeper_option);
+  bool ImportSimRobot( SimRobot& sim_robot );
+  void DeleteRobot(string robot_name);
   void UpdateWorldFullState(WorldFullStateMsg worldfullstate);
   void ApplyWorldFullStateOnAllPlayers();
   void ApplyWorldFullState();
   void DrawAllRobotsPoseAxis();
-  void GenPoseAxis(Eigen::Vector6d &Pose, Eigen::Vector6d &AxisX, Eigen::Vector6d &AxisY, Eigen::Vector6d &AxisZ);
+  void GenPoseAxis(Eigen::Vector6d &Pose, Eigen::Vector6d &AxisX,
+                   Eigen::Vector6d &AxisY, Eigen::Vector6d &AxisZ);
   SimRobot* GetMainRobot();
-  SimRobot* GetRobot(string sRobotName);
+  SimRobot* GetRobot(string robot_name);
+
+  // MEMBER VARIABLES
+
+  // the first robot join the list will be user's robot.
+  map<string, SimRobot*> sim_robots_map_;
+  // world state (pose, velocity) message. inlude the state of bodies.
+  WorldFullStateMsg world_state_;
+  ModelGraphBuilder scene_;
+  string sim_name_;
+  // Name of Main Robot. This is actually the robot we can control
+  string main_robot_name_;
+  bool statekeeper_option_;
 
 };
 

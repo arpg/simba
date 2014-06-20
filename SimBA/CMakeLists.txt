@@ -205,7 +205,7 @@ target_link_libraries( ${PROJECT_NAME}
   ${EIGEN3_LIBRARIES}
   ${PbMsgs_LIBRARIES}
   miniglog
-  SimMessages
+  NodeMessages
 )
 
 if(BUILD_SIM_PLANNER)

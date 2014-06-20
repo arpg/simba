@@ -26,4 +26,4 @@ target_link_libraries( LocalSim
                        ${Node_LIBRARIES}
                        ${SimBA_LIBRARIES}
 		       ${MINIGLOG_LIBRARIES}
-                       SimMessages )
+                       NodeMessages )

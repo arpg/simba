@@ -2,6 +2,7 @@
 #define BULLET_VEHICLE_H
 
 #include <vector>
+
 #include <bullet/btBulletDynamicsCommon.h>
 #include <bullet/BulletCollision/CollisionShapes/btBoxShape.h>
 #include <bullet/LinearMath/btAlignedAllocator.h>
@@ -39,7 +40,7 @@ public:
                                            parameters[Height]/2));
     btTransform startTransform;
     startTransform.setIdentity();
-    startTransform.setOrigin(btVector3(0,0,1));
+    startTransform.setOrigin(btVector3(0,0,0));
     bool isDynamic = (parameters[Mass] != 0.f);
     btVector3 localInertia(0,0,0);
     if (isDynamic){
@@ -105,8 +106,7 @@ public:
                             parameters[SuspRestLength],parameters[WheelRadius],
                             tuning,bIsFrontWheel);
 
-    for (int i=0;i<bulletVehicle->getNumWheels();i++)
-    {
+    for (int i=0;i<bulletVehicle->getNumWheels();i++) {
       btWheelInfo& wheel = bulletVehicle->getWheelInfo(i);
       wheel.m_rollInfluence = parameters[RollInfluence];
       btTransform wheelTrans = bulletVehicle->getWheelTransformWS(i);
@@ -120,12 +120,10 @@ public:
         getOverlappingPairCache()->cleanProxyFromPairs(
           bulletBody->getBroadphaseHandle(),
           m_pDynamicsWorld->getDispatcher());
-    if (bulletVehicle)
-    {
+    if (bulletVehicle) {
       bulletVehicle->resetSuspension();
       //synchronize the wheels with the (interpolated) chassis worldtransform
-      for (int i=0;i<bulletVehicle->getNumWheels();i++)
-      {
+      for (int i=0;i<bulletVehicle->getNumWheels();i++) {
         bulletVehicle->updateWheelTransform(i,false);
       }
     }

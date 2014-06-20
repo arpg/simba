@@ -49,7 +49,7 @@ bool URDF_Parser::ParseWorld(XMLDocument& pDoc, SimWorld& mSimWorld){
           std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
         LOG(debug_level_) << "SUCCESS: Subscribed to MATLAB/Heightmap";
-        pb::Heightmap params;
+        pb::PlannerHeightmapMsg params;
         while(!node_.receive("MATLAB/Heightmap", params)){
           std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
@@ -131,25 +131,14 @@ HeightmapShape* URDF_Parser::GetMeshData(XMLDocument& pDoc){
             pElement->Attribute("y_data"));
         vector<double> z_data = GenNumFromChar(
             pElement->Attribute("z_data"));
-        std::vector<double> X, Y, Z;
-        X.resize(row_count*col_count);
-        Y.resize(row_count*col_count);
-        Z.resize(row_count*col_count);
-        for (int ii=0; ii < x_data.size(); ii++) {
-          X.at(ii) = x_data.at(ii);
-          Y.at(ii) = y_data.at(ii);
-          Z.at(ii) = z_data.at(ii);
-        }
         HeightmapShape* map_shape = new HeightmapShape("Map",
                                                        row_count, col_count,
-                                                       X, Y, Z);
+                                                       x_data, y_data, z_data);
         return map_shape;
       }
     }
   }
 }
-
-
 
 ////////////////////////////////////////////////////////////
 /// PARSE ROBOT.XML FOR ROBOT PARTS AND BUILD INTO LocalSim
@@ -289,20 +278,20 @@ void URDF_Parser::ParseShape(string sRobotName, XMLElement *pElement)
 
     if(strcmp(sType, "Box") == 0){
       BoxShape* pBox =new BoxShape(sBodyName, vDimension[0], vDimension[1],
-          vDimension[2], iMass, 1, vPose);
+                                   vDimension[2], iMass, 1, vPose);
       m_mModelNodes[pBox->GetName()] = pBox;
     }
 
     else if(strcmp(sType,"Cylinder")== 0){
       CylinderShape* pCylinder =new CylinderShape(sBodyName, vDimension[0],
-          vDimension[1], iMass,1,
-          vPose);
+                                                  vDimension[1], iMass,1,
+                                                  vPose);
       m_mModelNodes[pCylinder->GetName()] = pCylinder;
     }
 
     else if(strcmp(sType, "Sphere") == 0){
       SphereShape* pSphere =new SphereShape(sBodyName, vDimension[0],
-          iMass, 1, vPose);
+                                            iMass, 1, vPose);
       m_mModelNodes[pSphere->GetName()] = pSphere;
     }
 
@@ -679,10 +668,12 @@ SimRaycastVehicle* URDF_Parser::ParseRaycastCar(string sRobotName,
     // Vehicle body parameters
     else if(!sAttrName.compare("body")){
       std::string body = pChild->Attribute("name");
-      if(!body.compare("length")){
+      // TODO: Switch length and width throughout
+      // right now, one is the other.
+      if(!body.compare("width")){
         vParameters[0] = GenNumFromChar(pChild->Attribute("value")).front();
       }
-      if(!body.compare("width")){
+      if(!body.compare("length")){
         vParameters[1] = GenNumFromChar(pChild->Attribute("value")).front();
       }
       if(!body.compare("height")){

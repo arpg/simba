@@ -3,7 +3,7 @@
 
 void RenderEngine::Init(std::string sLocalSimName){
   //Start our SceneGraph interface
-  pangolin::CreateGlutWindowAndBind(sLocalSimName,640,480);
+  pangolin::CreateGlutWindowAndBind(sLocalSimName, 1024, 768);
   SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
   glClearColor(0, 0, 0, 1);
   glewInit();
@@ -13,8 +13,7 @@ void RenderEngine::Init(std::string sLocalSimName){
 
 // Add to our list of SceneEntities
 // This will be added later in 'AddToScene'
-void RenderEngine::AddNode( ModelNode *pNode){
-
+SceneGraph::GLObject* RenderEngine::AddNode(ModelNode *pNode){
   // Add our RaycastVehicle (a myriad of shapes)
   if (dynamic_cast<SimRaycastVehicle*>(pNode) != NULL){
     // A RaycastVehicle is made of a cube and four cylinders.
@@ -76,6 +75,8 @@ void RenderEngine::AddNode( ModelNode *pNode){
       BRWheel->SetPose(pVehicle->GetWheelPose(3));
       BRWheel->SetScale(vWheelScale);
       m_mRaycastWheels[pVehicle->GetName()+"@BRWheel"] = BRWheel;
+
+      return chassis_mesh;
     }
 
     else{
@@ -112,6 +113,8 @@ void RenderEngine::AddNode( ModelNode *pNode){
                     params[WheelWidth], 10, 10);
       BRWheel->SetPose(pVehicle->GetWheelPose(3));
       m_mRaycastWheels[pVehicle->GetName()+"@BRWheel"] = BRWheel;
+
+      return chassis;
     }
   }
 
@@ -127,6 +130,7 @@ void RenderEngine::AddNode( ModelNode *pNode){
                          pbShape->m_dBounds[2]);
       new_box->SetPose(pbShape->GetPose());
       m_mSceneEntities[pNode] = new_box;
+      return new_box;
     }
 
     //Cylinder
@@ -137,6 +141,7 @@ void RenderEngine::AddNode( ModelNode *pNode){
                          pbShape->m_dHeight, 32, 1);
       new_cylinder->SetPose(pbShape->GetPose());
       m_mSceneEntities[pNode] = new_cylinder;
+      return new_cylinder;
     }
 
     //Plane
@@ -151,19 +156,7 @@ void RenderEngine::AddNode( ModelNode *pNode){
           pbShape->m_dNormal[2];
       new_plane->SetPlane(eig_norm);
       m_mSceneEntities[pNode] = new_plane;
-    }
-
-    //Light
-    else if (dynamic_cast<LightShape*>(pShape) != NULL){
-      LightShape* pbShape = (LightShape *) pShape;
-//      SceneGraph::GLShadowLight* new_light = new SceneGraph::GLShadowLight();
-      // IMPORTANT!! Can only use GLLight here if you want to use sim cam...
-      // DO NOT USE GL Shadow HERE!!!
-      SceneGraph::GLLight* new_light =
-          new SceneGraph::GLLight(pbShape->GetPose()(0,0),
-                                  pbShape->GetPose()(1,0),
-                                  pbShape->GetPose()(2,0));
-      m_mSceneEntities[pNode] = new_light;
+      return new_plane;
     }
 
     //Mesh
@@ -175,6 +168,7 @@ void RenderEngine::AddNode( ModelNode *pNode){
       new_mesh->SetScale(pbShape->GetScale());
       new_mesh->SetPose(pbShape->GetPose());
       m_mSceneEntities[pNode] = new_mesh;
+      return new_mesh;
     }
 
     //Heightmap
@@ -185,6 +179,37 @@ void RenderEngine::AddNode( ModelNode *pNode){
                                       pbShape->z_data_, pbShape->row_count_,
                                       pbShape->col_count_);
       m_mSceneEntities[pNode] = new_map;
+      return new_map;
+    }
+
+    /// Collision-free objects
+
+    //Light
+    else if (dynamic_cast<LightShape*>(pShape) != NULL){
+      LightShape* pbShape = (LightShape *) pShape;
+      //      SceneGraph::GLShadowLight* new_light =
+      //      new SceneGraph::GLShadowLight();
+      // IMPORTANT!! Can only use GLLight here if you want to use sim cam...
+      // DO NOT USE GL Shadow HERE!!!
+      SceneGraph::GLLight* new_light =
+          new SceneGraph::GLLight(pbShape->GetPose()(0,0),
+                                  pbShape->GetPose()(1,0),
+                                  pbShape->GetPose()(2,0));
+      m_mSceneEntities[pNode] = new_light;
+      return new_light;
+    }
+
+    //Waypoint
+    else if (dynamic_cast<WaypointShape*>(pShape) != NULL){
+      std::cout<<"ADDING WAYPOINT";
+      WaypointShape* pbShape = (WaypointShape *) pShape;
+      SceneGraph::GLWayPoint* new_waypoint =
+          new SceneGraph::GLWayPoint();
+      new_waypoint->SetPose(pbShape->GetPose());
+      new_waypoint->SetVelocity(pbShape->GetVelocity());
+      new_waypoint->SetScale(pbShape->GetVelocity());
+      m_mSceneEntities[pNode] = new_waypoint;
+      return new_waypoint;
     }
   }
 }
@@ -295,7 +320,6 @@ void RenderEngine::SetImagesToWindow(){
 ///////////////////////////////////////
 
 void RenderEngine::AddToScene(){
-
   // Add shapes
   std::map<ModelNode*, SceneGraph::GLObject* >::iterator it;
   for(it = m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
@@ -308,6 +332,11 @@ void RenderEngine::AddToScene(){
     SceneGraph::GLObject* w = jj->second;
     m_glGraph.AddChild( w );
   }
+}
+
+// This method helps add objects even during simulation
+void RenderEngine::AddNewShape(SceneGraph::GLObject* object){
+  m_glGraph.AddChild(object);
 }
 
 ///////////////////////////////////////
@@ -323,11 +352,13 @@ void RenderEngine::CompleteScene(bool bEnableCameraView=false)
 
   // Define Camera Render Object (for view / scene browsing)
   pangolin::OpenGlRenderState stacks(
-        pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
-        pangolin::ModelViewLookAt(center(0), center(1) + 7,
-                                  center(2) + 6,
-                                  center(0), center(1), center(2),
-                                  pangolin::AxisZ) );
+      pangolin::ProjectionMatrix(1024, 768, 420, 420,
+                                 1024/2, 768/2, 0.1, 1000),
+      // pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
+      pangolin::ModelViewLookAt(center(0), center(1) + 7,
+                                center(2) + 6,
+                                center(0), center(1), center(2),
+                                pangolin::AxisZ) );
   m_stacks3d = stacks;
 
   // We define a new view which will reside within the container.
@@ -338,25 +369,25 @@ void RenderEngine::CompleteScene(bool bEnableCameraView=false)
   m_view3d = new pangolin::View(0.0);
   m_view3d->SetBounds( 0.0, 1.0, 0.0, 1.0/*, -640.0f/480.0f*/ );
   m_view3d->SetHandler( new SceneGraph::HandlerSceneGraph(
-                          m_glGraph, m_stacks3d) );
+      m_glGraph, m_stacks3d) );
   m_view3d->SetDrawFunction( SceneGraph::ActivateDrawFunctor(
-                               m_glGraph, m_stacks3d) );
+      m_glGraph, m_stacks3d) );
 
   // Add our views as children to the base container.
   pangolin::DisplayBase().AddDisplay( *m_view3d );
 
   if(bEnableCameraView==true){
-      m_bCameraView= true;
+    m_bCameraView= true;
     //  // window for display image capture from SimCamera
-      m_LSimCamImage = new SceneGraph::ImageView(true, true);
-      m_LSimCamImage->SetBounds( 0.0, 0.5, 0.75, 1.0/*, 512.0f/384.0f*/ );
+    m_LSimCamImage = new SceneGraph::ImageView(true, true);
+    m_LSimCamImage->SetBounds( 0.0, 0.5, 0.75, 1.0/*, 512.0f/384.0f*/ );
 
     //  // window for display image capture from SimCamera
-      m_RSimCamImage = new SceneGraph::ImageView(true, true);
-      m_RSimCamImage->SetBounds( 0.5, 1.0, 0.75, 1.0/*, 512.0f/384.0f */);
+    m_RSimCamImage = new SceneGraph::ImageView(true, true);
+    m_RSimCamImage->SetBounds( 0.5, 1.0, 0.75, 1.0/*, 512.0f/384.0f */);
 
-      pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
-      pangolin::DisplayBase().AddDisplay( *m_RSimCamImage );
+    pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
+    pangolin::DisplayBase().AddDisplay( *m_RSimCamImage );
   }
   else
   {

@@ -11,7 +11,7 @@
      <param name="exp damp factor"    value="0"/>
      <param name="roll influence"     value="0"/>
      <param name="steering coeff"     value="-1.5"/>
-     <param name="max steering"       value=".7"/> <!-- In degrees -->
+     <param name="max steering"       value=".7"/> <!-- In radians -->
      <param name="max steering rate"  value="13"/>
      <param name="accel offset"       value="0"/> <!-- .463 -->
      <param name="steering offset"    value="0"/> <!-- .450 -->
@@ -27,7 +27,8 @@
      <body name="restitution" value="0"/>
      <!-- NB: The pose of the robot is set in World.xml  -->
      <body name="pose"    value="0,0,0,0,0,0"/>
-     <body name="mesh"
+     <!-- <body name="mesh" -->
+     <body name="NONE"
 	   path="/Users/Trystan/Code/Meshes/Herbie/Herbie.blend"
 	   dim="0.903,0.338,0.279"/>
      <!-- This was a scaling hack, for drawing, but it works for now -->
@@ -39,7 +40,8 @@
      <wheel name="slip coeff"        value="0"/>
      <wheel name="traction friction" value="1000"/>
      <wheel name="side friction"     value="1.56"/>
-     <wheel name="mesh"
+          <!-- <wheel name="mesh" -->
+     <wheel name="NONE"
 	    path="/Users/Trystan/Code/Meshes/Herbie/Wheel.blend"
 	    dim="0.04313,0.145,0.145"/>
 

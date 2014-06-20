@@ -4,59 +4,47 @@
 /// INITIALIZE the RobotsManager
 ////////////////////////////////////////////////////////////////////////
 
-bool RobotsManager::Init(string& sProxyName, ModelGraphBuilder& Scene,
-                         SimRobot& mSimRobot, const string& sServerOption){
-  m_Scene      = Scene;
-  m_sProxyName = sProxyName;
-  if(sServerOption == "WithoutStateKeeper" || sServerOption =="WithoutNetwork"){
-    m_bStateKeeperOn = false;
+bool RobotsManager::Init(const string& sim_name, const ModelGraphBuilder& scene,
+                         SimRobot& sim_robot, const string& statekeeper_option){
+  scene_ = scene;
+  sim_name_ = sim_name;
+  if (statekeeper_option == "WithoutStateKeeper" ||
+     statekeeper_option == "WithoutNetwork") {
+    statekeeper_option_ = false;
+  } else {
+    statekeeper_option_ = true;
   }
-  else{
-    m_bStateKeeperOn = true;
-  }
-  return ImportSimRobot(mSimRobot);
+  return ImportSimRobot(sim_robot);
 }
 
-
-bool RobotsManager::ImportSimRobot( SimRobot& mSimRobot ){
-
-  if(mSimRobot.GetStateKeeperStatus() == true){
-    // TODO: Add pose from StateKeeper
-    // If this is not on, the World pose is automatically known.
+///////
+bool RobotsManager::ImportSimRobot( SimRobot& sim_robot ) {
+  if (sim_robot.GetStateKeeperStatus() == true) {
+    // Ummm
   }
-
   // check if we should save name of this robot as save main robot name
-  if(m_mSimRobotsList.size()==0){
-    m_sMainRobotName = mSimRobot.GetRobotName();
+  if (sim_robots_map_.size()==0) {
+    main_robot_name_ = sim_robot.GetRobotName();
   }
-
-  m_mSimRobotsList.insert(pair<string, SimRobot*>(mSimRobot.GetRobotName(),
-                                                  &mSimRobot));
+  sim_robots_map_.insert(pair<string, SimRobot*>(sim_robot.GetRobotName(),
+                                                 &sim_robot));
   return true;
 }
 
-////////////////////////////////////////////////////////////////////////
-
+///////
 // Delete the robot
-
 // THE BELOW WILL NOT HAPPEN WITH A RAYCAST_VEHICLE
-// ************************ Notice! Sometimes the proxy will exit when we delete joint of robot. ***************************
-// ****** the error is exist in  ' for(; Hiter!=m_rPhyMGAgent.m_Agent.m_HingeJointList.end(); Hiter++)  ' *******
-// **when we want to use iter of ' std::_Rb_tree_iterator<std::pair<std::string const, btHingeConstraint*> >::operator++' **
-
-void RobotsManager::DeleteRobot(string sRobotName)
-{
-  SimRobot* pSimRobot = GetRobot(sRobotName);
-  if(pSimRobot->GetRobotName() == sRobotName)
-  {
-    GetRobot(sRobotName)->~SimRobot();
-    std::map<string, SimRobot*>::iterator iter=  m_mSimRobotsList.find(sRobotName);
-    m_mSimRobotsList.erase(iter);
-    cout<<"[RobotsManager/DeleteRobot] Delete Robot :"<<sRobotName<<" success. Num of robot we have now is "<<m_mSimRobotsList.size()<<endl;
-  }
-  else
-  {
-    cout<<"[RobotManager/DeleteRobot] Cannot find robot "<<sRobotName<<endl;
+void RobotsManager::DeleteRobot(string robot_name) {
+  SimRobot* pSimRobot = GetRobot(robot_name);
+  if (pSimRobot->GetRobotName() == robot_name) {
+    GetRobot(robot_name)->~SimRobot();
+    std::map<string, SimRobot*>::iterator iter =
+        sim_robots_map_.find(robot_name);
+    sim_robots_map_.erase(iter);
+    // cout<<"[RobotsManager/DeleteRobot] Delete Robot :"<<robot_name<<
+    //" success. Num of robot we have now is "<<sim_robots_map_.size()<<endl;
+  } else {
+    // cout<<"[RobotManager/DeleteRobot] Cannot find robot "<<robot_name<<endl;
   }
 }
 
@@ -65,17 +53,14 @@ void RobotsManager::DeleteRobot(string sRobotName)
 // Update the full world state: include all poses, commands and velocity
 // information of all bodies creating the main robot from each LocalSim
 
-void RobotsManager::UpdateWorldFullState(WorldFullStateMsg worldfullstate)
-{
-  m_WorldFullState = worldfullstate;
+void RobotsManager::UpdateWorldFullState(WorldFullStateMsg worldfullstate) {
+  world_state_ = worldfullstate;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 // Draw all players on the screen
-
-void RobotsManager::ApplyWorldFullStateOnAllPlayers()
-{
+void RobotsManager::ApplyWorldFullStateOnAllPlayers(){
   DrawAllRobotsPoseAxis();
   ApplyWorldFullState();
 }
@@ -85,32 +70,32 @@ void RobotsManager::ApplyWorldFullStateOnAllPlayers()
 // Simply apply the poses of all main robots from all other LocalSims.
 // DO NOT apply the pose of this LocalSim's main robot.
 
-void RobotsManager::ApplyWorldFullState()
-{
-  for (int i=0;i!=m_WorldFullState.robot_state_size();i++)
-  {
-    RobotFullStateMsg mRobotState =  m_WorldFullState.robot_state(i);
-
+void RobotsManager::ApplyWorldFullState(){
+  for (int i = 0; i != world_state_.robot_state_size(); i++){
+    RobotFullStateMsg mRobotState =  world_state_.robot_state(i);
     // only apply state of other robots
-    string sRobotName = mRobotState.robot_name();
+    string robot_name = mRobotState.robot_name();
 
-    if(sRobotName != GetMainRobot()->GetRobotName())
-    {
+    if (robot_name != GetMainRobot()->GetRobotName()) {
       // get and apply the state of robot's all body
-      for (int j=0;j!=mRobotState.mutable_body_state()->size();j++)
-      {
+      for (int j=0;j!=mRobotState.mutable_body_state()->size();j++) {
         BodyStateMsg* mBodyState = mRobotState.mutable_body_state(j);
         string sBodyName = mBodyState->body_name();
 
         // get velocity
         Eigen::Vector3d eLinearVelocity;
-        eLinearVelocity<<  mBodyState->linear_velocity().x(), mBodyState->linear_velocity().y(), mBodyState->linear_velocity().z();
+        eLinearVelocity << mBodyState->linear_velocity().x(),
+            mBodyState->linear_velocity().y(),
+            mBodyState->linear_velocity().z();
         Eigen::Vector3d eAngularVelocity;
-        eAngularVelocity<< mBodyState->angular_velocity().x(), mBodyState->angular_velocity().y(), mBodyState->angular_velocity().z();
+        eAngularVelocity << mBodyState->angular_velocity().x(),
+            mBodyState->angular_velocity().y(),
+            mBodyState->angular_velocity().z();
 
         // get origin
         Eigen::Vector3d eOrigin;
-        eOrigin << mBodyState->origin().x(), mBodyState->origin().y(), mBodyState->origin().z();
+        eOrigin << mBodyState->origin().x(),
+            mBodyState->origin().y(), mBodyState->origin().z();
 
         // get basis
         Matrix33Msg origin = mBodyState->basis();
@@ -121,11 +106,13 @@ void RobotsManager::ApplyWorldFullState()
 
         // TODO: Make this happen. But not right now.
 
-//        // apply in bullet engine
-//        m_Scene.m_Phys.SetEntityOrigin(sBodyName ,eOrigin);
-//        m_Scene.m_Phys.SetEntityBasis(sBodyName ,mBasis);
-//        m_Scene.m_Phys.SetEntityLinearvelocity(sBodyName, eLinearVelocity);
-//        m_Scene.m_Phys.SetEntityAngularvelocity(sBodyName, eAngularVelocity);
+        //        // apply in bullet engine
+        //        scene_.m_Phys.SetEntityOrigin(sBodyName ,eOrigin);
+        //        scene_.m_Phys.SetEntityBasis(sBodyName ,mBasis);
+        //        scene_.m_Phys.SetEntityLinearvelocity(sBodyName,
+        //                                              eLinearVelocity);
+        //        scene_.m_Phys.SetEntityAngularvelocity(sBodyName,
+        //                                               eAngularVelocity);
       }
     }
   }
@@ -134,82 +121,45 @@ void RobotsManager::ApplyWorldFullState()
 
 ////////////////////////////////////////////////////////////////////////
 
-void RobotsManager::DrawAllRobotsPoseAxis()
-{
-  //        for (int i=0;i!=m_WorldState.robots_size();i++)
-  //        {
-
-  //                Eigen::Vector6d pose;
-  //                pose<<  m_WorldState.robots(i).pose().x(),
-  //                        m_WorldState.robots(i).pose().y(),
-  //                        m_WorldState.robots(i).pose().z(),
-  //                        m_WorldState.robots(i).pose().p(),
-  //                        m_WorldState.robots(i).pose().q(),
-  //                        m_WorldState.robots(i).pose().r();// axis edge
-
-  //               Eigen::Vector6d AxisX, AxisY, AxisZ;
-
-  //               GenPoseAxis(pose,AxisX,AxisY,AxisZ);
-
-  //               glBegin(GL_LINES);
-  //               glColor3f(1.0f,0.0f,0.0f);
-  //               glVertex3f(m_WorldState.robots(i).pose().x(),m_WorldState.robots(i).pose().y(),m_WorldState.robots(i).pose().z());//origin x
-  //               glVertex3f(AxisX(0,0),AxisX(1,0),AxisX(2,0));
-
-  //               glColor3f(0.0f,1.0f,0.0f);
-  //               glVertex3f(m_WorldState.robots(i).pose().x(),m_WorldState.robots(i).pose().y(),m_WorldState.robots(i).pose().z());//origin y
-  //               glVertex3f(AxisY(0,0),AxisY(1,0),AxisY(2,0));
-
-  //               glColor3f(0.0f,0.0f,1.0f);
-  //               glVertex3f(m_WorldState.robots(i).pose().x(),m_WorldState.robots(i).pose().y(),m_WorldState.robots(i).pose().z());//origin z
-  //               glVertex3f(AxisZ(0,0),AxisZ(1,0),AxisZ(2,0));
-  //               glEnd();
-
-  //               glColor3f(1.0f, 0.0f, 0.0f);
-  //               glRasterPos3f(m_WorldState.robots(i).pose().x(),m_WorldState.robots(i).pose().y(),m_WorldState.robots(i).pose().z()+1);
-  ////               glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, (const unsigned char*)m_WorldState.robots(i).robot_name().c_str());
-  //        }
+void RobotsManager::DrawAllRobotsPoseAxis(){
+  // Fill this in later
 }
 
 ////////////////////////////////////////////////////////////////////////
-
 // GenAxis x,y,z for Pose (x,y,z,p,q,r)
 
-void RobotsManager::GenPoseAxis(Eigen::Vector6d &Pose, Eigen::Vector6d &AxisX, Eigen::Vector6d &AxisY, Eigen::Vector6d &AxisZ)
-{
-  int length=1;
-  double origin_x=Pose(0,0);
-  double origin_y=Pose(1,0);
-  double origin_z=Pose(2,0);
-  double p=Pose(3,0);
-  double q=Pose(4,0);
-  double r=Pose(5,0);
+void RobotsManager::GenPoseAxis(Eigen::Vector6d &Pose, Eigen::Vector6d &AxisX,
+                                Eigen::Vector6d &AxisY, Eigen::Vector6d &AxisZ){
+  // Again, do this later
+  // int length=1;
+  // double origin_x=Pose(0,0);
+  // double origin_y=Pose(1,0);
+  // double origin_z=Pose(2,0);
+  // double p=Pose(3,0);
+  // double q=Pose(4,0);
+  // double r=Pose(5,0);
 
-  AxisX<<origin_x+length*cos(q)*cos(r), origin_y+length*(cos(r)*sin(p)*sin(q) + cos(p)*sin(r)), origin_z+length*(sin(p)*sin(r) - cos(p)*cos(r)*sin(q)), 0, 0, 0;
-  AxisY<<origin_x+length*(-cos(q)*sin(r)),  origin_y+length*( cos(p)*cos(r) - sin(p)*sin(q)*sin(r)), origin_z+length*( cos(p)*sin(q)*sin(r) + cos(r)*sin(p)), 0, 0, 0;
-  AxisZ<<origin_x+length*(sin(q)),  origin_y+length*(-cos(q)*sin(p)), origin_z+length*(cos(p)*cos(q)), 0, 0, 0;
+  // AxisX << origin_x+length*cos(q)*cos(r),
+  //     origin_y + length * (cos(r)*sin(p)*sin(q)
+  //                      + cos(p)*sin(r)),
+  //     origin_z+length*(sin(p)*sin(r) - cos(p)*cos(r)*sin(q)), 0, 0, 0;
+  // AxisY << origin_x+length*(-cos(q)*sin(r)),
+  //     origin_y+length*( cos(p)*cos(r)
+  //                       - sin(p)*sin(q)*sin(r)),
+  //     origin_z+length*( cos(p)*sin(q)*sin(r) + cos(r)*sin(p)), 0, 0, 0;
+  // AxisZ << origin_x+length*(sin(q)),
+  //     origin_y+length*(-cos(q)*sin(p)),
+  //     origin_z+length*(cos(p)*cos(q)), 0, 0, 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
-
-/// Get the pointer of the main robot. Notice that if Simba runs with StateKeeper
-/// There will be more than one robot in Simba. The main robot is the robot that
-/// we can control.
-SimRobot* RobotsManager::GetMainRobot()
-{
-  string sRobotName = m_sMainRobotName;
-  SimRobot* pSimRobot = m_mSimRobotsList.find(sRobotName)->second;
+SimRobot* RobotsManager::GetMainRobot() {
+  SimRobot* pSimRobot = sim_robots_map_.find(main_robot_name_)->second;
   return pSimRobot;
 }
 
 ////////////////////////////////////////////////////////////////////////
-
-// Get any robot in the proxy, including another player's robot.
-// The user should not use this function to grab the main robot;
-// use GetMainRobot instead.
-
-SimRobot* RobotsManager::GetRobot(string sRobotName)
-{
-  SimRobot* pSimRobot = m_mSimRobotsList.find(sRobotName)->second;
+SimRobot* RobotsManager::GetRobot(string robot_name){
+  SimRobot* pSimRobot = sim_robots_map_.find(robot_name)->second;
   return pSimRobot;
 }
