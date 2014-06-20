@@ -24,7 +24,8 @@ include_directories(
   ${Calibu_INCLUDE_DIRS}
   ${MINIGLOG_INCLUDE_DIRS})
 
-add_executable( PathPlannerTest PathPlannerTest.cpp
+add_executable( PathPlannerSolver PathPlannerSolver.cpp
+  PathPlannerTest.cpp
   PlannerGui.cpp
   GLBulletDebugDrawer.cpp
   PathPlannerTest.h
@@ -32,9 +33,25 @@ add_executable( PathPlannerTest PathPlannerTest.cpp
   GLBulletDebugDrawer.h
   ClickHandler.h)
 		     
-target_link_libraries( PathPlannerTest
-                       ${Node_LIBRARIES}
-                       ${SimBA_LIBRARIES}
-                       ${CAR_PLANNER_LIBRARIES}
-		       ${MVL_LIBRARIES}
-                       ${Calibu_LIBRARIES})
+target_link_libraries( PathPlannerSolver
+  ${Node_LIBRARIES}
+  ${SimBA_LIBRARIES}
+  ${CAR_PLANNER_LIBRARIES}
+  ${MVL_LIBRARIES}
+  ${Calibu_LIBRARIES})
+
+add_executable( PathPlannerInterpolation PathPlannerInterpolation.cpp
+  PathPlannerTest.cpp
+  PlannerGui.cpp
+  GLBulletDebugDrawer.cpp
+  PathPlannerTest.h
+  PlannerGui.h
+  GLBulletDebugDrawer.h
+  ClickHandler.h)
+
+target_link_libraries( PathPlannerInterpolation
+  ${Node_LIBRARIES}
+  ${SimBA_LIBRARIES}
+  ${CAR_PLANNER_LIBRARIES}
+  ${MVL_LIBRARIES}
+  ${Calibu_LIBRARIES})

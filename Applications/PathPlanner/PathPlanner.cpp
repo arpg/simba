@@ -123,8 +123,8 @@ void PathPlanner::GetPolicy(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply) {
   if (policy_set_) {
     pb::PlannerPolicyMsg* policy = new pb::PlannerPolicyMsg();
-    for (unsigned int ii = 0; ii < trajectory_->m_vCommands.size(); ii++) {
-      ControlCommand comm = trajectory_->m_vCommands.at(ii);
+    for (unsigned int ii = 0; ii < trajectory_.m_vCommands.size(); ii++) {
+      ControlCommand comm = trajectory_.m_vCommands.at(ii);
       policy->add_force(comm.m_dForce);
       policy->add_phi(comm.m_dPhi);
       policy->add_time(comm.m_dT);
@@ -132,8 +132,7 @@ void PathPlanner::GetPolicy(pb::RegisterPlannerReqMsg& mRequest,
     mReply.set_allocated_policy(policy);
     mReply.set_rep_node_name(planner_name_);
   }
-  // All of our booleans are true, so to reset, reset them first.
-  // ResetBooleans();
+  ResetBooleans();
 }
 
 void PathPlanner::GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
@@ -148,13 +147,12 @@ void PathPlanner::GetSpline(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply) {
   if (policy_set_) {
     pb::PlannerSplineMsg* spline_msg = new pb::PlannerSplineMsg();
-    BezierBoundaryProblem* spline = local_problem_->GetBezierProblem();
-    for (unsigned int ii = 0; ii < spline->x_values_.size(); ii++) {
-      spline_msg->add_x_values(spline->x_values_(ii));
-      spline_msg->add_y_values(spline->y_values_(ii));
+    for (unsigned int ii = 0; ii < spline_x_values_.size(); ii++) {
+      spline_msg->add_x_values(spline_x_values_(ii));
+      spline_msg->add_y_values(spline_y_values_(ii));
     }
     for (unsigned int ii = 0; ii < 4; ii++) {
-      spline_msg->add_solved_goal_pose(spline->solved_goal_pose_(ii));
+      spline_msg->add_solved_goal_pose(spline_goal_pose_(ii));
     }
     mReply.set_allocated_spline(spline_msg);
     mReply.set_rep_node_name(planner_name_); // in case we implement a queue
@@ -170,14 +168,14 @@ void PathPlanner::GroundStates() {
   Sophus::SE3d pose = start_state_.m_dTwv;
   if (car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
                           dIntersect, true, 0)) {
-    dIntersect(2) = dIntersect(2)+.12;
+    dIntersect(2) = dIntersect(2)+.15;
     start_state_.m_dTwv.translation() = dIntersect;
   }
   // Ground the goal point
   pose = goal_state_.m_dTwv;
   if (car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*30,
                           dIntersect, true, 0)) {
-    dIntersect(2) = dIntersect(2)+.12;
+    dIntersect(2) = dIntersect(2)+.15;
     goal_state_.m_dTwv.translation() = dIntersect;
   }
 }
@@ -185,30 +183,33 @@ void PathPlanner::GroundStates() {
 /////////////////////////
 // TODO: arguments here might have to be modified to accept different things.
 
-//Finds the fastest path between two
+// Finds the fastest path between two
 void PathPlanner::SolveBVP() {
   bool success = false;
   int count = 0;
+  int max_count = 1000;
   ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
   VehicleState state;
-  car_model_->GetVehicleState(0, state);
   func.SetNoDelay(true);
   MotionSample sample;
-  //Initialize the problem
+  // Initialize the problem
   LocalProblem problem(&func, start_state_, goal_state_, 1.0/30.0);
   LocalPlanner local_planner;
   local_planner.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
-  while (!success && count<100) {
+  while (!success && count<max_count) {
     success = local_planner.Iterate(problem);
     local_planner.SimulateTrajectory(sample,problem,0,true);
     count++;
   }
   LOG(debug_level_) << "SUCCESS: Planned this configuration";
-  if(local_problem_){
-    delete local_problem_;
+  if (count == max_count) {
+    LOG(debug_level_) << "We took too long to plan.";
   }
-  local_problem_ = &problem;
-  trajectory_ = &sample;
+  BezierBoundaryProblem* spline = problem.GetBezierProblem();
+  spline_x_values_ = spline->x_values_;
+  spline_y_values_ = spline->y_values_;
+  spline_goal_pose_ = spline->solved_goal_pose_;
+  trajectory_ = sample;
   policy_set_ = true;
 }
 
@@ -226,7 +227,6 @@ void PathPlanner::ResetBooleans() {
   mesh_set_ = false;
   policy_set_ = false;
   policy_delivered_ = false;
-  local_problem_ = new LocalProblem();
 }
 
 /***********************************

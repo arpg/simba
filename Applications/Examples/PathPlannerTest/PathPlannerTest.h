@@ -90,14 +90,16 @@ class PathPlannerTest
   ~PathPlannerTest();
 
   /// FUNCTIONS
-  void Init(HeightmapShape* heightmap_data);
-  void CheckNeed();
-  void CheckSolved();
+  void Init(HeightmapShape* heightmap_data,
+            std::vector<double> start,
+            std::vector<double> goal);
+  void InitGoals();
   bool InitMesh();
   void GroundStates();
-  double* RaycastToGround(double id, double x, double y);
-  void InitGoals();
-  void SampleTrajectory(pb::PlannerPolicyMsg* policy);
+  void SolveTrajectory(pb::PlannerPolicyMsg* policy);
+  void SampleTrajectory(pb::PlannerPolicyMsg* policy,
+                        Eigen::VectorXd x_values,
+                        Eigen::VectorXd y_values);
   std::string GetNumber(std::string name);
 
   //member variables
@@ -105,7 +107,7 @@ class PathPlannerTest
   BulletCarModel*       car_model_;
   PlannerGui            planner_gui_;
   GLBulletDebugDrawer   m_GLDebugDrawer;
-  LocalPlanner          m_snapper;
+  LocalPlanner          local_planner_;
   CarParameterMap       m_VehicleParams;
   VehicleState          start_state_;
   VehicleState          goal_state_;
