@@ -214,7 +214,8 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy,
     planner_gui_.Render();
   }
   // Solve our trajectory, and get the error
-  local_planner_.SimulateTrajectory(sample, problem, 0, false);
+  local_planner_.Iterate(problem);
+  local_planner_.SimulateTrajectory(sample, problem, 0, true);
   // Render what we see
   for (int jj = 0; jj < 5; jj++) {
     for (int ii=0; ii<sample.m_vStates.size(); ii++){
