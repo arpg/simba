@@ -2,25 +2,14 @@
 
 /***********************************
  * THE MAIN LOOP
- * This is a test, so we're only going to do ONE path through
- * the simplest type of a terrain, the flat plane. Get the commands
- * back from this simulation, and start a separate Node process
- * that sends these commands to LocalSim in SimBA.
+ * Solves the control policy between two configurations
  **********************************/
 
 int main(int argc, char** argv){
   // Start and goal configurations
   // <x, y, theta, vel>
-  std::vector<double> start;
-  std::vector<double> goal;
-  start.push_back(0);
-  start.push_back(0);
-  start.push_back(-.4);
-  start.push_back(.6);
-  goal.push_back(5);
-  goal.push_back(-2);
-  goal.push_back(-.4);
-  goal.push_back(.5);
+  std::vector<double> start = {0., 0., -.4, .6};
+  std::vector<double> goal = {5., -2., -.4, .5};
 
   // Boilerplate stuff
   PathPlannerTest* sim = new PathPlannerTest();
@@ -35,7 +24,8 @@ int main(int argc, char** argv){
   const string& world_urdf_path =
       "/Users/Trystan/Code/simba/urdf/Worlds/world_localplanner.xml";
   GetXMLdoc(world_urdf_path, world_xml);
-  HeightmapShape* heightmap_data = parser->GetMeshData(world_xml);
+  std::shared_ptr<HeightmapShape> heightmap_data(
+      parser->GetMeshData(world_xml));
   sim->Init(heightmap_data, start, goal);
 
 

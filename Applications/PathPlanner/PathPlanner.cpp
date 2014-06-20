@@ -79,18 +79,12 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
     Y.at(ii) = heightmap.y_data().Get(ii);
     Z.at(ii) = heightmap.z_data().Get(ii);
   }
-  HeightmapShape* heightmap_data = new HeightmapShape("Map", row_count,
-                                                      col_count,
-                                                      X, Y, Z);
-  bullet_heightmap* map = new bullet_heightmap(heightmap_data);
+  std::unique_ptr<HeightmapShape> heightmap_data(
+      new HeightmapShape("Map", row_count, col_count, X, Y, Z));
   btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
   btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
   CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
-  LOG(debug_level_) << "Init our mesh!";
-  if (car_model_) {
-    delete car_model_;
-  }
-  car_model_ = new BulletCarModel();
+  car_model_.reset(new BulletCarModel());
   btTransform localTrans;
   localTrans.setIdentity();
   localTrans.setOrigin(btVector3(0,0,0));
@@ -188,7 +182,7 @@ void PathPlanner::SolveBVP() {
   bool success = false;
   int count = 0;
   int max_count = 1000;
-  ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
+  ApplyVelocitesFunctor5d func(car_model_.get(), Eigen::Vector3d::Zero(), NULL);
   VehicleState state;
   func.SetNoDelay(true);
   MotionSample sample;
@@ -240,7 +234,7 @@ void PathPlanner::ResetBooleans() {
 int main(int argc, char** argv) {
   std::string name = argv[1];
   int count = 0;
-  PathPlanner* planner = new PathPlanner();
+  std::unique_ptr<PathPlanner> planner(new PathPlanner());
   planner->planner_name_ = name;
   std::string number = planner->GetNumber(planner->planner_name_);
   planner->InitNode();

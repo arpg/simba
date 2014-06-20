@@ -92,8 +92,7 @@ class PathPlanner {
 
   /// MEMBER VARIABLES
   // PlannerLib things
-  BulletCarModel* car_model_;
-  LocalProblem* local_problem_;
+  std::unique_ptr<BulletCarModel> car_model_;
   CarParameterMap m_VehicleParams;
   VehicleState start_state_;
   VehicleState goal_state_;

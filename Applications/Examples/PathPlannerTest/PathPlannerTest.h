@@ -90,7 +90,7 @@ class PathPlannerTest
   ~PathPlannerTest();
 
   /// FUNCTIONS
-  void Init(HeightmapShape* heightmap_data,
+  void Init(const std::shared_ptr<HeightmapShape>& heightmap_data,
             std::vector<double> start,
             std::vector<double> goal);
   void InitGoals();
@@ -104,7 +104,7 @@ class PathPlannerTest
 
   //member variables
   std::string           sim_planner_name_;
-  BulletCarModel*       car_model_;
+  std::unique_ptr<BulletCarModel> car_model_;
   PlannerGui            planner_gui_;
   GLBulletDebugDrawer   m_GLDebugDrawer;
   LocalPlanner          local_planner_;
@@ -120,7 +120,7 @@ class PathPlannerTest
   std::vector<double> start_;
   std::vector<double> goal_;
   std::string params_file_name_;
-  HeightmapShape* heightmap_data_;
+  std::shared_ptr<HeightmapShape> heightmap_data_;
   // This is what we compare to our desired goal_param, from our policy
   std::vector<double> last_pose_;
 

@@ -14,9 +14,10 @@ PathPlannerTest::~PathPlannerTest(){
 
 /////////////////////////////////////////////
 
-void PathPlannerTest::Init(HeightmapShape* heightmap_data,
-                           std::vector<double> start,
-                           std::vector<double> goal){
+void PathPlannerTest::Init(
+    const std::shared_ptr<HeightmapShape>& heightmap_data,
+    std::vector<double> start,
+    std::vector<double> goal){
   heightmap_data_ = heightmap_data;
   start_ = start;
   goal_ = goal;
@@ -45,7 +46,7 @@ void PathPlannerTest::Init(HeightmapShape* heightmap_data,
 
 bool PathPlannerTest::InitMesh(){
   // We don't want to reinitialize if we have the same map, after all.
-  bullet_heightmap* map = new bullet_heightmap(heightmap_data_);
+  bullet_heightmap* map = new bullet_heightmap(heightmap_data_.get());
   btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
   btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
   CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
@@ -57,9 +58,8 @@ bool PathPlannerTest::InitMesh(){
                                   heightmap_data_->row_count_,
                                   heightmap_data_->col_count_);
   planner_gui_.Init(new_map);
-  LOG(INFO) << "Init our mesh!";
   // Set up our car
-  car_model_ = new BulletCarModel();
+  car_model_.reset(new BulletCarModel());
   btTransform localTrans;
   localTrans.setIdentity();
   localTrans.setOrigin(btVector3(0,0,0));
@@ -113,7 +113,7 @@ void PathPlannerTest::SolveTrajectory(pb::PlannerPolicyMsg* policy){
   bool success = false;
   int count = 0;
   int max_count = 1000;
-  ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
+  ApplyVelocitesFunctor5d func(car_model_.get(), Eigen::Vector3d::Zero(), NULL);
   func.SetNoDelay(true);
   MotionSample sample;
   car_model_->SetState(0, start_state_);
@@ -138,12 +138,9 @@ void PathPlannerTest::SolveTrajectory(pb::PlannerPolicyMsg* policy){
     success = local_planner_.Iterate(problem);
     local_planner_.SimulateTrajectory(sample,problem,0,false);
     for (int ii = 0; ii<6; ii++) {
-      LOG(INFO) << spline->x_values_(ii);
-      LOG(INFO) << spline->y_values_(ii);
       spline_vec<<spline->x_values_(ii), spline->y_values_(ii), 0, 0, 0, 0;
       planner_gui_.MoveSplinePoints(spline_vec, ii);
       planner_gui_.Render();
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     // Render what we see
     if (count % 5 == 0) {
@@ -187,7 +184,7 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy,
   bool success = false;
   int count = 0;
   int max_count = 1000;
-  ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
+  ApplyVelocitesFunctor5d func(car_model_.get(), Eigen::Vector3d::Zero(), NULL);
   func.SetNoDelay(true);
   MotionSample sample;
   car_model_->SetState(0, start_state_);
