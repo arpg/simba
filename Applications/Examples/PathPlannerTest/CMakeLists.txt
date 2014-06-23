@@ -1,4 +1,4 @@
-project( PathPlannerTest )
+project( PathPlannerTester )
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -9,12 +9,12 @@ endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules/")
 
-find_package( Node REQUIRED )
-find_package( MVL REQUIRED )
-find_package( SimBA REQUIRED )
-find_package( CarPlanner REQUIRED )
-find_package( Calibu REQUIRED )
-find_package( MINIGLOG REQUIRED )
+find_package(Node REQUIRED)
+find_package(MVL REQUIRED)
+find_package(SimBA REQUIRED)
+find_package(CarPlanner REQUIRED)
+find_package(Calibu REQUIRED)
+find_package(MINIGLOG REQUIRED)
 
 include_directories(
   ${Node_INCLUDE_DIRS}
@@ -24,17 +24,36 @@ include_directories(
   ${Calibu_INCLUDE_DIRS}
   ${MINIGLOG_INCLUDE_DIRS})
 
-add_executable( PathPlannerTest PathPlannerTest.cpp
+add_executable(PathPlannerSolver
+  PathPlannerSolver.cpp
+  PathPlannerTester.cpp
   PlannerGui.cpp
   GLBulletDebugDrawer.cpp
-  PathPlannerTest.h
+  PathPlannerTester.h
   PlannerGui.h
   GLBulletDebugDrawer.h
   ClickHandler.h)
 		     
-target_link_libraries( PathPlannerTest
-                       ${Node_LIBRARIES}
-                       ${SimBA_LIBRARIES}
-                       ${CAR_PLANNER_LIBRARIES}
-		       ${MVL_LIBRARIES}
-                       ${Calibu_LIBRARIES})
+target_link_libraries(PathPlannerSolver
+  ${Node_LIBRARIES}
+  ${SimBA_LIBRARIES}
+  ${CAR_PLANNER_LIBRARIES}
+  ${MVL_LIBRARIES}
+  ${Calibu_LIBRARIES})
+
+add_executable(PathPlannerInterpolation
+  PathPlannerInterpolation.cpp
+  PathPlannerTester.cpp
+  PlannerGui.cpp
+  GLBulletDebugDrawer.cpp
+  PathPlannerTester.h
+  PlannerGui.h
+  GLBulletDebugDrawer.h
+  ClickHandler.h)
+
+target_link_libraries(PathPlannerInterpolation
+  ${Node_LIBRARIES}
+  ${SimBA_LIBRARIES}
+  ${CAR_PLANNER_LIBRARIES}
+  ${MVL_LIBRARIES}
+  ${Calibu_LIBRARIES})

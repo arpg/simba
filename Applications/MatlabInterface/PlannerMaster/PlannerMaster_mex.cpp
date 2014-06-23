@@ -88,12 +88,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
     plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL);
     plhs[2] = mxCreateDoubleMatrix(1, 1, mxREAL);
+    plhs[3] = mxCreateDoubleMatrix(1, 1, mxREAL);
     double* config_status = mxGetPr(plhs[0]);
     double* mesh_status = mxGetPr(plhs[1]);
     double* policy_status = mxGetPr(plhs[2]);
+    double* policy_failed = mxGetPr(plhs[3]);
     *config_status = status[0];
     *mesh_status = status[1];
     *policy_status = status[2];
+    *policy_failed = status[3];
     return;
   }
 

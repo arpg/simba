@@ -10,14 +10,19 @@ find_package( Pangolin )
 find_package( Node REQUIRED )
 find_package( Calibu )
 find_package( SimBA REQUIRED )
-find_package( MINIGLOG )
+find_package(MINIGLOG REQUIRED)
+find_package(CVARS REQUIRED)
+find_package(Protobuf REQUIRED)
+find_package(ASSIMP REQUIRED)
 
 include_directories( ${Pangolin_INCLUDE_DIRS}
   ${SceneGraph_INCLUDE_DIRS}
   ${Node_INCLUDE_DIRS}
   ${Calibu_INCLUDE_DIRS}
   ${SimBA_INCLUDE_DIRS}
-  ${MINIGLOG_INCLUDE_DIRS})
+  ${MINIGLOG_INCLUDE_DIRS}
+  ${CVARS_INCLUDE_DIRS}
+  )
 
 add_executable( LocalSim LocalSim.cpp LocalSim.h )
 
@@ -26,4 +31,6 @@ target_link_libraries( LocalSim
                        ${Node_LIBRARIES}
                        ${SimBA_LIBRARIES}
 		       ${MINIGLOG_LIBRARIES}
+		       ${PROTOBUF_LIBRARIES}
+		       ${ASSIMP_LIBRARIES}
                        NodeMessages )

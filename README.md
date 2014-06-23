@@ -36,7 +36,7 @@ Directory: ./urdf/Worlds/
 - Basic: Just a flat plane
 - Heightmap: Uses csv's for <X Y Z> data to generate a defined terrain
 - Lost World: Imprts a .dae mesh file into SimBA and uses it as terrain
-- MATLAB: Uses the MatlabInterface for Node (found in ./Applications/SimPlanner for now) to import a MATLAB-generated heightmap. This is a work in progress, so further documentation will be written in the future.
+- MATLAB: Uses the MatlabInterface for Node to import a MATLAB-generated heightmap. Use MatlabInterface/GenMesh.m to generate a heightmap with different describeable characteristics. 
 
 ROBOTS
 ---------
@@ -70,16 +70,9 @@ Work in progress...
 
 MatlabInterface
 ---------
-
 The MatlabInterface is actually a set of programs: SimbaMaster and PlannerMaster. SimbaMaster is a basic interaction tool with LocalSim (see Applications->LocalSim below), and has its own commands for building and testing RaycastVehicle performance in LocalSim.
 
 PlannerMaster interacts directly with PlannerLib, and as such will only build if BUILD CAR PLANNER is set to ON. PlannerMaster takes commands found from PlannerLib and passes them to MATLAB, where they can then be transferred to LocalSim for plotting.
-
-There will be an example .m file in the future demonstrating these programs in more detail, but they are currently still in development.
-
-SimPlanner
----------
-Work in progress...
 
 Examples/KeyboardCarCommander
 ---------
@@ -93,7 +86,10 @@ With a LocalSim started and a camera initiated, TestCam allows the user to see t
 
 Examples/PathPlannerTest
 ---------
-*Must have BUILD CAR PLANNER switched ON.* This program currently takes a start and goal configuration, along with a mesh, and uses them to calculate the optimum control policy to get from start to goal. The program then starts a node instance and passes the commands to LocalSim (assuming it's up and running already)
+*Must have BUILD CAR PLANNER switched ON.* This folder implements two programs: PathPlannerSolver and PathPlannerInterpolation.
+- PathPlannerSolver: Takes a start and goal configuration, along with a mesh, and uses them to calculate the optimum control policy to get from start to goal. The program then starts a node instance and passes the commands to LocalSim (assuming it's up and running already).
+- PathPlannerInterpolation: Takes a solved bezier control function (6 <x,y> vectors) and derives a control policy from that. Still in development.
+This will be moved to the CarPlanner library in the near future.
 
 Examples/WaypointAddition
 ---------

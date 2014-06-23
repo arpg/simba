@@ -74,6 +74,7 @@ class PlannerMaster{
     status[0] = 0;
     status[1] = 0;
     status[2] = 0;
+    status[3] = 0;
     req.set_req_node_name(node_name_);
     node_.call_rpc("Sim" + std::to_string(planner_num)
                    + "/GetStatus", req, rep);
@@ -86,6 +87,9 @@ class PlannerMaster{
     }
     if (status_msg.policy_set()) {
       status[2] = 1;
+    }
+    if (status_msg.policy_failed()) {
+      status[3] = 1;
     }
     return status;
   }

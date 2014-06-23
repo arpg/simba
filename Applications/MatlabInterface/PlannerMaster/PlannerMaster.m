@@ -42,15 +42,27 @@ classdef PlannerMaster < handle
             mesh = GenMesh(tau, granularity, scale, smoothness, is_recorded);
             % make an array of start and goal points
             start_theta = [-.4 : .2 : .4]; % 5 possible thetas
-            start_vel = [.6: .2 : 1.4]; % 5 possible start velocities
+            start_vel = [.8: .2 : 1.6]; % 5 possible start velocities
             [starts] = combvec(start_theta, start_vel);
             start_x_y = repmat([0;0], 1, numel(starts(1, :))); 
             start_point = [start_x_y; starts];
             goal_x = [4 : .5 : 5]; % 4 x values
             goal_y = [-2 : 1 : 2]; % 5 y values
             goal_theta = [-.4 : .2 : .4]; % 5 theta values
-            goal_vel = [.5 : .5 : 3]; % 3 vel values
-            goal_point = combvec(goal_x, goal_y, goal_theta, goal_vel)            
+            goal_vel = [.8 : .4 : 1.6]; % 3 vel values
+            goal_point = combvec(goal_x, goal_y, goal_theta, goal_vel);
+                
+                
+            %start_theta = [0 : .2 : 0]; % 5 possible thetas
+            %start_vel = [.6: .2 : .6]; % 5 possible start velocities
+            %[starts] = combvec(start_theta, start_vel);
+            %start_x_y = repmat([0;0], 1, numel(starts(1, :))); 
+            %start_point = [start_x_y; starts];
+            %goal_x = [5 : .5 : 5]; % 4 x values
+            %goal_y = [-2 : 4 : 2]; % 5 y values
+            %goal_theta = [-.4 : .2 : 0]; % 5 theta values
+            %goal_vel = [1 : .5 : 1]; % 3 vel values
+            %goal_point = combvec(goal_x, goal_y, goal_theta, goal_vel)
             % We have a lot of policies to go through; about 7500, 
             % in fact. We can do it!
             ii = ii_num;
@@ -100,12 +112,11 @@ classdef PlannerMaster < handle
         % This function only uses the PathPlanner called Sim0, 
         % and only tests one path on one mesh. 
         % Parameters for GenMesh
-            t = cputime;
             this.SetBusy(sim_num);
             is_found = false;
             while 1, 
-                pause(.2);
-                [config_stat, mesh_stat, policy_stat] = this.GetStatus(sim_num); 
+                pause(.5);
+                [config_stat, mesh_stat, policy_stat, policy_failed] = this.GetStatus(sim_num); 
                 if config_stat == 0 && mesh_stat == 0, 
                     disp('Sending BVP Now');
                     success = this.SetBVP(sim_num, start_point, goal_point, ...
@@ -118,13 +129,12 @@ classdef PlannerMaster < handle
                     this.SaveBVPSpline(start_point, goal_point, ...
                                        mesh, spline);
                     break;
-                end
-                e = cputime-t;
-                if e > 10, 
-                    is_found = false;
+                elseif policy_failed == 1, 
                     this.SetAvailable(sim_num);
+                    disp('Didnt work...');
+                    is_found = false;
                     break;
-                end;
+                end
             end
         end
         
@@ -273,8 +283,8 @@ classdef PlannerMaster < handle
             end
         end
         
-        function [config_status, mesh_status, policy_status] = GetStatus(this, planner_num)
-            [config_status, mesh_status, policy_status] = PlannerMaster_mex('GetStatus', this.planners_, planner_num);        
+        function [config_status, mesh_status, policy_status, policy_failed] = GetStatus(this, planner_num)
+            [config_status, mesh_status, policy_status, policy_failed] = PlannerMaster_mex('GetStatus', this.planners_, planner_num);        
         end
         
         function [policy] = GetPolicy(this, planner_num)

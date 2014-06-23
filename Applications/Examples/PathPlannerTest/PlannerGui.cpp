@@ -301,18 +301,18 @@ int PlannerGui::AddWaypoint(const VehicleState &state){
 ///////////////////////////////////////////
 void PlannerGui::AddSplinePoints(const Eigen::Vector6d &pose,
                                  const double &number){
-  m_vWaypoints.push_back(new Waypoint());
-  Waypoint *pWaypoint = m_vWaypoints.back();
+  m_vSplinePoints.push_back(new Waypoint());
+  Waypoint *pWaypoint = m_vSplinePoints.back();
   pWaypoint->m_Waypoint.SetPose(pose);
-  pWaypoint->m_Waypoint.SetVelocity(.8);
-  pWaypoint->m_Waypoint.SetScale(1);
+  pWaypoint->m_Waypoint.SetVelocity(1);
+  pWaypoint->m_Waypoint.SetScale(.5);
   m_SceneGraph.AddChild(&pWaypoint->m_Waypoint);
 }
 
 ///////////////////////////////////////////
 void PlannerGui::MoveSplinePoints(const Eigen::Vector6d &pose,
                                   const double &number){
-  Waypoint *pWaypoint = m_vWaypoints.at(number);
+  Waypoint *pWaypoint = m_vSplinePoints.at(number);
   pWaypoint->m_Waypoint.SetPose(pose);
 }
 

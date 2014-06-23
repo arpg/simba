@@ -50,7 +50,7 @@ class PathPlanner {
   void GroundStates();
   void SolveBVP();
   std::string GetNumber(std::string name);
-  void ResetBooleans();
+  void Reset();
 
   // NODE RPC FUNCTIONS
   // These correspond to functions in PlannerMaster.h
@@ -92,13 +92,16 @@ class PathPlanner {
 
   /// MEMBER VARIABLES
   // PlannerLib things
-  BulletCarModel* car_model_;
-  LocalProblem* local_problem_;
-  //  LocalPlanner* local_planner_;
-  CarParameterMap m_VehicleParams;
+  std::unique_ptr<BulletCarModel> car_model_;
+  CarParameterMap vehicle_parameters_;
   VehicleState start_state_;
   VehicleState goal_state_;
-  MotionSample* trajectory_;
+  MotionSample trajectory_;
+  // Spline parameters
+  Eigen::VectorXd spline_x_values_;
+  Eigen::VectorXd spline_y_values_;
+  Eigen::Vector4d spline_goal_pose_;
+
   std::string params_file_name_;
   //Node things
   node::node node_;
@@ -115,6 +118,7 @@ class PathPlanner {
   bool mesh_set_;
   bool policy_set_;
   bool policy_delivered_;
+  bool policy_failed_;
 
 };
 

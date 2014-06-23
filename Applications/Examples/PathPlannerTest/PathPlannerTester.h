@@ -1,9 +1,7 @@
-#ifndef PATHPLANNERTEST_H
-#define PATHPLANNERTEST_H
+#ifndef PATHPLANNERTESTER_H
+#define PATHPLANNERTESTER_H
 
 #include <iostream>
-
-
 
 // Planning functions, from CarPlanner lib
 #include "PlannerLib/CarPlannerCommon.h"
@@ -81,31 +79,34 @@ class KeyCarController{
 
 //////////////////////////////////////////////////
 
-class PathPlannerTest
+class PathPlannerTester
 {
  public:
 
   /// CONSTRUCTOR
-  PathPlannerTest();
-  ~PathPlannerTest();
+  PathPlannerTester();
+  ~PathPlannerTester();
 
   /// FUNCTIONS
-  void Init(HeightmapShape* heightmap_data);
-  void CheckNeed();
-  void CheckSolved();
-  bool InitMesh();
-  void GroundStates();
-  double* RaycastToGround(double id, double x, double y);
+  void Init(const std::shared_ptr<HeightmapShape>& heightmap_data,
+            std::vector<double> start,
+            std::vector<double> goal);
   void InitGoals();
-  void SampleTrajectory(pb::PlannerPolicyMsg* policy);
+  bool InitSimulation();
+  void GroundStates();
+  void SolveTrajectory(pb::PlannerPolicyMsg* policy);
+  void SampleTrajectory(pb::PlannerPolicyMsg* policy,
+                        Eigen::VectorXd x_values,
+                        Eigen::VectorXd y_values);
   std::string GetNumber(std::string name);
 
   //member variables
   std::string           sim_planner_name_;
-  BulletCarModel*       car_model_;
+  std::unique_ptr<BulletCarModel> car_model_;
+  std::shared_ptr<HeightmapShape> heightmap_data_;
   PlannerGui            planner_gui_;
   GLBulletDebugDrawer   m_GLDebugDrawer;
-  LocalPlanner          m_snapper;
+  LocalPlanner          local_planner_;
   CarParameterMap       m_VehicleParams;
   VehicleState          start_state_;
   VehicleState          goal_state_;
@@ -118,10 +119,7 @@ class PathPlannerTest
   std::vector<double> start_;
   std::vector<double> goal_;
   std::string params_file_name_;
-  HeightmapShape* heightmap_data_;
-  // This is what we compare to our desired goal_param, from our policy
-  std::vector<double> last_pose_;
 
 };
 
-#endif // PATHPLANNERTEST_H
+#endif // PATHPLANNERTESTER_H

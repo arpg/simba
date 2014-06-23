@@ -8,7 +8,7 @@ PathPlanner::PathPlanner() {
   debug_level_ = 0;
   params_file_name_ =
       "/Users/Trystan/Code/simba/Applications/Examples/PathPlannerTest/gui_params.csv";
-  ResetBooleans();
+  Reset();
 }
 
 /////////////////////////////////////////////
@@ -27,7 +27,8 @@ void PathPlanner::InitNode() {
   node_.provide_rpc("GetPolicy", &_GetPolicy, this);
   node_.provide_rpc("GetMotionSample", &_GetMotionSample, this);
   node_.provide_rpc("GetSpline", &_GetSpline, this);
-  ResetBooleans();
+  CarParameters::LoadFromFile(params_file_name_, vehicle_parameters_);
+  Reset();
 }
 
 /////////////////////////////////////////////
@@ -65,7 +66,6 @@ void PathPlanner::SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
 
 void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
                                pb::RegisterPlannerRepMsg& mReply) {
-  // TODO : Change so that we grab parameters from mRequest
   pb::PlannerHeightmapMsg heightmap = mRequest.heightmap();
   // Create our world mesh
   int row_count = heightmap.row_count();
@@ -79,29 +79,16 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
     Y.at(ii) = heightmap.y_data().Get(ii);
     Z.at(ii) = heightmap.z_data().Get(ii);
   }
-  HeightmapShape* heightmap_data = new HeightmapShape("Map", row_count,
-                                                      col_count,
-                                                      X, Y, Z);
-  bullet_heightmap* map = new bullet_heightmap(heightmap_data);
   btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
   btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
-  CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
-  LOG(debug_level_) << "Init our mesh!";
-  if (car_model_) {
-    delete car_model_;
-  }
-  car_model_ = new BulletCarModel();
+  car_model_.reset(new BulletCarModel());
   btTransform localTrans;
   localTrans.setIdentity();
   localTrans.setOrigin(btVector3(0,0,0));
   // MAKE SURE YOU ADD ENOUGH FREAKIN' WORLDS TO THE CAR MODEL.
   // 11 should do it.
-  car_model_->Init(heightmap_data->row_count_,
-                   heightmap_data->col_count_,
-                   heightmap_data->x_data_,
-                   heightmap_data->y_data_,
-                   heightmap_data->z_data_,
-                   localTrans, dMin, dMax, m_VehicleParams, 11);
+  car_model_->Init(row_count, col_count, X, Y, Z,
+                   localTrans, dMin, dMax, vehicle_parameters_, 11);
   GroundStates();
   mReply.set_success(1);
   mesh_set_ = true;
@@ -111,29 +98,30 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
 
 void PathPlanner::GetStatus(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply) {
-  pb::PlannerStatusMsg* status = new pb::PlannerStatusMsg();
+  pb::PlannerStatusMsg* status = mReply.mutable_status();
   status->set_config_set(config_set_);
   status->set_mesh_set(mesh_set_);
   status->set_policy_set(policy_set_);
-  mReply.set_allocated_status(status);
+  status->set_policy_failed(policy_failed_);
   mReply.set_rep_node_name(planner_name_);
+  if (policy_failed_) {
+    Reset();
+  }
 }
 
 void PathPlanner::GetPolicy(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply) {
   if (policy_set_) {
-    pb::PlannerPolicyMsg* policy = new pb::PlannerPolicyMsg();
-    for (unsigned int ii = 0; ii < trajectory_->m_vCommands.size(); ii++) {
-      ControlCommand comm = trajectory_->m_vCommands.at(ii);
+    pb::PlannerPolicyMsg* policy = mReply.mutable_policy();
+    for (unsigned int ii = 0; ii < trajectory_.m_vCommands.size(); ii++) {
+      ControlCommand comm = trajectory_.m_vCommands.at(ii);
       policy->add_force(comm.m_dForce);
       policy->add_phi(comm.m_dPhi);
       policy->add_time(comm.m_dT);
     }
-    mReply.set_allocated_policy(policy);
     mReply.set_rep_node_name(planner_name_);
   }
-  // All of our booleans are true, so to reset, reset them first.
-  // ResetBooleans();
+  Reset();
 }
 
 void PathPlanner::GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
@@ -147,18 +135,16 @@ void PathPlanner::GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
 void PathPlanner::GetSpline(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply) {
   if (policy_set_) {
-    pb::PlannerSplineMsg* spline_msg = new pb::PlannerSplineMsg();
-    BezierBoundaryProblem* spline = local_problem_->GetBezierProblem();
-    for (unsigned int ii = 0; ii < spline->x_values_.size(); ii++) {
-      spline_msg->add_x_values(spline->x_values_(ii));
-      spline_msg->add_y_values(spline->y_values_(ii));
+    pb::PlannerSplineMsg* spline_msg = mReply.mutable_spline();
+    for (unsigned int ii = 0; ii < spline_x_values_.size(); ii++) {
+      spline_msg->add_x_values(spline_x_values_(ii));
+      spline_msg->add_y_values(spline_y_values_(ii));
     }
     for (unsigned int ii = 0; ii < 4; ii++) {
-      spline_msg->add_solved_goal_pose(spline->solved_goal_pose_(ii));
+      spline_msg->add_solved_goal_pose(spline_goal_pose_(ii));
     }
-    mReply.set_allocated_spline(spline_msg);
     mReply.set_rep_node_name(planner_name_); // in case we implement a queue
-    ResetBooleans();
+    Reset();
   }
 }
 
@@ -170,46 +156,54 @@ void PathPlanner::GroundStates() {
   Sophus::SE3d pose = start_state_.m_dTwv;
   if (car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
                           dIntersect, true, 0)) {
-    dIntersect(2) = dIntersect(2)+.12;
+    dIntersect(2) = dIntersect(2)+.15;
     start_state_.m_dTwv.translation() = dIntersect;
   }
   // Ground the goal point
   pose = goal_state_.m_dTwv;
   if (car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*30,
                           dIntersect, true, 0)) {
-    dIntersect(2) = dIntersect(2)+.12;
+    dIntersect(2) = dIntersect(2)+.15;
     goal_state_.m_dTwv.translation() = dIntersect;
   }
 }
 
 /////////////////////////
-// TODO: arguments here might have to be modified to accept different things.
+// Finds the fastest path between two
 
-//Finds the fastest path between two
 void PathPlanner::SolveBVP() {
   bool success = false;
   int count = 0;
-  ApplyVelocitesFunctor5d func(car_model_, Eigen::Vector3d::Zero(), NULL);
+  int max_count = 30;
+  ApplyVelocitiesFunctor5d func(car_model_.get(),
+                                Eigen::Vector3d::Zero(), NULL);
   VehicleState state;
-  car_model_->GetVehicleState(0, state);
   func.SetNoDelay(true);
   MotionSample sample;
-  //Initialize the problem
-  LocalProblem problem(&func, start_state_, goal_state_, 1.0/30.0);
-  LocalPlanner local_planner;
-  local_planner.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
-  while (!success && count<100) {
-    success = local_planner.Iterate(problem);
-    local_planner.SimulateTrajectory(sample,problem,0,true);
+  // Initialize the problem
+  LocalProblem problem(func, start_state_, goal_state_, 1.0/30.0);
+  std::unique_ptr<LocalPlanner> local_planner(new LocalPlanner());
+  local_planner->InitializeLocalProblem(problem, 0, NULL, eCostPoint);
+  while (!success && count<max_count) {
+    success = local_planner->Iterate(problem);
+    local_planner->SimulateTrajectory(sample,problem,0,true);
     count++;
   }
-  LOG(debug_level_) << "SUCCESS: Planned this configuration";
-  if(local_problem_){
-    delete local_problem_;
+  if (count == max_count) {
+    LOG(debug_level_) << "We took too long to plan.";
+    policy_failed_ = true;
   }
-  local_problem_ = &problem;
-  trajectory_ = &sample;
-  policy_set_ = true;
+  if (problem.is_local_minimum_) {
+    LOG(debug_level_) << "We hit a local minimum.";
+    policy_failed_ = true;
+  }
+  else {
+    LOG(debug_level_) << "SUCCESS: Planned this configuration";
+    spline_x_values_ = problem.GetBezierProblem()->x_values_;
+    spline_y_values_ = problem.GetBezierProblem()->y_values_;
+    trajectory_ = sample;
+    policy_set_ = true;
+  }
 }
 
 ///////////////
@@ -221,42 +215,39 @@ std::string PathPlanner::GetNumber(std::string name) {
   }
 }
 
-void PathPlanner::ResetBooleans() {
+void PathPlanner::Reset() {
   config_set_ = false;
   mesh_set_ = false;
   policy_set_ = false;
   policy_delivered_ = false;
-  local_problem_ = new LocalProblem();
+  policy_failed_ = false;
 }
 
 /***********************************
  * THE MAIN LOOP
  * Initializes PathPlanner, Runs the optimizer, and returns the path.
  * Never stops (though it does have a sleep time); instead, if it's done with
- * one path, it destructs the PathPlanner and creates a new one with the
+ * one path, it destructs the LocalPlanner within and creates a new one with the
  * new info it's fed.
  **********************************/
 
 int main(int argc, char** argv) {
   std::string name = argv[1];
   int count = 0;
-  PathPlanner* planner = new PathPlanner();
-  planner->planner_name_ = name;
-  std::string number = planner->GetNumber(planner->planner_name_);
-  planner->InitNode();
+  PathPlanner planner;
+  planner.planner_name_ = name;
+  std::string number = planner.GetNumber(planner.planner_name_);
+  planner.InitNode();
   while (1) {
     // Reset the system every 500 plans
-    while (!planner->config_set_ || !planner->mesh_set_) {
+    while (!planner.config_set_ || !planner.mesh_set_) {
       // Just wait
       // Once these are set, we're ready to solve
     }
-    planner->SolveBVP();
-    while (!planner->policy_set_) {
-      // Just wait again
-    }
-    while (planner->policy_set_
-           || planner->config_set_
-           || planner->mesh_set_) {
+    planner.SolveBVP();
+    while (planner.policy_set_
+           || planner.config_set_
+           || planner.mesh_set_) {
       // Just wait again for a reset
     }
   }
