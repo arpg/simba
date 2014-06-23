@@ -13,6 +13,7 @@ find_package( SimBA REQUIRED )
 find_package(MINIGLOG REQUIRED)
 find_package(CVARS REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(ASSIMP REQUIRED)
 
 include_directories( ${Pangolin_INCLUDE_DIRS}
   ${SceneGraph_INCLUDE_DIRS}
@@ -31,4 +32,5 @@ target_link_libraries( LocalSim
                        ${SimBA_LIBRARIES}
 		       ${MINIGLOG_LIBRARIES}
 		       ${PROTOBUF_LIBRARIES}
+		       ${ASSIMP_LIBRARIES}
                        NodeMessages )
