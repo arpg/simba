@@ -11,6 +11,6 @@ add_library( NodeMessages ${PROTO_SRCS})
 
 include_directories( ${PROTOBUF_INCLUDE_DIRS} )
 include_directories( ${Node_INCLUDE_DIRS}  ${CMAKE_SOURCE_DIR} )
-target_link_libraries(NodeMessages ${Node_LIBRARIES} )
+target_link_libraries(NodeMessages ${Node_LIBRARIES} ${PROTOBUF_LIBRARIES})
 install(TARGETS NodeMessages DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/PB_Headers EXPORT NodeMessagesTargets)
 install(EXPORT NodeMessagesTargets DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
