@@ -1,20 +1,20 @@
-#include "PathPlannerTest.h"
+#include "PathPlannerTester.h"
 
 #include <thread>
 
 /// CONSTRUCTOR
-PathPlannerTest::PathPlannerTest(){
+PathPlannerTester::PathPlannerTester(){
   params_file_name_ =
       "/Users/Trystan/Code/simba/Applications/Examples/PathPlannerTest/gui_params.csv";
 }
 
 /// DESTRUCTOR
-PathPlannerTest::~PathPlannerTest(){
+PathPlannerTester::~PathPlannerTester(){
 }
 
 /////////////////////////////////////////////
 
-void PathPlannerTest::Init(
+void PathPlannerTester::Init(
     const std::shared_ptr<HeightmapShape>& heightmap_data,
     std::vector<double> start,
     std::vector<double> goal){
@@ -22,12 +22,12 @@ void PathPlannerTest::Init(
   start_ = start;
   goal_ = goal;
   InitGoals();
-  InitMesh();
+  InitSimulation();
 }
 
 /////////////////////////////////////////////
 
-   void PathPlannerTest::InitGoals(){
+void PathPlannerTester::InitGoals(){
   // Now populate the start and goal parameters.
   // X, Y, yaw, and velocity... that should be it.
   Eigen::Matrix4d eigen_start;
@@ -44,9 +44,7 @@ void PathPlannerTest::Init(
 
 //////////////////
 
-bool PathPlannerTest::InitMesh(){
-  // We don't want to reinitialize if we have the same map, after all.
-  bullet_heightmap* map = new bullet_heightmap(heightmap_data_.get());
+bool PathPlannerTester::InitSimulation(){
   btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
   btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
   CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
@@ -83,17 +81,18 @@ bool PathPlannerTest::InitMesh(){
                       m_VehicleParams[CarParameters::Height],
                       m_VehicleParams[CarParameters::WheelRadius],
                       m_VehicleParams[CarParameters::WheelWidth]);
+  return true;
 }
 
 //////////////////////////////////////////////////
 
-void PathPlannerTest::GroundStates(){
+void PathPlannerTester::GroundStates(){
   // Ground the start point.
   Eigen::Vector3d dIntersect, normal;
   Sophus::SE3d pose = start_state_.m_dTwv;
   if(car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*10,
                          dIntersect, true, 0)){
-    dIntersect(2) = dIntersect(2)+.15;
+    dIntersect(2) = dIntersect(2) + .15;
     start_state_.m_dTwv.translation() = dIntersect;
   }
 
@@ -101,7 +100,7 @@ void PathPlannerTest::GroundStates(){
   pose = goal_state_.m_dTwv;
   if(car_model_->RayCast(pose.translation(), GetBasisVector(pose,2)*30,
                          dIntersect, true, 0)){
-    dIntersect(2) = dIntersect(2)+.15;
+    dIntersect(2) = dIntersect(2) + .15;
     goal_state_.m_dTwv.translation() = dIntersect;
   }
 }
@@ -109,42 +108,42 @@ void PathPlannerTest::GroundStates(){
 /////////////////////////////////////////////
 
 //Finds the fastest path between two
-void PathPlannerTest::SolveTrajectory(pb::PlannerPolicyMsg* policy){
+void PathPlannerTester::SolveTrajectory(pb::PlannerPolicyMsg* policy){
   bool success = false;
   int count = 0;
   int max_count = 1000;
-  ApplyVelocitesFunctor5d func(car_model_.get(), Eigen::Vector3d::Zero(), NULL);
+  ApplyVelocitiesFunctor5d func(car_model_.get(),
+                                Eigen::Vector3d::Zero(), NULL);
   func.SetNoDelay(true);
-  MotionSample sample;
   car_model_->SetState(0, start_state_);
-  GLWayPoint* a = &planner_gui_.GetWaypoint(0)->m_Waypoint;
-  GLWayPoint* b = &planner_gui_.GetWaypoint(1)->m_Waypoint;
-  VehicleState st(Sophus::SE3d(a->GetPose4x4_po()),a->GetVelocity(),0);
-  VehicleState gl(Sophus::SE3d(b->GetPose4x4_po()),b->GetVelocity(),0);
-  LocalProblem problem(&func, st, gl, 1.0/30.0);
+  GLWayPoint& a = planner_gui_.GetWaypoint(0)->m_Waypoint;
+  GLWayPoint& b = planner_gui_.GetWaypoint(1)->m_Waypoint;
+  VehicleState st(Sophus::SE3d(a.GetPose4x4_po()), a.GetVelocity(),0);
+  VehicleState gl(Sophus::SE3d(b.GetPose4x4_po()), b.GetVelocity(),0);
+  LocalProblem problem(func, st, gl, 1.0/30.0);
   local_planner_.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
-
+  MotionSample sample;
   BezierBoundaryProblem* spline = problem.GetBezierProblem();
   Eigen::Vector6d spline_vec;
-  for (int ii = 0; ii<6; ii++) {
-    spline_vec<<spline->x_values_(ii), spline->y_values_(ii), 0, 0, 0, 0;
+  for (int ii = 0; ii < 6; ii++) {
+    spline_vec << spline->x_values_(ii), spline->y_values_(ii), 0, 0, 0, 0;
     planner_gui_.AddSplinePoints(spline_vec, ii);
   }
-  for (int ii = 0; ii<200; ii++) {
+  for (int ii = 0; ii < 200; ii++) {
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     planner_gui_.Render();
   }
   while (!success && count < max_count) {
     success = local_planner_.Iterate(problem);
-    local_planner_.SimulateTrajectory(sample,problem,0,false);
-    for (int ii = 0; ii<6; ii++) {
-      spline_vec<<spline->x_values_(ii), spline->y_values_(ii), 0, 0, 0, 0;
+    local_planner_.SimulateTrajectory(sample,problem,0,true);
+    for (int ii = 0; ii < 6; ii++) {
+      spline_vec << spline->x_values_(ii), spline->y_values_(ii), 0, 0, 0, 0;
       planner_gui_.MoveSplinePoints(spline_vec, ii);
       planner_gui_.Render();
     }
     // Render what we see
     if (count % 5 == 0) {
-      for (int ii=0; ii<sample.m_vStates.size(); ii++){
+      for (int ii = 0; ii < sample.m_vStates.size(); ii++){
         car_model_->SetState(0, sample.m_vStates.at(ii));
         planner_gui_.SetCarState(0, sample.m_vStates.at(ii), true);
         planner_gui_.Render();
@@ -152,9 +151,13 @@ void PathPlannerTest::SolveTrajectory(pb::PlannerPolicyMsg* policy){
     }
     count++;
   }
-  for (int ii = 0; ii<200; ii++) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    planner_gui_.Render();
+  // Show our finished path
+  for (int ii = 0; ii < 3; ii++) {
+    for (int ii = 0; ii < sample.m_vStates.size(); ii++){
+      car_model_->SetState(0, sample.m_vStates.at(ii));
+      planner_gui_.SetCarState(0, sample.m_vStates.at(ii), true);
+      planner_gui_.Render();
+    }
   }
   // We should have a good plan now
   // We can easily grab the bezier_boundary_problem from here.
@@ -178,13 +181,14 @@ void PathPlannerTest::SolveTrajectory(pb::PlannerPolicyMsg* policy){
 
 ///////////////////////////////////////////////////////
 // Interpolates commands given a set of spline parameters
-void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy,
-                                       Eigen::VectorXd x_values,
-                                       Eigen::VectorXd y_values) {
+void PathPlannerTester::SampleTrajectory(pb::PlannerPolicyMsg* policy,
+                                         Eigen::VectorXd x_values,
+                                         Eigen::VectorXd y_values) {
   bool success = false;
   int count = 0;
   int max_count = 1000;
-  ApplyVelocitesFunctor5d func(car_model_.get(), Eigen::Vector3d::Zero(), NULL);
+  ApplyVelocitiesFunctor5d func(car_model_.get(),
+                                Eigen::Vector3d::Zero(), NULL);
   func.SetNoDelay(true);
   MotionSample sample;
   car_model_->SetState(0, start_state_);
@@ -192,7 +196,7 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy,
   GLWayPoint* b = &planner_gui_.GetWaypoint(1)->m_Waypoint;
   VehicleState st(Sophus::SE3d(a->GetPose4x4_po()),a->GetVelocity(),0);
   VehicleState gl(Sophus::SE3d(b->GetPose4x4_po()),b->GetVelocity(),0);
-  LocalProblem problem(&func, st, gl, 1.0/30.0);
+  LocalProblem problem(func, st, gl, 1.0/30.0);
   // Set our Bezier boundary problem's values
   // This means that it won't try to solve for the trajectory itself.
   // There's a nicer way to do this, I'm sure, but I haven't programmed it.
@@ -211,16 +215,20 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy,
     planner_gui_.Render();
   }
   // Solve our trajectory, and get the error
-  local_planner_.Iterate(problem);
-  local_planner_.SimulateTrajectory(sample, problem, 0, true);
+  // while (!success && count < max_count) {
+  success = local_planner_.Iterate(problem);
+  local_planner_.SimulateTrajectory(sample,problem,0,true);
   // Render what we see
-  for (int jj = 0; jj < 5; jj++) {
-    for (int ii=0; ii<sample.m_vStates.size(); ii++){
+  for (int jj = 0; jj < 1; jj++) {
+    for (int ii=0; ii < sample.m_vStates.size(); ii++){
       car_model_->SetState(0, sample.m_vStates.at(ii));
       planner_gui_.SetCarState(0, sample.m_vStates.at(ii), true);
       planner_gui_.Render();
     }
   }
+  count++;
+  // }
+
   for (int ii = 0; ii<200; ii++) {
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     planner_gui_.Render();
@@ -242,9 +250,87 @@ void PathPlannerTest::SampleTrajectory(pb::PlannerPolicyMsg* policy,
   }
 }
 
+
+// // Interpolates commands given a set of spline parameters
+// void PathPlannerTester::InterpolateTrajectory(pb::PlannerPolicyMsg* policy,
+//                                               Eigen::VectorXd x_values_one,
+//                                               Eigen::VectorXd y_values_one,
+//                                               Eigen::VectorXd x_values_two,
+//                                               Eigen::VectorXd y_values_two) {
+//   bool success = false;
+//   int count = 0;
+//   int max_count = 1000;
+//   ApplyVelocitesFunctor5d func(car_model_.get(), Eigen::Vector3d::Zero(), NULL);
+//   func.SetNoDelay(true);
+//   MotionSample sample;
+//   car_model_->SetState(0, start_state_);
+//   GLWayPoint* a = &planner_gui_.GetWaypoint(0)->m_Waypoint;
+//   GLWayPoint* b = &planner_gui_.GetWaypoint(1)->m_Waypoint;
+//   VehicleState st(Sophus::SE3d(a->GetPose4x4_po()),a->GetVelocity(),0);
+//   VehicleState gl(Sophus::SE3d(b->GetPose4x4_po()),b->GetVelocity(),0);
+//   LocalProblem problem(&func, st, gl, 1.0/30.0);
+//   // Set our Bezier boundary problem's values
+//   // This means that it won't try to solve for the trajectory itself.
+//   // There's a nicer way to do this, I'm sure, but I haven't programmed it.
+//   BezierBoundaryProblem* spline_one = new BezierBoundaryProblem();
+//   spline_one->x_values_ = x_values_one;
+//   spline_one->y_values_ = y_values_one;
+//   BezierBoundaryProblem* spline_two = new BezierBoundaryProblem();
+//   spline_two->x_values_ = x_values_two;
+//   spline_two->y_values_ = y_values_two;
+//   BezierBoundarySolver solver;
+//   solver._InterpolateBezierCurve(spline_one, spline_two);
+//   BezierBoundaryProblem* spline = problem.GetBezierProblem();
+//   spline->has_given_points_ = true;
+//   Eigen::Vector6d spline_vec;
+//   for (int ii = 0; ii<6; ii++) {
+//     spline_vec<<spline->x_values_(ii), spline->y_values_(ii), 0, 0, 0, 0;
+//     planner_gui_.AddSplinePoints(spline_vec, ii);
+//   }
+//   local_planner_.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
+//   for (int ii = 0; ii<200; ii++) {
+//     std::this_thread::sleep_for(std::chrono::milliseconds(20));
+//     planner_gui_.Render();
+//   }
+//   // Solve our trajectory, and get the error
+//   // while (!success && count < max_count) {
+//   success = local_planner_.Iterate(problem);
+//   local_planner_.SimulateTrajectory(sample,problem,0,true);
+//   // Render what we see
+//   for (int jj = 0; jj < 1; jj++) {
+//     for (int ii=0; ii < sample.m_vStates.size(); ii++){
+//       car_model_->SetState(0, sample.m_vStates.at(ii));
+//       planner_gui_.SetCarState(0, sample.m_vStates.at(ii), true);
+//       planner_gui_.Render();
+//     }
+//   }
+//   count++;
+//   // }
+
+//   for (int ii = 0; ii<200; ii++) {
+//     std::this_thread::sleep_for(std::chrono::milliseconds(20));
+//     planner_gui_.Render();
+//   }
+
+//   VehicleState last_vehicle_state = sample.GetLastPose();
+//   for(unsigned int ii=0; ii<sample.m_vCommands.size(); ii++){
+//     ControlCommand Comm = sample.m_vCommands.at(ii);
+//     policy->add_force(Comm.m_dForce);
+//     policy->add_phi(Comm.m_dPhi);
+//     policy->add_time(Comm.m_dT);
+//   }
+//   // Print forces here to verify results with PathPlanner program
+//   if (count >= max_count) {
+//     LOG(INFO) << "We're done with our policy search!!";
+//     LOG(INFO) << "We hit the maximum number of iterations...";
+//   } else {
+//     LOG(INFO) << "We're done with our policy search!!";
+//   }
+// }
+
 //////////////////
 
-std::string PathPlannerTest::GetNumber(std::string name){
+std::string PathPlannerTester::GetNumber(std::string name){
   std::size_t found = name.find("m");
   if(found!=std::string::npos){
     return name.substr(found+1);

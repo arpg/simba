@@ -1,4 +1,4 @@
-project( PathPlannerTest )
+project( PathPlannerTester )
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -26,10 +26,10 @@ include_directories(
 
 add_executable(PathPlannerSolver
   PathPlannerSolver.cpp
-  PathPlannerTest.cpp
+  PathPlannerTester.cpp
   PlannerGui.cpp
   GLBulletDebugDrawer.cpp
-  PathPlannerTest.h
+  PathPlannerTester.h
   PlannerGui.h
   GLBulletDebugDrawer.h
   ClickHandler.h)
@@ -43,10 +43,10 @@ target_link_libraries(PathPlannerSolver
 
 add_executable(PathPlannerInterpolation
   PathPlannerInterpolation.cpp
-  PathPlannerTest.cpp
+  PathPlannerTester.cpp
   PlannerGui.cpp
   GLBulletDebugDrawer.cpp
-  PathPlannerTest.h
+  PathPlannerTester.h
   PlannerGui.h
   GLBulletDebugDrawer.h
   ClickHandler.h)

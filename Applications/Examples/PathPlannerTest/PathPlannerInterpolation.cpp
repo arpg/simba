@@ -1,4 +1,4 @@
-#include "PathPlannerTest.h"
+#include "PathPlannerTester.h"
 
 /***********************************
  * THE MAIN LOOP
@@ -6,27 +6,28 @@
  **********************************/
 
 int main(int argc, char** argv){
+  // These are the two trajectories we're comparing:
+  double sol1[] =
+      {-0.2, 0.8, 4, -1, -0.4, 0.8, 0, 0, 0.93128, 0, 1.8626, 0,
+       3.1484, 0.73721, 3.8947, 0.18027, 4.6411, -0.37668};
+      // {0, 0.6, 5, -2, -0.4, 1, 0, 0, 1.0617, 0, 2.1234, 0,
+      //  4.7835, 0.43888, 4.9113, -0.61508, 5.0392, -1.669};
+  double sol2[] =
+      {-0.2, 0.8, 4.5, -1, -0.4, 0.8, 0, 0, 1.031, 0, 2.062, 0,
+       3.3344, 1.5103, 4.2327, 1.0042, 5.1309, 0.49807};
+      // {0, 0.6, 5, 2, -0.4, 1, 0, 0, 1.077, 0, 2.1541, 0,
+      //  3.016, 2.8388, 4.008, 2.4194, 5, 2};
+  double goal_pts[] = {sol1[2], sol1[3], sol1[4], sol1[5],
+                       sol2[2], sol2[3], sol2[4], sol2[5]};
+  double solution[18];
+  for (int ii = 0; ii < 18; ii++){
+    solution[ii] = (sol1[ii] + sol2[ii]) / 2;
+  }
   // Start and goal configurations
   // <x, y, theta, vel>
-  std::vector<double> start;
-  std::vector<double> goal;
-  // Old school like the old school
-  // These are the two trajectories we're comparing:
-  // -0.4 0.6 5 -2 -0.2 0.5 0 0 1.0737 0 2.1474 0 3.2331  0.10952    4.3 -0.011462 5.3669 -0.13245
-  // -0.4 0.6 5 -2    0   1 0 0  1.077 0 2.1541 0 3.4001 -0.73386 4.3921  -0.31445 5.3841  0.10497
-  double solution[] =
-      {-0.4, 0.6, 5, -2, -0.1, 0.75, 0, 0, 1.07535, 0, 2.15075, 0, 3.3166,
-       -0.3121699, 4.34605, -0.162956, 5.3755, -0.01374};
-      // {-0.4, 0.6, 5, -2, -0.4, 0.5, 0, 0, 1.0699, 0, 2.1397, 0, 3.1377,
-      //  -0.68632, 4.1671, -0.97782, 5.1965, -1.2693};
-  start.push_back(0);
-  start.push_back(0);
-  start.push_back(solution[0]);
-  start.push_back(solution[1]);
-  goal.push_back(solution[2]);
-  goal.push_back(solution[3]);
-  goal.push_back(solution[4]);
-  goal.push_back(solution[5]);
+  std::vector<double> start = {0, 0, solution[0], solution[1]};
+  std::vector<double> goal = {solution[2], solution[3],
+                              solution[4], solution[5]};
   // Spline points
   Eigen::VectorXd x_values = Eigen::VectorXd(6);
   Eigen::VectorXd y_values = Eigen::VectorXd(6);
@@ -36,7 +37,7 @@ int main(int argc, char** argv){
       solution[13], solution[15], solution[17];
 
   // Boilerplate stuff
-  std::unique_ptr<PathPlannerTest> sim(new PathPlannerTest());
+  std::unique_ptr<PathPlannerTester> sim(new PathPlannerTester());
   std::string name = "Sim0";
   if (argc == 2) {
     name = argv[1];
@@ -55,6 +56,11 @@ int main(int argc, char** argv){
   // Interpolate the path with the bezier control points that we were
   // provided
   std::unique_ptr<pb::PlannerPolicyMsg> policy(new pb::PlannerPolicyMsg());
+  Eigen::Vector6d spline_vec;
+  spline_vec<<goal_pts[0], goal_pts[1], 0, 0, 0, goal_pts[2];
+  sim->planner_gui_.AddSplinePoints(spline_vec, 1);
+  spline_vec<<goal_pts[4], goal_pts[5], 0, 0, 0, goal_pts[6];
+  sim->planner_gui_.AddSplinePoints(spline_vec, 1);
   sim->SampleTrajectory(policy.get(), x_values, y_values);
 
   // Drive our car in SimBA

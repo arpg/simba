@@ -50,7 +50,7 @@ class PathPlanner {
   void GroundStates();
   void SolveBVP();
   std::string GetNumber(std::string name);
-  void ResetBooleans();
+  void Reset();
 
   // NODE RPC FUNCTIONS
   // These correspond to functions in PlannerMaster.h
@@ -118,6 +118,7 @@ class PathPlanner {
   bool mesh_set_;
   bool policy_set_;
   bool policy_delivered_;
+  bool policy_failed_;
 
 };
 

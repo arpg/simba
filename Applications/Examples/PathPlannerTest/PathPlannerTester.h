@@ -1,9 +1,7 @@
-#ifndef PATHPLANNERTEST_H
-#define PATHPLANNERTEST_H
+#ifndef PATHPLANNERTESTER_H
+#define PATHPLANNERTESTER_H
 
 #include <iostream>
-
-
 
 // Planning functions, from CarPlanner lib
 #include "PlannerLib/CarPlannerCommon.h"
@@ -81,20 +79,20 @@ class KeyCarController{
 
 //////////////////////////////////////////////////
 
-class PathPlannerTest
+class PathPlannerTester
 {
  public:
 
   /// CONSTRUCTOR
-  PathPlannerTest();
-  ~PathPlannerTest();
+  PathPlannerTester();
+  ~PathPlannerTester();
 
   /// FUNCTIONS
   void Init(const std::shared_ptr<HeightmapShape>& heightmap_data,
             std::vector<double> start,
             std::vector<double> goal);
   void InitGoals();
-  bool InitMesh();
+  bool InitSimulation();
   void GroundStates();
   void SolveTrajectory(pb::PlannerPolicyMsg* policy);
   void SampleTrajectory(pb::PlannerPolicyMsg* policy,
@@ -105,6 +103,7 @@ class PathPlannerTest
   //member variables
   std::string           sim_planner_name_;
   std::unique_ptr<BulletCarModel> car_model_;
+  std::shared_ptr<HeightmapShape> heightmap_data_;
   PlannerGui            planner_gui_;
   GLBulletDebugDrawer   m_GLDebugDrawer;
   LocalPlanner          local_planner_;
@@ -120,10 +119,7 @@ class PathPlannerTest
   std::vector<double> start_;
   std::vector<double> goal_;
   std::string params_file_name_;
-  std::shared_ptr<HeightmapShape> heightmap_data_;
-  // This is what we compare to our desired goal_param, from our policy
-  std::vector<double> last_pose_;
 
 };
 
-#endif // PATHPLANNERTEST_H
+#endif // PATHPLANNERTESTER_H

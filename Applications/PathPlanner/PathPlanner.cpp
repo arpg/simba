@@ -8,7 +8,7 @@ PathPlanner::PathPlanner() {
   debug_level_ = 0;
   params_file_name_ =
       "/Users/Trystan/Code/simba/Applications/Examples/PathPlannerTest/gui_params.csv";
-  ResetBooleans();
+  Reset();
 }
 
 /////////////////////////////////////////////
@@ -27,7 +27,7 @@ void PathPlanner::InitNode() {
   node_.provide_rpc("GetPolicy", &_GetPolicy, this);
   node_.provide_rpc("GetMotionSample", &_GetMotionSample, this);
   node_.provide_rpc("GetSpline", &_GetSpline, this);
-  ResetBooleans();
+  Reset();
 }
 
 /////////////////////////////////////////////
@@ -105,28 +105,30 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
 
 void PathPlanner::GetStatus(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply) {
-  pb::PlannerStatusMsg* status = new pb::PlannerStatusMsg();
+  pb::PlannerStatusMsg* status = mReply.mutable_status();
   status->set_config_set(config_set_);
   status->set_mesh_set(mesh_set_);
   status->set_policy_set(policy_set_);
-  mReply.set_allocated_status(status);
+  status->set_policy_failed(policy_failed_);
   mReply.set_rep_node_name(planner_name_);
+  if (policy_failed_) {
+    Reset();
+  }
 }
 
 void PathPlanner::GetPolicy(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply) {
   if (policy_set_) {
-    pb::PlannerPolicyMsg* policy = new pb::PlannerPolicyMsg();
+    pb::PlannerPolicyMsg* policy = mReply.mutable_policy();
     for (unsigned int ii = 0; ii < trajectory_.m_vCommands.size(); ii++) {
       ControlCommand comm = trajectory_.m_vCommands.at(ii);
       policy->add_force(comm.m_dForce);
       policy->add_phi(comm.m_dPhi);
       policy->add_time(comm.m_dT);
     }
-    mReply.set_allocated_policy(policy);
     mReply.set_rep_node_name(planner_name_);
   }
-  ResetBooleans();
+  Reset();
 }
 
 void PathPlanner::GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
@@ -140,7 +142,7 @@ void PathPlanner::GetMotionSample(pb::RegisterPlannerReqMsg& mRequest,
 void PathPlanner::GetSpline(pb::RegisterPlannerReqMsg& mRequest,
                             pb::RegisterPlannerRepMsg& mReply) {
   if (policy_set_) {
-    pb::PlannerSplineMsg* spline_msg = new pb::PlannerSplineMsg();
+    pb::PlannerSplineMsg* spline_msg = mReply.mutable_spline();
     for (unsigned int ii = 0; ii < spline_x_values_.size(); ii++) {
       spline_msg->add_x_values(spline_x_values_(ii));
       spline_msg->add_y_values(spline_y_values_(ii));
@@ -148,9 +150,8 @@ void PathPlanner::GetSpline(pb::RegisterPlannerReqMsg& mRequest,
     for (unsigned int ii = 0; ii < 4; ii++) {
       spline_msg->add_solved_goal_pose(spline_goal_pose_(ii));
     }
-    mReply.set_allocated_spline(spline_msg);
     mReply.set_rep_node_name(planner_name_); // in case we implement a queue
-    ResetBooleans();
+    Reset();
   }
 }
 
@@ -181,30 +182,36 @@ void PathPlanner::GroundStates() {
 void PathPlanner::SolveBVP() {
   bool success = false;
   int count = 0;
-  int max_count = 1000;
-  ApplyVelocitesFunctor5d func(car_model_.get(), Eigen::Vector3d::Zero(), NULL);
+  int max_count = 30;
+  ApplyVelocitiesFunctor5d func(car_model_.get(),
+                                Eigen::Vector3d::Zero(), NULL);
   VehicleState state;
   func.SetNoDelay(true);
   MotionSample sample;
   // Initialize the problem
-  LocalProblem problem(&func, start_state_, goal_state_, 1.0/30.0);
-  LocalPlanner local_planner;
-  local_planner.InitializeLocalProblem(problem, 0, NULL, eCostPoint);
+  LocalProblem problem(func, start_state_, goal_state_, 1.0/30.0);
+  std::unique_ptr<LocalPlanner> local_planner(new LocalPlanner());
+  local_planner->InitializeLocalProblem(problem, 0, NULL, eCostPoint);
   while (!success && count<max_count) {
-    success = local_planner.Iterate(problem);
-    local_planner.SimulateTrajectory(sample,problem,0,true);
+    success = local_planner->Iterate(problem);
+    local_planner->SimulateTrajectory(sample,problem,0,true);
     count++;
   }
-  LOG(debug_level_) << "SUCCESS: Planned this configuration";
   if (count == max_count) {
     LOG(debug_level_) << "We took too long to plan.";
+    policy_failed_ = true;
   }
-  BezierBoundaryProblem* spline = problem.GetBezierProblem();
-  spline_x_values_ = spline->x_values_;
-  spline_y_values_ = spline->y_values_;
-  spline_goal_pose_ = spline->solved_goal_pose_;
-  trajectory_ = sample;
-  policy_set_ = true;
+  if (problem.is_local_minimum_) {
+    LOG(debug_level_) << "We hit a local minimum.";
+    policy_failed_ = true;
+  }
+  else {
+    LOG(debug_level_) << "SUCCESS: Planned this configuration";
+    spline_x_values_ = problem.GetBezierProblem()->x_values_;
+    spline_y_values_ = problem.GetBezierProblem()->y_values_;
+    trajectory_ = sample;
+    policy_set_ = true;
+  }
 }
 
 ///////////////
@@ -216,11 +223,12 @@ std::string PathPlanner::GetNumber(std::string name) {
   }
 }
 
-void PathPlanner::ResetBooleans() {
+void PathPlanner::Reset() {
   config_set_ = false;
   mesh_set_ = false;
   policy_set_ = false;
   policy_delivered_ = false;
+  policy_failed_ = false;
 }
 
 /***********************************
@@ -245,13 +253,11 @@ int main(int argc, char** argv) {
       // Once these are set, we're ready to solve
     }
     planner->SolveBVP();
-    while (!planner->policy_set_) {
-      // Just wait again
-    }
     while (planner->policy_set_
            || planner->config_set_
            || planner->mesh_set_) {
       // Just wait again for a reset
     }
+    google::protobuf::ShutdownProtobufLibrary();
   }
 }
