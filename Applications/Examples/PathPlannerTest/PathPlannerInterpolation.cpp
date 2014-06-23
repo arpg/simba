@@ -37,13 +37,13 @@ int main(int argc, char** argv){
       solution[13], solution[15], solution[17];
 
   // Boilerplate stuff
-  std::unique_ptr<PathPlannerTester> sim(new PathPlannerTester());
+  PathPlannerTester sim;
   std::string name = "Sim0";
   if (argc == 2) {
     name = argv[1];
   }
-  sim->sim_planner_name_ = name;
-  std::string number = sim->GetNumber(sim->sim_planner_name_);
+  sim.sim_planner_name_ = name;
+  std::string number = sim.GetNumber(sim.sim_planner_name_);
   std::shared_ptr<URDF_Parser> parser = std::make_shared<URDF_Parser>(0);
   XMLDocument world_xml;
   const string& world_urdf_path =
@@ -51,17 +51,17 @@ int main(int argc, char** argv){
   GetXMLdoc(world_urdf_path, world_xml);
   std::shared_ptr<HeightmapShape> heightmap_data(
       parser->GetMeshData(world_xml));
-  sim->Init(heightmap_data, start, goal);
+  sim.Init(heightmap_data, start, goal);
 
   // Interpolate the path with the bezier control points that we were
   // provided
   std::unique_ptr<pb::PlannerPolicyMsg> policy(new pb::PlannerPolicyMsg());
   Eigen::Vector6d spline_vec;
   spline_vec<<goal_pts[0], goal_pts[1], 0, 0, 0, goal_pts[2];
-  sim->planner_gui_.AddSplinePoints(spline_vec, 1);
+  sim.planner_gui_.AddSplinePoints(spline_vec, 1);
   spline_vec<<goal_pts[4], goal_pts[5], 0, 0, 0, goal_pts[6];
-  sim->planner_gui_.AddSplinePoints(spline_vec, 1);
-  sim->SampleTrajectory(policy.get(), x_values, y_values);
+  sim.planner_gui_.AddSplinePoints(spline_vec, 1);
+  sim.SampleTrajectory(policy.get(), x_values, y_values);
 
   // Drive our car in SimBA
   KeyCarController KeyCar("NodeCar:[name=VehicleController,sim=Ricky]//",

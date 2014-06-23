@@ -66,7 +66,6 @@ void PathPlanner::SetConfiguration(pb::RegisterPlannerReqMsg& mRequest,
 
 void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
                                pb::RegisterPlannerRepMsg& mReply) {
-  // TODO : Change so that we grab parameters from mRequest
   pb::PlannerHeightmapMsg heightmap = mRequest.heightmap();
   // Create our world mesh
   int row_count = heightmap.row_count();
@@ -80,8 +79,6 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
     Y.at(ii) = heightmap.y_data().Get(ii);
     Z.at(ii) = heightmap.z_data().Get(ii);
   }
-  // std::unique_ptr<HeightmapShape> heightmap_data(
-  //     new HeightmapShape("Map", row_count, col_count, X, Y, Z));
   btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
   btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
   car_model_.reset(new BulletCarModel());
@@ -172,9 +169,8 @@ void PathPlanner::GroundStates() {
 }
 
 /////////////////////////
-// TODO: arguments here might have to be modified to accept different things.
-
 // Finds the fastest path between two
+
 void PathPlanner::SolveBVP() {
   bool success = false;
   int count = 0;
@@ -231,7 +227,7 @@ void PathPlanner::Reset() {
  * THE MAIN LOOP
  * Initializes PathPlanner, Runs the optimizer, and returns the path.
  * Never stops (though it does have a sleep time); instead, if it's done with
- * one path, it destructs the PathPlanner and creates a new one with the
+ * one path, it destructs the LocalPlanner within and creates a new one with the
  * new info it's fed.
  **********************************/
 
@@ -253,8 +249,6 @@ int main(int argc, char** argv) {
            || planner.config_set_
            || planner.mesh_set_) {
       // Just wait again for a reset
-      google::protobuf::ShutdownProtobufLibrary();
     }
   }
-
 }
