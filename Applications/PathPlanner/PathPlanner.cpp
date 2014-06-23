@@ -27,6 +27,7 @@ void PathPlanner::InitNode() {
   node_.provide_rpc("GetPolicy", &_GetPolicy, this);
   node_.provide_rpc("GetMotionSample", &_GetMotionSample, this);
   node_.provide_rpc("GetSpline", &_GetSpline, this);
+  CarParameters::LoadFromFile(params_file_name_, vehicle_parameters_);
   Reset();
 }
 
@@ -79,23 +80,18 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
     Y.at(ii) = heightmap.y_data().Get(ii);
     Z.at(ii) = heightmap.z_data().Get(ii);
   }
-  std::unique_ptr<HeightmapShape> heightmap_data(
-      new HeightmapShape("Map", row_count, col_count, X, Y, Z));
+  // std::unique_ptr<HeightmapShape> heightmap_data(
+  //     new HeightmapShape("Map", row_count, col_count, X, Y, Z));
   btVector3 dMin(DBL_MAX,DBL_MAX,DBL_MAX);
   btVector3 dMax(DBL_MIN,DBL_MIN,DBL_MIN);
-  CarParameters::LoadFromFile(params_file_name_, m_VehicleParams);
   car_model_.reset(new BulletCarModel());
   btTransform localTrans;
   localTrans.setIdentity();
   localTrans.setOrigin(btVector3(0,0,0));
   // MAKE SURE YOU ADD ENOUGH FREAKIN' WORLDS TO THE CAR MODEL.
   // 11 should do it.
-  car_model_->Init(heightmap_data->row_count_,
-                   heightmap_data->col_count_,
-                   heightmap_data->x_data_,
-                   heightmap_data->y_data_,
-                   heightmap_data->z_data_,
-                   localTrans, dMin, dMax, m_VehicleParams, 11);
+  car_model_->Init(row_count, col_count, X, Y, Z,
+                   localTrans, dMin, dMax, vehicle_parameters_, 11);
   GroundStates();
   mReply.set_success(1);
   mesh_set_ = true;
@@ -242,22 +238,23 @@ void PathPlanner::Reset() {
 int main(int argc, char** argv) {
   std::string name = argv[1];
   int count = 0;
-  std::unique_ptr<PathPlanner> planner(new PathPlanner());
-  planner->planner_name_ = name;
-  std::string number = planner->GetNumber(planner->planner_name_);
-  planner->InitNode();
+  PathPlanner planner;
+  planner.planner_name_ = name;
+  std::string number = planner.GetNumber(planner.planner_name_);
+  planner.InitNode();
   while (1) {
     // Reset the system every 500 plans
-    while (!planner->config_set_ || !planner->mesh_set_) {
+    while (!planner.config_set_ || !planner.mesh_set_) {
       // Just wait
       // Once these are set, we're ready to solve
     }
-    planner->SolveBVP();
-    while (planner->policy_set_
-           || planner->config_set_
-           || planner->mesh_set_) {
+    planner.SolveBVP();
+    while (planner.policy_set_
+           || planner.config_set_
+           || planner.mesh_set_) {
       // Just wait again for a reset
+      google::protobuf::ShutdownProtobufLibrary();
     }
-    google::protobuf::ShutdownProtobufLibrary();
   }
+
 }
