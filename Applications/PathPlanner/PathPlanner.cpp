@@ -92,6 +92,7 @@ void PathPlanner::SetHeightmap(pb::RegisterPlannerReqMsg& mRequest,
   GroundStates();
   mReply.set_success(1);
   mesh_set_ = true;
+  LOG(INFO) << "heightmap set!";
 }
 
 ///////////
@@ -172,6 +173,7 @@ void PathPlanner::GroundStates() {
 // Finds the fastest path between two
 
 void PathPlanner::SolveBVP() {
+  LOG(INFO) << "Solving BVP.";
   bool success = false;
   int count = 0;
   int max_count = 30;
@@ -183,7 +185,9 @@ void PathPlanner::SolveBVP() {
   // Initialize the problem
   LocalProblem problem(func, start_state_, goal_state_, 1.0/30.0);
   std::unique_ptr<LocalPlanner> local_planner(new LocalPlanner());
+  LOG(INFO) << "Starting planner";
   local_planner->InitializeLocalProblem(problem, 0, NULL, eCostPoint);
+  LOG(INFO) << "planner started";
   while (!success && count<max_count) {
     success = local_planner->Iterate(problem);
     local_planner->SimulateTrajectory(sample,problem,0,true);
@@ -234,20 +238,22 @@ void PathPlanner::Reset() {
 int main(int argc, char** argv) {
   std::string name = argv[1];
   int count = 0;
-  PathPlanner planner;
-  planner.planner_name_ = name;
-  std::string number = planner.GetNumber(planner.planner_name_);
-  planner.InitNode();
+  std::unique_ptr<PathPlanner> planner(new PathPlanner());
+  planner->planner_name_ = name;
+  std::string number = planner->GetNumber(planner->planner_name_);
+  planner->InitNode();
   while (1) {
     // Reset the system every 500 plans
-    while (!planner.config_set_ || !planner.mesh_set_) {
+    while (!planner->config_set_ || !planner->mesh_set_) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
       // Just wait
       // Once these are set, we're ready to solve
     }
-    planner.SolveBVP();
-    while (planner.policy_set_
-           || planner.config_set_
-           || planner.mesh_set_) {
+    planner->SolveBVP();
+    while (planner->policy_set_
+           || planner->config_set_
+           || planner->mesh_set_) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
       // Just wait again for a reset
     }
   }

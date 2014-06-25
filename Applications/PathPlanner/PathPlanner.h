@@ -1,6 +1,8 @@
 #ifndef PATHPLANNER_H
 #define PATHPLANNER_H
 
+#include <atomic>
+
 // Planning functions, from CarPlanner lib
 #include "PlannerLib/CarPlannerCommon.h"
 #include "PlannerLib/ApplyVelocitiesFunctor.h"
@@ -114,11 +116,11 @@ class PathPlanner {
   // Our bitstring that describes the map.
   int  map_tau_;
   // booleans
-  bool config_set_;
-  bool mesh_set_;
-  bool policy_set_;
-  bool policy_delivered_;
-  bool policy_failed_;
+  volatile std::atomic<bool> config_set_;
+  volatile std::atomic<bool> mesh_set_;
+  volatile std::atomic<bool> policy_set_;
+  volatile std::atomic<bool> policy_delivered_;
+  volatile std::atomic<bool> policy_failed_;
 
 };
 

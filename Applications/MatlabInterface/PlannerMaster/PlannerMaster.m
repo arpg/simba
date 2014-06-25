@@ -33,7 +33,7 @@ classdef PlannerMaster < handle
             PlannerMaster_mex('delete', this.planners_);
         end
         
-        function CreateLookupTable(this, ii_num)
+        function CreateLookupTable(this, ii_start)
             tau = 0;             
             granularity = 10; % creates a 31 x 21 matrix
             scale = 3;
@@ -41,66 +41,93 @@ classdef PlannerMaster < handle
             is_recorded = false;
             mesh = GenMesh(tau, granularity, scale, smoothness, is_recorded);
             % make an array of start and goal points
-            start_theta = [-.4 : .2 : .4]; % 5 possible thetas
+            start_theta = [-.5 : .1 : .5]; % 5 possible thetas
             start_vel = [.8: .2 : 1.6]; % 5 possible start velocities
             [starts] = combvec(start_theta, start_vel);
             start_x_y = repmat([0;0], 1, numel(starts(1, :))); 
             start_point = [start_x_y; starts];
-            goal_x = [4 : .5 : 5]; % 4 x values
+            goal_x = [4 : .5 : 5.5]; % 4 x values
             goal_y = [-2 : 1 : 2]; % 5 y values
-            goal_theta = [-.4 : .2 : .4]; % 5 theta values
+            goal_theta = [-.5 : .2 : .5]; % 5 theta values
             goal_vel = [.8 : .4 : 1.6]; % 3 vel values
             goal_point = combvec(goal_x, goal_y, goal_theta, goal_vel);
-                
-                
-            %start_theta = [0 : .2 : 0]; % 5 possible thetas
-            %start_vel = [.6: .2 : .6]; % 5 possible start velocities
-            %[starts] = combvec(start_theta, start_vel);
-            %start_x_y = repmat([0;0], 1, numel(starts(1, :))); 
-            %start_point = [start_x_y; starts];
-            %goal_x = [5 : .5 : 5]; % 4 x values
-            %goal_y = [-2 : 4 : 2]; % 5 y values
-            %goal_theta = [-.4 : .2 : 0]; % 5 theta values
-            %goal_vel = [1 : .5 : 1]; % 3 vel values
-            %goal_point = combvec(goal_x, goal_y, goal_theta, goal_vel)
             % We have a lot of policies to go through; about 7500, 
             % in fact. We can do it!
-            ii = ii_num;
+            ii = ii_start;
             jj = 1;
-            while 1, 
+            config_stat = zeros(1, this.num_planners_);
+            mesh_stat = zeros(1, this.num_planners_);
+            policy_stat = zeros(1, this.num_planners_);
+            policy_failed = zeros(1, this.num_planners_);
+            % These keep track of the points that are in our
+            % planners now
+            working_start_points = zeros(4, this.num_planners_);
+            working_goal_points = zeros(4, this.num_planners_);
+            done_planning = false;
+            ready_to_save = false;
+            saving_ii = 1; 
+            while 1,
+                pause(1);
                 for kk = 0:this.num_planners_-1,
-                    if this.IsAvailable(kk) == true, 
-                        % Print where we are
+                    [config_stat(kk+1), mesh_stat(kk+1), policy_stat(kk+1), ...
+                     policy_failed(kk+1)] = this.GetStatus(kk);
+                end
+                for kk = 0:this.num_planners_-1,
+                    if done_planning, 
+                        config_stat = ones(1, this.num_planners_);
+                        mesh_stat = ones(1, this.num_planners_);
+                    end
+                    if config_stat(kk+1) == 0 && mesh_stat(kk+1) == 0, 
+                        this.SetBusy(kk);
                         (ii-1)*numel(goal_point(1,:)) + (jj-1)
-                        is_found = this.FindSinglePolicy(start_point(:, ii), ...
-                                                         goal_point(:, ...
-                                                                    jj), mesh, kk);
-                        if is_found == false, 
-                           disp('Skipping goal; it didnt converge'); 
-                        end
-                        % wacky boolean stuff. 
+                        disp('Sending BVP Now');
+                        success = this.SetBVP(kk, start_point(:, ii), goal_point(:, jj), ...
+                                              mesh);
+                        working_start_points(:, kk+1) = start_point(:, ...
+                                                                    ii);
+                        working_goal_points(:, kk+1) = goal_point(:, ...
+                                                                  ii);
                         if jj == numel(goal_point(1,:)),
                             if ii == numel(start_point(1,:)),
-                                this.SaveAll(ii);
-                                return;
-                            else 
-                                this.SaveAll(ii);
-                                ii = ii + 1
-                                return;
-                            end
+                                saving_ii = ii; 
+                                done_planning = true; % Stop all
+                                                      % path creation
+                            else
+                                saving_ii = ii; 
+                                ii = ii + 1;
+                            end                            
                             jj = 1;
+                            ready_to_save = true;
                         else
                             jj = jj+1; 
                         end
-                    else
-                        disp('Nothing is available');
+                    elseif policy_stat(kk+1) == 1, 
+                        disp('Getting Spline'); 
+                        [spline] = this.GetSpline(kk);
+                        this.SetAvailable(kk);
+                        is_found = true; 
+                        this.SaveBVPSpline(working_start_points(:, ...
+                                                                kk+1), ...
+                        working_goal_points(:, kk+1), mesh, ...
+                            spline);
+                        if ready_to_save == true, 
+                            disp('---------------------------');
+                            disp(['SAVING POLICY ', ...
+                                  num2str(saving_ii)]);
+                            disp('---------------------------');
+                            this.SaveAll(saving_ii);
+                            ready_to_save = false;
+                        end
+                    elseif policy_failed(kk+1) == 1,
+                        this.SetAvailable(kk);
+                        disp('Didnt work...');
+                        is_found = false;
                     end
                 end
             end
-            % We should have a huge matrix of all of our solutions now
+        end
+        % We should have a huge matrix of all of our solutions now
 
-        end 
-        
         function SaveAll(this, num_sol)
         % Save and clear the spline matrix
             filename = ['PathSolutions', num2str(num_sol), '.txt'];
@@ -115,8 +142,8 @@ classdef PlannerMaster < handle
             this.SetBusy(sim_num);
             is_found = false;
             while 1, 
-                pause(.5);
-                [config_stat, mesh_stat, policy_stat, policy_failed] = this.GetStatus(sim_num); 
+                pause(.2);
+                [config_stat, mesh_stat, policy_stat, policy_failed] = this.GetStatus(sim_num);
                 if config_stat == 0 && mesh_stat == 0, 
                     disp('Sending BVP Now');
                     success = this.SetBVP(sim_num, start_point, goal_point, ...
@@ -137,7 +164,7 @@ classdef PlannerMaster < handle
                 end
             end
         end
-        
+    
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%% MATLAB FUNCTIONS
         %%%% These don't interact with node at all. 
@@ -270,11 +297,9 @@ classdef PlannerMaster < handle
 
         function [success] = SetBVP(this, planner_num, start_state, goal_state, ...
                                     mesh)
-            disp('Setting Configuration');
             config_success = this.SetConfiguration(planner_num, start_state, ...
                                                    goal_state);
             pause(.2);
-            disp('Setting Mesh');
             mesh_success = this.SetHeightmap(planner_num, mesh);
             pause(.2);
             success = 0;
