@@ -8,7 +8,7 @@
 /////////////////////////////////////////
 
 // Our Eigen Helpers
-#include <ModelGraph/EigenHelpers.h>
+#include <URDFParser/EigenHelpers.h>
 
 #include <ModelGraph/PhysicsEngineHelpers.h>
 

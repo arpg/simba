@@ -648,7 +648,7 @@ bool NetworkManager::RegisterWithStateKeeper()
       XMLDocument doc;
       doc.Parse(urdf.xml().c_str());
       // create previous robot
-      URDF_Parser* parse = new URDF_Parser(debug_level_);
+      URDFParser* parse = new URDFParser(debug_level_);
       SimRobot* robot = new SimRobot();
       parse->ParseRobot(doc, *robot, sLastName);
       robot_manager_->ImportSimRobot(*robot);
@@ -685,7 +685,7 @@ void NetworkManager::AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
       mRequest.mutable_init_pose()->q(), mRequest.mutable_init_pose()->r();
 
   // add new robot in proxy
-  URDF_Parser* parse = new URDF_Parser(debug_level_);
+  URDFParser* parse = new URDFParser(debug_level_);
   SimRobot* robot = new SimRobot();
   parse->ParseRobot(doc, *robot, sProxyNameOfNewRobot);
   robot_manager_->ImportSimRobot(*robot);

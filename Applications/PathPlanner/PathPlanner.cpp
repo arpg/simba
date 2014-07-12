@@ -105,6 +105,7 @@ void PathPlanner::GetStatus(pb::RegisterPlannerReqMsg& mRequest,
   status->set_policy_set(policy_set_);
   status->set_policy_failed(policy_failed_);
   mReply.set_rep_node_name(planner_name_);
+  mReply.set_success(true);
   if (policy_failed_) {
     Reset();
   }
@@ -176,7 +177,7 @@ void PathPlanner::SolveBVP() {
   LOG(INFO) << "Solving BVP.";
   bool success = false;
   int count = 0;
-  int max_count = 30;
+  int max_count = 100;
   ApplyVelocitiesFunctor5d func(car_model_.get(),
                                 Eigen::Vector3d::Zero(), NULL);
   VehicleState state;
@@ -197,10 +198,10 @@ void PathPlanner::SolveBVP() {
     LOG(debug_level_) << "We took too long to plan.";
     policy_failed_ = true;
   }
-  if (problem.is_local_minimum_) {
-    LOG(debug_level_) << "We hit a local minimum.";
-    policy_failed_ = true;
-  }
+  // if (problem.is_local_minimum_) {
+  //   LOG(debug_level_) << "We hit a local minimum.";
+  //   policy_failed_ = true;
+  // }
   else {
     LOG(debug_level_) << "SUCCESS: Planned this configuration";
     spline_x_values_ = problem.GetBezierProblem()->x_values_;

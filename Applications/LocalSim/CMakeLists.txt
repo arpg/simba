@@ -33,4 +33,4 @@ target_link_libraries( LocalSim
 		       ${MINIGLOG_LIBRARIES}
 		       ${PROTOBUF_LIBRARIES}
 		       ${ASSIMP_LIBRARIES}
-                       NodeMessages )
+		       )

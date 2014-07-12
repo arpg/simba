@@ -20,10 +20,7 @@
 
 #include "Managers/NetworkManager.h"           // for managing the Network
 #include "Managers/RobotsManager.h"            // for managing all robots
-
-
-#include <URDFParser/URDF_Parser.h>            // for parsing URDF file
-
+#include <URDFParser/URDFParser.h>            // for parsing URDF file
 #include <SimRobots/SimRobot.h>                // for managing the User's robot
 #include "SimRobots/SimWorld.h"
 #include "SimDevices/SimDevices.h"             // for managing the SimDevices
@@ -44,7 +41,7 @@ public:
   SimDevices                  sim_devices_;
   RobotsManager               robot_manager_;
   NetworkManager              network_manager_;
-  URDF_Parser*                parser_;
+  URDFParser*                parser_;
   bool                        render_option_;
 
   /// Constructor

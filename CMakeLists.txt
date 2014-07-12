@@ -16,9 +16,6 @@ set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules ${CMAKE_MODULE_
 set( BUILD_CAR_PLANNER false CACHE BOOL force )
 set( BUILD_MATLAB_INTERFACE false CACHE BOOL force )
 
-# We must create our protobuf headers first. A bit weird.
-add_subdirectory( SimBA/PB_Headers )
-
 #Create everything else.
 add_subdirectory( SimBA )
 add_subdirectory( Applications )

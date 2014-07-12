@@ -33,5 +33,4 @@ target_link_libraries(
   ${MINIGLOG_LIBRARIES}
   ${SimBA_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  NodeMessages
 )

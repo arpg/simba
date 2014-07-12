@@ -8,10 +8,11 @@
 #include <miniglog/logging.h>
 
 #include <SimDevices/SimDevices.h>
-#include <URDFParser/URDF_Parser.h>
+#include <URDFParser/URDFParser.h>
 #include <Managers/RobotsManager.h>
 #include <Network/WorldState.h>
-#include <ModelGraph/Shape.h>
+#include <BulletStructs/Shape.h>
+#include <Utils/ConvertName.h>
 
 /// Node messages for our controllers
 #include <NodeMessages.pb.h>
@@ -19,7 +20,7 @@
 #include <NodeCamMessage.pb.h>
 #include <NodeCar.pb.h>
 // To add shapes to our scenegraph in real-time
-#include "PB_Headers/RenderShapes.pb.h"
+#include "PbMsgs/SceneGraphShapes.pb.h"
 
 
 using namespace std;

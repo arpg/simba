@@ -1,7 +1,6 @@
 #ifndef CONVERTNAME_H
 #define CONVERTNAME_H
 
-//#include <Network/Messages.h>
 #include <PB_Headers/SimMessages.pb.h>
 #include <Network/WorldState.h>
 

@@ -23,7 +23,7 @@ LocalSim::LocalSim(const string& local_sim_name,
   GetXMLdoc(world_urdf_path, world_xml);
 
   // 2. Parse our world and our robot for objects in the scene.
-  parser_ = new URDF_Parser(debug_level);
+  parser_ = new URDFParser(debug_level);
   parser_->ParseWorld(world_xml, sim_world_);
   parser_->ParseDevices(robot_xml, sim_devices_, local_sim_name_);
   parser_->ParseRobot(robot_xml, sim_robot_, local_sim_name_);

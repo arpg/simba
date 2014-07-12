@@ -9,9 +9,9 @@
 #include <bullet/btBulletDynamicsCommon.h>
 
 // Our ModelNode Objects
-#include <ModelGraph/Shape.h>
-#include <ModelGraph/SimRaycastVehicle.h>
-#include <ModelGraph/Constraint.h>
+#include <BulletStructs/Shape.h>
+#include <BulletStructs/SimRaycastVehicle.h>
+#include <BulletStructs/Constraint.h>
 
 // Our Controllers
 #include <SimDevices/SimDevices.h>
@@ -25,6 +25,10 @@
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+
+// Eigen to Bullet converters
+#include <ModelGraph/EigenToBullet.h>
+
 
 enum Compounds{
   VEHICLE = 0
