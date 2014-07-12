@@ -41,7 +41,7 @@ public:
   SimDevices                  sim_devices_;
   RobotsManager               robot_manager_;
   NetworkManager              network_manager_;
-  URDFParser*                parser_;
+  URDFParser*                 parser_;
   bool                        render_option_;
 
   /// Constructor
