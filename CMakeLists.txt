@@ -13,7 +13,6 @@ add_definitions(-DBT_NO_PROFILE)
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/.)
 set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules ${CMAKE_MODULE_PATH} )
 
-set( BUILD_CAR_PLANNER false CACHE BOOL force )
 set( BUILD_MATLAB_INTERFACE false CACHE BOOL force )
 
 #Create everything else.

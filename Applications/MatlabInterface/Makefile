@@ -21,6 +21,8 @@
 #---------------------------------#
 MATLAB_DIR = /Applications/MATLAB_R2013a.app/extern/include/
 
+COREDEV_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/
+COREDEV_BUILD_DIR = /Users/Trystan/Code/rslam/build/CoreDev/
 HAL_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/HAL/
 HAL_BUILD_DIR = /Users/Trynstan/Code/rslam/build/CoreDev/HAL/
 NODE_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/Node/
@@ -37,6 +39,7 @@ GENERAL_HDR = /usr/include/
 PROJECT_DIR = /Users/Trystan/Code/simba/Applications/MatlabInterface/
 
 CXXFLAGS = -std=c++11 -O -I$(MATLAB_DIR)\
+  -I$(COREDEV_DIR) -I$(COREDEV_BUILD_DIR)\
   -I$(HAL_DIR) -I$(HAL_BUILD_DIR) -I$(NODE_DIR) -I$(NODE_BUILD_DIR)\
   -I$(PANGOLIN_BUILD_DIR) -I$(PbMsgs_DIR) -I$(PbMsgs_BUILD_DIR)\
   -I$(PROTOBUF_DIR) -I$(ZMQ_DIR)\
@@ -44,6 +47,7 @@ CXXFLAGS = -std=c++11 -O -I$(MATLAB_DIR)\
   -I$(NODE_BUILD_DIR)NodeMessages.pb.cc
 
 MXXFLAGS = -O -I$(MATLAB_DIR)\
+  -I$(COREDEV_DIR) -I$(COREDEV_BUILD_DIR)\
   -I$(HAL_DIR) -I$(HAL_BUILD_DIR) -I$(NODE_DIR) -I$(NODE_BUILD_DIR)\
   -I$(PANGOLIN_BUILD_DIR) -I$(PbMsgs_DIR) -I$(PbMsgs_BUILD_DIR)\
   -I$(PROTOBUF_DIR) -I$(ZMQ_DIR)\
