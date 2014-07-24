@@ -13,6 +13,7 @@ find_package( SimBA )
 find_package( Node )
 find_package( MINIGLOG )
 find_package( Protobuf REQUIRED )
+find_package( URDFParser REQUIRED )
 
 
 include_directories(${Pangolin_INCLUDE_DIRS})
@@ -22,6 +23,7 @@ include_directories(${MINIGLOG_INCLUDE_DIRS})
 include_directories(${SimBA_INCLUDE_DIRS})
 include_directories(${Calibu_INCLUDE_DIRS})
 include_directories(${PROTOBUF_INCLUDE_DIR})
+include_directories(${URDFParser_INCLUDE_DIR})
 link_directories(${HAL_LINK_DIRS})
 
 add_executable( TestCam TestCam.cpp )
@@ -33,6 +35,7 @@ target_link_libraries( TestCam
   ${Node_LIBRARIES}
   ${SimBA_LIBRARIES}
   ${Calibu_LIBRARIES}
+  ${URDFParser_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   miniglog
  )
