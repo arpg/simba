@@ -10,8 +10,8 @@ class bullet_cylinder : public bullet_shape{
 
 public:
   //constructor
-  bullet_cylinder(ModelNode* mnCylinder){
-    CylinderShape* pCylinder = (CylinderShape*) mnCylinder;
+  bullet_cylinder(const std::shared_ptr<ModelNode>& mnCylinder){
+    CylinderShape* pCylinder = (CylinderShape*) mnCylinder.get();
     double dRadius = pCylinder->m_dRadius;
     double dHeight = pCylinder->m_dHeight;
     double dMass = pCylinder->GetMass();
@@ -20,7 +20,7 @@ public:
     dPose = pCylinder->GetPoseMatrix();
 
     bulletShape = new btCylinderShapeZ(btVector3(dRadius, dRadius, dHeight/2));
-    bulletMotionState = new NodeMotionState( *mnCylinder );
+    bulletMotionState = new NodeMotionState(mnCylinder);
     bool isDynamic = ( dMass != 0.f );
     btVector3 localInertia( 0, 0, 0 );
     if( isDynamic ){

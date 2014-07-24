@@ -1,8 +1,9 @@
+// Copyright (c) bminortx
+
 #include <ModelGraph/RenderEngine.h>
 
-
-void RenderEngine::Init(std::string sLocalSimName){
-  //Start our SceneGraph interface
+void RenderEngine::Init(std::string sLocalSimName) {
+  // Start our SceneGraph interface
   pangolin::CreateGlutWindowAndBind(sLocalSimName, 1024, 768);
   SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
   glClearColor(0, 0, 0, 1);
@@ -13,202 +14,171 @@ void RenderEngine::Init(std::string sLocalSimName){
 
 // Add to our list of SceneEntities
 // This will be added later in 'AddToScene'
-SceneGraph::GLObject* RenderEngine::AddNode(ModelNode *pNode){
-  // Add our RaycastVehicle (a myriad of shapes)
-  if (dynamic_cast<SimRaycastVehicle*>(pNode) != NULL){
-    // A RaycastVehicle is made of a cube and four cylinders.
-    // Since a vehicle is one shape in the PhysicsEngine, but five shapes
-    // in the RenderEngine, we must call PhysicsEngine::GetVehicleTransform
-    // anytime we want to update the rendering.
+SceneGraph::GLObject* RenderEngine::AddNode(ModelNode *pNode) {
+  //  Add our RaycastVehicle (a myriad of shapes)
+  if (SimRaycastVehicle* pVehicle = dynamic_cast<SimRaycastVehicle*>(pNode)) {
+    //  A RaycastVehicle is made of a cube and four cylinders.
+    //  Since a vehicle is one shape in the PhysicsEngine, but five shapes
+    //  in the RenderEngine, we must call PhysicsEngine::GetVehicleTransform
+    //  anytime we want to update the rendering.
 
-    // Get the positions of every part of the car.
-
-    SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) pNode;
+    //  Get the positions of every part of the car.
     std::vector<double> params = pVehicle->GetParameters();
 
-    // Were the meshes set for the car? If so, import those; else, use shapes.
-    if(pVehicle->GetBodyMesh()!="NONE" && pVehicle->GetWheelMesh()!="NONE"){
-
-      // The chassis
+    //  Were the meshes set for the car? If so, import those; else, use shapes.
+    if (pVehicle->GetBodyMesh()!= "NONE" && pVehicle->GetWheelMesh()!= "NONE") {
+      //  The chassis
       SceneGraph::GLMesh* chassis_mesh = new SceneGraph::GLMesh();
       chassis_mesh->Init(pVehicle->GetBodyMesh());
       chassis_mesh->SetPerceptable(true);
       Eigen::Vector3d vScale;
       Eigen::Vector3d vBodyDim = pVehicle->GetBodyMeshDim();
-      vScale<<(params[WheelBase]/vBodyDim(1)),
+      vScale << (params[WheelBase]/vBodyDim(1)),
           1.5*params[Width]/vBodyDim(0),
           params[Height]/vBodyDim(2);
       chassis_mesh->SetScale(vScale);
       chassis_mesh->SetPose(pVehicle->GetPose());
-      m_mSceneEntities[pNode] = chassis_mesh;
+      scene_entities_[pNode] = chassis_mesh;
 
       Eigen::Vector3d vWheelScale;
       Eigen::Vector3d vWheelDim = pVehicle->GetWheelMeshDim();
-      vWheelScale<<2*params[WheelRadius]/vWheelDim(1),
+      vWheelScale << 2*params[WheelRadius]/vWheelDim(1),
           2*params[WheelRadius]/vWheelDim(2),
           params[WheelWidth]/vWheelDim(0);
 
-      // FL Wheel
+      //  FL Wheel
       SceneGraph::GLMesh* FLWheel = new SceneGraph::GLMesh();
       FLWheel->Init(pVehicle->GetWheelMesh());
       FLWheel->SetScale(vWheelScale);
       FLWheel->SetPose(pVehicle->GetWheelPose(0));
-      m_mRaycastWheels[pVehicle->GetName()+"@FLWheel"] = FLWheel;
+      raycast_wheels_[pVehicle->GetName()+"@FLWheel"] = FLWheel;
 
-      // FR Wheel
+      //  FR Wheel
       SceneGraph::GLMesh* FRWheel = new SceneGraph::GLMesh();
       FRWheel->Init(pVehicle->GetWheelMesh());
       FRWheel->SetPose(pVehicle->GetWheelPose(1));
       FRWheel->SetScale(vWheelScale);
-      m_mRaycastWheels[pVehicle->GetName()+"@FRWheel"] = FRWheel;
+      raycast_wheels_[pVehicle->GetName()+"@FRWheel"] = FRWheel;
 
-      // BL Wheel
+      //  BL Wheel
       SceneGraph::GLMesh* BLWheel = new SceneGraph::GLMesh();
       BLWheel->Init(pVehicle->GetWheelMesh());
       BLWheel->SetPose(pVehicle->GetWheelPose(2));
       BLWheel->SetScale(vWheelScale);
-      m_mRaycastWheels[pVehicle->GetName()+"@BLWheel"] = BLWheel;
+      raycast_wheels_[pVehicle->GetName()+"@BLWheel"] = BLWheel;
 
-      // BR Wheel
+      //  BR Wheel
       SceneGraph::GLMesh* BRWheel = new SceneGraph::GLMesh();
       BRWheel->Init(pVehicle->GetWheelMesh());
       BRWheel->SetPose(pVehicle->GetWheelPose(3));
       BRWheel->SetScale(vWheelScale);
-      m_mRaycastWheels[pVehicle->GetName()+"@BRWheel"] = BRWheel;
+      raycast_wheels_[pVehicle->GetName()+"@BRWheel"] = BRWheel;
 
       return chassis_mesh;
-    }
-
-    else{
-      // The chassis
+    } else {
+      //  The chassis
       SceneGraph::GLBox* chassis = new SceneGraph::GLBox();
       chassis->SetExtent(params[WheelBase], params[Width], params[Height]);
       chassis->SetPose(pVehicle->GetPose());
-      m_mSceneEntities[pNode] = chassis;
+      scene_entities_[pNode] = chassis;
 
-      // FL Wheel
+      //  FL Wheel
       SceneGraph::GLCylinder* FLWheel = new SceneGraph::GLCylinder();
       FLWheel->Init(params[WheelRadius], params[WheelRadius],
                     params[WheelWidth], 10, 10);
       FLWheel->SetPose(pVehicle->GetWheelPose(0));
-      m_mRaycastWheels[pVehicle->GetName()+"@FLWheel"] = FLWheel;
+      raycast_wheels_[pVehicle->GetName()+"@FLWheel"] = FLWheel;
 
-      // FR Wheel
+      //  FR Wheel
       SceneGraph::GLCylinder* FRWheel = new SceneGraph::GLCylinder();
       FRWheel->Init(params[WheelRadius], params[WheelRadius],
                     params[WheelWidth], 10, 10);
       FRWheel->SetPose(pVehicle->GetWheelPose(1));
-      m_mRaycastWheels[pVehicle->GetName()+"@FRWheel"] = FRWheel;
+      raycast_wheels_[pVehicle->GetName()+"@FRWheel"] = FRWheel;
 
-      // BL Wheel
+      //  BL Wheel
       SceneGraph::GLCylinder* BLWheel = new SceneGraph::GLCylinder();
       BLWheel->Init(params[WheelRadius], params[WheelRadius],
                     params[WheelWidth], 10, 10);
       BLWheel->SetPose(pVehicle->GetWheelPose(2));
-      m_mRaycastWheels[pVehicle->GetName()+"@BLWheel"] = BLWheel;
+      raycast_wheels_[pVehicle->GetName()+"@BLWheel"] = BLWheel;
 
-      // BR Wheel
+      //  BR Wheel
       SceneGraph::GLCylinder* BRWheel = new SceneGraph::GLCylinder();
       BRWheel->Init(params[WheelRadius], params[WheelRadius],
                     params[WheelWidth], 10, 10);
       BRWheel->SetPose(pVehicle->GetWheelPose(3));
-      m_mRaycastWheels[pVehicle->GetName()+"@BRWheel"] = BRWheel;
+      raycast_wheels_[pVehicle->GetName()+"@BRWheel"] = BRWheel;
 
       return chassis;
     }
   }
 
-  // Add our Shapes
-  if (dynamic_cast<Shape*>(pNode) != NULL){
-    Shape* pShape = (Shape*)(pNode);
-
-    //Box
-    if (dynamic_cast<BoxShape*>(pShape) != NULL){
-      BoxShape* pbShape = (BoxShape *) pShape;
+  //  Add our Shapes
+  if (Shape* pShape = dynamic_cast<Shape*>(pNode)) {
+    // Box
+    if (BoxShape* pbShape = dynamic_cast<BoxShape*>(pShape)) {
       SceneGraph::GLBox* new_box = new SceneGraph::GLBox();
       new_box->SetExtent(pbShape->m_dBounds[0], pbShape->m_dBounds[1],
                          pbShape->m_dBounds[2]);
       new_box->SetPose(pbShape->GetPose());
-      m_mSceneEntities[pNode] = new_box;
+      scene_entities_[pNode] = new_box;
       return new_box;
-    }
-
-    //Cylinder
-    else if (dynamic_cast<CylinderShape*>(pShape) != NULL){
-      CylinderShape* pbShape = (CylinderShape *) pShape;
+    } else if (CylinderShape* pbShape = dynamic_cast<CylinderShape*>(pShape)) {
+      // Cylinder
       SceneGraph::GLCylinder* new_cylinder = new SceneGraph::GLCylinder();
       new_cylinder->Init(pbShape->m_dRadius, pbShape->m_dRadius,
                          pbShape->m_dHeight, 32, 1);
       new_cylinder->SetPose(pbShape->GetPose());
-      m_mSceneEntities[pNode] = new_cylinder;
+      scene_entities_[pNode] = new_cylinder;
       return new_cylinder;
-    }
-
-    //Plane
-    else if (dynamic_cast<PlaneShape*>(pShape) != NULL){
-      PlaneShape* pbShape = (PlaneShape *) pShape;
+    } else if (PlaneShape* pbShape = dynamic_cast<PlaneShape*>(pShape)) {
+      // Plane
       SceneGraph::GLGrid* new_plane = new SceneGraph::GLGrid();
       new_plane->SetNumLines(20);
       new_plane->SetLineSpacing(1);
       Eigen::Vector3d eig_norm;
-      eig_norm<<pbShape->m_dNormal[0],
+      eig_norm << pbShape->m_dNormal[0],
           pbShape->m_dNormal[1],
           pbShape->m_dNormal[2];
       new_plane->SetPlane(eig_norm);
-      m_mSceneEntities[pNode] = new_plane;
+      scene_entities_[pNode] = new_plane;
       return new_plane;
-    }
-
-    //Mesh
-    else if (dynamic_cast<MeshShape*>(pShape) != NULL){
-      MeshShape* pbShape = (MeshShape *) pShape;
+    } else if (MeshShape* pbShape = dynamic_cast<MeshShape*>(pShape)) {
+      // Mesh
       SceneGraph::GLMesh* new_mesh = new SceneGraph::GLMesh();
       new_mesh->Init(pbShape->GetFileDir());
       new_mesh->SetPerceptable(true);
       new_mesh->SetScale(pbShape->GetScale());
       new_mesh->SetPose(pbShape->GetPose());
-      m_mSceneEntities[pNode] = new_mesh;
+      scene_entities_[pNode] = new_mesh;
       return new_mesh;
-    }
-
-    //Heightmap
-    else if (dynamic_cast<HeightmapShape*>(pShape) != NULL){
-      HeightmapShape* pbShape = (HeightmapShape *) pShape;
+    } else if (HeightmapShape* pbShape =
+               dynamic_cast<HeightmapShape*>(pShape)) {
+      // Heightmap
       SceneGraph::GLHeightmap* new_map =
           new SceneGraph::GLHeightmap(pbShape->x_data_, pbShape->y_data_,
                                       pbShape->z_data_, pbShape->row_count_,
                                       pbShape->col_count_);
-      m_mSceneEntities[pNode] = new_map;
+      scene_entities_[pNode] = new_map;
       return new_map;
-    }
-
-    /// Collision-free objects
-
-    //Light
-    else if (dynamic_cast<LightShape*>(pShape) != NULL){
-      LightShape* pbShape = (LightShape *) pShape;
-      //      SceneGraph::GLShadowLight* new_light =
-      //      new SceneGraph::GLShadowLight();
-      // IMPORTANT!! Can only use GLLight here if you want to use sim cam...
-      // DO NOT USE GL Shadow HERE!!!
+    } else if (LightShape* pbShape = dynamic_cast<LightShape*>(pShape)) {
+      // COLLISION-FREE OBJECTS
+      // Light
       SceneGraph::GLLight* new_light =
-          new SceneGraph::GLLight(pbShape->GetPose()(0,0),
-                                  pbShape->GetPose()(1,0),
-                                  pbShape->GetPose()(2,0));
-      m_mSceneEntities[pNode] = new_light;
+          new SceneGraph::GLLight(pbShape->GetPose()(0, 0),
+                                  pbShape->GetPose()(1, 0),
+                                  pbShape->GetPose()(2, 0));
+      scene_entities_[pNode] = new_light;
       return new_light;
-    }
-
-    //Waypoint
-    else if (dynamic_cast<WaypointShape*>(pShape) != NULL){
-      std::cout<<"ADDING WAYPOINT";
-      WaypointShape* pbShape = (WaypointShape *) pShape;
+    } else if (WaypointShape* pbShape = dynamic_cast<WaypointShape*>(pShape)) {
+      // Waypoint
       SceneGraph::GLWayPoint* new_waypoint =
           new SceneGraph::GLWayPoint();
       new_waypoint->SetPose(pbShape->GetPose());
       new_waypoint->SetVelocity(pbShape->GetVelocity());
       new_waypoint->SetScale(pbShape->GetVelocity());
-      m_mSceneEntities[pNode] = new_waypoint;
+      scene_entities_[pNode] = new_waypoint;
       return new_waypoint;
     }
   }
@@ -216,24 +186,24 @@ SceneGraph::GLObject* RenderEngine::AddNode(ModelNode *pNode){
 
 ///////////////////////////////////////
 
-void RenderEngine::AddDevices(SimDevices& Devices){
-  for(map<string, SimDeviceInfo*>::iterator it =
-      Devices.m_vSimDevices.begin();
-      it != Devices.m_vSimDevices.end();
-      it++){
+void RenderEngine::AddDevices(const SimDevices& Devices) {
+  for (std::map<std::string, SimDeviceInfo*>::const_iterator it =
+           Devices.sim_device_map_.begin();
+       it != Devices.sim_device_map_.end();
+       it++) {
     SimDeviceInfo* Device = it->second;
-    if(Device->m_sDeviceType=="Camera"){
-      SimCamera* pSimCam = (SimCamera*) Device;
-      // Initialize the cameras with SceneGraph
-      pSimCam->init(&m_glGraph);
-      // Match devices with their ModelNodes
-      for(map<ModelNode*, SceneGraph::GLObject*>::iterator jj =
-          m_mSceneEntities.begin();
-          jj != m_mSceneEntities.end();
-          jj++){
+    if (Device->m_sDeviceType == "Camera") {
+      SimCamera* pSimCam = static_cast<SimCamera*>(Device);
+      //  Initialize the cameras with SceneGraph
+      pSimCam->init(&gl_graph_);
+      //  Match devices with their ModelNodes
+      for (std::map<ModelNode*, SceneGraph::GLObject*>::iterator jj =
+               scene_entities_.begin();
+           jj != scene_entities_.end();
+           jj++) {
         ModelNode* pNode = jj->first;
-        if(isCameraBody(pNode->GetName(), pSimCam->GetBodyName())){
-          m_mCameras[pSimCam] = pNode;
+        if (isCameraBody(pNode->GetName(), pSimCam->GetBodyName())) {
+          scene_cameras_[pSimCam] = pNode;
         }
       }
     }
@@ -242,17 +212,16 @@ void RenderEngine::AddDevices(SimDevices& Devices){
 
 /////////////////////////////////////////////////
 
-bool RenderEngine::UpdateCameras()
-{
+bool RenderEngine::UpdateCameras() {
   bool bStatus = false;
-  for(map<SimCamera*, ModelNode*>::iterator it = m_mCameras.begin();
-      it != m_mCameras.end();
-      it++){
+  for (std::map<SimCamera*, ModelNode*>::iterator it = scene_cameras_.begin();
+       it != scene_cameras_.end();
+       it++) {
     SimCamera* Device = it->first;
     Device->Update();
     bStatus = true;
   }
-    return bStatus;
+  return bStatus;
 }
 
 
@@ -261,54 +230,54 @@ bool RenderEngine::UpdateCameras()
 // Scan all SimDevices and send the simulated camera images to Pangolin.
 // Right now, we can only support up to two windows.
 
-// TODO: Fairly certain that there's a glitch here. Go through and correct the
-// Image buffers for content.
-void RenderEngine::SetImagesToWindow(){
+// TODO(anyone): Fairly certain that there's a glitch here.
+// Go through and correct the Image buffers for content.
+void RenderEngine::SetImagesToWindow() {
   int WndCounter = 0;
-  for(map<SimCamera*, ModelNode*>::iterator it = m_mCameras.begin();
-      it != m_mCameras.end();
-      it++){
+  for (std::map<SimCamera*, ModelNode*>::iterator it = scene_cameras_.begin();
+       it != scene_cameras_.end();
+       it++) {
     SimCamera* Device = it->first;
-    if(Device->m_bDeviceOn==true){
-      SimCamera* pSimCam = (SimCamera*) Device;
+    if (Device->m_bDeviceOn == true) {
+      SimCamera* pSimCam = dynamic_cast<SimCamera*>(Device);
       SceneGraph::ImageView* ImageWnd;
-      // get pointer to window
-      // TODO: Accept more windows. We might have more cameras, who knows.
-      (WndCounter == 0) ? ImageWnd = m_LSimCamImage :
-          ImageWnd = m_RSimCamImage;
+      //  get pointer to window
+      (WndCounter == 0) ? ImageWnd = left_cam_image_ :
+          ImageWnd = right_cam_image_;
       WndCounter++;
-      // Set image to window
-      // DEPTH
-      if(pSimCam->m_iCamType == SceneGraph::eSimCamDepth){
-        float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
-                                          pSimCam->m_nImgHeight *
-                                          sizeof(float) );
+      //  Set image to window
+      //  DEPTH
+      if (pSimCam->glcamera_type_ == SceneGraph::eSimCamDepth) {
+        float* pImgbuf =
+            static_cast<float*>(malloc(pSimCam->image_width_ *
+                                       pSimCam->image_height_ *
+                                       sizeof(float)));
         bool success = pSimCam->capture(pImgbuf);
-        if(success){
-          ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
-                             pSimCam->m_nImgHeight,
+        if (success) {
+          ImageWnd->SetImage(pImgbuf, pSimCam->image_width_,
+                             pSimCam->image_height_,
                              GL_INTENSITY, GL_LUMINANCE, GL_FLOAT);
           free(pImgbuf);
         }
-      }
-      // RGB
-      else if(pSimCam->m_iCamType == SceneGraph::eSimCamRGB){
-        char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
-                                      pSimCam->m_nImgHeight * 3);
-        if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
-                             pSimCam->m_nImgHeight,
+      } else if (pSimCam->glcamera_type_ == SceneGraph::eSimCamRGB) {
+        //  RGB
+        char* pImgbuf =
+            static_cast<char*>(malloc(pSimCam->image_width_ *
+                                      pSimCam->image_height_ * 3));
+        if (pSimCam->capture(pImgbuf) == true) {
+          ImageWnd->SetImage(pImgbuf, pSimCam->image_width_,
+                             pSimCam->image_height_,
                              GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
           free(pImgbuf);
         }
-      }
-      // GREY
-      else if(pSimCam->m_iCamType == SceneGraph::eSimCamLuminance){
-        char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
-                                      pSimCam->m_nImgHeight);
-        if(pSimCam->capture(pImgbuf)==true){
-          ImageWnd->SetImage(pImgbuf, pSimCam->m_nImgWidth,
-                             pSimCam->m_nImgHeight,
+      } else if (pSimCam->glcamera_type_ == SceneGraph::eSimCamLuminance) {
+        //  GREY
+        char* pImgbuf =
+            static_cast<char*>(malloc(pSimCam->image_width_ *
+                                      pSimCam->image_height_));
+        if (pSimCam->capture(pImgbuf) == true) {
+          ImageWnd->SetImage(pImgbuf, pSimCam->image_width_,
+                             pSimCam->image_height_,
                              GL_INTENSITY, GL_LUMINANCE, GL_UNSIGNED_BYTE);
           free(pImgbuf);
         }
@@ -319,88 +288,85 @@ void RenderEngine::SetImagesToWindow(){
 
 ///////////////////////////////////////
 
-void RenderEngine::AddToScene(){
-  // Add shapes
+void RenderEngine::AddToScene() {
+  //  Add shapes
   std::map<ModelNode*, SceneGraph::GLObject* >::iterator it;
-  for(it = m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
+  for (it = scene_entities_.begin(); it != scene_entities_.end(); it++) {
     SceneGraph::GLObject* p = it->second;
-    m_glGraph.AddChild( p );
+    gl_graph_.AddChild(p);
   }
-  // If we have them, add wheels
-  std::map<string, SceneGraph::GLObject* >::iterator jj;
-  for(jj = m_mRaycastWheels.begin(); jj != m_mRaycastWheels.end(); jj++) {
+  //  If we have them, add wheels
+  std::map<std::string, SceneGraph::GLObject* >::iterator jj;
+  for (jj = raycast_wheels_.begin(); jj != raycast_wheels_.end(); jj++) {
     SceneGraph::GLObject* w = jj->second;
-    m_glGraph.AddChild( w );
+    gl_graph_.AddChild(w);
   }
 }
 
 // This method helps add objects even during simulation
-void RenderEngine::AddNewShape(SceneGraph::GLObject* object){
-  m_glGraph.AddChild(object);
+void RenderEngine::AddNewShape(SceneGraph::GLObject* object) {
+  gl_graph_.AddChild(object);
 }
 
 ///////////////////////////////////////
 
-void RenderEngine::CompleteScene(bool bEnableCameraView=false)
-{
+void RenderEngine::CompleteScene(bool bEnableCameraView = false) {
   const SceneGraph::AxisAlignedBoundingBox bbox =
-      m_glGraph.ObjectAndChildrenBounds();
+      gl_graph_.ObjectAndChildrenBounds();
   const Eigen::Vector3d center = bbox.Center();
   const double size = bbox.Size().norm();
   const double far = 15*size;
   const double near = far / 1E3;
 
-  // Define Camera Render Object (for view / scene browsing)
+  //  Define Camera Render Object (for view / scene browsing)
   pangolin::OpenGlRenderState stacks(
       pangolin::ProjectionMatrix(1024, 768, 420, 420,
                                  1024/2, 768/2, 0.1, 1000),
-      // pangolin::ProjectionMatrix(640,480,420,420,320,240,near,far),
+      //  pangolin::ProjectionMatrix(640, 480, 420, 420, 320, 240, near, far),
       pangolin::ModelViewLookAt(center(0), center(1) + 7,
                                 center(2) + 6,
                                 center(0), center(1), center(2),
-                                pangolin::AxisZ) );
-  m_stacks3d = stacks;
+                                pangolin::AxisZ));
+  gl_stacks_ = stacks;
 
-  // We define a new view which will reside within the container.
+  //  We define a new view which will reside within the container.
 
-  // We set the views location on screen and add a handler which will
-  // let user input update the model_view matrix (stacks3d) and feed through
-  // to our scenegraph
-  m_view3d = new pangolin::View(0.0);
-  m_view3d->SetBounds( 0.0, 1.0, 0.0, 1.0/*, -640.0f/480.0f*/ );
-  m_view3d->SetHandler( new SceneGraph::HandlerSceneGraph(
-      m_glGraph, m_stacks3d) );
-  m_view3d->SetDrawFunction( SceneGraph::ActivateDrawFunctor(
-      m_glGraph, m_stacks3d) );
+  //  We set the views location on screen and add a handler which will
+  //  let user input update the model_view matrix (stacks3d) and feed through
+  //  to our scenegraph
+  gl_view_ = new pangolin::View(0.0);
+  gl_view_->SetBounds(0.0, 1.0, 0.0, 1.0/*, -640.0f/480.0f*/);
+  gl_view_->SetHandler(new SceneGraph::HandlerSceneGraph(
+      gl_graph_, gl_stacks_));
+  gl_view_->SetDrawFunction(SceneGraph::ActivateDrawFunctor(
+      gl_graph_, gl_stacks_));
 
-  // Add our views as children to the base container.
-  pangolin::DisplayBase().AddDisplay( *m_view3d );
+  //  Add our views as children to the base container.
+  pangolin::DisplayBase().AddDisplay(*gl_view_);
 
-  if(bEnableCameraView==true){
-    m_bCameraView= true;
-    //  // window for display image capture from SimCamera
-    m_LSimCamImage = new SceneGraph::ImageView(true, true);
-    m_LSimCamImage->SetBounds( 0.0, 0.5, 0.75, 1.0/*, 512.0f/384.0f*/ );
+  if (bEnableCameraView == true) {
+    is_camera_view_ = true;
+    /// window for display image capture from SimCamera
+    left_cam_image_ = new SceneGraph::ImageView(true, true);
+    left_cam_image_->SetBounds(0.0, 0.5, 0.75, 1.0/*, 512.0f/384.0f*/);
 
-    //  // window for display image capture from SimCamera
-    m_RSimCamImage = new SceneGraph::ImageView(true, true);
-    m_RSimCamImage->SetBounds( 0.5, 1.0, 0.75, 1.0/*, 512.0f/384.0f */);
+    /// window for display image capture from SimCamera
+    right_cam_image_ = new SceneGraph::ImageView(true, true);
+    right_cam_image_->SetBounds(0.5, 1.0, 0.75, 1.0/*, 512.0f/384.0f */);
 
-    pangolin::DisplayBase().AddDisplay( *m_LSimCamImage );
-    pangolin::DisplayBase().AddDisplay( *m_RSimCamImage );
-  }
-  else
-  {
-    m_bCameraView= false;
+    pangolin::DisplayBase().AddDisplay(*left_cam_image_);
+    pangolin::DisplayBase().AddDisplay(*right_cam_image_);
+  } else {
+    is_camera_view_ = false;
   }
 }
 
 ////////////////////////////////////////////////////
 
-bool RenderEngine::isCameraBody(string BodyName, string CameraName){
+bool RenderEngine::isCameraBody(std::string BodyName, std::string CameraName) {
   bool inthere = false;
   std::size_t found = BodyName.find(CameraName);
-  if (found!=std::string::npos){
+  if (found!= std::string::npos) {
     inthere = true;
   }
   return inthere;
@@ -408,43 +374,39 @@ bool RenderEngine::isCameraBody(string BodyName, string CameraName){
 
 ////////////////////////////////////////////////////
 
-void RenderEngine::UpdateScene(){
-  /// React to changes in the PhysicsEngine
+void RenderEngine::UpdateScene() {
+  // React to changes in the PhysicsEngine
   std::map<ModelNode*, SceneGraph::GLObject*>::iterator it;
-  for(it=m_mSceneEntities.begin(); it != m_mSceneEntities.end(); it++) {
+  for (it = scene_entities_.begin(); it != scene_entities_.end(); it++) {
     ModelNode* mn = it->first;
     SceneGraph::GLObject* p = it->second;
-    p->SetPose( mn->GetPose() );
-    // Update all of our tires.
-    if((dynamic_cast<SimRaycastVehicle*>(mn) != NULL)){
-      std::map<string, SceneGraph::GLObject*>::iterator jj;
-      SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) mn;
-      for(jj=m_mRaycastWheels.begin(); jj != m_mRaycastWheels.end(); jj++) {
-        string name = jj->first;
+    p->SetPose(mn->GetPose());
+    //  Update all of our tires.
+    if (SimRaycastVehicle* pVehicle = dynamic_cast<SimRaycastVehicle*>(mn)) {
+      std::map<std::string, SceneGraph::GLObject*>::iterator jj;
+      for (jj = raycast_wheels_.begin(); jj != raycast_wheels_.end(); jj++) {
+        std::string name = jj->first;
         SceneGraph::GLObject* wheel = jj->second;
-        if(name == pVehicle->GetName()+"@FLWheel"){
+        if (name == pVehicle->GetName()+"@FLWheel") {
           wheel->SetPose(pVehicle->GetWheelPose(0));
-        }
-        else if(name == pVehicle->GetName()+"@FRWheel"){
+        } else if (name == pVehicle->GetName()+"@FRWheel") {
           wheel->SetPose(pVehicle->GetWheelPose(1));
-        }
-        else if(name == pVehicle->GetName()+"@BLWheel"){
+        } else if (name == pVehicle->GetName()+"@BLWheel") {
           wheel->SetPose(pVehicle->GetWheelPose(2));
-        }
-        else if(name == pVehicle->GetName()+"@BRWheel"){
+        } else if (name == pVehicle->GetName()+"@BRWheel") {
           wheel->SetPose(pVehicle->GetWheelPose(3));
         }
       }
     }
   }
-  /// Change the views in the Cameras
+  // Change the views in the Cameras
   std::map<SimCamera*, ModelNode*>::iterator jj;
-  for(jj=m_mCameras.begin(); jj != m_mCameras.end(); jj++) {
+  for (jj = scene_cameras_.begin(); jj != scene_cameras_.end(); jj++) {
     SimCamera* pCamera = jj->first;
     ModelNode* pNode = jj->second;
     pCamera->m_vPose = pNode->GetPose();
   }
-  if(UpdateCameras()==true &&m_bCameraView==true){
+  if (UpdateCameras() == true && is_camera_view_ == true) {
     SetImagesToWindow();
   }
 }

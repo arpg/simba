@@ -12,14 +12,14 @@ class bullet_plane: public bullet_shape{
 
 public:
   //constructor
-  bullet_plane(ModelNode* mnPlane){
-    PlaneShape* pPlane = (PlaneShape*) mnPlane;
+  explicit bullet_plane(const std::shared_ptr<ModelNode>& mnPlane){
+    PlaneShape* pPlane = (PlaneShape*) mnPlane.get();
     std::vector<double> dNormal = pPlane->m_dNormal;
 
     //Just make a flat plain
     bulletShape = new btStaticPlaneShape(
           btVector3(dNormal[0], dNormal[1], dNormal[2]), 0);
-    bulletMotionState = new NodeMotionState(*mnPlane);
+    bulletMotionState = new NodeMotionState(mnPlane);
     btRigidBody::btRigidBodyConstructionInfo cInfo(0, bulletMotionState,
                                                    bulletShape,
                                                    btVector3(0, 0, 0));
@@ -29,4 +29,3 @@ public:
 };
 
 #endif // BULLET_PLANE_H
-

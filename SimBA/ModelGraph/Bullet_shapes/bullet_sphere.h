@@ -9,8 +9,8 @@ class bullet_sphere : public bullet_shape{
 
 public:
   //constructor
-  bullet_sphere(ModelNode* mnSphere){
-    SphereShape* pSphere = (SphereShape*) mnSphere;
+  bullet_sphere(const std::shared_ptr<ModelNode>& mnSphere){
+    SphereShape* pSphere = (SphereShape*) mnSphere.get();
     double dRadius = pSphere->m_dRadius;
     double dMass = pSphere->GetMass();
     double dRestitution = pSphere->GetRestitution();
@@ -18,7 +18,7 @@ public:
     dPose = pSphere->GetPoseMatrix();
 
     bulletShape = new btSphereShape(dRadius);
-    bulletMotionState = new NodeMotionState(*mnSphere);
+    bulletMotionState = new NodeMotionState(mnSphere);
     bool isDynamic = ( dMass != 0.f );
     btVector3 localInertia( 0, 0, 0 );
     if( isDynamic ){

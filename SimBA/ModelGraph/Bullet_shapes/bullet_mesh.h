@@ -12,8 +12,8 @@ class bullet_mesh: public bullet_shape{
 
 public:
   //construction
-  bullet_mesh(ModelNode* mnMesh){
-    MeshShape* pMesh = (MeshShape*) mnMesh;
+  explicit bullet_mesh(const std::shared_ptr<ModelNode>& mnMesh){
+    MeshShape* pMesh = (MeshShape*) mnMesh.get();
     const aiScene *pScene = aiImportFile( pMesh->GetFileDir().c_str() ,
                                           aiProcess_Triangulate |
                                           aiProcess_FindDegenerates |
@@ -29,7 +29,7 @@ public:
                        pScene->mRootNode->mTransformation,
                        1.0, *pTriangleMesh, dMin, dMax);
     bulletShape = new btBvhTriangleMeshShape(pTriangleMesh, true, true);
-    bulletMotionState = new NodeMotionState(*mnMesh);
+    bulletMotionState = new NodeMotionState(mnMesh);
     btRigidBody::btRigidBodyConstructionInfo cInfo(pMesh->GetMass(),
                                                    bulletMotionState,
                                                    bulletShape,

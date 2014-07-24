@@ -5,7 +5,8 @@
 ////////////////////////////////////////////////////////////////////////
 
 bool RobotsManager::Init(const string& sim_name, const ModelGraphBuilder& scene,
-                         SimRobot& sim_robot, const string& statekeeper_option){
+                         SimRobot& sim_robot,
+			 const string& statekeeper_option) {
   scene_ = scene;
   sim_name_ = sim_name;
   if (statekeeper_option == "WithoutStateKeeper" ||
@@ -18,12 +19,12 @@ bool RobotsManager::Init(const string& sim_name, const ModelGraphBuilder& scene,
 }
 
 ///////
-bool RobotsManager::ImportSimRobot( SimRobot& sim_robot ) {
+bool RobotsManager::ImportSimRobot(SimRobot& sim_robot) {
   if (sim_robot.GetStateKeeperStatus() == true) {
-    // Ummm
+    //  Ummm
   }
-  // check if we should save name of this robot as save main robot name
-  if (sim_robots_map_.size()==0) {
+  //  check if we should save name of this robot as save main robot name
+  if (sim_robots_map_.size() == 0) {
     main_robot_name_ = sim_robot.GetRobotName();
   }
   sim_robots_map_.insert(pair<string, SimRobot*>(sim_robot.GetRobotName(),
@@ -41,10 +42,10 @@ void RobotsManager::DeleteRobot(string robot_name) {
     std::map<string, SimRobot*>::iterator iter =
         sim_robots_map_.find(robot_name);
     sim_robots_map_.erase(iter);
-    // cout<<"[RobotsManager/DeleteRobot] Delete Robot :"<<robot_name<<
-    //" success. Num of robot we have now is "<<sim_robots_map_.size()<<endl;
+    //  cout<<"[RobotsManager/DeleteRobot] Delete Robot :"<<robot_name<<
+    // " success. Num of robot we have now is "<<sim_robots_map_.size()<<endl;
   } else {
-    // cout<<"[RobotManager/DeleteRobot] Cannot find robot "<<robot_name<<endl;
+    //  cout<<"[RobotManager/DeleteRobot] Cannot find robot "<<robot_name<<endl;
   }
 }
 
@@ -60,7 +61,7 @@ void RobotsManager::UpdateWorldFullState(WorldFullStateMsg worldfullstate) {
 ////////////////////////////////////////////////////////////////////////
 
 // Draw all players on the screen
-void RobotsManager::ApplyWorldFullStateOnAllPlayers(){
+void RobotsManager::ApplyWorldFullStateOnAllPlayers() {
   DrawAllRobotsPoseAxis();
   ApplyWorldFullState();
 }
@@ -70,19 +71,19 @@ void RobotsManager::ApplyWorldFullStateOnAllPlayers(){
 // Simply apply the poses of all main robots from all other LocalSims.
 // DO NOT apply the pose of this LocalSim's main robot.
 
-void RobotsManager::ApplyWorldFullState(){
-  for (int i = 0; i != world_state_.robot_state_size(); i++){
+void RobotsManager::ApplyWorldFullState() {
+  for (int i = 0; i != world_state_.robot_state_size(); i++) {
     RobotFullStateMsg mRobotState =  world_state_.robot_state(i);
-    // only apply state of other robots
+    //  only apply state of other robots
     string robot_name = mRobotState.robot_name();
 
     if (robot_name != GetMainRobot()->GetRobotName()) {
-      // get and apply the state of robot's all body
-      for (int j=0;j!=mRobotState.mutable_body_state()->size();j++) {
+      //  get and apply the state of robot's all body
+      for (int j = 0; j!= mRobotState.mutable_body_state()->size(); j++) {
         BodyStateMsg* mBodyState = mRobotState.mutable_body_state(j);
         string sBodyName = mBodyState->body_name();
 
-        // get velocity
+        //  get velocity
         Eigen::Vector3d eLinearVelocity;
         eLinearVelocity << mBodyState->linear_velocity().x(),
             mBodyState->linear_velocity().y(),
@@ -92,27 +93,27 @@ void RobotsManager::ApplyWorldFullState(){
             mBodyState->angular_velocity().y(),
             mBodyState->angular_velocity().z();
 
-        // get origin
+        //  get origin
         Eigen::Vector3d eOrigin;
         eOrigin << mBodyState->origin().x(),
             mBodyState->origin().y(), mBodyState->origin().z();
 
-        // get basis
+        //  get basis
         Matrix33Msg origin = mBodyState->basis();
         Eigen::Matrix3d mBasis;
         mBasis<<origin.x11(), origin.x12(), origin.x13(),
             origin.x21(), origin.x22(), origin.x23(),
             origin.x31(), origin.x32(), origin.x33();
 
-        // TODO: Make this happen. But not right now.
+        //  TODO: Make this happen. But not right now.
 
-        //        // apply in bullet engine
-        //        scene_.m_Phys.SetEntityOrigin(sBodyName ,eOrigin);
-        //        scene_.m_Phys.SetEntityBasis(sBodyName ,mBasis);
-        //        scene_.m_Phys.SetEntityLinearvelocity(sBodyName,
-        //                                              eLinearVelocity);
-        //        scene_.m_Phys.SetEntityAngularvelocity(sBodyName,
-        //                                               eAngularVelocity);
+        //       //  apply in bullet engine
+        //       scene_.m_Phys.SetEntityOrigin(sBodyName , eOrigin);
+        //       scene_.m_Phys.SetEntityBasis(sBodyName , mBasis);
+        //       scene_.m_Phys.SetEntityLinearvelocity(sBodyName,
+        //                                             eLinearVelocity);
+        //       scene_.m_Phys.SetEntityAngularvelocity(sBodyName,
+        //                                              eAngularVelocity);
       }
     }
   }
@@ -121,35 +122,8 @@ void RobotsManager::ApplyWorldFullState(){
 
 ////////////////////////////////////////////////////////////////////////
 
-void RobotsManager::DrawAllRobotsPoseAxis(){
-  // Fill this in later
-}
-
-////////////////////////////////////////////////////////////////////////
-// GenAxis x,y,z for Pose (x,y,z,p,q,r)
-
-void RobotsManager::GenPoseAxis(Eigen::Vector6d &Pose, Eigen::Vector6d &AxisX,
-                                Eigen::Vector6d &AxisY, Eigen::Vector6d &AxisZ){
-  // Again, do this later
-  // int length=1;
-  // double origin_x=Pose(0,0);
-  // double origin_y=Pose(1,0);
-  // double origin_z=Pose(2,0);
-  // double p=Pose(3,0);
-  // double q=Pose(4,0);
-  // double r=Pose(5,0);
-
-  // AxisX << origin_x+length*cos(q)*cos(r),
-  //     origin_y + length * (cos(r)*sin(p)*sin(q)
-  //                      + cos(p)*sin(r)),
-  //     origin_z+length*(sin(p)*sin(r) - cos(p)*cos(r)*sin(q)), 0, 0, 0;
-  // AxisY << origin_x+length*(-cos(q)*sin(r)),
-  //     origin_y+length*( cos(p)*cos(r)
-  //                       - sin(p)*sin(q)*sin(r)),
-  //     origin_z+length*( cos(p)*sin(q)*sin(r) + cos(r)*sin(p)), 0, 0, 0;
-  // AxisZ << origin_x+length*(sin(q)),
-  //     origin_y+length*(-cos(q)*sin(p)),
-  //     origin_z+length*(cos(p)*cos(q)), 0, 0, 0;
+void RobotsManager::DrawAllRobotsPoseAxis() {
+  //  Fill this in later
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -159,7 +133,7 @@ SimRobot* RobotsManager::GetMainRobot() {
 }
 
 ////////////////////////////////////////////////////////////////////////
-SimRobot* RobotsManager::GetRobot(string robot_name){
+SimRobot* RobotsManager::GetRobot(string robot_name) {
   SimRobot* pSimRobot = sim_robots_map_.find(robot_name)->second;
   return pSimRobot;
 }

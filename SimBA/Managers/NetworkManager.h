@@ -47,7 +47,7 @@ class NetworkManager {
   string CheckURI(string sURI);
 
   /// NODE FUNCTIONS
-  void RegisterDevices(SimDevices* pSimDevices);
+  void RegisterDevices(const std::shared_ptr<SimDevices> pSimDevices);
   void RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
                             RegisterNodeCamRepMsg & mReply);
   void RegisterControllerDevice(pb::RegisterControllerReqMsg& mRequest,
@@ -59,35 +59,24 @@ class NetworkManager {
   bool PublishSimCamBySensor(string sCamBodyName);
   bool PublishGPS(string sDeviceName);
 
-
-  /// STATEKEEPER FUNCTIONS
-  bool RegisterRobot(RobotsManager* pRobotsManager);
-  bool RegisterWithStateKeeper();
-  void AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
-                      LocalSimAddNewRobotRepMsg& mReply);
-  void DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
-                   LocalSimDeleteRobotRepMsg& mReply);
-  bool PublishRobotToStateKeeper();
-  bool ReceiveWorldFromStateKeeper();
-
   //////////////////////////////////////
   // RPC FUNCTIONS CALLED BY HAL AND STATEKEEPER
   //////////////////////////////////////
 
-  // add a new robot by URDF (Called by StateKeeper)
-  static void _AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
-                              LocalSimAddNewRobotRepMsg& mReply,
-                              void* pUserData){
-    ((NetworkManager*)pUserData)->AddRobotByURDF(mRequest, mReply);
-  }
+  // // add a new robot by URDF (Called by StateKeeper)
+  // static void _AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
+  //                             LocalSimAddNewRobotRepMsg& mReply,
+  //                             void* pUserData){
+  //   ((NetworkManager*)pUserData)->AddRobotByURDF(mRequest, mReply);
+  // }
 
-  //////////////////////////////
+  // //////////////////////////////
 
-  static void _DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
-                           LocalSimDeleteRobotRepMsg& mReply,
-                           void* pUserData){
-    ((NetworkManager*)pUserData)->DeleteRobot(mRequest, mReply);
-  }
+  // static void _DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
+  //                          LocalSimDeleteRobotRepMsg& mReply,
+  //                          void* pUserData){
+  //   ((NetworkManager*)pUserData)->DeleteRobot(mRequest, mReply);
+  // }
 
   //////////////////////////////
   // Register hal camera device in LocalSim. This RPC function is called by hal.
@@ -127,7 +116,7 @@ class NetworkManager {
   std::string     local_sim_name_;
   string          server_name_;
   int             timestep_;
-  SimDevices*     sim_devices_;
+  std::shared_ptr<SimDevices> sim_devices_;
   RobotsManager*  robot_manager_;
   std::mutex      statekeeper_mutex_;
 

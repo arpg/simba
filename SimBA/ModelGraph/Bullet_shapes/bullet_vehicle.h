@@ -24,10 +24,10 @@ class bullet_vehicle{
 public:
 
   //constructor
-  bullet_vehicle(ModelNode* mnVehicle, btDynamicsWorld* m_pDynamicsWorld,
-                 btVehicleRaycaster* VehicleRaycaster){
-    SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) mnVehicle;
-
+  bullet_vehicle(const std::shared_ptr<ModelNode>& mnVehicle,
+                 const std::shared_ptr<btVehicleRaycaster>& VehicleRaycaster,
+                 std::shared_ptr<btDynamicsWorld> m_pDynamicsWorld) {
+    SimRaycastVehicle* pVehicle = (SimRaycastVehicle*) mnVehicle.get();
     std::vector<double> parameters = pVehicle->GetParameters();
     Eigen::Matrix4d dPose;
     dPose = pVehicle->GetPoseMatrix();
@@ -46,7 +46,7 @@ public:
     if (isDynamic){
       bulletShape->calculateLocalInertia(parameters[Mass],localInertia);
     }
-    bulletMotionState = new NodeMotionState(*mnVehicle);
+    bulletMotionState = new NodeMotionState(mnVehicle);
     btRigidBody::btRigidBodyConstructionInfo cInfo(parameters[Mass],
                                                    bulletMotionState,
                                                    bulletShape,
@@ -69,7 +69,7 @@ public:
     tuning.m_maxSuspensionForce = parameters[MaxSuspForce];
     tuning.m_maxSuspensionTravelCm = parameters[MaxSuspTravel]*100.0;
     bulletVehicle = new btRaycastVehicle(tuning, bulletBody,
-                                         VehicleRaycaster);
+                                         VehicleRaycaster.get());
     // Never deactivate the vehicle
     bulletBody->forceActivationState(DISABLE_DEACTIVATION);
     bulletVehicle->setCoordinateSystem(1, 2, 0);

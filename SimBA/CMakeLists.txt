@@ -80,48 +80,12 @@ list(APPEND MODELGRAPH_HDRS
   ModelGraph/Bullet_shapes/bullet_vehicle.h
   ModelGraph/Bullet_shapes/bullet_plane.h
   ModelGraph/Bullet_shapes/bullet_mesh.h
-  # ModelGraph/VehicleEnums.h
 )
 
 list(APPEND NETWORK_HDRS
   Network/Tools.h
   Network/WorldState.h
 )
-
-# list(APPEND SIMDEVICES_HDRS
-#   SimDevices/SimDeviceInfo.h
-#   SimDevices/SimDevices.h
-# )
-
-# list(APPEND SIMDEVICES_CONTROLLER_HDRS
-#   SimDevices/Controller/Controller.h
-#   SimDevices/Controller/CarController.h
-#   SimDevices/Controller/PIDControl.h
-#   SimDevices/Controller/SimpleAIController.h
-#   SimDevices/Controller/PIDController.h
-#   SimDevices/Controller/SimpleController.h
-#   SimDevices/Controller/PoseController.h
-# )
-
-# list(APPEND SIMDEVICES_SENSOR_HDRS
-#   SimDevices/Sensor/SimGPS.h
-#   SimDevices/Sensor/SimLaser3D.h
-#   SimDevices/Sensor/SimVicon.h
-#   SimDevices/Sensor/SimCamera.h
-#   SimDevices/Sensor/SimLaser2D.h
-#   SimDevices/Sensor/SimOdometry.h
-# )
-
-# list(APPEND SIMROBOTS_HDRS
-#   SimRobots/SimRobot.h
-#   SimRobots/SimWorld.h
-# )
-
-# list(APPEND URDFPARSER_HDRS
-#   URDFParser/URDF_Parser.h
-#   URDFParser/TinyXMLTool.h
-#   URDFParser/GenURIFromURDF.h
-# )
 
 list(APPEND UTILS_HDRS
   Utils/ConvertName.h
@@ -154,21 +118,13 @@ list(APPEND MODELGRAPH_SRCS
   ModelGraph/GLDebugDrawer.cpp
 )
 list(APPEND NETWORK_SRCS)
-# list(APPEND SIMDEVICES_SRCS
-#   SimDevices/SimDevices.cpp
-# )
 list(APPEND SIMDEVICES_CONTROL_SRCS)
 list(APPEND SIMDEVICES_SENSOR_SRCS)
 list(APPEND SIMROBOTS_SRCS)
-# list(APPEND URDFPARSER_SRCS
-#   URDFParser/URDF_Parser.cpp
-# )
 list(APPEND UTILS_SRCS)
 
 list(APPEND SIMBA_SRCS ${MANAGERS_SRCS}
-                       # ${URDFPARSER_SRCS}
                        ${MODELGRAPH_SRCS}
-                       # ${SIMDEVICES_SRCS}
 		       )
 
 ##################

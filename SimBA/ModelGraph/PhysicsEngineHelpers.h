@@ -1,5 +1,7 @@
-#ifndef PHYSICSENGINEHELPERS_H
-#define PHYSICSENGINEHELPERS_H
+// Copyright (c) bminortx
+
+#ifndef SIMBA_MODELGRAPH_PHYSICSENGINEHELPERS_H_
+#define SIMBA_MODELGRAPH_PHYSICSENGINEHELPERS_H_
 
 #include <math.h>
 
@@ -16,12 +18,12 @@
 // Our Controllers
 #include <SimDevices/SimDevices.h>
 
-//SceneGraphMotionState (for tracking our shapes)
+// SceneGraphMotionState (for tracking our shapes)
 #include <SceneGraph/SceneGraph.h>
 #include <pangolin/pangolin.h>
 #include <ModelGraph/GLDebugDrawer.h>
 
-//Assimp to import our meshes into the Physics system
+// Assimp to import our meshes into the Physics system
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -29,8 +31,7 @@
 // Eigen to Bullet converters
 #include <ModelGraph/EigenToBullet.h>
 
-
-enum Compounds{
+enum Compounds {
   VEHICLE = 0
 };
 
@@ -41,120 +42,97 @@ enum Compounds{
 //////////////////////////////////////////////////////////
 
 class NodeMotionState : public btMotionState {
-public:
-  NodeMotionState(ModelNode& obj)
-    : object(obj){
+ public:
+  explicit NodeMotionState(const std::shared_ptr<ModelNode>& obj)
+      : object(obj) {
   }
 
   virtual void getWorldTransform(btTransform &worldTrans) const {
-    worldTrans = toBullet(object.GetPoseMatrix());
+    worldTrans = toBullet(object->GetPoseMatrix());
   }
 
   virtual void setWorldTransform(const btTransform &worldTrans) {
-    object.SetPose(toEigen(worldTrans));
+    object->SetPose(toEigen(worldTrans));
   }
 
-  ModelNode& object;
-
+  std::shared_ptr<ModelNode> object;
 };
 
-//////////////////////////////////////////////////////////
-///
 /// We declare these typedefs to shorten the name, basically.
-///
-//////////////////////////////////////////////////////////
 
-typedef  std::shared_ptr<btCollisionShape>            CollisionShapePtr;
-typedef  std::shared_ptr<btRigidBody>                 RigidBodyPtr;
-typedef  std::shared_ptr<NodeMotionState>             MotionStatePtr;
-typedef  std::shared_ptr<btRaycastVehicle>            VehiclePtr;
+typedef std::shared_ptr<btCollisionShape> CollisionShapePtr;
+typedef std::shared_ptr<btRigidBody> RigidBodyPtr;
+typedef std::shared_ptr<NodeMotionState> MotionStatePtr;
+typedef std::shared_ptr<btRaycastVehicle> VehiclePtr;
 
-///////////////////////////////////////////////////////
-///
+//////////////////////////
 /// The Entity class
 /// Holds our bullet shapes and terrain.
-///
-///////////////////////////////////////////////////////
 
-class Entity
-{
-public:
-  Entity(){
+class Entity {
+ public:
+  Entity() {
   }
 
-  Entity(CollisionShapePtr  pShape, MotionStatePtr  pMotionState,
-         RigidBodyPtr pRigidShape, string sName){
-    m_sName        = sName;
-    m_pShape       = pShape;
-    m_pMotionState = pMotionState;
-    m_pRigidBody   = pRigidShape;
+  Entity(const CollisionShapePtr& pShape, const MotionStatePtr& pMotionState,
+         const RigidBodyPtr& pRigidShape, const std::string& sName)
+      : name_(sName), shape_(pShape), motion_state_(pMotionState),
+        rigid_body_(pRigidShape) {
+    name_ = sName;
+    shape_ = pShape;
+    motion_state_ = pMotionState;
+    rigid_body_ = pRigidShape;
   }
 
-  //member variables
-  string                  m_sName;
-  CollisionShapePtr       m_pShape;
-  MotionStatePtr          m_pMotionState;
-  RigidBodyPtr            m_pRigidBody;
+  // member variables
+  std::string name_;
+  CollisionShapePtr shape_;
+  MotionStatePtr motion_state_;
+  RigidBodyPtr rigid_body_;
 };
 
-///////////////////////////////////////////////////////
-///
+//////////////////////////
 /// The Compound_Entity class
 /// Holds all of our compound shapes and constraints, as well as the type of
 /// compound we have.
-///
-///////////////////////////////////////////////////////
 
-class Compound_Entity
-{
-public:
-  Compound_Entity(){
+class Compound_Entity {
+ public:
+  Compound_Entity() { }
 
-  }
+  Compound_Entity(const std::vector<double> Shape_ids,
+                  const std::vector<double> Con_ids,
+                  const Compounds& type, const std::string& sName)
+      : name_(sName), shape_ids_(Shape_ids),
+        constraint_ids_(Con_ids), type_(type) { }
 
-  Compound_Entity(double* Shape_ids,
-                  double* Con_ids,
-                  Compounds type,
-                  string sName){
-    m_sName        = sName;
-    m_vShape_ids = Shape_ids;
-    m_vCon_ids = Con_ids;
-    m_Type = type;
-  }
-  string    m_sName;
-  double*   m_vShape_ids;
-  double*   m_vCon_ids;
-  Compounds m_Type;
+  std::string name_;
+  std::vector<double> shape_ids_;
+  std::vector<double> constraint_ids_;
+  Compounds type_;
 };
 
-///////////////////////////////////////////////////////
-///
+//////////////////////////
 /// The Vehicle_Entity class
 /// Holds all of our RaycastVehicles
-///
-///////////////////////////////////////////////////////
 
-class Vehicle_Entity
-{
-public:
-  Vehicle_Entity()
-  {
+class Vehicle_Entity {
+ public:
+  Vehicle_Entity() { }
 
-  }
-  Vehicle_Entity(CollisionShapePtr  pShape, MotionStatePtr  pMotionState,
-                 RigidBodyPtr pRigidShape, VehiclePtr pVehicle, string sName){
-    m_sName        = sName;
-    m_pShape       = pShape;
-    m_pMotionState = pMotionState;
-    m_pRigidBody   = pRigidShape;
-    m_pVehicle     = pVehicle;
-  }
-  //member variables
-  string                  m_sName;
-  CollisionShapePtr       m_pShape;
-  MotionStatePtr          m_pMotionState;
-  RigidBodyPtr            m_pRigidBody;
-  VehiclePtr              m_pVehicle;
+  Vehicle_Entity(const CollisionShapePtr& pShape,
+                 const MotionStatePtr& pMotionState,
+                 const RigidBodyPtr& pRigidShape, const VehiclePtr& pVehicle,
+                 const std::string& sName)
+      : name_(sName), shape_(pShape), motion_state_(pMotionState),
+        rigid_body_(pRigidShape), vehicle_(pVehicle)  { }
+
+  // member variables
+  std::string name_;
+  CollisionShapePtr shape_;
+  MotionStatePtr motion_state_;
+  RigidBodyPtr rigid_body_;
+  VehiclePtr vehicle_;
 };
 
-#endif // PHYSICSENGINEHELPERS_H
+#endif  // SIMBA_MODELGRAPH_PHYSICSENGINEHELPERS_H_
