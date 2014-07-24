@@ -1,9 +1,8 @@
 #ifndef CONVERTNAME_H
 #define CONVERTNAME_H
 
-#include <PB_Headers/SimMessages.pb.h>
+#include <PbMsgs/SimMessages.pb.h>
 #include <Network/WorldState.h>
-
 
 // Get first name from robot name. robot name e.g. robot1@proxy1
 inline string GetRobotFirstName(string sRobotFullName){
