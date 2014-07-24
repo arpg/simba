@@ -59,9 +59,6 @@ list(APPEND MANAGERS_HDRS
 )
 
 list(APPEND MODELGRAPH_HDRS
-  # ModelGraph/SimRaycastVehicle.h
-  # ModelGraph/Constraint.h
-  # ModelGraph/Shape.h
   ModelGraph/ModelGraphBuilder.h
   ModelGraph/PhysicsEngine.h
   ModelGraph/PhysicsEngineHelpers.h
@@ -69,7 +66,6 @@ list(APPEND MODELGRAPH_HDRS
   ModelGraph/GLDebugDrawer.h
   ModelGraph/GLHeightmap.h
   ModelGraph/GlutStuff.h
-  # ModelGraph/ModelNode.h
   ModelGraph/RenderEngine.h
   ModelGraph/EigenToBullet.h
   ModelGraph/Bullet_shapes/bullet_cube.h
