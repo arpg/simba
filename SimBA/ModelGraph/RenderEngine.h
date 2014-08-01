@@ -17,8 +17,6 @@
 #include <map>
 #include <string>
 
-#include "ModelGraph/GLHeightmap.h"
-
 class RenderEngine {
  public:
   void Init(std::string sLocalSimName);
