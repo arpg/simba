@@ -63,13 +63,13 @@ public:
 
     btVector3 vWheelDirectionCS0(0, 0, -1);
     btVector3 vWheelAxleCS(0, -1, 0);
-    btRaycastVehicle::btVehicleTuning	tuning;
+    btRaycastVehicle::btVehicleTuning tuning;
     tuning.m_frictionSlip = parameters[TractionFriction];
     tuning.m_suspensionCompression = parameters[CompDamping];
     tuning.m_suspensionStiffness = parameters[Stiffness];
     tuning.m_suspensionDamping = parameters[ExpDamping];
     tuning.m_maxSuspensionForce = parameters[MaxSuspForce];
-    tuning.m_maxSuspensionTravelCm = parameters[MaxSuspTravel]*100.0;
+    tuning.m_maxSuspensionTravelCm = parameters[MaxSuspTravel] * 100.0;
     bulletVehicle = std::make_shared<btRaycastVehicle>(tuning, bulletBody.get(),
                                                        VehicleRaycaster.get());
     //  Never deactivate the vehicle
@@ -88,8 +88,8 @@ public:
     bulletVehicle->addWheel(connectionPointCS0, vWheelDirectionCS0, vWheelAxleCS,
                             parameters[SuspRestLength], parameters[WheelRadius],
                             tuning, bIsFrontWheel);
-    connectionPointCS0 = btVector3(-con_length,
-                                   con_width,
+    connectionPointCS0 = btVector3(con_length,
+                                   -con_width,
                                    con_height);
     bulletVehicle->addWheel(connectionPointCS0, vWheelDirectionCS0, vWheelAxleCS,
                             parameters[SuspRestLength], parameters[WheelRadius],
@@ -101,8 +101,8 @@ public:
     bulletVehicle->addWheel(connectionPointCS0, vWheelDirectionCS0, vWheelAxleCS,
                             parameters[SuspRestLength], parameters[WheelRadius],
                             tuning, bIsFrontWheel);
-    connectionPointCS0 = btVector3(con_length,
-                                   -con_width,
+    connectionPointCS0 = btVector3(-con_length,
+                                   con_width,
                                    con_height);
     bulletVehicle->addWheel(connectionPointCS0, vWheelDirectionCS0, vWheelAxleCS,
                             parameters[SuspRestLength], parameters[WheelRadius],

@@ -1,6 +1,8 @@
 <world name="SimWorld">
   <!-- This is a smaller version of the heightmap found in world_heightmap.xml.
        Since that heightmap, and its car, are larger than life, I scaled it down here. -->
+  <!-- DO NOT INSERT SPACES BETWEEN COMMAS. When generating data structures later, spaces are
+       interpreted as 0s. Thus, an array of 3 numbers will turn into an array of 6. No bueno. -->
   <base mesh="CSV"
 	row_count="41"
 	col_count="31"
@@ -11,8 +13,6 @@
 	mass="0"
 	worldpose="0,0,0"
 	worldnormal="0,0,1"
-	robotpose="-.5, 1, .12, 0, -1.570795, 0"
-	startpose="10, -5, 2, 0, 0, 0"
-	endpose="0, 0, 0, 0, 0, 0"
+	robotpose="-.5,.3,.12,0,-1.579,0"
 	lightpose="10,10,-100"/>
 </world>
