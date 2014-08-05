@@ -13,17 +13,18 @@ class bullet_plane: public bullet_shape{
 public:
   //constructor
   explicit bullet_plane(const std::shared_ptr<ModelNode>& mnPlane){
-    PlaneShape* pPlane = (PlaneShape*) mnPlane.get();
+    std::shared_ptr<PlaneShape> pPlane =
+        std::dynamic_pointer_cast<PlaneShape>(mnPlane);
     std::vector<double> dNormal = pPlane->m_dNormal;
 
     //Just make a flat plain
-    bulletShape = new btStaticPlaneShape(
+    bulletShape = std::make_shared<btStaticPlaneShape>(
           btVector3(dNormal[0], dNormal[1], dNormal[2]), 0);
-    bulletMotionState = new NodeMotionState(mnPlane);
-    btRigidBody::btRigidBodyConstructionInfo cInfo(0, bulletMotionState,
-                                                   bulletShape,
+    bulletMotionState = std::make_shared<NodeMotionState>(mnPlane);
+    btRigidBody::btRigidBodyConstructionInfo cInfo(0, bulletMotionState.get(),
+                                                   bulletShape.get(),
                                                    btVector3(0, 0, 0));
-    bulletBody = new btRigidBody(cInfo);
+    bulletBody = std::make_shared<btRigidBody>(cInfo);
   }
 
 };

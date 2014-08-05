@@ -27,7 +27,6 @@ find_package( Eigen3 REQUIRED )
 find_package( TinyXML2 REQUIRED )
 find_package( MINIGLOG REQUIRED )
 
-
 #######################################################
 
 set(USER_INC ${BULLET_INCLUDE_DIR}
@@ -64,7 +63,6 @@ list(APPEND MODELGRAPH_HDRS
   ModelGraph/PhysicsEngineHelpers.h
   ModelGraph/GL_ShapeDrawer.h
   ModelGraph/GLDebugDrawer.h
-  ModelGraph/GLHeightmap.h
   ModelGraph/GlutStuff.h
   ModelGraph/RenderEngine.h
   ModelGraph/EigenToBullet.h

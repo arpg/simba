@@ -19,11 +19,12 @@
 
 // Constructs a Bullet btHeightfieldTerrainShape.
 
-class bullet_heightmap {
+class bullet_heightmap : public bullet_shape {
  public:
   // constructor
   explicit bullet_heightmap(const std::shared_ptr<ModelNode>& mnMap) {
-    HeightmapShape* pMap = dynamic_cast<HeightmapShape*>(mnMap.get());
+    std::shared_ptr<HeightmapShape> pMap =
+        std::dynamic_pointer_cast<HeightmapShape>(mnMap);
     int row_count = pMap->row_count_;
     int col_count = pMap->col_count_;
     std::vector<double> X = pMap->x_data_;
@@ -71,33 +72,14 @@ class bullet_heightmap {
                                        (btScalar*) &m_vertices[0].x(),
                                        vertStride);
     ////////////
-    bulletShape.reset(new btBvhTriangleMeshShape(m_indexVertexArrays, true));
-    bulletMotionState.reset(new NodeMotionState(mnMap));
+    bulletShape = std::make_shared<btBvhTriangleMeshShape>(
+        m_indexVertexArrays, true);
+    bulletMotionState = std::make_shared<NodeMotionState>(mnMap);
     btRigidBody::btRigidBodyConstructionInfo cInfo(0, bulletMotionState.get(),
                                                    bulletShape.get(),
                                                    btVector3(0, 0, 0));
-    bulletBody.reset(new btRigidBody(cInfo));
+    bulletBody = std::make_shared<btRigidBody>(cInfo);
   }
-
-  /////////////////////////
-
-  // GETTERS
-  btCollisionShape* getBulletShapePtr() {
-    return bulletShape.get();
-  }
-
-  btRigidBody* getBulletBodyPtr() {
-    return bulletBody.get();
-  }
-
-  NodeMotionState* getBulletMotionStatePtr() {
-    return bulletMotionState.get();
-  }
-
- private:
-  std::shared_ptr<btCollisionShape> bulletShape;
-  std::shared_ptr<btRigidBody> bulletBody;
-  std::shared_ptr<NodeMotionState> bulletMotionState;
 };
 
 #endif  // SIMBA_MODELGRAPH_BULLET_SHAPES_BULLET_HEIGHTMAP_H_

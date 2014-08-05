@@ -96,7 +96,6 @@ int main( int argc, char** argv )
     // Initialize a LocalSim.
     LocalSim local_sim(local_sim_name, robot_urdf_path, world_urdf_path,
                        server_option, debug_level);
-
     // Are we rendering the world?
     if (local_sim.render_option_) {
       while (!pangolin::ShouldQuit()) {

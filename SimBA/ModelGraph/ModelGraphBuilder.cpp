@@ -147,7 +147,6 @@ void ModelGraphBuilder::Init(const SimWorld& world_model,
 
 void ModelGraphBuilder::UpdateScene() {
   CheckForNewShapes();
-  physics_engine_->StepSimulation();
   if (debug_status_) {
     physics_engine_->DebugDrawWorld();
   } else {

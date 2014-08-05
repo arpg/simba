@@ -45,26 +45,24 @@ public:
   }
 
   ///////////////////////////////////
-
-  //getters
-  btCollisionShape* getBulletShapePtr() {
+  ///getters
+  CollisionShapePtr getBulletShapePtr() {
     return bulletShape;
   }
 
-  btRigidBody* getBulletBodyPtr() {
+  RigidBodyPtr getBulletBodyPtr() {
     return bulletBody;
   }
 
-  NodeMotionState* getBulletMotionStatePtr() {
+  MotionStatePtr getBulletMotionStatePtr() {
     return bulletMotionState;
   }
 
-
-protected:
-  btCollisionShape* bulletShape;
-  btRigidBody* bulletBody;
-  NodeMotionState* bulletMotionState;
-
+ protected:
+  //A compound shape to hold all of our collision shapes.
+  CollisionShapePtr bulletShape;
+  RigidBodyPtr bulletBody;
+  MotionStatePtr bulletMotionState;
 };
 
 

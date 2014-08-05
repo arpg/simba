@@ -49,9 +49,6 @@ class PhysicsEngine {
   /// PRINT AND DRAW FUNCTIONS
   void PrintAllShapes();
 
-  /// GETTERS - Used for sensors and controllers
-  btHinge2Constraint* getHinge2Constraint(std::string name);
-  btHingeConstraint* getHingeConstraint(std::string name);
   /// RAYCAST VEHICLE METHODS
   Eigen::Vector6d SwitchYaw(Eigen::Vector6d bad_yaw);
   Eigen::Vector6d SwitchWheelYaw(Eigen::Vector6d bad_yaw);
