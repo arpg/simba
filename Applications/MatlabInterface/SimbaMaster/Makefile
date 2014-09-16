@@ -65,7 +65,7 @@ MXXLIBS = -L$(PROTOBUF_LIB_DIR) -lprotobuf\
 # Notice that the PbMsgs header must be included here as well. 
 #---------------------------------#
 
-HDRS = class_handle.hpp SimbaMaster.h BVP.pb.h
+HDRS = class_handle.hpp SimbaMaster.h CarPlanner.pb.h
 TARGET = SimbaMaster_mex
 
 #---------------------------------#

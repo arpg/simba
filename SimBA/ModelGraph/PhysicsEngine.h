@@ -1,10 +1,10 @@
-#ifndef _PHYSICS_ENGINE_H
-#define _PHYSICS_ENGINE_H
+// Copyright (c) bminortx
 
-#include "PhysicsEngineHelpers.h"
+#ifndef SIMBA_MODELGRAPH_PHYSICSENGINE_H_
+#define SIMBA_MODELGRAPH_PHYSICSENGINE_H_
 
-//All of our Bullet Objects
-//bullet_shape holds the header files Shapes.h and RaycastVehicle.h
+// All of our Bullet Objects
+// bullet_shape holds the header files Shapes.h and RaycastVehicle.h
 #include <ModelGraph/Bullet_shapes/bullet_shape.h>
 #include <ModelGraph/Bullet_shapes/bullet_cube.h>
 #include <ModelGraph/Bullet_shapes/bullet_cylinder.h>
@@ -13,6 +13,8 @@
 #include <ModelGraph/Bullet_shapes/bullet_plane.h>
 #include <ModelGraph/Bullet_shapes/bullet_heightmap.h>
 #include <ModelGraph/Bullet_shapes/bullet_mesh.h>
+#include "ModelGraph/PhysicsEngineHelpers.h"
+
 
 //////////////////////////////////////////////////////////
 ///
@@ -24,10 +26,8 @@
 //////////////////////////////////////////////////////////
 
 
-class PhysicsEngine
-{
-public:
-
+class PhysicsEngine {
+ public:
   /// CONSTRUCTOR
   PhysicsEngine();
 
@@ -37,9 +37,9 @@ public:
 
   /// ADDING OBJECTS TO THE PHYSICS ENGINE
   /// RegisterObject adds shapes, constraints, and vehicles.
-  void RegisterObject(ModelNode *pItem);
+  void RegisterObject(const std::shared_ptr<ModelNode>& pItem);
   void RegisterDevice(SimDeviceInfo* pDevice);
-  bool isVehicle(string Shape);
+  bool isVehicle(std::string Shape);
 
   /// RUNNING THE SIMULATION
   void DebugDrawWorld();
@@ -49,13 +49,10 @@ public:
   /// PRINT AND DRAW FUNCTIONS
   void PrintAllShapes();
 
-  /// GETTERS - Used for sensors and controllers
-  btHinge2Constraint* getHinge2Constraint(string name);
-  btHingeConstraint* getHingeConstraint(string name);
   /// RAYCAST VEHICLE METHODS
   Eigen::Vector6d SwitchYaw(Eigen::Vector6d bad_yaw);
   Eigen::Vector6d SwitchWheelYaw(Eigen::Vector6d bad_yaw);
-  std::vector<Eigen::Matrix4d> GetVehiclePoses( Vehicle_Entity* Vehicle );
+  std::vector<Eigen::Matrix4d> GetVehiclePoses(Vehicle_Entity* Vehicle);
   std::vector<Eigen::Matrix4d> GetVehicleTransform(std::string sVehicleName);
   bool RayCast(const Eigen::Vector3d& dSource,
                const Eigen::Vector3d& dRayVector,
@@ -64,22 +61,20 @@ public:
                      const Eigen::Vector3d& dRayVector,
                      Eigen::Vector3d& dNormal);
 
-
   /// PUBLIC MEMBER VARIABLES
   GLDebugDrawer debug_drawer_;
-  std::map<string, std::shared_ptr<Vehicle_Entity> >    ray_vehicles_map_;
-  std::map<string, std::shared_ptr<Entity> >            shapes_map_;
-  std::map<string, std::shared_ptr<Compound_Entity> >   compounds_map_;
-  std::map<string, btHingeConstraint*>                  hinge_map_;
-  std::map<string, btHinge2Constraint*>                 hinge2_map_;
-  std::map<string, btGeneric6DofConstraint*>            sixdof_map_;
-  std::map<string, btPoint2PointConstraint*>            ptop_map_;
-  vector<SimDeviceInfo*>                                sim_devices_;
+  std::map<std::string, std::shared_ptr<Vehicle_Entity> >    ray_vehicles_map_;
+  std::map<std::string, std::shared_ptr<Entity> >            shapes_map_;
+  std::map<std::string, std::shared_ptr<Compound_Entity> >   compounds_map_;
+  std::map<std::string, btHingeConstraint*>                  hinge_map_;
+  std::map<std::string, btHinge2Constraint*>                 hinge2_map_;
+  std::map<std::string, btGeneric6DofConstraint*>            sixdof_map_;
+  std::map<std::string, btPoint2PointConstraint*>            ptop_map_;
+  std::vector<SimDeviceInfo*>                                sim_devices_;
   std::shared_ptr<btDiscreteDynamicsWorld>              dynamics_world_;
-  btVehicleRaycaster* vehicle_raycaster_;
+  std::shared_ptr<btDefaultVehicleRaycaster> vehicle_raycaster_;
 
-private:
-
+ private:
   /// PRIVATE MEMBER VARIABLES
   btDefaultCollisionConfiguration  collision_configuration_;
   std::shared_ptr<btCollisionDispatcher> bt_dispatcher_;
@@ -88,7 +83,6 @@ private:
   double timestep_;
   double gravity_acc_;
   int time_max_substeps_;
-
 };
 
-#endif //PHYSICSENGINE_H
+#endif  // SIMBA_MODELGRAPH_PHYSICSENGINE_H_

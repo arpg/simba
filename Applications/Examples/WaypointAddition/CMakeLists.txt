@@ -13,7 +13,7 @@ find_package( Node )
 find_package( Calibu )
 find_package( MINIGLOG )
 find_package( SimBA )
-find_package(Protobuf)
+find_package( Protobuf )
 
 include_directories( ${HAL_INCLUDE_DIRS} )
 include_directories( ${Pangolin_INCLUDE_DIRS} )
@@ -33,5 +33,4 @@ target_link_libraries(
   ${MINIGLOG_LIBRARIES}
   ${SimBA_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  NodeMessages
 )

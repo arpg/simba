@@ -85,15 +85,15 @@ string NetworkManager::CheckURI(string sURI) {
     // Check for different devices here. Not sure how else to do this...
     if (uri_contents["device"] == "openni") {
       if (uri_contents["rgb"] == "1") {
-        sim_devices_->m_vSimDevices["RGB_"+sDeviceName]->m_bDeviceOn = true;
+        sim_devices_->sim_device_map_["RGB_"+sDeviceName]->m_bDeviceOn = true;
       }
       if (uri_contents["depth"] == "1") {
-        sim_devices_->m_vSimDevices["Depth_"+sDeviceName]->m_bDeviceOn = true;
+        sim_devices_->sim_device_map_["Depth_"+sDeviceName]->m_bDeviceOn = true;
       }
     }
     /// NodeCar controller
     if (uri_contents["device"] == "NodeCar") {
-      sim_devices_->m_vSimDevices[sDeviceName]->m_bDeviceOn = true;
+      sim_devices_->sim_device_map_[sDeviceName]->m_bDeviceOn = true;
       LOG(debug_level_) << "Got a NodeCar Controller!";
     }
     return sDeviceName;
@@ -113,23 +113,24 @@ string NetworkManager::CheckURI(string sURI) {
 // function after the main robot has gotten its initial pose from StateKeeper,
 // and been built into the ModelGraph.
 
-void NetworkManager::RegisterDevices(SimDevices* pSimDevices) {
+void NetworkManager::RegisterDevices(
+    const std::shared_ptr<SimDevices> pSimDevices) {
   sim_devices_ = pSimDevices;
   // Check if we need to init devices in Node.
   if (server_name_ == "WithoutNetwork") {
     LOG(debug_level_) << "Skip! Init LocalSim without Network.";
     // Turn all of our devices on, since it doesn't matter.
     for (map<string, SimDeviceInfo*>::iterator it =
-             sim_devices_->m_vSimDevices.begin();
-         it != sim_devices_->m_vSimDevices.end();
+             sim_devices_->sim_device_map_.begin();
+         it != sim_devices_->sim_device_map_.end();
          it++) {
       SimDeviceInfo* Device = it->second;
       Device->m_bDeviceOn = true;
     }
   } else {
     for (map<string, SimDeviceInfo*>::iterator it =
-             sim_devices_->m_vSimDevices.begin();
-         it != sim_devices_->m_vSimDevices.end();
+             sim_devices_->sim_device_map_.begin();
+         it != sim_devices_->sim_device_map_.end();
          it++) {
       SimDeviceInfo* Device = it->second;
 
@@ -208,8 +209,8 @@ void NetworkManager::RegisterSensorDevice(RegisterNodeCamReqMsg& mRequest,
     mReply.set_time_step(timestep_);
     mReply.set_regsiter_flag(1);
     mReply.set_channels(pDevices.size());
-    mReply.set_width(pCam->m_nImgWidth);
-    mReply.set_height(pCam->m_nImgHeight);
+    mReply.set_width(pCam->image_width_);
+    mReply.set_height(pCam->image_height_);
     m_iNodeClients = m_iNodeClients + 1;
     string sServiceName = GetFirstName(pCam->GetBodyName());
     if (node_.advertise(sServiceName) == true) {
@@ -258,7 +259,7 @@ void NetworkManager::AddRenderObject(pb::RegisterRenderReqMsg& mRequest,
   LOG(debug_level_) << "AddRenderObject called through RPC...";
   LOG(debug_level_) << "Adding shapes to Scene.";
   pb::SceneGraphMsg new_objects = mRequest.new_objects();
-  std::vector<ModelNode*> new_parts;
+  std::vector<std::shared_ptr<ModelNode> > new_parts;
   if (new_objects.has_box()) {
     auto box_info = new_objects.box();
     std::vector<double> pose;
@@ -271,8 +272,9 @@ void NetworkManager::AddRenderObject(pb::RegisterRenderReqMsg& mRequest,
     for (int ii = 0; ii < box_info.pose().size(); ii++) {
       pose.at(ii) = box_info.pose().Get(ii);
     }
-    BoxShape* pBox = new BoxShape(name, x_length, y_length, z_length,
-                                  mass, 1, pose);
+    std::shared_ptr<BoxShape> pBox = std::make_shared<BoxShape>(
+        name, x_length, y_length, z_length,
+        mass, 1, pose);
     new_parts.push_back(pBox);
     LOG(debug_level_) << "    Box added";
   }
@@ -305,7 +307,8 @@ void NetworkManager::AddRenderObject(pb::RegisterRenderReqMsg& mRequest,
       pose.at(ii) = waypoint_info.pose().Get(ii);
     }
     double velocity = waypoint_info.velocity();
-    WaypointShape* pWaypoint = new WaypointShape(name, pose, velocity);
+    std::shared_ptr<WaypointShape> pWaypoint = std::make_shared<WaypointShape>(
+        name, pose, velocity);
     new_parts.push_back(pWaypoint);
     LOG(debug_level_) << "    Waypoint added";
   }
@@ -358,16 +361,7 @@ bool NetworkManager::UpdateNetwork() {
 
   /// -s WithStateKeeper
   if (server_name_ == "WithStateKeeper") {
-    if (PublishRobotToStateKeeper() == false) {
-      LOG(debug_level_) << "FAILURE: Cannot Publish Robot State To StateKeeper!"
-                        << " You might be disconnected from the server...";
-      return false;
-    }
-    if (ReceiveWorldFromStateKeeper() == false) {
-      LOG(debug_level_) << "Cannot Receive World State from StateKeeper! "
-                        << "You may be disconnected from the server... ";
-      return false;
-    }
+    LOG(debug_level_) << "Why do you have this switched on?";
   }
   return true;
 }
@@ -389,14 +383,14 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName) {
     ////////////
     // A grayscale image
     ////////////
-    if (pSimCam->m_iCamType == SceneGraph::eSimCamLuminance) {
+    if (pSimCam->glcamera_type_ == SceneGraph::eSimCamLuminance) {
       pb::ImageMsg *pImage = mCamImage.add_image();
-      char* pImgbuf = (char*)malloc (pSimCam->m_nImgWidth *
-                                     pSimCam->m_nImgHeight);
+      char* pImgbuf = (char*)malloc (pSimCam->image_width_ *
+                                     pSimCam->image_height_);
       if (pSimCam->capture(pImgbuf) == true) {
         pImage->set_timestamp( timestep_);
-        pImage->set_width( pSimCam->m_nImgWidth );
-        pImage->set_height( pSimCam->m_nImgHeight );
+        pImage->set_width( pSimCam->image_width_ );
+        pImage->set_height( pSimCam->image_height_ );
         pImage->set_type(pb::PB_UNSIGNED_SHORT);
         pImage->set_format(pb::PB_LUMINANCE);
         pImage->set_data(pImgbuf);
@@ -409,15 +403,15 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName) {
     ////////////
     // An RGB image
     ////////////
-    else if (pSimCam->m_iCamType == SceneGraph::eSimCamRGB) {
+    else if (pSimCam->glcamera_type_ == SceneGraph::eSimCamRGB) {
       pb::ImageMsg *pImage = mCamImage.add_image();
-      char* pImgbuf= (char*)malloc (pSimCam->m_nImgWidth *
-                                    pSimCam->m_nImgHeight * 3);
+      char* pImgbuf= (char*)malloc (pSimCam->image_width_ *
+                                    pSimCam->image_height_ * 3);
       if (pSimCam->capture(pImgbuf) == true) {
         pImage->set_data(pImgbuf);
         pImage->set_timestamp( timestep_);
-        pImage->set_width( pSimCam->m_nImgWidth );
-        pImage->set_height( pSimCam->m_nImgHeight );
+        pImage->set_width( pSimCam->image_width_ );
+        pImage->set_height( pSimCam->image_height_ );
         pImage->set_type(pb::PB_UNSIGNED_BYTE);
         pImage->set_format(pb::PB_RGB);
         LOG(debug_level_) << "Published RGB";
@@ -429,16 +423,16 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName) {
     ////////////
     // A depth image
     ////////////
-    else if (pSimCam->m_iCamType == SceneGraph::eSimCamDepth) {
+    else if (pSimCam->glcamera_type_ == SceneGraph::eSimCamDepth) {
       pb::ImageMsg *pImage = mCamImage.add_image();
-      float* pImgbuf = (float*) malloc( pSimCam->m_nImgWidth *
-                                        pSimCam->m_nImgHeight *
+      float* pImgbuf = (float*) malloc( pSimCam->image_width_ *
+                                        pSimCam->image_height_ *
                                         sizeof(float) );
       if (pSimCam->capture(pImgbuf) == true) {
         pImage->set_data((char*)pImgbuf);
         pImage->set_timestamp( timestep_);
-        pImage->set_width( pSimCam->m_nImgWidth );
-        pImage->set_height( pSimCam->m_nImgHeight );
+        pImage->set_width(pSimCam->image_width_);
+        pImage->set_height(pSimCam->image_height_);
         pImage->set_type(pb::PB_FLOAT);
         pImage->set_format(pb::PB_LUMINANCE);
         LOG(debug_level_) << "Published Depth";
@@ -468,7 +462,7 @@ bool NetworkManager::PublishSimCamBySensor(string sCamBodyName) {
 
 bool NetworkManager::PublishGPS(string sDeviceName) {
   Eigen::Vector3d pose;
-  SimGPS* pGPS = (SimGPS*) sim_devices_->m_vSimDevices[sDeviceName];
+  SimGPS* pGPS = (SimGPS*) sim_devices_->sim_device_map_[sDeviceName];
   pGPS->GetPose(pose);
   GPSMsg mGPSMSg;
   mGPSMSg.set_time_step(timestep_);
@@ -496,7 +490,7 @@ bool NetworkManager::PublishGPS(string sDeviceName) {
 // (we may have more than one controller here.)
 
 bool NetworkManager::ReceiveControllerInfo(string sDeviceName) {
-  SimDeviceInfo* pDevice = sim_devices_->m_vSimDevices[sDeviceName];
+  SimDeviceInfo* pDevice = sim_devices_->sim_device_map_[sDeviceName];
   /// TODO: There's a naming issue here; we have to duplicate the name
   /// to register correctly.
   string sServiceName = GetFirstName(sDeviceName) + "/"
@@ -541,283 +535,6 @@ bool NetworkManager::ReceiveControllerInfo(string sDeviceName) {
     } else {
       LOG(ERROR) << "FAILURE: Couldn't get the command for the"
                  << " Simple Controller";
-      return false;
-    }
-  }
-  return true;
-}
-
-
-/************************************************************
- *
- * STATEKEEPER FUNCTIONS
- *
- ***********************************************************/
-
-// Used to commmunicate with the StateKeeper, if it's initialized.
-bool NetworkManager::RegisterRobot(RobotsManager* pRobotsManager) {
-  robot_manager_ = pRobotsManager;
-  // Check if we need to connect to StateKeeper.
-  if (server_name_ == "WithoutNetwork") {
-    LOG(debug_level_) << "Skip due to WithoutNetwork mode";
-  } else if (server_name_ == "WithoutStateKeeper") {
-    LOG(debug_level_) << "Skip due to WithoutStateKeeper mode";
-  }
-  // We have a StateKeeper! Go publish. Now.
-  else if (server_name_ == "WithStateKeeper") {
-    node_.advertise("RobotState");
-    bool bStatus = RegisterWithStateKeeper();
-    if (bStatus == false) {
-      LOG(debug_level_) << "Cannot register LocalSim '"
-                        << local_sim_name_ << "' in " << server_name_
-                        << ". Please make sure " << server_name_
-                        << " is running!";
-      return false;
-    }
-    // TODO: Allow these methods; not sure if they work yet, though.
-    node_.provide_rpc("AddRobotByURDF",&_AddRobotByURDF, this);
-    node_.provide_rpc("DeleteRobot",&_DeleteRobot, this);
-    LOG(debug_level_) << "Init Robot Network "
-                      << local_sim_name_ << " for statekeeper success.";
-  }
-  return true;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-/// REGISTER AND DELETE ROBOTS/DEVICES FROM STATEKEEPER
-/// 1. subscribe to WorldState Topic.
-/// 2. Send Robot's URDF file to StateKeeper.
-/// 3. Receive init pose for Robot.
-
-bool NetworkManager::RegisterWithStateKeeper()
-{
-  // 1. Subscribe to StateKeeper World state topic
-  string sServiceName = server_name_+"/WorldState";
-  if (!node_.subscribe(sServiceName)) {
-    LOG(WARNING) << "FAILURE: Cannot subscribe to "<<sServiceName;
-    return false;
-  }
-
-  // 2. prepare URDF file to StateKeeper
-  //  - Get Robot URDF (.xml) file
-  //  - Set request msg
-  SimRobot* pSimRobot = robot_manager_->sim_robots_map_.begin()->second;
-  XMLPrinter printer;
-  pSimRobot->GetRobotURDF()->Accept(&printer);
-  RegisterLocalSimReqMsg mRequest;
-  string sRobotName = pSimRobot->GetRobotName();
-  mRequest.set_proxy_name(local_sim_name_);
-  mRequest.mutable_urdf()->set_robot_name(sRobotName);
-  mRequest.mutable_urdf()->set_xml(printer.CStr());
-
-  // 3. Call StateKeeper to register robot: service name, request_msg,
-  // reply_msg. Reply message must be empty.
-  RegisterLocalSimRepMsg mReply;
-  sServiceName = server_name_ + "/RegisterLocalSim";
-  if (node_.call_rpc(sServiceName, mRequest, mReply) == true &&
-      mReply.robot_name() == sRobotName) {
-    Vector6Msg  mInitRobotState = mReply.init_pose();
-    LOG(debug_level_) << "Set URDF to StateKeeper success";
-    // 3.1 init time step. this is very important step.
-    timestep_ = mReply.time_step();
-    // 3.2 init pose state of my robot.
-    Eigen::Vector6d ePose;
-    ePose<<mInitRobotState.x(), mInitRobotState.y(), mInitRobotState.z(),
-        mInitRobotState.p(), mInitRobotState.q(), mInitRobotState.r();
-
-    LOG(debug_level_) << "Robot register success!"
-                      << " Get init robot state as x: " << ePose[0]
-                      << " y: " << ePose[1]
-                      << " z: " << ePose[2]
-                      << " p: " << ePose[3]
-                      << " q: " << ePose[4]
-                      << " r: " << ePose[5]
-                      << ". in Time step: " << timestep_;
-
-    // 3.3 build other robots that already in StateKeeper in our proxy.
-    // Read initial pose of them from URDF. This is a trick as their real
-    // pose will be set quickly when we sync worldstate message.
-    LOG(debug_level_) << "Try to init " << mReply.urdf_size()
-                      << " previous players.";
-    for (int i = 0; i != mReply.urdf_size(); i++) {
-      // prepare urdf
-      const URDFMsg& urdf = mReply.urdf(i);
-      string sFullName = urdf.robot_name();
-      string sLastName = GetLastName(sFullName);
-      XMLDocument doc;
-      doc.Parse(urdf.xml().c_str());
-      // create previous robot
-      URDF_Parser* parse = new URDF_Parser(debug_level_);
-      SimRobot* robot = new SimRobot();
-      parse->ParseRobot(doc, *robot, sLastName);
-      robot_manager_->ImportSimRobot(*robot);
-
-      // TODO: How to add this back into the scene...
-      LOG(debug_level_) << "SUCCESS: Init previous player " << sFullName
-                        << ". Last Name " << sLastName;
-    }
-    return true;
-  } else {
-    LOG(WARNING) << "FAILURE: LocalSim register";
-    return false;
-  }
-}
-
-////////////////////////////////////////////////////////////////////////
-/// Add a new robot to the Sim (through StateKeeper)
-
-void NetworkManager::AddRobotByURDF(LocalSimAddNewRobotReqMsg& mRequest,
-                                    LocalSimAddNewRobotRepMsg& mReply)
-{
-  // set reply message for StateKeeper
-  mReply.set_message("AddNewRobotSuccess");
-
-  // Create New Robot Base on URDF File in my proxy
-  XMLDocument doc;
-  doc.Parse(mRequest.urdf().xml().c_str());
-  string sNewAddRobotName = mRequest.robot_name();
-  string sProxyNameOfNewRobot= GetRobotLastName(sNewAddRobotName);
-
-  Eigen::Vector6d ePose;
-  ePose<<mRequest.mutable_init_pose()->x(), mRequest.mutable_init_pose()->y(),
-      mRequest.mutable_init_pose()->z(), mRequest.mutable_init_pose()->p(),
-      mRequest.mutable_init_pose()->q(), mRequest.mutable_init_pose()->r();
-
-  // add new robot in proxy
-  URDF_Parser* parse = new URDF_Parser(debug_level_);
-  SimRobot* robot = new SimRobot();
-  parse->ParseRobot(doc, *robot, sProxyNameOfNewRobot);
-  robot_manager_->ImportSimRobot(*robot);
-  LOG(debug_level_) << "SUCCESS: Added new robot "
-                    << mRequest.robot_name();
-}
-
-////////////////////////////////////////////////////////////////////////
-/// Delete an existing robot from the Sim (through StateKeeper)
-
-void NetworkManager::DeleteRobot(LocalSimDeleteRobotReqMsg& mRequest,
-                                 LocalSimDeleteRobotRepMsg& mReply) {
-  // Don't let anyone touch the shared resource table...
-  std::lock_guard<std::mutex> lock(statekeeper_mutex_);
-
-  // set reply message for StateKeeper
-  mReply.set_message("DeleteRobotSuccess");
-
-  // delete robot in our proxy
-  string sRobotName = mRequest.robot_name();
-  robot_manager_->DeleteRobot(sRobotName);
-  LOG(debug_level_) << "SUCCESS: Deleted Robot "
-                    << sRobotName;
-}
-
-////////////////////////////////////////////////////////////////////////
-/// Sync WorldState by
-/// (1) Publishing main robot's state and
-/// (2) Receiving the world state
-/// We read the robot state via a vicon device. This state includes the robot
-/// pose, state, and current command.
-bool NetworkManager::PublishRobotToStateKeeper() {
-  // don't let anyone touch the shared resource table...
-  std::lock_guard<std::mutex> lock(statekeeper_mutex_);
-
-  // 1. Set robot name and time step info
-  RobotFullStateMsg mRobotFullState;
-  mRobotFullState.set_robot_name(
-      robot_manager_->GetMainRobot()->GetRobotName());
-  // mark it as the lastest robot state by time_step +1.
-  mRobotFullState.set_time_step(timestep_);
-
-  // 2. Set body state info
-  vector<string> vAllBodyFullName =
-      robot_manager_->GetMainRobot()->GetAllBodyName();
-
-  // TODO: Fix this implementation.
-
-  //  for (unsigned int i=0;i!=vAllBodyFullName.size();i++)
-  //  {
-  //    string sBodyName = vAllBodyFullName[i];
-  //    // prepare pose info
-  //    Eigen::Vector3d eOrigin =
-  //        robot_manager_->m_Scene.m_Phys.GetEntityOrigin(sBodyName);
-  //    Eigen::Matrix3d eBasis =
-  //        robot_manager_->m_Scene.m_Phys.GetEntityBasis(sBodyName);
-
-  //    // prepare veloicty info
-  //    Eigen::Vector3d eLinearV =
-  //        robot_manager_->m_Scene.m_Phys.GetEntityLinearVelocity(sBodyName);
-  //    Eigen::Vector3d eAngularV =
-  //        robot_manager_->m_Scene.m_Phys.GetEntityAngularVelocity(sBodyName);
-
-  //    // set pose info
-  //    BodyStateMsg* mBodyState = mRobotFullState.add_body_state();
-  //    mBodyState->set_body_name(sBodyName);
-  //    mBodyState->mutable_origin()->set_x(eOrigin[0]);
-  //    mBodyState->mutable_origin()->set_y(eOrigin[1]);
-  //    mBodyState->mutable_origin()->set_z(eOrigin[2]);
-
-  //    mBodyState->mutable_basis()->set_x11(eBasis(0,0));
-  //    mBodyState->mutable_basis()->set_x12(eBasis(0,1));
-  //    mBodyState->mutable_basis()->set_x13(eBasis(0,2));
-  //    mBodyState->mutable_basis()->set_x21(eBasis(1,0));
-  //    mBodyState->mutable_basis()->set_x22(eBasis(1,1));
-  //    mBodyState->mutable_basis()->set_x23(eBasis(1,2));
-  //    mBodyState->mutable_basis()->set_x31(eBasis(2,0));
-  //    mBodyState->mutable_basis()->set_x32(eBasis(2,1));
-  //    mBodyState->mutable_basis()->set_x33(eBasis(2,2));
-
-  //    // set velocity
-  //    mBodyState->mutable_linear_velocity()->set_x(eLinearV[0]);
-  //    mBodyState->mutable_linear_velocity()->set_y(eLinearV[1]);
-  //    mBodyState->mutable_linear_velocity()->set_z(eLinearV[2]);
-
-  //    mBodyState->mutable_angular_velocity()->set_x(eAngularV[0]);
-  //    mBodyState->mutable_angular_velocity()->set_y(eAngularV[1]);
-  //    mBodyState->mutable_angular_velocity()->set_z(eAngularV[2]);
-  //  }
-
-  // 4. Publish robot state
-  bool bStatus = false;
-  while (bStatus == false) {
-    bStatus = node_.publish("RobotState", mRobotFullState);
-    if (bStatus==true) {
-      LOG(debug_level_) << "Publish " << local_sim_name_
-                        << " State to Statekeeper success. Publish Timestep is "
-                        << timestep_;
-      return true;
-    } else {
-      LOG(WARNING) << "ERROR: Publishing RobotState Fail.";
-      return false;
-    }
-  }
-  return true;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-bool NetworkManager::ReceiveWorldFromStateKeeper() {
-  std::lock_guard<std::mutex> lock(statekeeper_mutex_);
-  WorldFullStateMsg ws;
-  string sServiceName = server_name_ + "/WorldState";
-  // wait until we get the lastest world state
-  int iMaxTry=50;
-  bool bStatus=false;
-  while (bStatus==false) {
-    if (node_.receive(sServiceName, ws )==true && ws.time_step() >=
-        robot_manager_->world_state_.time_step()) {
-      // update world state in robots manager.
-      robot_manager_->UpdateWorldFullState(ws);
-      robot_manager_->ApplyWorldFullState();
-      timestep_ = ws.time_step();
-      bStatus=true;
-      LOG(debug_level_) << "Update World state success! Size is "
-                        << ws.robot_state_size()
-                        << ". Time Step for world state is " << ws.time_step();
-    } else if (bStatus == false && iMaxTry!=0) {
-      usleep(50000);
-      iMaxTry--;
-    } else {
-      LOG(WARNING) << "Update World state fail!";
       return false;
     }
   }

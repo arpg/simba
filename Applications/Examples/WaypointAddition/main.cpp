@@ -2,7 +2,7 @@
 
 #include <pangolin/pangolin.h>
 #include <Node/Node.h>
-#include <PB_Headers/RenderShapes.pb.h>
+#include <PbMsgs/SceneGraphShapes.pb.h>
 
 /****************
  * MAIN LOOP

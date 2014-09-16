@@ -20,7 +20,6 @@ The below libraries are needed in order to install (provided in suggested order)
 - Calibu
 
 CMake Options:
-- BUILD CAR PLANNER: Builds the sections of SimBA that only work with the PlannerLib repo. Check it out from the RPG github, ssh://rpg@robotics.gwu.edu/home/rpg/git/CarPlanner
 - BUILD MATLAB INTERFACE: Makes the MATLAB interface files, PlannerMaster and SimbaMaster. *Before switching this option to ON, change the Makefiles included in their directories (./Applications/MatlabInterface/---Planner)*.
 
 After these options are set, run cmake and make on SimBA. You are now ready to do some sweet simulation!
@@ -70,9 +69,7 @@ Work in progress...
 
 MatlabInterface
 ---------
-The MatlabInterface is actually a set of programs: SimbaMaster and PlannerMaster. SimbaMaster is a basic interaction tool with LocalSim (see Applications->LocalSim below), and has its own commands for building and testing RaycastVehicle performance in LocalSim.
-
-PlannerMaster interacts directly with PlannerLib, and as such will only build if BUILD CAR PLANNER is set to ON. PlannerMaster takes commands found from PlannerLib and passes them to MATLAB, where they can then be transferred to LocalSim for plotting.
+The MatlabInterface holds the SimbaMaster program. SimbaMaster is a basic interaction tool with LocalSim (see Applications->LocalSim below), and has its own commands for building and testing RaycastVehicle performance in LocalSim.
 
 Examples/KeyboardCarCommander
 ---------
@@ -83,13 +80,6 @@ Despite its name, KeyboardCarCommander does not use the keyboard at all; rather,
 Examples/TestCam
 ---------
 With a LocalSim started and a camera initiated, TestCam allows the user to see through that camera. It gathers simulated video/photo data and sends it through Node to a separate window. It just serves as another example of the HAL<->LocalSim connection.
-
-Examples/PathPlannerTest
----------
-*Must have BUILD CAR PLANNER switched ON.* This folder implements two programs: PathPlannerSolver and PathPlannerInterpolation.
-- PathPlannerSolver: Takes a start and goal configuration, along with a mesh, and uses them to calculate the optimum control policy to get from start to goal. The program then starts a node instance and passes the commands to LocalSim (assuming it's up and running already).
-- PathPlannerInterpolation: Takes a solved bezier control function (6 <x,y> vectors) and derives a control policy from that. Still in development.
-This will be moved to the CarPlanner library in the near future.
 
 Examples/WaypointAddition
 ---------

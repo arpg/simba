@@ -14,8 +14,6 @@
 	mass="0"
 	worldpose="0,0,0"
 	worldnormal="0,0,1"
-	robotpose="10, -5, 2, 0, 0, 0"
-	startpose="10, -5, 2, 0, 0, 0"
-	endpose="0, 0, 0, 0, 0, 0"
+	robotpose="10,-5,.2,0,0,0"
 	lightpose="10,10,-100"/>
 </world>

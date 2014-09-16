@@ -21,6 +21,8 @@
 #---------------------------------#
 MATLAB_DIR = /Applications/MATLAB_R2013a.app/extern/include/
 
+COREDEV_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/
+COREDEV_BUILD_DIR = /Users/Trystan/Code/rslam/build/CoreDev/
 HAL_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/HAL/
 HAL_BUILD_DIR = /Users/Trynstan/Code/rslam/build/CoreDev/HAL/
 NODE_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/Node/
@@ -34,22 +36,23 @@ MINIGLOG_DIR = /Users/Trystan/Code/rslam/rslam/CoreDev/miniglog/
 MINIGLOG_BUILD_DIR = /Users/Trystan/Code/rslam/build/CoreDev/miniglog/
 ZMQ_DIR = /usr/local/include/
 GENERAL_HDR = /usr/include/
-PROJECT_DIR = /Users/Trystan/Code/simba_tests/MatlabInterface/PlannerMaster/
-NODEMESSAGES_DIR = /Users/Trystan/Code/simba/build/SimBA/PB_Headers/
+PROJECT_DIR = /Users/Trystan/Code/simba/Applications/MatlabInterface/
 
 CXXFLAGS = -std=c++11 -O -I$(MATLAB_DIR)\
+  -I$(COREDEV_DIR) -I$(COREDEV_BUILD_DIR)\
   -I$(HAL_DIR) -I$(HAL_BUILD_DIR) -I$(NODE_DIR) -I$(NODE_BUILD_DIR)\
   -I$(PANGOLIN_BUILD_DIR) -I$(PbMsgs_DIR) -I$(PbMsgs_BUILD_DIR)\
   -I$(PROTOBUF_DIR) -I$(ZMQ_DIR)\
   -I$(GENERAL_HDR) -I$(PROJECT_DIR) -I$(MINIGLOG_DIR)\
-  -I$(NODE_BUILD_DIR)NodeMessages.pb.cc -I$(NODEMESSAGES_DIR)
+  -I$(NODE_BUILD_DIR)NodeMessages.pb.cc
 
 MXXFLAGS = -O -I$(MATLAB_DIR)\
+  -I$(COREDEV_DIR) -I$(COREDEV_BUILD_DIR)\
   -I$(HAL_DIR) -I$(HAL_BUILD_DIR) -I$(NODE_DIR) -I$(NODE_BUILD_DIR)\
   -I$(PANGOLIN_BUILD_DIR) -I$(PbMsgs_DIR) -I$(PbMsgs_BUILD_DIR)\
   -I$(PROTOBUF_DIR) -I$(ZMQ_DIR)\
   -I$(GENERAL_HDR) -I$(PROJECT_DIR) -I$(MINIGLOG_DIR)\
-  -I$(NODE_BUILD_DIR)NodeMessages.pb.cc -I$(NODEMESSAGES_DIR)
+  -I$(NODE_BUILD_DIR)NodeMessages.pb.cc 
 
  CXXLIBS = -L$(PROTOBUF_LIB_DIR) -lprotobuf\
   -L$(NODE_BUILD_DIR) -lnode\
@@ -65,8 +68,8 @@ MXXLIBS = -L$(PROTOBUF_LIB_DIR) -lprotobuf\
 # Notice that the PbMsgs header must be included here as well. 
 #---------------------------------#
 
-HDRS = class_handle.hpp PlannerMaster.h BVP.pb.h
-TARGET = PlannerMaster_mex
+HDRS = class_handle.hpp SimbaMaster.h CarPlanner.pb.h
+TARGET = SimbaMaster_mex
 
 #---------------------------------#
 # 3. ARCHITECTURE VARIABLES

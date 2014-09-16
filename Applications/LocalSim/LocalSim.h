@@ -13,6 +13,7 @@
 #include "Utils/CVarHelpers.h"                 // for parsing Eigen as CVars
 #include <CVars/CVar.h>                        // for GLConsole
 #include <Utils/GetPot>                        // for command line parsing
+#include <URDFParser/TinyXMLTool.h>
 #include <miniglog/logging.h>
 
 // Node is used for communication between RP and any devices
@@ -20,10 +21,7 @@
 
 #include "Managers/NetworkManager.h"           // for managing the Network
 #include "Managers/RobotsManager.h"            // for managing all robots
-
-
-#include <URDFParser/URDF_Parser.h>            // for parsing URDF file
-
+#include <URDFParser/URDFParser.h>            // for parsing URDF file
 #include <SimRobots/SimRobot.h>                // for managing the User's robot
 #include "SimRobots/SimWorld.h"
 #include "SimDevices/SimDevices.h"             // for managing the SimDevices
@@ -39,12 +37,12 @@ public:
   //member variables
   std::string                 local_sim_name_;
   ModelGraphBuilder           scene_;
-  SimRobot                    sim_robot_;
-  SimWorld                    sim_world_;
-  SimDevices                  sim_devices_;
+  std::shared_ptr<SimRobot> sim_robot_;
+  std::shared_ptr<SimWorld> sim_world_;
+  std::shared_ptr<SimDevices> sim_devices_;
   RobotsManager               robot_manager_;
   NetworkManager              network_manager_;
-  URDF_Parser*                parser_;
+  URDFParser*                 parser_;
   bool                        render_option_;
 
   /// Constructor

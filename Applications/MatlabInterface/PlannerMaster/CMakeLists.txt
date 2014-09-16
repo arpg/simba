@@ -1,6 +1,0 @@
-execute_process(COMMAND make clean
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-execute_process(COMMAND make
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-

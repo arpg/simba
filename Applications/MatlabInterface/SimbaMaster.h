@@ -1,25 +1,27 @@
-#ifndef _SIMBAMASTER_H
-#define _SIMBAMASTER_H
+// Copyright (c) bminortx
+
+#ifndef APPLICATIONS_MATLABINTERFACE_SIMBAMASTER_H_
+#define APPLICATIONS_MATLABINTERFACE_SIMBAMASTER_H_
 
 /*
  * File:   SimbaMaster.h
- * Author: bminortx
  * SimbaMaster connects MATLAB and SimBA::LocalSim. This allows two things:
  * 1. Simulate trajectories from MATLAB
  * 2. Test the results from a LocalPlanner optimization given to MATLAB
  */
 
 #include <unistd.h>
+#include <string>
+#include <vector>
 #include <cstdlib>
-#include "Node.h"
+#include "Node/Node.h"
 // Our protobuf sources - I couldn't find a successful way to import these
 // using the makefile, so #includes had to do.
-#include "PbMsgs/CarPlanner.pb.h"
+#include "CarPlanner.pb.h"
 #include "/Users/Trystan/Code/rslam/build/CoreDev/HAL/PbMsgs/CarPlanner.pb.cc"
 
-class SimbaMaster{
+class SimbaMaster {
  public:
-
   /// CONSTRUCTOR
   SimbaMaster() {
     std::string node_name = "SimbaMaster";
@@ -31,11 +33,11 @@ class SimbaMaster{
    **********************************************************************/
 
   void StartConnections() {
-    // TODO: Modify this so that it uses an RPC call
+    // TODO(bminortx): Modify this so that it uses an RPC call
     // node_.advertise("BVP"+std::to_string(i));
-    // while(!node_.subscribe(sim_name+"/CheckSolved")) {
-    //   std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    //   std::cout<<"=>";
+    // while (!node_.subscribe(sim_name+"/CheckSolved")) {
+    // std::this_thread::sleep_for (std::chrono::milliseconds(10));
+    // std::cout<<" = >";
     // }
   }
 
@@ -50,11 +52,11 @@ class SimbaMaster{
       params_.add_start_param(start_point[ii]);
       params_.add_goal_param(goal_point[ii]);
     }
-    // TODO: Modify so that we have a good way to send 6d vectors
-    // for (int ii = 0;ii<(row_count*col_count); ii++) {
-    //   params_.add_x_data(x_data[ii]);
-    //   params_.add_y_data(y_data[ii]);
-    //   params_.add_z_data(z_data[ii]);
+    // TODO(bminortx): Modify so that we have a good way to send 6d vectors
+    // for (int ii = 0; ii<(row_count*col_count); ii++) {
+    // params_.add_x_data(x_data[ii]);
+    // params_.add_y_data(y_data[ii]);
+    // params_.add_z_data(z_data[ii]);
     // }
     // params_.set_col_count(col_count);
     // params_.set_row_count(row_count);
@@ -66,11 +68,11 @@ class SimbaMaster{
 
   ////////////
 
-  // Used in URDF_Parser.cpp in SimBA
+  //  Used in URDF_Parser.cpp in SimBA
   void SetHeightmap(double* x_data, double* y_data,
                     double* z_data, int row_count, int col_count) {
     std::this_thread::sleep_for(std::chrono::seconds(5));
-    pb::Heightmap map;
+    pb::PlannerHeightmapMsg map;
     for (int ii = 0; ii < (row_count*col_count); ii++) {
       map.add_x_data(x_data[ii]);
       map.add_y_data(y_data[ii]);
@@ -90,52 +92,51 @@ class SimbaMaster{
    **********************************************************************/
 
   void RunPolicy(double* force, double* phi, double* duration) {
+    // / rpc call to physics engine as a hal::car, and send all the commands
+    // / that we have to to simulator. There is already a template for this
+    // / in PathPlannerTest. Use that
 
-    /// rpc call to physics engine as a hal::car, and send all the commands
-    /// that we have to to simulator. There is already a template for this
-    /// in PathPlannerTest. Use that
-
-    // TODO: Modify so that we have a good way to send 6d vectors
+    // TODO(bminortx): Modify so that we have a good way to send 6d vectors
     // for (int ii = 0; ii <(row_count*col_count); ii++) {
-    //   params_.add_x_data(x_data[ii]);
-    //   params_.add_y_data(y_data[ii]);
-    //   params_.add_z_data(z_data[ii]);
+    // params_.add_x_data(x_data[ii]);
+    // params_.add_y_data(y_data[ii]);
+    // params_.add_z_data(z_data[ii]);
     // }
     // params_.set_col_count(col_count);
     // params_.set_row_count(row_count);
     // params_.set_tau(tau);
     // while (!node_.publish("SetConfiguration", params_)) {
-    //   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // std::this_thread::sleep_for (std::chrono::milliseconds(100));
     // }
   }
 
-  ////////////
+  // //////////
 
   void PlotMotionSample(double* x, double* y, double* z,
                         double* r, double* p, double* q) {
-    /// rpc call to scenegraph, and add a waypoint at each of
-    /// these points
+    // / rpc call to scenegraph, and add a waypoint at each of
+    // / these points
 
 
-    // TODO: Modify so that we have a good way to send 6d vectors
+    // TODO(bminortx): Modify so that we have a good way to send 6d vectors
     // for (int ii = 0; ii <(row_count*col_count); ii++) {
-    //   params_.add_x_data(x_data[ii]);
-    //   params_.add_y_data(y_data[ii]);
-    //   params_.add_z_data(z_data[ii]);
+    // params_.add_x_data(x_data[ii]);
+    // params_.add_y_data(y_data[ii]);
+    // params_.add_z_data(z_data[ii]);
     // }
     // params_.set_col_count(col_count);
     // params_.set_row_count(row_count);
     // params_.set_tau(tau);
     // while (!node_.publish("SetConfiguration", params_)) {
-    //   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // std::this_thread::sleep_for (std::chrono::milliseconds(100));
     // }
   }
 
 
-  ////////////////////////
-  /// VECTOR MANIPULATORS
-  /// #justmatlabthings
-  ////////////////////////
+  // //////////////////////
+  // / VECTOR MANIPULATORS
+  // / #justmatlabthings
+  // //////////////////////
 
   double* Vector2Double(std::vector<double> vect) {
     double* new_doub = new double[vect.size()];
@@ -145,33 +146,33 @@ class SimbaMaster{
     return new_doub;
   }
 
-  ///////
+  // /////
 
   std::vector<double> Double2Vector(double* doub, int size) {
     std::vector<double> new_vect;
-    for(int ii = 0; ii < size; ii++) {
+    for (int ii = 0; ii < size; ii++) {
       new_vect.push_back(doub[ii]);
     }
     return new_vect;
   }
 
-  ///////
+  // /////
 
   std::vector< std::vector<double> > TurnPolicyIntoVector(
-      pb::BVP_policy buffer) {
+      pb::PlannerPolicyMsg buffer) {
     std::vector< std::vector<double> > policy;
     std::vector<double> force;
     std::vector<double> phi;
     std::vector<double> time;
-    // Force
+    //  Force
     for (int ii = 0; ii < buffer.force_size(); ii++) {
       force.push_back(buffer.force(ii));
     }
-    // Phi
+    //  Phi
     for (int ii = 0; ii < buffer.phi_size(); ii++) {
       phi.push_back(buffer.phi(ii));
     }
-    // Time
+    //  Time
     for (int ii = 0; ii < buffer.time_size(); ii++) {
       time.push_back(buffer.time(ii));
     }
@@ -181,28 +182,28 @@ class SimbaMaster{
     return policy;
   }
 
-  ///////
+  // /////
 
-  double* TurnPolicyIntoArray(pb::BVP_policy buffer) {
-    // Array Size = time vector + force vector + phi vector + length of
-    //   these vectors, so MATLAB knows + start state + goal state
+  double* TurnPolicyIntoArray(pb::PlannerPolicyMsg buffer) {
+    //  Array Size = time vector + force vector + phi vector + length of
+    //  these vectors, so MATLAB knows + start state + goal state
     int array_size = buffer.time_size() + buffer.force_size() +
         buffer.phi_size() + 1;
     double* policy = new double[array_size];
-    // Space 0 gives us the length of each column vector.
+    //  Space 0 gives us the length of each column vector.
     policy[0] = buffer.force_size();
     int counter = 1;
-    // Force
+    //  Force
     for (int ii = 0; ii < buffer.force_size(); ii++) {
       policy[counter] = buffer.force(ii);
       counter++;
     }
-    // Phi
+    //  Phi
     for (int ii = 0; ii < buffer.phi_size(); ii++) {
       policy[counter] = buffer.phi(ii);
       counter++;
     }
-    // Time
+    //  Time
     for (int ii = 0; ii < buffer.time_size(); ii++) {
       policy[counter] = buffer.time(ii);
       counter++;
@@ -210,14 +211,13 @@ class SimbaMaster{
     return policy;
   }
 
-  //////////////
-  /// MEMBER VARIABLES
-  //////////////
+  // ////////////
+  // / MEMBER VARIABLES
+  // ////////////
 
   node::node node_;
-  pb::BVP_params params_;
-  pb::BVP_policy policy_;
-
+  pb::PlannerConfigMsg params_;
+  pb::PlannerPolicyMsg policy_;
 };
 
-#endif // _SIMBAMASTER_H
+#endif  // APPLICATIONS_MATLABINTERFACE_SIMBAMASTER_H_

@@ -8,17 +8,17 @@
 /////////////////////////////////////////
 
 // Our Eigen Helpers
-#include <ModelGraph/EigenHelpers.h>
+#include <URDFParser/EigenHelpers.h>
 
 #include <ModelGraph/PhysicsEngineHelpers.h>
 
-class bullet_shape{
+class bullet_shape {
 public:
 
-  //Methods
+  // Methods
 
-  //Set the object to the pose specified through MATLAB.
-  int SetPose(double* position, double* rotation){
+  // Set the object to the pose specified through MATLAB.
+  int SetPose(double* position, double* rotation) {
     btVector3 pos;
     pos.setX(position[0]);
     pos.setY(position[1]);
@@ -38,35 +38,33 @@ public:
     return 0;
   }
 
-  void SetPose(Eigen::Matrix4d World_pose){
-    // This may not work... may have to cast.
+  void SetPose(Eigen::Matrix4d World_pose) {
+    //  This may not work... may have to cast.
     btTransform bullet_trans = toBullet(World_pose);
     bulletBody->setCenterOfMassTransform(bullet_trans);
   }
 
-  ////////////////////////////////////
-
+  ///////////////////////////////////
   ///getters
-  btCollisionShape* getBulletShapePtr(){
+  CollisionShapePtr getBulletShapePtr() {
     return bulletShape;
   }
 
-  btRigidBody* getBulletBodyPtr(){
+  RigidBodyPtr getBulletBodyPtr() {
     return bulletBody;
   }
 
-  NodeMotionState* getBulletMotionStatePtr(){
+  MotionStatePtr getBulletMotionStatePtr() {
     return bulletMotionState;
   }
 
-
-protected:
-  btCollisionShape* bulletShape;
-  btRigidBody* bulletBody;
-  NodeMotionState* bulletMotionState;
-
+ protected:
+  //A compound shape to hold all of our collision shapes.
+  CollisionShapePtr bulletShape;
+  RigidBodyPtr bulletBody;
+  MotionStatePtr bulletMotionState;
 };
 
 
 
-#endif // BULLET_SHAPE_H
+#endif //  BULLET_SHAPE_H

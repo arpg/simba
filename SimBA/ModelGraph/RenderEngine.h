@@ -1,39 +1,33 @@
-#ifndef RENDERCLASS_H
-#define RENDERCLASS_H
+// Copyright (c) bminortx
 
-#include <map>
+#ifndef SIMBA_MODELGRAPH_RENDERENGINE_H_
+#define SIMBA_MODELGRAPH_RENDERENGINE_H_
 
 // Our SceneGraph interface
 #include <SceneGraph/SceneGraph.h>
-#include "ModelGraph/GLHeightmap.h"
+
 
 // All of our bullet objects
-#include <ModelGraph/Shape.h>
-#include <ModelGraph/Constraint.h>
-#include <ModelGraph/SimRaycastVehicle.h>
-
+#include <BulletStructs/Shape.h>
+#include <BulletStructs/Constraint.h>
+#include <BulletStructs/SimRaycastVehicle.h>
 // Our Sensor data
 #include <SimDevices/SimDevices.h>
 
-class RenderEngine
-{
-public:
+#include <map>
+#include <string>
 
+class RenderEngine {
+ public:
   void Init(std::string sLocalSimName);
-
-  ///////////////////////
 
   // Add to our list of SceneEntities
   SceneGraph::GLObject* AddNode(ModelNode *pNode);
 
-  ///////////////////////////////////////
-
   // Add sensors and cameras to the Scene
-  void AddDevices(SimDevices& Devices);
+  void AddDevices(const SimDevices& Devices);
   bool UpdateCameras();
   void SetImagesToWindow();
-
-  ///////////////////////////////////////
 
   // Pass all SceneEntities (and RaycastWheels) at one time into
   // the Scene
@@ -43,23 +37,22 @@ public:
   // Complete the SceneGraph and Pangolin initialization
   void CompleteScene(bool bEnableCameraView);
 
-  bool isCameraBody(string BodyName, string CameraName);
+  bool isCameraBody(std::string BodyName, std::string CameraName);
 
   // Update the Scene by one timestep
   void UpdateScene();
 
 
   /// MEMBER VARIABLES
-  std::map<ModelNode*, SceneGraph::GLObject*> m_mSceneEntities;
-  std::map<string, SceneGraph::GLObject*>     m_mRaycastWheels;
-  std::map<SimCamera*, ModelNode*>            m_mCameras;
-  SceneGraph::GLSceneGraph                    m_glGraph;
-  SceneGraph::ImageView*                      m_LSimCamImage;
-  SceneGraph::ImageView*                      m_RSimCamImage;
-  pangolin::View*                             m_view3d;
-  pangolin::OpenGlRenderState                 m_stacks3d;
-  bool                                        m_bCameraView;
-
+  std::map<ModelNode*, SceneGraph::GLObject*> scene_entities_;
+  std::map<std::string, SceneGraph::GLObject*> raycast_wheels_;
+  std::map<SimCamera*, ModelNode*> scene_cameras_;
+  SceneGraph::GLSceneGraph gl_graph_;
+  SceneGraph::ImageView* left_cam_image_;
+  SceneGraph::ImageView* right_cam_image_;
+  pangolin::View* gl_view_;
+  pangolin::OpenGlRenderState gl_stacks_;
+  bool is_camera_view_;
 };
 
-#endif // RENDERCLASS_H
+#endif  // SIMBA_MODELGRAPH_RENDERENGINE_H_

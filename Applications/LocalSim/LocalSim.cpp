@@ -18,27 +18,30 @@ LocalSim::LocalSim(const string& local_sim_name,
   render_option_ = true;
 
   // 1. Read URDF files.
-  XMLDocument robot_xml, world_xml;
+  tinyxml2::XMLDocument robot_xml, world_xml;
   GetXMLdoc(robot_urdf_path, robot_xml);
   GetXMLdoc(world_urdf_path, world_xml);
 
   // 2. Parse our world and our robot for objects in the scene.
-  parser_ = new URDF_Parser(debug_level);
+  parser_ = new URDFParser(debug_level);
+  sim_world_ = std::make_shared<SimWorld>();
+  sim_robot_ = std::make_shared<SimRobot>();
+  sim_devices_ = std::make_shared<SimDevices>();
   parser_->ParseWorld(world_xml, sim_world_);
-  parser_->ParseDevices(robot_xml, sim_devices_, local_sim_name_);
-  parser_->ParseRobot(robot_xml, sim_robot_, local_sim_name_);
+  parser_->ParseDevices(robot_xml, local_sim_name_, sim_devices_);
+  parser_->ParseRobot(robot_xml, local_sim_name_, sim_robot_);
 
   // 3. Init User's Robot and add it to RobotManager
-  robot_manager_.Init(local_sim_name_, scene_, sim_robot_, server_option);
+  robot_manager_.Init(local_sim_name_, scene_, *sim_robot_, server_option);
 
   // 4. We must decide the next actions based off of the Server Option.
   LOG(debug_level) << " The server option is set to " << server_option << ".";
   network_manager_.Init(local_sim_name_, server_option, debug_level);
-  network_manager_.RegisterRobot(&robot_manager_);
-  network_manager_.RegisterDevices(&sim_devices_);
+  // network_manager_.RegisterRobot(&robot_manager_);
+  network_manager_.RegisterDevices(sim_devices_);
 
   // 5. Add the world, robot, and controllers to the ModelGraph
-  scene_.Init(sim_world_, sim_robot_, sim_devices_,
+  scene_.Init(*sim_world_, *sim_robot_, *sim_devices_,
               local_sim_name_, false, render_option_, false);
 
   // TODO: What to do with StateKeeper option...?
@@ -53,7 +56,7 @@ LocalSim::LocalSim(const string& local_sim_name,
 
 void LocalSim::StepForward(){
   // Update SimDevices
-  sim_devices_.UpdateSensors();
+  sim_devices_->UpdateSensors();
   // Update the Network
   network_manager_.UpdateNetwork();
   // Update the PhysicsEngine and RenderEngine
@@ -93,7 +96,6 @@ int main( int argc, char** argv )
     // Initialize a LocalSim.
     LocalSim local_sim(local_sim_name, robot_urdf_path, world_urdf_path,
                        server_option, debug_level);
-
     // Are we rendering the world?
     if (local_sim.render_option_) {
       while (!pangolin::ShouldQuit()) {
